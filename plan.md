@@ -976,7 +976,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Highlight color button (background)
 - Shows current color of selection
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
