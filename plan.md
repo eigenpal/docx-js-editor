@@ -1342,7 +1342,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - onError(error)
 - onFontsLoaded()
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -1358,7 +1358,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
   - All public types
 - Clean, documented exports
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

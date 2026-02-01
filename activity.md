@@ -4646,3 +4646,58 @@ All event callbacks are implemented in DocxEditor.tsx.
 - bun build exits 0: ✓
 
 ---
+
+### US-90: Public API exports
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Updated `src/index.ts` with comprehensive public API exports.
+
+**Main Component:**
+- `DocxEditor` (default and named export)
+- `DocxEditorProps`, `DocxEditorRef` types
+
+**Agent API:**
+- `DocumentAgent` - Main agent class
+- `executeCommand`, `CommandResult`
+- `getAgentContext`, `getDocumentSummary`
+- `buildSelectionContext`, `buildExtendedSelectionContext`
+
+**Parser/Serializer:**
+- `parseDocx` - Parse DOCX buffer
+- `serializeDocx` - Serialize to DOCX
+- `processTemplate` - Template processing
+
+**Font Loader:**
+- `loadFont`, `loadFonts`, `loadFontFromBuffer`
+- `isFontLoaded`, `isFontsLoading`, `getLoadedFonts`
+- `onFontsLoaded`, `canRenderFont`, `preloadCommonFonts`
+
+**UI Components:**
+- `Toolbar`, `VariablePanel`, `Editor`, `AIEditor`
+- `DocumentViewer`, `ContextMenu`, `ResponsePreview`
+
+**Error Handling:**
+- `ErrorBoundary`, `ErrorProvider`
+- `useErrorNotifications`, `ParseErrorDisplay`
+- `UnsupportedFeatureWarning`
+
+**UI Controls:**
+- `ZoomControl`, `FontPicker`, `FontSizePicker`
+- `ColorPicker`, `StylePicker`, `AlignmentButtons`, `ListButtons`
+
+**Dialogs:**
+- `FindReplaceDialog`, `HyperlinkDialog`
+
+**Types:**
+- All document types (Document, Paragraph, Table, etc.)
+- All agent API types (AIAction, SelectionContext, etc.)
+
+**Utilities:**
+- Unit conversions (twips, pixels, emu)
+- Color utilities (theme color, hex conversion)
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
