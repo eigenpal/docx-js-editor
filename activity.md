@@ -4425,3 +4425,40 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - bun build exits 0: ✓
 
 ---
+
+### US-85: Loading states
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Loading states are implemented across multiple components.
+
+**DocumentViewer.tsx:**
+- `isLoading` prop for loading state
+- `loadingIndicator` prop for custom loading indicator
+- `DefaultLoadingIndicator` component with animated spinner
+- Shows "Loading document..." message
+
+**ResponsePreview.tsx:**
+- `isLoading` prop for loading state
+- `LoadingSpinner` component with animated SVG
+- Shows action label while loading (e.g., "Rewriting...")
+
+**fontLoader.ts:**
+- `isLoading()` - Check if any fonts are loading
+- `loadingFonts` Map tracks fonts being loaded
+- `onFontsLoaded(callback)` - Register callback for when fonts load
+- Progress tracking via Promise-based loading
+
+**VariablePanel.tsx:**
+- `isApplying` prop for apply operation in progress
+- Disables controls while applying
+
+**Loading Indicators:**
+- Animated CSS spinner (DocumentViewer)
+- Animated SVG spinner (ResponsePreview)
+- State tracking via `isLoading` props
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
