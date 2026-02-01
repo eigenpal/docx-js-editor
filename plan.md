@@ -1208,7 +1208,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Available styles
 - JSON serializable
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

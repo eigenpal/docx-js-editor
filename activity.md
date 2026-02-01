@@ -4164,3 +4164,62 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - bun build exits 0: ✓
 
 ---
+
+### US-80: Agent context builder
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+`src/agent/context.ts` already existed with comprehensive implementation.
+
+**Main Functions:**
+- `getAgentContext(doc, options?)` - Build full agent context from document
+- `buildSelectionContext(doc, range, options?)` - Build context for selection
+- `getDocumentSummary(doc)` - Get simple summary string
+
+**AgentContext Includes:**
+- `paragraphCount` - Total paragraph count
+- `wordCount` - Total word count
+- `characterCount` - Character count
+- `variables` - Detected template variables array
+- `variableCount` - Count of variables
+- `availableStyles` - Array of StyleInfo
+- `outline` - Array of ParagraphOutline (first N chars per paragraph)
+- `sections` - Array of SectionInfo
+- `hasTables`, `hasImages`, `hasHyperlinks` - Feature flags
+
+**ParagraphOutline Fields:**
+- `index` - Paragraph index
+- `preview` - First N characters
+- `style` - Style ID
+- `isHeading`, `headingLevel` - Heading detection
+- `isListItem` - List item detection
+- `isEmpty` - Empty paragraph detection
+
+**SelectionContext Includes:**
+- `selectedText` - Selected text content
+- `range` - Selection range
+- `formatting` - Text formatting at selection
+- `paragraphFormatting` - Paragraph formatting
+- `textBefore`, `textAfter` - Context around selection
+- `paragraph` - ParagraphContext
+- `inTable`, `inHyperlink` - Position flags
+- `suggestedActions` - AI action suggestions
+
+**Helper Functions:**
+- `calculateWordCount(body)` - Count words in body
+- `calculateCharacterCount(body)` - Count characters
+- `countWords(text)` - Count words in text
+- `getParagraphText(paragraph)` - Get plain text
+- `getRunText(run)` - Get run text
+- `getDocumentSummary(doc)` - Human-readable summary
+
+**Design Notes:**
+- All outputs are JSON serializable
+- Options for customizing outline length
+- Heading detection from style IDs
+- Suggested actions based on selection content
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
