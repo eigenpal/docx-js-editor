@@ -1102,7 +1102,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Styled distinctively
 - Also in context menu
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

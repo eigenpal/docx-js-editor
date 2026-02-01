@@ -3745,3 +3745,70 @@ Created `src/components/edit/EditableImage.tsx` with comprehensive image editing
 - bun build exits 0: ✓
 
 ---
+
+### US-73: Variable insertion
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ui/VariableInserter.tsx` with comprehensive variable insertion UI:
+
+**Main Components:**
+- `VariableInserter` - Input with insert button for toolbar
+- `VariableButton` - Dropdown button for toolbar integration
+- `VariableContextMenuItem` - Variable insertion for context menu
+
+**VariableInserter Features:**
+- Text input with curly brace prefix indicator
+- Insert button with icon
+- Suggestions dropdown with existing variables
+- Keyboard navigation (arrows, enter, escape)
+- Auto-sanitizes variable names
+- Compact mode for smaller UI
+- Auto-clear after insert
+
+**VariableButton Features:**
+- Toolbar button with dropdown
+- Shows VariableInserter in dropdown
+- Variable icon (curly braces)
+- Dropdown arrow indicator
+- Click outside to close
+
+**VariableContextMenuItem Features:**
+- Compact input for context menu
+- Shows existing variables as quick-insert buttons
+- Focus input on mount
+- Closes menu after insert
+
+**Styling:**
+- Yellow/gold color scheme for variables (#e4b416)
+- Variable tags: yellow background, gold border, monospace font
+- Matches document styling for {{variables}}
+- Hover and focus states
+- Disabled states
+
+**Icons:**
+- `VariableIcon` - Curly braces with 'x' symbol
+- `InsertVariableIcon` - Curly braces with plus
+- `DropdownArrowIcon` - Down chevron
+
+**Utility Functions:**
+- `sanitizeVariableName(name)` - Remove invalid characters, convert spaces to underscores
+- `isValidVariableName(name)` - Validate variable name format
+- `formatVariable(name)` - Add {{}} wrapper
+- `parseVariable(template)` - Extract name from {{variable}}
+- `isTemplateVariable(text)` - Check if text is a variable
+- `extractVariables(text)` - Extract all variables from text
+- `getCommonVariables()` - Get common variable suggestions
+
+**CSS Classes:**
+- `docx-variable-inserter` - Main container
+- `docx-variable-input` - Text input
+- `docx-variable-insert-button` - Insert button
+- `docx-variable-suggestions` - Suggestions dropdown
+- `docx-variable-button` - Toolbar button
+- `docx-variable-context-menu` - Context menu item
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
