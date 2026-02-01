@@ -3182,3 +3182,53 @@ Created `src/components/ui/FontSizePicker.tsx` with comprehensive font size sele
 - bun build exits 0: ✓
 
 ---
+### US-64: Color picker
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ui/ColorPicker.tsx` with comprehensive color selection:
+
+**Main Components:**
+- `ColorPicker` - Main color picker with dropdown grid
+- `ColorGrid` - Reusable color grid component
+- `TextColorPicker` - Specialized text color picker (foreground)
+- `HighlightColorPicker` - Specialized highlight color picker (background)
+
+**Props:**
+- `value?: string` - Currently selected color (hex)
+- `onChange?: (color: string) => void` - Callback when color is selected
+- `type?: 'text' | 'highlight'` - Type of color picker
+- `theme?: Theme` - Theme for resolving theme colors
+- `colors?: ColorOption[]` - Custom color options
+- `disabled?: boolean` - Whether picker is disabled
+- `showNoColor?: boolean` - Show "No Color" option
+- `showMoreColors?: boolean` - Show custom hex input
+
+**Features:**
+- Grid of common colors (30 for text, 16 for highlight)
+- Text color button with font color indicator bar
+- Highlight color button with marker indicator
+- Shows current color of selection via color bar
+- Custom hex color input for text colors
+- Keyboard navigation support
+- Accessible with ARIA attributes
+
+**Default Colors:**
+- Text colors: 30 colors in 3 rows (dark, standard, tints)
+- Highlight colors: 16 standard Word highlight colors
+
+**Utility Functions:**
+- `getTextColors()` - Get default text colors
+- `getHighlightColors()` - Get default highlight colors
+- `createColorOption(hex, name)` - Create color option
+- `isColorInList(hex, colors)` - Check if color in list
+- `getColorName(hex, colors)` - Get color name from hex
+- `parseColorValue(color)` - Parse color from various formats
+- `isValidHexColor(hex)` - Validate hex color
+- `getContrastColor(bgHex)` - Get contrasting text color
+- `getThemeColorsForPicker(theme)` - Get theme colors for picker
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
