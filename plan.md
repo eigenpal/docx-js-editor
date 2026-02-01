@@ -91,7 +91,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles theme fonts (majorFont, minorFont)
 - Returns proper CSS fallback stack
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
