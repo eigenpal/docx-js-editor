@@ -3282,3 +3282,62 @@ Created `src/components/ui/AlignmentButtons.tsx` with paragraph alignment contro
 - bun build exits 0: ✓
 
 ---
+
+### US-66: List buttons
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ui/ListButtons.tsx` with list formatting controls:
+
+**Main Components:**
+- `ListButtons` - Main component with bullet/numbered list buttons and indent controls
+- `ListButton` - Individual button component with active/hover states
+
+**Types:**
+- `ListType` - 'bullet' | 'numbered' | 'none'
+- `ListState` - State object with type, level, isInList, numId
+
+**Props:**
+- `listState?: ListState` - Current list state of selection
+- `onBulletList?: () => void` - Callback for bullet list toggle
+- `onNumberedList?: () => void` - Callback for numbered list toggle
+- `onIndent?: () => void` - Callback for increase indent
+- `onOutdent?: () => void` - Callback for decrease indent
+- `disabled?: boolean` - Whether buttons are disabled
+- `showIndentButtons?: boolean` - Show indent/outdent buttons
+- `compact?: boolean` - Smaller button size
+
+**Features:**
+- Bullet list button with toggle behavior
+- Numbered list button with toggle behavior
+- Indent button (increase list level)
+- Outdent button (decrease list level, disabled at level 0)
+- Active states for current list type
+- ARIA attributes for accessibility
+
+**CSS Classes:**
+- `docx-list-buttons` - Container
+- `docx-list-button` - Individual button
+- `docx-list-button-active` - Active state
+- `docx-list-button-disabled` - Disabled state
+
+**Utility Functions:**
+- `createDefaultListState()` - Create non-list state
+- `createBulletListState(level, numId)` - Create bullet list state
+- `createNumberedListState(level, numId)` - Create numbered list state
+- `isBulletListState(state)` / `isNumberedListState(state)` - Type checks
+- `isAnyListState(state)` - Check if in any list
+- `getNextIndentLevel(level)` / `getPreviousIndentLevel(level)` - Level manipulation
+- `toggleListType(state, targetType)` - Toggle list type
+- `getListIndentCss(level)` - Get CSS for list indent
+- `getDefaultBulletForLevel(level)` - Get bullet character
+- `getDefaultNumberFormatForLevel(level)` - Get number format
+- `handleListShortcut(event)` - Parse keyboard shortcuts (Tab/Shift+Tab)
+
+**Exported Icons:**
+- `BulletListIcon`, `NumberedListIcon`, `IndentIcon`, `OutdentIcon`
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

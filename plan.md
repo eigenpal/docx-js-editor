@@ -1003,7 +1003,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Toggles list on/off for selection
 - Indent/outdent for list levels
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
