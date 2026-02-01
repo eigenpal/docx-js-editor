@@ -426,3 +426,42 @@ Created `src/utils/fontLoader.ts` with:
 - bun build exits 0: ✓
 
 ---
+
+### US-05: Font family resolver
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/utils/fontResolver.ts` with:
+
+**Main Function:**
+- `resolveFontFamily(docxFontName)` - Returns `{ googleFont, cssFallback, originalFont, hasGoogleEquivalent }`
+
+**Font Mappings (Microsoft → Google):**
+- Calibri → Carlito
+- Cambria → Caladea
+- Arial → Arimo
+- Times New Roman → Tinos
+- Courier New → Cousine
+- Georgia → Tinos
+- Verdana, Tahoma → Open Sans
+- Trebuchet MS → Fira Sans
+- Comic Sans MS → Comic Neue
+- Consolas → Inconsolata
+- CJK fonts → Noto font family
+
+**Helper Functions:**
+- `resolveThemeFont(themeRef, fontScheme)` - Resolve theme font references (majorAscii, minorHAnsi, etc.)
+- `getGoogleFontsToLoad(docxFonts)` - Get unique Google Font names to load
+- `buildFontFamilyString(fonts, category)` - Build CSS font-family with proper quoting
+- `getGoogleFontEquivalent(docxFontName)` - Get Google Font name
+- `hasGoogleFontEquivalent(docxFontName)` - Check if mapping exists
+
+**Features:**
+- Detects font category (serif/sans-serif/monospace) from font name
+- Proper CSS font-family quoting
+- Default fallback stacks by category
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
