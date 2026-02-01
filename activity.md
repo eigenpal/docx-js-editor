@@ -2698,3 +2698,53 @@ Created `src/docx/serializer/runSerializer.ts` with comprehensive run serializat
 - bun build exits 0: ✓
 
 ---
+
+### US-51: Paragraph serializer
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/serializer/paragraphSerializer.ts` with comprehensive paragraph serialization:
+
+**Main Functions:**
+- `serializeParagraph(para): string` - Serialize a single paragraph to OOXML XML
+- `serializeParagraphs(paras): string` - Serialize multiple paragraphs
+- `serializeParagraphFormatting(formatting): string` - Serialize w:pPr element
+
+**Paragraph Properties Serialization (w:pPr):**
+- w:pStyle (paragraph style reference)
+- w:keepNext, w:keepLines, w:pageBreakBefore (page break control)
+- w:framePr (text frame properties)
+- w:widowControl
+- w:numPr (numbering/list properties with numId and ilvl)
+- w:pBdr (paragraph borders: top, bottom, left, right, between, bar)
+- w:shd (paragraph shading/background)
+- w:tabs (tab stops with position, alignment, leader)
+- w:suppressLineNumbers, w:suppressAutoHyphens
+- w:spacing (before, after, line, lineRule, autospacing)
+- w:ind (left, right, firstLine, hanging indentation)
+- w:bidi (right-to-left text direction)
+- w:jc (justification/alignment)
+- w:outlineLvl (outline level for TOC)
+- w:rPr (default run properties for paragraph)
+
+**Content Serialization:**
+- w:r (runs via serializeRun from runSerializer.ts)
+- w:hyperlink (with rId, anchor, tooltip, target, history, docLocation)
+- w:bookmarkStart (with id, name, colFirst, colLast)
+- w:bookmarkEnd (with id)
+- w:fldSimple (simple fields with instruction and content)
+- Complex fields (reconstructed from fieldCode and fieldResult runs)
+
+**Utility Functions:**
+- `hasParagraphContent(paragraph)` - Check if paragraph has content
+- `hasParagraphFormatting(paragraph)` - Check if paragraph has formatting
+- `getParagraphPlainText(paragraph)` - Get plain text for debugging
+- `createEmptyParagraph(formatting)` - Create empty paragraph
+- `createTextParagraph(text, pFormatting, rFormatting)` - Create text paragraph
+- `isListParagraph(paragraph)` - Check if paragraph is list item
+- `getListLevel(paragraph)` - Get list level (0-8)
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
