@@ -2286,3 +2286,56 @@ Created `src/components/render/FootnoteRef.tsx` with footnote/endnote reference 
 - bun build exits 0: ✓
 
 ---
+
+### US-43: Header/Footer component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/HeaderFooter.tsx` with header and footer rendering:
+
+**Main Component:**
+- `HeaderFooter` - React component rendering header or footer content
+
+**Container Components:**
+- `HeaderArea` - Container for header positioned at top of page
+- `FooterArea` - Container for footer positioned at bottom of page
+
+**Props:**
+- `headerFooter: HeaderFooterType` - The header/footer data to render
+- `position: 'header' | 'footer'` - Type of area
+- `sectionProps?: SectionProperties` - Section properties for positioning
+- `theme?: Theme` - Theme for resolving colors and fonts
+- `pageNumber?: number` - Current page number (for PAGE field)
+- `totalPages?: number` - Total page count (for NUMPAGES field)
+- `pageWidthPx?: number` - Page width in pixels
+- `renderParagraph?: (paragraph, index) => ReactNode` - Render function for paragraphs
+- `renderTable?: (table, index) => ReactNode` - Render function for tables
+
+**Features:**
+- Renders paragraphs with all formatting
+- Tables within headers/footers
+- Page number fields
+- Positioned in header/footer area based on section margins
+- Different header/footer types (default, first, even)
+
+**CSS Classes:**
+- `docx-header-footer` - Base class
+- `docx-header` / `docx-footer` - Position-specific
+- `docx-header-default` / `docx-header-first` / `docx-header-even` - Type-specific
+- `docx-header-area` / `docx-footer-area` - Container classes
+
+**Utility Functions:**
+- `getHeaderForPage(pageNumber, isFirstPage, headers, sectionProps)` - Get header for page
+- `getFooterForPage(pageNumber, isFirstPage, footers, sectionProps)` - Get footer for page
+- `hasContent(hf)` - Check if header/footer has content
+- `hasPageNumberField(hf)` - Check for PAGE/NUMPAGES fields
+- `getHeaderFooterText(hf)` - Get plain text content
+- `hasImages(hf)` / `hasTables(hf)` - Check for content types
+- `createHeaderFooterMap(items)` - Create type-to-content map
+- `hasHeaders(headers)` / `hasFooters(footers)` - Check existence
+- `getHeaderTypes(headers)` / `getFooterTypes(footers)` - Get available types
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
