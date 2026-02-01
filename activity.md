@@ -2339,3 +2339,58 @@ Created `src/components/render/HeaderFooter.tsx` with header and footer renderin
 - bun build exits 0: ✓
 
 ---
+
+### US-44: Line breaker
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/layout/lineBreaker.ts` with comprehensive line breaking:
+
+**Main Function:**
+- `breakIntoLines(paragraph, options): LineBreakResult` - Break paragraph into lines
+
+**LineBreakOptions:**
+- `maxWidth: number` - Maximum width for content
+- `firstLineIndent?: number` - First line indent
+- `tabStops?: TabStop[]` - Tab stops for the paragraph
+- `theme?: Theme` - Theme for font resolution
+- `defaultFormatting?: TextFormatting` - Default formatting
+- `lineHeightMultiplier?: number` - Line height multiplier
+- `minLineHeight?: number` - Minimum line height
+
+**LineFragment Interface:**
+- `type` - text, tab, break, image, field, symbol, space
+- `content: string` - The content
+- `width, height, baseline` - Measurements in pixels
+- `runIndex, contentIndex` - Source indices
+- `formatting?: TextFormatting` - Applied formatting
+- `canBreakAfter: boolean` - Whether break is allowed after
+- `nonBreaking?: boolean` - Whether element is non-breaking
+
+**Line Interface:**
+- `fragments: LineFragment[]` - Fragments on this line
+- `width, height, baseline` - Line metrics
+- `y: number` - Y position from paragraph top
+- `isLastLine, hasHardBreak` - Line state
+- `lineNumber: number` - 0-indexed line number
+
+**Features:**
+- Word boundary line breaking for natural text flow
+- Multiple runs with different font sizes
+- Tab stops and their alignment
+- Non-breaking spaces and hyphens
+- Soft hyphens for optional breaks
+
+**Utility Functions:**
+- `getLineText(line)` - Get text content of a line
+- `getLineCharCount(line)` - Get character count
+- `isLineEmpty(line)` - Check if line is whitespace only
+- `getFragmentAtOffset(line, offset)` - Get fragment at character offset
+- `getXPositionForOffset(line, offset)` - Calculate x position
+- `getTotalLines(result)` - Get total line count
+- `isMultiLine(result)` - Check if multiple lines
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
