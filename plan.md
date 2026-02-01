@@ -1046,7 +1046,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Highlights matches in document
 - Ctrl+F to open, Ctrl+H for replace mode
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
