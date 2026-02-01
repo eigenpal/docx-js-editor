@@ -1614,3 +1614,46 @@ Created `src/utils/units.ts` with comprehensive OOXML unit conversions:
 - bun build exits 0: ✓
 
 ---
+
+### US-29: Color resolver
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/utils/colorResolver.ts` with comprehensive color resolution:
+
+**Main Functions:**
+- `resolveColor(color, theme, defaultColor)` - Resolve ColorValue to CSS color string
+- `resolveHighlightColor(highlight)` - Resolve highlight color name to CSS
+- `resolveShadingColor(color, theme)` - Resolve shading fill/pattern color
+
+**Theme Color Support:**
+- Handles all theme color slots (dk1, lt1, dk2, lt2, accent1-6, hlink, folHlink)
+- Maps aliases (dark1→dk1, background1→lt1, text1→dk1, etc.)
+- Default Office 2016 theme colors for fallback
+
+**Tint/Shade Modifications:**
+- `applyTint(hex, tint)` - Make color lighter (blend with white) using HSL
+- `applyShade(hex, shade)` - Make color darker (blend with black) using HSL
+- Parses OOXML hex modifier values (00-FF → 0-1)
+
+**Color Utilities:**
+- `hexToRgb(hex)`, `rgbToHex(r, g, b)` - RGB/hex conversion
+- `rgbToHsl(r, g, b)`, `hslToRgb(h, s, l)` - HSL conversion for tint/shade
+- `isBlack(color, theme)`, `isWhite(color, theme)` - Color detection
+- `getContrastingColor(bg, theme)` - Get black/white for best contrast
+- `darkenColor(color, theme, percent)`, `lightenColor(color, theme, percent)`
+- `blendColors(color1, color2, ratio, theme)` - Blend two colors
+- `colorsEqual(color1, color2, theme)` - Compare colors
+
+**Color Creation:**
+- `parseColorString(colorString)` - Parse various color formats to ColorValue
+- `createThemeColor(slot, tint?, shade?)` - Create theme color reference
+- `createRgbColor(hex)` - Create RGB ColorValue
+
+**Highlight Colors:**
+- Full mapping of OOXML highlight names to hex (black, blue, cyan, darkBlue, etc.)
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
