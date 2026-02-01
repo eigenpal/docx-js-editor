@@ -575,3 +575,57 @@ Created `src/docx/styleParser.ts` with comprehensive style parsing:
 - bun build exits 0: ✓
 
 ---
+
+### US-12: Numbering/List parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/numberingParser.ts` with comprehensive list/numbering parsing:
+
+**Main Functions:**
+- `parseNumbering(numberingXml: string | null): NumberingMap` - Main parsing function
+
+**NumberingMap Interface:**
+- `definitions` - Raw NumberingDefinitions with abstractNums and nums arrays
+- `getLevel(numId, ilvl)` - Get level info for a numId and ilvl (with override resolution)
+- `getAbstract(abstractNumId)` - Get abstract numbering by ID
+- `hasNumbering(numId)` - Check if numId exists
+
+**Parses All OOXML Structures:**
+- `w:abstractNum` - Abstract numbering definitions with all levels (0-8)
+- `w:num` - Numbering instances referencing abstractNum
+- `w:lvl` - Level definitions with:
+  - `ilvl` - Level index (0-8)
+  - `start` - Starting value
+  - `numFmt` - Number format (decimal, upperRoman, lowerRoman, upperLetter, lowerLetter, bullet, etc.)
+  - `lvlText` - Pattern text with placeholders (%1, %2, etc.)
+  - `lvlJc` - Justification
+  - `suff` - Suffix (tab, space, nothing)
+  - `isLgl` - Legal numbering
+  - `lvlRestart` - Restart from higher level
+  - `legacy` - Legacy settings
+  - `pPr` - Paragraph properties (indentation, tabs)
+  - `rPr` - Run properties (fonts for bullets)
+- `w:lvlOverride` - Level overrides in num instances with startOverride or full lvl redefinition
+
+**Number Formats Supported:**
+- All standard formats: decimal, upperRoman, lowerRoman, upperLetter, lowerLetter
+- Special formats: ordinal, cardinalText, ordinalText, bullet, none
+- CJK formats: ideographDigital, japaneseCounting, aiueo, iroha, and many more
+- International formats: hebrew, arabic, hindi, thai, russian, vietnamese, korean
+
+**Helper Functions:**
+- `formatNumber(num, format)` - Format a number according to NumberFormat
+- `renderListMarker(lvlText, counters, formats)` - Render marker text with placeholders
+- `getBulletCharacter(level)` - Get bullet character for bullet levels
+- `isBulletLevel(level)` - Check if level is bullet (not numbered)
+
+**Internal Utilities:**
+- `toRoman(num)` - Convert to Roman numerals
+- `toLetter(num)` - Convert to letter (a, b, ... z, aa, ab, ...)
+- `toOrdinal(num)` - Convert to ordinal (1st, 2nd, 3rd, ...)
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

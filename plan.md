@@ -192,7 +192,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles bullet characters, number formats (decimal, lowerLetter, upperLetter, lowerRoman, upperRoman)
 - Handles restart numbering, start values
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
