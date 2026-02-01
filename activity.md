@@ -3998,3 +3998,67 @@ Created `src/utils/processTemplate.ts` with comprehensive template processing:
 - bun build exits 0: ✓
 
 ---
+
+### US-77: Agent types
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/types/agentApi.ts` with comprehensive agent API types:
+
+**Position & Range:**
+- `Position` - { paragraphIndex, offset, contentIndex?, sectionIndex? }
+- `Range` - { start, end, collapsed? }
+- `createCollapsedRange(position)` - Create cursor range
+- `createRange(start, end)` - Create selection range
+- `isPositionInRange(position, range)` - Check containment
+- `comparePositions(a, b)` - Compare positions (-1, 0, 1)
+
+**Command Types:**
+- `InsertTextCommand` - Insert text at position
+- `ReplaceTextCommand` - Replace text in range
+- `DeleteTextCommand` - Delete text in range
+- `FormatTextCommand` - Apply text formatting
+- `FormatParagraphCommand` - Apply paragraph formatting
+- `ApplyStyleCommand` - Apply named style
+- `InsertTableCommand` - Insert table (rows, cols, data)
+- `InsertImageCommand` - Insert image (src, dimensions, alt)
+- `InsertHyperlinkCommand` - Insert/create hyperlink
+- `RemoveHyperlinkCommand` - Remove hyperlink keeping text
+- `InsertParagraphBreakCommand` - Insert paragraph break
+- `MergeParagraphsCommand` - Merge consecutive paragraphs
+- `SplitParagraphCommand` - Split paragraph at position
+- `SetVariableCommand` - Set template variable
+- `ApplyVariablesCommand` - Apply all template variables
+- `AgentCommand` - Union of all command types
+
+**Context Types:**
+- `AgentContext` - Document context for AI agents
+- `StyleInfo` - Style information
+- `ParagraphOutline` - Paragraph preview for outline
+- `SectionInfo` - Section information
+
+**Selection Context:**
+- `SelectionContext` - Current selection details
+- `ParagraphContext` - Paragraph containing selection
+- `SuggestedAction` - Suggested action for context menu
+
+**Response Types:**
+- `AgentResponse` - Response from agent action
+- `AgentContent` - Content block in response
+
+**AI Actions:**
+- `AIAction` - askAI, rewrite, expand, summarize, translate, explain, fixGrammar, makeFormal, makeCasual, custom
+- `AIActionRequest` - Request with context
+- `getActionLabel(action)` - Get display label
+- `getActionDescription(action)` - Get description
+- `DEFAULT_AI_ACTIONS` - Default actions for context menu
+
+**Utility Types:**
+- `CommandHandler<T>` - Command handler function type
+- `AIRequestHandler` - AI request handler function type
+- `createCommand<T>(command)` - Create command with ID
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

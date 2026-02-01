@@ -1163,7 +1163,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
   - InsertTableCommand, InsertImageCommand, InsertHyperlinkCommand
   - AgentContext, AgentResponse, SelectionContext
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
