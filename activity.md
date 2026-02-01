@@ -3341,3 +3341,53 @@ Created `src/components/ui/ListButtons.tsx` with list formatting controls:
 - bun build exits 0: ✓
 
 ---
+
+### US-67: Style picker
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ui/StylePicker.tsx` with comprehensive style selection:
+
+**Main Component:**
+- `StylePicker` - React component with dropdown for selecting paragraph/character styles
+
+**Props:**
+- `value?: string` - Currently selected style ID
+- `onChange?: (styleId: string) => void` - Callback when style is selected
+- `styles?: Style[]` - Available styles from document
+- `theme?: Theme` - Document theme for color resolution
+- `disabled?: boolean` - Whether picker is disabled
+- `showPreview?: boolean` - Show styles in their formatting
+- `styleTypes?: StyleType[]` - Filter to specific style types
+- `quickFormatOnly?: boolean` - Only show qFormat styles
+
+**Features:**
+- Dropdown with available styles from document
+- Shows style name in its formatting (preview)
+- Shows current style of selection
+- Applies style to paragraph via onChange callback
+- Keyboard navigation (Arrow keys, Enter, Escape)
+- Grouped by category: Headings, Paragraph, Quotes, Lists & TOC
+- Sorts by UI priority then name
+- Default styles when no document styles provided
+
+**Default Styles Included:**
+- Normal, Heading 1-3, Title, Subtitle, Quote, Intense Quote
+
+**Utility Functions:**
+- `getDefaultStyles()` - Get default style options
+- `createStyleOptions(styles, options)` - Convert Style[] to StyleOption[]
+- `findStyleById(styles, styleId)` - Find style by ID
+- `findStyleByName(styles, name)` - Find style by name
+- `getParagraphStyles(styles)` - Filter paragraph styles
+- `getCharacterStyles(styles)` - Filter character styles
+- `getTableStyles(styles)` - Filter table styles
+- `getQuickFormatStyles(styles)` - Filter qFormat styles
+- `getDefaultParagraphStyle(styles)` - Get default/Normal style
+- `isHeadingStyle(style)` - Check if style is a heading
+- `getHeadingLevel(style)` - Get heading level (1-9)
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
