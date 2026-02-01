@@ -629,3 +629,61 @@ Created `src/docx/numberingParser.ts` with comprehensive list/numbering parsing:
 - bun build exits 0: ✓
 
 ---
+
+### US-13: Run parser with full formatting
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/runParser.ts` with comprehensive run parsing:
+
+**Main Functions:**
+- `parseRun(node, styles, theme): Run` - Main parsing function
+- `parseRunProperties(rPr, theme, styles): TextFormatting` - Parse w:rPr element
+
+**Parses ALL Run Properties (w:rPr):**
+- w:b (bold), w:bCs (bold complex script)
+- w:i (italic), w:iCs (italic complex script)
+- w:u (underline with style and color)
+- w:strike (strikethrough), w:dstrike (double strike)
+- w:vertAlign (superscript/subscript/baseline)
+- w:smallCaps, w:caps (capitalization)
+- w:vanish (hidden text)
+- w:color (text color with theme resolution)
+- w:highlight (text highlight color)
+- w:shd (character shading/background)
+- w:sz, w:szCs (font size in half-points)
+- w:rFonts (font family with theme resolution - ascii, hAnsi, eastAsia, cs, and theme refs)
+- w:spacing (character spacing in twips)
+- w:position (raised/lowered position)
+- w:w (horizontal text scale)
+- w:kern (kerning threshold)
+- w:effect (text animation effects)
+- w:em (emphasis marks)
+- w:emboss, w:imprint, w:outline, w:shadow (text effects)
+- w:rtl, w:cs (right-to-left and complex script)
+- w:rStyle (character style reference)
+
+**Parses All Run Content Types:**
+- w:t (text content with space preservation)
+- w:tab (tab characters)
+- w:br (line/page/column breaks)
+- w:sym (symbol characters)
+- w:footnoteReference, w:endnoteReference
+- w:fldChar (field characters: begin/separate/end)
+- w:instrText (field instruction text)
+- w:softHyphen, w:noBreakHyphen
+- w:drawing (images - placeholder, full parsing in US-20)
+- w:cr (carriage return)
+
+**Helper Functions:**
+- `getRunText(run)` - Get plain text from a run
+- `hasContent(run)` - Check if run has visible content
+- `hasImage(run)` - Check if run contains an image
+- `getImages(run)` - Get all images from a run
+- `hasFieldChar(run)` - Check if run is part of a complex field
+- `getFieldCharType(run)` - Get field character type
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

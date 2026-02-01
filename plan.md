@@ -219,7 +219,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
   - w:effect (text effects)
 - Detects images (w:drawing)
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
