@@ -3391,3 +3391,70 @@ Created `src/components/ui/StylePicker.tsx` with comprehensive style selection:
 - bun build exits 0: ✓
 
 ---
+
+### US-68: Insert hyperlink dialog
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/dialogs/HyperlinkDialog.tsx` with comprehensive hyperlink dialog:
+
+**Main Component:**
+- `HyperlinkDialog` - React modal component for inserting/editing hyperlinks
+
+**Props:**
+- `isOpen: boolean` - Whether the dialog is open
+- `onClose: () => void` - Callback when dialog is closed
+- `onSubmit: (data: HyperlinkData) => void` - Callback when hyperlink is submitted
+- `onRemove?: () => void` - Callback when hyperlink is removed
+- `initialData?: HyperlinkData` - Initial data for editing existing hyperlink
+- `selectedText?: string` - Currently selected text (default display text)
+- `isEditing?: boolean` - Whether editing an existing hyperlink
+- `bookmarks?: BookmarkOption[]` - Available bookmarks for internal links
+
+**Features:**
+- Input for URL with validation (http, https, mailto, tel, ftp)
+- Input for display text
+- Edit existing hyperlinks
+- Remove hyperlink option
+- Internal bookmark selection via tabs (when bookmarks available)
+- Tooltip input
+- Form validation with error messages
+- Keyboard support (Enter to submit, Escape to close)
+- Focus management
+- Accessible with ARIA attributes
+
+**Types:**
+- `HyperlinkData` - Interface for hyperlink data (url, displayText, bookmark, tooltip)
+- `BookmarkOption` - Interface for bookmark selection options
+- `HyperlinkDialogProps` - Component props interface
+
+**Utility Functions:**
+- `isValidUrl(url)` - Validate URL string (supports http, https, mailto, tel, ftp)
+- `normalizeUrl(url)` - Add protocol if missing
+- `getUrlType(url)` - Detect URL type (web, email, phone, ftp)
+- `createHyperlinkData(url, displayText)` - Create hyperlink data from URL
+- `createBookmarkLinkData(bookmark, displayText)` - Create bookmark link data
+- `isExternalHyperlinkData(data)` - Check if external URL
+- `isBookmarkHyperlinkData(data)` - Check if internal bookmark
+- `getDisplayText(data)` - Get display text with fallback
+- `emailToMailto(email)` - Convert email to mailto: link
+- `phoneToTel(phone)` - Convert phone to tel: link
+- `extractBookmarksForDialog(bookmarks)` - Convert bookmarks for dialog
+
+**CSS Classes:**
+- `docx-hyperlink-dialog-overlay` - Overlay backdrop
+- `docx-hyperlink-dialog` - Dialog container
+- `docx-hyperlink-dialog-header` - Header with title and close button
+- `docx-hyperlink-dialog-body` - Body with form fields
+- `docx-hyperlink-dialog-footer` - Footer with action buttons
+- `docx-hyperlink-dialog-tabs` - Tab buttons for URL/bookmark switch
+- `docx-hyperlink-dialog-field` - Form field container
+- `docx-hyperlink-dialog-input` - Text input
+- `docx-hyperlink-dialog-select` - Select dropdown
+
+Also created `src/components/dialogs/index.ts` for exports.
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

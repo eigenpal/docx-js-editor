@@ -1031,7 +1031,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Edit existing hyperlinks
 - Remove hyperlink option
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
