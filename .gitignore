@@ -23,6 +23,9 @@ yarn-error.log*
 # Test coverage
 coverage/
 
+# Ralph loop screenshots
+screenshots/
+
 # Environment
 .env
 .env.local

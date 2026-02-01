@@ -18,12 +18,16 @@
     "dist"
   ],
   "scripts": {
-    "dev": "bun run --hot demo/main.tsx",
+    "dev": "vite",
     "build": "tsup && bun run build:css",
     "build:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
     "build:demo": "bun build ./demo/main.tsx --outdir ./demo/dist --target browser",
     "test": "bun test",
     "test:watch": "bun test --watch",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:visual": "npx playwright test visual.spec.ts",
+    "test:screenshots": "npx playwright test --project=chromium --reporter=list",
     "prepublishOnly": "bun test && bun run build",
     "typecheck": "tsc --noEmit"
   },
@@ -32,7 +36,6 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "superdoc": "^1.10.0",
     "docxtemplater": "^3.50.0",
     "jszip": "^3.10.1",
     "pizzip": "^3.1.7",
@@ -46,13 +49,15 @@
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^13.3.8",
+    "@playwright/test": "^1.58.1",
     "@testing-library/react": "^14.1.2",
     "@types/bun": "^1.0.0",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.17",
-    "clsx": "^2.1.0",
     "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
     "lucide-react": "^0.312.0",
     "postcss": "^8.4.33",
     "react": "^18.2.0",
@@ -61,7 +66,8 @@
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vite": "^7.3.1"
   },
   "keywords": [
     "docx",

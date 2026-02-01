@@ -1,132 +1,119 @@
+/**
+ * DOCX Explorer Utility
+ *
+ * Opens a DOCX file (which is a ZIP archive) and provides utilities
+ * to explore its structure, list files, and extract/format XML content.
+ */
+
 import JSZip from 'jszip';
 
 /**
- * Information about a single file in the DOCX ZIP
+ * Information about a single file in the DOCX ZIP archive
  */
 export interface DocxFileInfo {
+  /** Full path within the ZIP (e.g., "word/document.xml") */
   path: string;
+  /** Uncompressed file size in bytes */
   size: number;
-  compressedSize: number;
+  /** Whether this is an XML file */
   isXml: boolean;
+  /** Whether this is in the word/ directory (main content) */
+  isWordContent: boolean;
+  /** Whether this is a relationship file */
+  isRels: boolean;
+  /** Whether this is a media file (image, etc.) */
   isMedia: boolean;
-  isRelationship: boolean;
 }
 
 /**
- * Complete exploration result for a DOCX file
+ * Result of exploring a DOCX file
  */
 export interface DocxExploration {
-  /** Total number of files in the ZIP */
+  /** Total number of files in the archive */
   fileCount: number;
-
-  /** Total uncompressed size in bytes */
+  /** Total uncompressed size of all files */
   totalSize: number;
-
   /** List of all files with metadata */
   files: DocxFileInfo[];
-
   /** Files grouped by directory */
-  directories: Map<string, DocxFileInfo[]>;
-
-  /** XML content cache for extracted files */
-  xmlCache: Map<string, string>;
+  directories: Record<string, DocxFileInfo[]>;
+  /** Pre-loaded XML content for quick access */
+  xmlCache: Record<string, string>;
+  /** The underlying JSZip instance for further operations */
+  zip: JSZip;
 }
 
 /**
- * Format XML with proper indentation for readability
+ * Key files typically found in a DOCX
  */
-function formatXml(xml: string): string {
-  let formatted = '';
-  let indent = 0;
-  const indentSize = 2;
-
-  // Split on tags
-  const parts = xml.replace(/>\s*</g, '><').split(/(<[^>]+>)/);
-
-  for (const part of parts) {
-    if (!part.trim()) continue;
-
-    if (part.startsWith('</')) {
-      // Closing tag - decrease indent first
-      indent = Math.max(0, indent - indentSize);
-      formatted += ' '.repeat(indent) + part + '\n';
-    } else if (part.startsWith('<?') || part.endsWith('/>')) {
-      // Processing instruction or self-closing tag
-      formatted += ' '.repeat(indent) + part + '\n';
-    } else if (part.startsWith('<')) {
-      // Opening tag
-      formatted += ' '.repeat(indent) + part + '\n';
-      indent += indentSize;
-    } else {
-      // Text content
-      formatted += ' '.repeat(indent) + part + '\n';
-    }
-  }
-
-  return formatted;
+export interface DocxKeyFiles {
+  hasDocument: boolean;
+  hasStyles: boolean;
+  hasTheme: boolean;
+  hasNumbering: boolean;
+  hasFontTable: boolean;
+  hasHeaders: boolean;
+  hasFooters: boolean;
+  hasFootnotes: boolean;
+  hasEndnotes: boolean;
+  hasMedia: boolean;
+  hasComments: boolean;
+  headerCount: number;
+  footerCount: number;
+  mediaCount: number;
 }
 
 /**
- * Get the directory from a file path
- */
-function getDirectory(path: string): string {
-  const lastSlash = path.lastIndexOf('/');
-  return lastSlash === -1 ? '' : path.substring(0, lastSlash);
-}
-
-/**
- * Explore a DOCX file and return detailed structure information
+ * Explore a DOCX file and return information about its structure
  *
- * @param buffer - ArrayBuffer containing the DOCX file data
- * @returns Promise resolving to DocxExploration with file structure details
+ * @param buffer - The DOCX file as an ArrayBuffer
+ * @returns Promise resolving to exploration results
  */
 export async function exploreDocx(buffer: ArrayBuffer): Promise<DocxExploration> {
-  const zip = new JSZip();
-  const docx = await zip.loadAsync(buffer);
+  const zip = await JSZip.loadAsync(buffer);
 
   const files: DocxFileInfo[] = [];
-  const directories = new Map<string, DocxFileInfo[]>();
-  const xmlCache = new Map<string, string>();
   let totalSize = 0;
+  const directories: Record<string, DocxFileInfo[]> = {};
+  const xmlCache: Record<string, string> = {};
 
-  for (const [path, zipEntry] of Object.entries(docx.files)) {
-    if (zipEntry.dir) continue;
+  // Process each file in the ZIP
+  for (const [path, file] of Object.entries(zip.files)) {
+    // Skip directories
+    if (file.dir) continue;
+
+    // Get file info
+    const content = await file.async('arraybuffer');
+    const size = content.byteLength;
+    totalSize += size;
 
     const isXml = path.endsWith('.xml') || path.endsWith('.rels');
+    const isWordContent = path.startsWith('word/') && !path.includes('/_rels/');
+    const isRels = path.endsWith('.rels');
     const isMedia = path.startsWith('word/media/');
-    const isRelationship = path.endsWith('.rels');
-
-    // Get file size info
-    const content = await zipEntry.async('uint8array');
-    const size = content.length;
-
-    // Compressed size approximation (JSZip doesn't expose this directly)
-    const compressedSize = zipEntry._data?.compressedSize ?? size;
-
-    totalSize += size;
 
     const fileInfo: DocxFileInfo = {
       path,
       size,
-      compressedSize,
       isXml,
+      isWordContent,
+      isRels,
       isMedia,
-      isRelationship,
     };
 
     files.push(fileInfo);
 
     // Group by directory
-    const dir = getDirectory(path);
-    if (!directories.has(dir)) {
-      directories.set(dir, []);
+    const dir = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '/';
+    if (!directories[dir]) {
+      directories[dir] = [];
     }
-    directories.get(dir)!.push(fileInfo);
+    directories[dir].push(fileInfo);
 
-    // Cache XML content for quick access
+    // Pre-load XML files into cache
     if (isXml) {
-      const xmlContent = new TextDecoder().decode(content);
-      xmlCache.set(path, xmlContent);
+      const textContent = await file.async('text');
+      xmlCache[path] = textContent;
     }
   }
 
@@ -139,79 +126,158 @@ export async function exploreDocx(buffer: ArrayBuffer): Promise<DocxExploration>
     files,
     directories,
     xmlCache,
+    zip,
   };
 }
 
 /**
- * Extract and format an XML file from a DOCX
+ * Extract and optionally format an XML file from the exploration
  *
- * @param exploration - DocxExploration from exploreDocx()
+ * @param exploration - The exploration result
  * @param path - Path to the XML file within the DOCX
  * @param format - Whether to pretty-print the XML (default: true)
- * @returns The XML content as a string, or null if not found
+ * @returns The XML content, or null if not found
  */
 export function extractXml(
   exploration: DocxExploration,
   path: string,
   format: boolean = true
 ): string | null {
-  const content = exploration.xmlCache.get(path);
+  const content = exploration.xmlCache[path];
   if (!content) return null;
 
-  return format ? formatXml(content) : content;
+  if (!format) return content;
+
+  // Simple XML pretty-printing
+  return formatXml(content);
 }
 
 /**
- * Print exploration summary to console
+ * Simple XML formatter for debugging
+ */
+function formatXml(xml: string): string {
+  let formatted = '';
+  let indent = 0;
+  const INDENT_SIZE = 2;
+
+  // Remove existing whitespace between tags
+  const cleaned = xml.replace(/>\s+</g, '><').trim();
+
+  // Process each character
+  let i = 0;
+  while (i < cleaned.length) {
+    if (cleaned[i] === '<') {
+      // Find the end of this tag
+      const tagEnd = cleaned.indexOf('>', i);
+      if (tagEnd === -1) break;
+
+      const tag = cleaned.substring(i, tagEnd + 1);
+
+      if (tag.startsWith('</')) {
+        // Closing tag - decrease indent first
+        indent = Math.max(0, indent - INDENT_SIZE);
+        formatted += '\n' + ' '.repeat(indent) + tag;
+      } else if (tag.endsWith('/>') || tag.startsWith('<?') || tag.startsWith('<!')) {
+        // Self-closing tag, XML declaration, or comment
+        formatted += '\n' + ' '.repeat(indent) + tag;
+      } else {
+        // Opening tag
+        formatted += '\n' + ' '.repeat(indent) + tag;
+        indent += INDENT_SIZE;
+      }
+
+      i = tagEnd + 1;
+    } else {
+      // Text content
+      const nextTag = cleaned.indexOf('<', i);
+      const text = nextTag === -1 ? cleaned.substring(i) : cleaned.substring(i, nextTag);
+      if (text.trim()) {
+        formatted += text;
+      }
+      i = nextTag === -1 ? cleaned.length : nextTag;
+    }
+  }
+
+  return formatted.trim();
+}
+
+/**
+ * Print a summary of the DOCX exploration to the console
  */
 export function printExplorationSummary(exploration: DocxExploration): void {
-  console.log('\n=== DOCX Structure ===\n');
+  console.log('=== DOCX Exploration Summary ===');
   console.log(`Total files: ${exploration.fileCount}`);
-  console.log(`Total size: ${(exploration.totalSize / 1024).toFixed(2)} KB\n`);
+  console.log(`Total size: ${(exploration.totalSize / 1024).toFixed(2)} KB`);
+  console.log('\n--- Files ---');
 
-  console.log('Files by directory:\n');
+  for (const file of exploration.files) {
+    const flags: string[] = [];
+    if (file.isXml) flags.push('XML');
+    if (file.isRels) flags.push('RELS');
+    if (file.isMedia) flags.push('MEDIA');
 
-  for (const [dir, files] of exploration.directories) {
-    const dirName = dir || '(root)';
-    console.log(`📁 ${dirName}/`);
+    console.log(
+      `  ${file.path} (${file.size} bytes)${flags.length ? ' [' + flags.join(', ') + ']' : ''}`
+    );
+  }
 
-    for (const file of files) {
-      const fileName = file.path.split('/').pop() || file.path;
-      const sizeKb = (file.size / 1024).toFixed(2);
-      const typeIcon = file.isMedia ? '🖼️' : file.isXml ? '📄' : '📦';
-      console.log(`   ${typeIcon} ${fileName} (${sizeKb} KB)`);
-    }
-    console.log();
+  console.log('\n--- By Directory ---');
+  for (const [dir, files] of Object.entries(exploration.directories)) {
+    console.log(`  ${dir}/: ${files.length} file(s)`);
   }
 }
 
 /**
- * Get key DOCX structure information
+ * Get a quick summary of key DOCX files
  */
-export function getKeyFiles(exploration: DocxExploration): {
-  hasDocument: boolean;
-  hasStyles: boolean;
-  hasTheme: boolean;
-  hasNumbering: boolean;
-  hasFontTable: boolean;
-  hasFootnotes: boolean;
-  hasEndnotes: boolean;
-  headers: string[];
-  footers: string[];
-  mediaFiles: string[];
-} {
-  const files = exploration.files.map(f => f.path);
+export function getKeyFiles(exploration: DocxExploration): DocxKeyFiles {
+  const paths = exploration.files.map((f) => f.path);
+
+  const headerCount = paths.filter((p) => p.match(/word\/header\d+\.xml/)).length;
+  const footerCount = paths.filter((p) => p.match(/word\/footer\d+\.xml/)).length;
+  const mediaCount = paths.filter((p) => p.startsWith('word/media/')).length;
 
   return {
-    hasDocument: files.includes('word/document.xml'),
-    hasStyles: files.includes('word/styles.xml'),
-    hasTheme: files.includes('word/theme/theme1.xml'),
-    hasNumbering: files.includes('word/numbering.xml'),
-    hasFontTable: files.includes('word/fontTable.xml'),
-    hasFootnotes: files.includes('word/footnotes.xml'),
-    hasEndnotes: files.includes('word/endnotes.xml'),
-    headers: files.filter(f => /word\/header\d*\.xml/.test(f)),
-    footers: files.filter(f => /word\/footer\d*\.xml/.test(f)),
-    mediaFiles: files.filter(f => f.startsWith('word/media/')),
+    hasDocument: paths.includes('word/document.xml'),
+    hasStyles: paths.includes('word/styles.xml'),
+    hasTheme: paths.includes('word/theme/theme1.xml'),
+    hasNumbering: paths.includes('word/numbering.xml'),
+    hasFontTable: paths.includes('word/fontTable.xml'),
+    hasHeaders: headerCount > 0,
+    hasFooters: footerCount > 0,
+    hasFootnotes: paths.includes('word/footnotes.xml'),
+    hasEndnotes: paths.includes('word/endnotes.xml'),
+    hasMedia: mediaCount > 0,
+    hasComments: paths.includes('word/comments.xml'),
+    headerCount,
+    footerCount,
+    mediaCount,
   };
+}
+
+/**
+ * Extract raw binary content from a file in the DOCX
+ * Useful for extracting images and other media
+ */
+export async function extractBinary(
+  exploration: DocxExploration,
+  path: string
+): Promise<ArrayBuffer | null> {
+  const file = exploration.zip.file(path);
+  if (!file) return null;
+  return file.async('arraybuffer');
+}
+
+/**
+ * Get a list of all XML file paths in the DOCX
+ */
+export function getXmlPaths(exploration: DocxExploration): string[] {
+  return exploration.files.filter((f) => f.isXml).map((f) => f.path);
+}
+
+/**
+ * Get a list of all media file paths in the DOCX
+ */
+export function getMediaPaths(exploration: DocxExploration): string[] {
+  return exploration.files.filter((f) => f.isMedia).map((f) => f.path);
 }

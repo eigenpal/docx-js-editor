@@ -135,7 +135,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Extracts: word/_rels/*.rels
 - Stores original zip for round-trip
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -148,7 +148,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Maps rId → { target, type }
 - Handles: images, hyperlinks, headers, footers, footnotes
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -162,7 +162,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Extracts font scheme (majorFont, minorFont for different scripts)
 - Default values if theme missing
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
