@@ -1,6 +1,8 @@
 /**
  * Type exports for @eigenpal/docx-editor
+ *
+ * This file will export all public TypeScript types as they are implemented.
  */
 
-// Re-export all document types
-export * from './document';
+// Placeholder - types will be added in subsequent user stories
+export {};

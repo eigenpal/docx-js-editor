@@ -292,3 +292,28 @@ Created `src/types/document.ts` with comprehensive TypeScript types for full DOC
 Created `src/types/index.ts` to export all types.
 
 ---
+
+### Fresh Start
+**Date:** 2026-02-01
+**Status:** Source files were deleted - restarting from US-01
+
+Previous implementations were lost. Starting fresh with clean implementation.
+
+---
+
+### US-01: Project scaffold (Fresh)
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Recreated project scaffold:
+- `src/index.ts` - Main entry point with version export
+- `src/types/index.ts` - Types barrel export (placeholder)
+- `src/main.tsx` - React app entry point for demo
+
+**Verified:**
+- package.json has correct deps (no superdoc): ✓
+- tsconfig.json with jsx: react-jsx: ✓
+- src/index.ts entry point: ✓
+- bun build exits 0: ✓
+
+---

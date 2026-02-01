@@ -1,19 +1,20 @@
-// Main exports for @eigenpal/docx-editor
+/**
+ * @eigenpal/docx-editor
+ *
+ * A complete WYSIWYG DOCX editor with full Microsoft Word fidelity.
+ *
+ * Features:
+ * - Full text and paragraph formatting
+ * - Tables, images, shapes, text boxes
+ * - Hyperlinks, bookmarks, fields
+ * - Footnotes, lists, headers/footers
+ * - Page layout with margins and columns
+ * - DocumentAgent API for programmatic editing
+ * - Template variable substitution
+ */
 
-// Components
-export { DocxEditor } from './components/DocxEditor';
-export { Toolbar } from './components/Toolbar';
-export { Editor } from './components/Editor';
-export { FileLoader } from './components/FileLoader';
-export { VariableInserter } from './components/VariableInserter';
+// Core exports will be added as features are implemented
+export const VERSION = '0.1.0';
 
-// Hooks
-export { useDocxEditor } from './hooks/useDocxEditor';
-
-// Utilities
-export { parseDocx } from './docx/parser';
-export { serializeDocx } from './docx/serializer';
-export { exportDocx } from './docx/exporter';
-
-// Types
-export type { DocxEditorProps, ToolbarConfig, DocxData } from './types';
+// Placeholder exports - will be replaced with actual implementations
+export type { } from './types';
