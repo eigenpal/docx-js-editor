@@ -1945,3 +1945,56 @@ Created `src/components/render/Field.tsx` with comprehensive field rendering:
 - bun build exits 0: ✓
 
 ---
+
+### US-36: DocImage component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/DocImage.tsx` with comprehensive image rendering:
+
+**Main Component:**
+- `DocImage` - React component rendering embedded images
+
+**Props:**
+- `image: ImageType` - The image data to render
+- `className?: string` - Additional CSS class
+- `style?: CSSProperties` - Additional inline styles
+- `selected?: boolean` - Whether image is selected (for editing)
+- `onClick?: () => void` - Callback for image clicks
+- `onError?: () => void` - Callback for load errors
+- `onLoad?: () => void` - Callback for successful load
+
+**Features:**
+- Renders images with correct EMU-to-pixel dimensions
+- Supports image transformations: rotation, flipH, flipV
+- Text wrapping modes: inline, square, tight, through, topAndBottom, behind, inFront
+- Alt text for accessibility
+- Decorative image handling (aria-hidden)
+- Placeholder for missing image data
+- Selection state with outline
+
+**CSS Classes:**
+- `docx-image` - Base class
+- `docx-image-inline` / `docx-image-floating` - Position mode
+- `docx-image-behind` / `docx-image-infront` - Z-order
+- `docx-image-wrap-*` - Wrap type
+- `docx-image-selected` - Selection state
+
+**Utility Functions:**
+- `hasImageSource(image)` - Check if image has source data
+- `getImageAspectRatio(image)` - Get aspect ratio
+- `calculateAspectRatioDimensions(image, w?, h?)` - Maintain aspect ratio
+- `needsTextWrapping(image)` - Check if text wraps
+- `isAbsolutelyPositioned(image)` - Check for anchor position
+- `getPositionOffsets(image)` - Get position in pixels
+- `getPositionStyles(image)` - Get CSS for absolute positioning
+- `getImageDescription(image)` - Get accessible description
+
+**Re-exports from parser:**
+- `isInlineImage`, `isFloatingImage`, `isBehindText`, `isInFrontOfText`
+- `getImageWidthPx`, `getImageHeightPx`, `isDecorativeImage`
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
