@@ -3458,3 +3458,76 @@ Also created `src/components/dialogs/index.ts` for exports.
 - bun build exits 0: ✓
 
 ---
+
+### US-69: Find and Replace dialog
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/dialogs/FindReplaceDialog.tsx` with comprehensive find and replace functionality:
+
+**Main Component:**
+- `FindReplaceDialog` - React modal component for find and replace
+
+**Props:**
+- `isOpen: boolean` - Whether the dialog is open
+- `onClose: () => void` - Callback when dialog is closed
+- `onFind: (searchText, options) => FindResult | null` - Callback for searching
+- `onFindNext: () => FindMatch | null` - Callback for navigating to next match
+- `onFindPrevious: () => FindMatch | null` - Callback for navigating to previous match
+- `onReplace: (replaceText) => boolean` - Callback for replacing current match
+- `onReplaceAll: (searchText, replaceText, options) => number` - Callback for replacing all
+- `onHighlightMatches?: (matches) => void` - Callback to highlight matches
+- `onClearHighlights?: () => void` - Callback to clear highlights
+- `initialSearchText?: string` - Pre-populated search text
+- `replaceMode?: boolean` - Start in replace mode (Ctrl+H)
+
+**Features:**
+- Find input with next/previous navigation buttons (Enter/Shift+Enter)
+- Replace input with replace/replace all buttons
+- Match case option checkbox
+- Match whole word option checkbox
+- Match count display (e.g., "3 of 12 matches")
+- No results indicator
+- Non-modal positioning (top-right, doesnt block document)
+- Keyboard shortcuts (Escape to close)
+- Toggle between Find and Find+Replace modes
+- Focus management
+- ARIA accessibility attributes
+
+**Types:**
+- `FindMatch` - Interface for a single match (paragraphIndex, contentIndex, offsets, text)
+- `FindOptions` - Interface for search options (matchCase, matchWholeWord, useRegex)
+- `FindResult` - Interface for search result (matches, totalCount, currentIndex)
+- `HighlightOptions` - Interface for highlight colors
+
+**Utility Functions:**
+- `createDefaultFindOptions()` - Create default find options
+- `findAllMatches(content, searchText, options)` - Find all matches in text
+- `escapeRegexString(str)` - Escape string for regex use
+- `createSearchPattern(searchText, options)` - Create regex from options
+- `replaceAllInContent(content, searchText, replaceText, options)` - Replace all in text
+- `replaceFirstInContent(content, searchText, replaceText, options, startIndex)` - Replace first match
+- `getMatchCountText(result)` - Format match count for display
+- `isEmptySearch(searchText)` - Check if search is empty
+- `getDefaultHighlightOptions()` - Get default highlight colors
+
+**CSS Classes:**
+- `docx-find-replace-dialog-overlay` - Non-blocking overlay
+- `docx-find-replace-dialog` - Dialog container
+- `docx-find-replace-dialog-header` - Header with title and close
+- `docx-find-replace-dialog-body` - Body with inputs
+- `docx-find-replace-dialog-row` - Input row layout
+- `docx-find-replace-dialog-input` - Text inputs
+- `docx-find-replace-dialog-nav` - Navigation buttons
+- `docx-find-replace-dialog-options` - Options checkboxes
+- `docx-find-replace-dialog-status` - Match count display
+
+**Keyboard Shortcuts:**
+- Enter - Find next (or initial search)
+- Shift+Enter - Find previous
+- Escape - Close dialog
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

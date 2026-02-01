@@ -23,3 +23,23 @@ export {
   phoneToTel,
   extractBookmarksForDialog,
 } from './HyperlinkDialog';
+
+// Find and Replace dialog for searching and replacing text
+export {
+  FindReplaceDialog,
+  type FindReplaceDialogProps,
+  type FindMatch,
+  type FindOptions,
+  type FindResult,
+  type HighlightOptions,
+  // Utility functions
+  createDefaultFindOptions,
+  findAllMatches,
+  escapeRegexString,
+  createSearchPattern,
+  replaceAllInContent,
+  replaceFirstInContent,
+  getMatchCountText,
+  isEmptySearch,
+  getDefaultHighlightOptions,
+} from './FindReplaceDialog';
