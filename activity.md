@@ -1895,3 +1895,53 @@ Created `src/components/render/Hyperlink.tsx` with comprehensive hyperlink rende
 - bun build exits 0: ✓
 
 ---
+
+### US-35: Field component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/Field.tsx` with comprehensive field rendering:
+
+**Main Component:**
+- `Field` - React component rendering dynamic field content
+
+**Props:**
+- `field: FieldType` - The field data to render
+- `theme?: Theme | null` - Theme for resolving colors in child runs
+- `className?: string` - Additional CSS class
+- `style?: CSSProperties` - Additional inline styles
+- `pageNumber?: number` - Current page number (for PAGE field)
+- `totalPages?: number` - Total page count (for NUMPAGES field)
+- `showFieldCode?: boolean` - Show field instruction instead of result
+- `highlighted?: boolean` - Highlight for editing mode
+- `onClick?: () => void` - Callback for field clicks
+
+**Features:**
+- Displays current field value from document
+- Styled with subtle background to indicate dynamic content
+- Placeholder display for page numbers (#) until pagination
+- Tooltip showing field instruction on hover
+- Supports both simple and complex fields
+- Category-based CSS classes for styling
+
+**Field Categories Supported:**
+- Pagination: PAGE, NUMPAGES
+- DateTime: DATE, TIME, CREATEDATE, SAVEDATE, PRINTDATE
+- Document properties: AUTHOR, TITLE, FILENAME, DOCPROPERTY
+- Cross-references: REF, PAGEREF, NOTEREF
+- Mail merge: MERGEFIELD
+- Navigation: TOC, INDEX
+
+**Utility Functions:**
+- `isFieldDirty(field)` - Check if field needs updating
+- `isFieldLocked(field)` - Check if field is locked
+- `isSimpleField(field)` - Type guard for SimpleField
+- `isComplexField(field)` - Type guard for ComplexField
+- `getFieldCategory(field)` - Get category for grouping
+- `getFieldDescription(field)` - Get human-readable description
+- `needsPlaceholder(field)` - Check if field shows placeholder
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
