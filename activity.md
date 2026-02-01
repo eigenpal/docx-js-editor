@@ -2542,3 +2542,52 @@ Created `src/components/render/Page.tsx` with single page rendering:
 - bun build exits 0: ✓
 
 ---
+
+### US-48: Footnote area component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/FootnoteArea.tsx` with footnote/endnote rendering:
+
+**Main Components:**
+- `FootnoteArea` - Renders footnotes at page bottom
+- `EndnoteArea` - Renders endnotes at section/document end
+
+**Props (FootnoteArea):**
+- `footnotes: Footnote[]` - Footnotes to render
+- `pageNumber: number` - Current page number
+- `theme?: Theme` - Theme for resolving colors
+- `properties?: FootnoteProperties` - Numbering format, etc.
+- `startNumber?: number` - Starting number for this page
+- `showSeparator?: boolean` - Whether to show separator line
+- `separator?: ReactNode` - Custom separator element
+- `renderParagraph?: (paragraph, index) => ReactNode` - Custom renderer
+- `onFootnoteClick?: (id) => void` - Callback for back-link clicks
+
+**Features:**
+- Renders all footnotes for current page
+- Separator line above footnotes
+- Smaller text for footnote content (10px)
+- Numbered references that link back to text
+- Number formatting support (decimal, roman, letter)
+- Filters out separator footnotes
+
+**CSS Classes:**
+- `docx-footnote-area` / `docx-endnote-area` - Container
+- `docx-footnote-separator` - Separator line
+- `docx-footnote-list` / `docx-endnote-list` - List container
+- `docx-footnote-item` / `docx-endnote-item` - Individual notes
+- `docx-footnote-number` / `docx-endnote-number` - Number markers
+- `docx-footnote-content` / `docx-endnote-content` - Note content
+
+**Utility Functions:**
+- `calculateFootnoteAreaHeight(footnotes, options)` - Estimate area height
+- `getFootnotesForPage(allFootnotes, pageIds)` - Filter by page
+- `getFootnoteStartNumber(pageNumber, idsByPage, restart)` - Calculate start number
+- `hasFootnotes(footnotes)` / `hasEndnotes(endnotes)` - Check existence
+- `getFootnoteCount(footnotes)` / `getEndnoteCount(endnotes)` - Count (excluding separators)
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
