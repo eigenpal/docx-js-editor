@@ -3812,3 +3812,65 @@ Created `src/components/ui/VariableInserter.tsx` with comprehensive variable ins
 - bun build exits 0: ✓
 
 ---
+
+### US-74: Variable detector
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/utils/variableDetector.ts` with comprehensive variable detection:
+
+**Main Functions:**
+- `detectVariables(doc): string[]` - Returns unique variable names sorted
+- `detectVariablesDetailed(doc): VariableDetectionResult` - Detailed result with locations
+
+**Detection Scope:**
+- Document body (paragraphs and tables)
+- Text runs
+- Hyperlinks
+- Simple fields
+- Complex fields
+- Nested tables
+- Table cells
+- Headers and footers
+- Footnotes and endnotes
+- Text boxes
+
+**Pattern Matching:**
+- Standard pattern: `{{variable_name}}`
+- Variable names: letters, numbers, underscores, hyphens, dots
+- Must start with letter or underscore
+- Relaxed pattern available for any content between braces
+
+**Result Types:**
+- `VariableDetectionResult` - Full result with locations
+- `VariableOccurrence` - Single occurrence with location info
+- Location types: body, header, footer, footnote, endnote, textBox
+
+**Utility Functions:**
+- `extractVariablesFromText(text)` - Extract from plain text
+- `extractVariablesFromTextRelaxed(text)` - Relaxed matching
+- `hasTemplateVariables(text)` - Check if text has variables
+- `countVariables(text)` - Count occurrences
+- `getUniqueVariables(text)` - Unique sorted list
+
+**Validation Functions:**
+- `isValidVariableName(name)` - Validate format
+- `sanitizeVariableName(name)` - Clean up invalid characters
+- `formatVariable(name)` - Add {{}} wrapper
+- `parseVariable(variable)` - Extract name from {{}}
+
+**Replacement Functions:**
+- `replaceVariables(text, values)` - Replace with values
+- `removeVariables(text, placeholder)` - Remove variables
+- `highlightVariables(text, wrapper)` - Highlight for display
+
+**Document Helpers:**
+- `getVariableCount(doc)` - Total count including duplicates
+- `getUniqueVariableCount(doc)` - Unique variable count
+- `documentHasVariables(doc)` - Quick check
+- `groupVariablesByLetter(variables)` - Group for large lists
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

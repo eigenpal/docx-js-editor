@@ -1117,7 +1117,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Finds all {{...}} patterns
 - Returns unique names sorted
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
