@@ -919,7 +919,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles paste from Word (cleans up Word HTML)
 - Ctrl+C, Ctrl+V, Ctrl+X
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
