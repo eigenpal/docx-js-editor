@@ -1177,7 +1177,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Preserves surrounding formatting
 - Returns new document
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

@@ -4062,3 +4062,42 @@ Created `src/types/agentApi.ts` with comprehensive agent API types:
 - bun build exits 0: ✓
 
 ---
+
+### US-78: Command executor
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/agent/executor.ts` for executing agent commands immutably:
+
+**Main Functions:**
+- `executeCommand(doc, command): Document` - Execute a single command
+- `executeCommands(doc, commands): Document` - Execute multiple commands in sequence
+
+**Supported Commands:**
+- `insertText` - Insert text at position with optional formatting
+- `replaceText` - Replace text in range (single or multi-paragraph)
+- `deleteText` - Delete text in range (handles paragraph merging)
+- `formatText` - Apply text formatting to range
+- `formatParagraph` - Apply paragraph formatting
+- `applyStyle` - Apply named style to paragraph
+- `insertTable` - Insert table at position with data
+- `insertImage` - Insert image at position
+- `insertHyperlink` - Create hyperlink from range
+- `removeHyperlink` - Remove hyperlink keeping text
+- `insertParagraphBreak` - Split paragraph at position
+- `mergeParagraphs` - Merge consecutive paragraphs
+- `splitParagraph` - Alias for insertParagraphBreak
+- `setVariable` - Track template variable
+- `applyVariables` - Substitute {{variable}} patterns
+
+**Key Design Decisions:**
+- All operations are immutable (returns new Document)
+- Deep clones document before modifications
+- Preserves surrounding formatting during edits
+- Handles multi-paragraph operations correctly
+- Text offsets calculated across runs
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
