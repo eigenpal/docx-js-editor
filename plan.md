@@ -1089,7 +1089,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Click to select, show controls
 - Delete key removes image
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
