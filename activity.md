@@ -81,6 +81,25 @@ cat ~/superdoc/packages/super-editor/src/core/converters/v2/importer/docxImporte
 
 ---
 
+## Using Subagents for Research
+
+**Use Task tool with subagents for exploration - keeps context clean:**
+
+```
+# Explore SuperDoc implementation
+Task(subagent_type="Explore", prompt="How does ~/superdoc parse tables? Find tableParser and explain the approach.")
+
+# Understand OOXML structure
+Task(subagent_type="Explore", prompt="Explore word/numbering.xml structure in a sample DOCX. Document the XML format.")
+
+# Research a feature
+Task(subagent_type="Explore", prompt="How does SuperDoc resolve theme colors? Find the code and summarize.")
+```
+
+Subagents return concise summaries you can act on.
+
+---
+
 ## OOXML Quick Reference
 
 ### Namespaces
@@ -172,6 +191,18 @@ const newBuffer = await agent.toBuffer();
 
 ---
 
+### US-01: Project scaffold
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Verified existing project scaffold meets all acceptance criteria:
+- package.json with correct deps (no superdoc): ✓
+- tsconfig.json with jsx: react-jsx: ✓
+- src/index.ts entry point: ✓
+- bun build exits 0: ✓
+
+---
+
 ### US-02: DOCX exploration utility
 **Date:** 2026-02-01
 **Status:** Complete ✅
@@ -200,5 +231,64 @@ Created `src/docx/explorer.ts` with:
 - `word/footnotes.xml`, `word/endnotes.xml` - Notes
 - `word/media/*` - Embedded images
 - `word/_rels/document.xml.rels` - Relationships
+
+---
+
+### US-03: Comprehensive document types
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/types/document.ts` with comprehensive TypeScript types for full DOCX representation:
+
+**Core Types:**
+- `Document`, `DocxPackage`, `DocumentBody`, `Section`
+- `SectionProperties` (page size, margins, borders, columns, headers/footers)
+
+**Paragraph & Text:**
+- `Paragraph`, `ParagraphFormatting` (alignment, spacing, indent, borders, shading, tabs, keepNext, keepLines, widowControl, bidi, numPr)
+- `Run`, `TextFormatting` (bold, italic, underline, strike, dstrike, superscript/subscript, smallCaps, allCaps, highlight, shading, color, fontSize, fontFamily, spacing, effects)
+- `RunContent`, `TextContent`, `TabContent`, `BreakContent`, `SymbolContent`
+
+**Links & Bookmarks:**
+- `Hyperlink`, `BookmarkStart`, `BookmarkEnd`
+
+**Fields:**
+- `Field`, `SimpleField`, `ComplexField`, `FieldType` (PAGE, NUMPAGES, DATE, DOCPROPERTY, REF, TOC, etc.)
+
+**Tables:**
+- `Table`, `TableRow`, `TableCell`
+- `TableFormatting`, `TableRowFormatting`, `TableCellFormatting`
+- `TableBorders`, `CellMargins`, `TableLook`, `FloatingTableProperties`
+- `ConditionalFormatStyle` for table style conditional formatting
+
+**Images:**
+- `Image`, `ImageSize`, `ImageWrap`, `ImagePosition`, `ImageTransform`, `ImagePadding`
+
+**Shapes:**
+- `Shape`, `ShapeType` (rect, ellipse, line, arrows, flowcharts, etc.)
+- `ShapeFill`, `ShapeOutline`, `ShapeTextBody`
+
+**Text Boxes:**
+- `TextBox` with size, position, fill, outline, and content
+
+**Lists:**
+- `NumberingDefinitions`, `AbstractNumbering`, `NumberingInstance`
+- `ListLevel`, `NumberFormat`, `ListRendering`
+
+**Headers/Footers:**
+- `HeaderFooter`, `HeaderReference`, `FooterReference`, `HeaderFooterType`
+
+**Footnotes/Endnotes:**
+- `Footnote`, `Endnote`, `FootnoteReference`
+- `FootnoteProperties`, `EndnoteProperties`
+
+**Supporting Types:**
+- `Theme`, `ThemeColor`, `ThemeColorScheme`, `ThemeFontScheme`
+- `Style`, `StyleDefinitions`, `DocDefaults`, `StyleType`
+- `FontTable`, `FontInfo`
+- `Relationship`, `RelationshipMap`, `MediaFile`
+- `BorderSpec`, `ShadingProperties`, `ColorValue`
+
+Created `src/types/index.ts` to export all types.
 
 ---

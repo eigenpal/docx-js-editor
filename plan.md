@@ -23,7 +23,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - tsconfig.json with jsx: react-jsx
 - src/index.ts entry point
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -58,7 +58,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
   - `Tab`, `TabStop`
 - src/types/index.ts exports all
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
