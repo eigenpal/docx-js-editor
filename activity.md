@@ -3232,3 +3232,53 @@ Created `src/components/ui/ColorPicker.tsx` with comprehensive color selection:
 - bun build exits 0: ✓
 
 ---
+
+### US-65: Alignment buttons
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ui/AlignmentButtons.tsx` with paragraph alignment controls:
+
+**Main Components:**
+- `AlignmentButtons` - Main component with left, center, right, justify buttons
+- `AlignmentButton` - Individual button component with active/hover states
+
+**Props:**
+- `value?: ParagraphAlignment` - Current alignment value
+- `onChange?: (alignment: ParagraphAlignment) => void` - Callback when changed
+- `disabled?: boolean` - Whether buttons are disabled
+- `showLabels?: boolean` - Show text labels next to icons
+- `compact?: boolean` - Smaller button size
+
+**Features:**
+- Left, Center, Right, Justify buttons with SVG icons
+- Shows active state for current paragraph alignment
+- Applies alignment to current paragraph(s) via onChange callback
+- Keyboard shortcut hints in tooltips (Ctrl+L/E/R/J)
+- ARIA attributes for accessibility
+- Compact mode for dense toolbars
+
+**CSS Classes:**
+- `docx-alignment-buttons` - Container
+- `docx-alignment-button` - Individual button
+- `docx-alignment-button-active` - Active state
+- `docx-alignment-button-disabled` - Disabled state
+
+**Utility Functions:**
+- `getAlignmentOptions()` - Get all alignment options
+- `isValidAlignment(value)` - Type guard for alignment values
+- `getAlignmentLabel(value)` - Get display label
+- `getAlignmentIcon(value)` - Get icon component
+- `getAlignmentShortcut(value)` - Get keyboard shortcut
+- `alignmentToCss(alignment)` - Convert OOXML to CSS text-align
+- `cssToAlignment(textAlign)` - Convert CSS to OOXML alignment
+- `cycleAlignment(current)` - Cycle to next alignment
+- `handleAlignmentShortcut(event)` - Parse keyboard shortcut
+
+**Exported Icons:**
+- `AlignLeftIcon`, `AlignCenterIcon`, `AlignRightIcon`, `AlignJustifyIcon`
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

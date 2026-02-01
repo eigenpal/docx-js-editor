@@ -989,7 +989,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Shows active state for current paragraph
 - Applies to current paragraph(s)
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
