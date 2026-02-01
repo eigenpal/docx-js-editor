@@ -3674,3 +3674,74 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
 - bun build exits 0: ✓
 
 ---
+
+### US-72: Image editing
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/edit/EditableImage.tsx` with comprehensive image editing capabilities:
+
+**Main Component:**
+- `EditableImage` - React component with resize handles and editing support
+
+**Props:**
+- `image: ImageType` - The image data to render
+- `imageIndex?: number` - Index for identification
+- `editable?: boolean` - Whether editing is enabled
+- `selected?: boolean` - Whether image is selected
+- `onSelect?: (index) => void` - Selection callback
+- `onDeselect?: () => void` - Deselection callback
+- `onResize?: (newSize) => void` - Resize callback
+- `onDelete?: () => void` - Deletion callback
+- `onChange?: (image) => void` - Change callback
+- `minWidth/minHeight/maxWidth/maxHeight` - Size constraints
+
+**Resize Handles:**
+- 8 handles: nw, n, ne, e, se, s, sw, w
+- Corner handles (larger) and edge handles (smaller)
+- Blue colored handles with white border and shadow
+- Proper cursors for each handle direction
+
+**Resize Behavior:**
+- Maintains aspect ratio by default
+- Hold Shift to unlock aspect ratio (free resize)
+- Minimum size constraints (default 20px)
+- Maximum size constraints (default 2000px)
+- Real-time dimension indicator during resize
+- Converts to EMUs on completion
+
+**Selection & Keyboard:**
+- Click to select image
+- Blue outline when selected
+- Delete/Backspace key removes image
+- Escape key deselects
+- Tab focus support for accessibility
+
+**CSS Classes:**
+- `docx-editable-image` - Base class
+- `docx-editable-image-inline` / `docx-editable-image-floating` - Position mode
+- `docx-editable-image-selected` - Selection state
+- `docx-editable-image-resizing` - During resize
+- `docx-resize-handle` - Resize handle elements
+
+**Utility Functions:**
+- `isResizableImage(image)` - Check if image can be resized
+- `getOriginalAspectRatio(image)` - Get original aspect ratio
+- `calculateProportionalSize(w, h, newW, newH)` - Maintain aspect ratio
+- `resizeImage(image, newSize)` - Create resized image copy
+- `scaleImage(image, scale)` - Scale by percentage
+- `resetImageSize(image)` - Reset to original size
+- `getImageBounds(image)` - Get dimensions in pixels
+- `isPointInImage(image, x, y, imgX, imgY)` - Hit testing
+
+**Features:**
+- Floating/inline image support
+- Transform support (rotation, flip)
+- Placeholder for missing images
+- Accessibility with ARIA attributes
+- Dimension indicator shows current size during resize
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
