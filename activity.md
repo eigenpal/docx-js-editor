@@ -3874,3 +3874,75 @@ Created `src/utils/variableDetector.ts` with comprehensive variable detection:
 - bun build exits 0: ✓
 
 ---
+
+### US-75: Variable panel
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/VariablePanel.tsx` with comprehensive variable management:
+
+**Main Component:**
+- `VariablePanel` - Panel with variable inputs, apply button, empty state
+
+**Props:**
+- `variables: string[]` - Detected variable names
+- `values?: Record<string, string>` - Current variable values
+- `onValuesChange?: (values) => void` - Value change callback
+- `onApply?: (values) => void` - Apply button callback
+- `onReset?: () => void` - Reset callback
+- `isApplying?: boolean` - Loading state
+- `disabled?: boolean` - Disabled state
+- `title?: string` - Panel title
+- `emptyMessage?: string` - Empty state message
+- `showCount?: boolean` - Show variable count
+- `collapsible?: boolean` - Allow collapse
+- `showSearch?: boolean` - Show search filter
+- `descriptions?: Record<string, string>` - Variable descriptions
+
+**Features:**
+- Lists detected variables from document
+- Input field for each value
+- Apply button to process template
+- Reset button to clear all values
+- Shows empty state when no variables
+- Collapsible panel (optional)
+- Search filter (optional)
+- Variable count badge
+- Filled/unfilled counter
+- Variable descriptions support
+- Focus states with visual feedback
+- Filled state indicator (green border)
+
+**Styling:**
+- Yellow/gold theme for variables
+- Monospace font for variable names
+- Clean modern panel design
+- Responsive layout
+- Accessible inputs
+
+**Sub-components:**
+- `VariableInputField` - Individual variable input
+
+**Icons:**
+- `VariableIcon` - Curly braces
+- `EmptyVariablesIcon` - Empty document illustration
+- `CollapseIcon` - Chevron with rotation
+
+**Utility Functions:**
+- `createInitialValues(variables, defaultValue)` - Create values map
+- `allVariablesFilled(variables, values)` - Check all filled
+- `getEmptyVariables(variables, values)` - Get unfilled list
+- `getFilledVariables(variables, values)` - Get filled list
+- `validateVariableValues(variables, values, required)` - Validate values
+- `formatValuesForExport(values)` - Format for export
+- `parseValuesFromExport(text)` - Parse from export format
+
+**CSS Classes:**
+- `docx-variable-panel` - Main container
+- `docx-variable-item` - Individual variable
+- `docx-variable-input` - Input field
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
