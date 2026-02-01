@@ -1096,3 +1096,91 @@ w:drawing
 - bun build exits 0: ✓
 
 ---
+
+### US-21: Shape parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/shapeParser.ts` with comprehensive shape parsing:
+
+**Main Functions:**
+- `parseShape(node): Shape` - Parse wps:wsp element
+- `parseShapeFromDrawing(drawingEl): Shape | null` - Parse shape from w:drawing container
+- `isShapeDrawing(drawingEl)` - Check if drawing contains a shape (not an image)
+
+**Shape Properties Parsing (wps:spPr):**
+- `parseShapeType(spPr)` - Extract preset geometry from a:prstGeom[@prst]
+- `parseFill(spPr, style)` - Parse fill (solid, gradient, pattern, none)
+- `parseOutline(spPr, style)` - Parse outline/stroke (color, width, style, arrows)
+- `parseTransform(xfrm)` - Parse a:xfrm for size, rotation, flip
+
+**Fill Types Supported:**
+- Solid fill (a:solidFill) with theme and RGB colors
+- Gradient fill (a:gradFill) with linear/radial/path types and stops
+- Pattern fill (a:pattFill)
+- Picture fill (a:blipFill)
+- No fill (a:noFill)
+- Style reference fallback (wps:style/a:fillRef)
+
+**Color Parsing:**
+- `parseColorElement(element)` - Parse DrawingML colors
+- Theme colors (a:schemeClr) with accent1-6, dk1, lt1, dk2, lt2, etc.
+- RGB colors (a:srgbClr)
+- System colors (a:sysClr)
+- Preset colors (a:prstClr)
+- Color modifiers (a:shade, a:tint, a:lumMod)
+
+**Outline Parsing:**
+- Line width in EMUs
+- Line color (solid fill)
+- Line dash style (solid, dot, dash, etc.)
+- Line cap and join styles
+- Arrow heads (a:headEnd, a:tailEnd) with type, width, length
+
+**Text Box Parsing:**
+- `parseBodyProperties(bodyPr)` - Parse wps:bodyPr
+- Vertical text direction
+- Anchor/vertical alignment (top, middle, bottom)
+- Auto fit modes
+- Text margins/insets
+- `parseTextBoxContent(txbxContent)` - Parse w:txbxContent (placeholder for paragraph parsing)
+
+**Position and Wrap (for anchored shapes):**
+- `parseAnchorPosition(anchor)` - Parse wp:positionH/V
+- `parseWrap(anchor)` - Parse wrap mode (none, square, tight, through, topAndBottom)
+
+**Utility Functions:**
+- `isLineShape(shape)` - Check if shape is a line/connector
+- `isTextBoxShape(shape)` - Check if shape is a text box
+- `hasTextContent(shape)` - Check if shape has text
+- `getShapeWidthPx(shape)`, `getShapeHeightPx(shape)` - Get dimensions in pixels
+- `getShapeDimensionsPx(shape)` - Get both dimensions
+- `isFloatingShape(shape)` - Check if shape is anchored
+- `hasFill(shape)`, `hasOutline(shape)` - Check for styling
+- `getOutlineWidthPx(shape)` - Get outline width in pixels
+- `resolveFillColor(shape)` - Resolve fill to CSS color
+- `resolveOutlineColor(shape)` - Resolve outline to CSS color
+
+**OOXML Structure Reference:**
+```
+w:drawing
+  └── wp:inline or wp:anchor
+      └── a:graphic
+          └── a:graphicData
+              └── wps:wsp (shape)
+                  ├── wps:cNvSpPr (non-visual properties)
+                  ├── wps:spPr (shape properties)
+                  │   ├── a:xfrm (transform)
+                  │   ├── a:prstGeom (preset geometry)
+                  │   ├── a:solidFill / a:noFill / a:gradFill
+                  │   └── a:ln (line/outline)
+                  ├── wps:style (style reference)
+                  ├── wps:txbx
+                  │   └── w:txbxContent (text)
+                  └── wps:bodyPr (body properties)
+```
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
