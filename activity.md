@@ -742,3 +742,49 @@ Created `src/docx/paragraphParser.ts` with comprehensive paragraph parsing:
 - bun build exits 0: ✓
 
 ---
+
+### US-15: Tab stop parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/tabParser.ts` with comprehensive tab stop handling:
+
+**Main Functions:**
+- `parseTabStop(tab)` - Parse a single tab stop element (w:tab within w:tabs)
+- `parseTabStops(tabs)` - Parse tab stops container (w:tabs), returns sorted array
+- `parseTabStopsFromParagraphProperties(pPr)` - Parse tabs from w:pPr element
+
+**Tab Stop Resolution:**
+- `mergeTabStops(styleTabs, directTabs)` - Merge tabs from style and direct formatting
+- `getNextTabStop(currentPosition, tabStops, pageWidth)` - Get next tab stop for position
+- `findTabStopAtPosition(position, tabStops)` - Find tab at specific position
+
+**Width Calculation:**
+- `calculateTabWidth(currentPosition, tabStops, pageWidth)` - Simple width calculation
+- `calculateTabWidthWithAlignment(...)` - Width considering alignment (center, right, decimal)
+
+**Leader Character Utilities:**
+- `getLeaderCharacter(leader)` - Get the fill character (dot, hyphen, underscore, middleDot)
+- `hasVisibleLeader(leader)` - Check if leader needs visible characters
+- `generateLeaderString(leader, widthInChars)` - Generate leader fill string
+
+**Default Tab Stops:**
+- `generateDefaultTabStops(pageWidth, interval)` - Generate implicit tab stops
+- `getEffectiveTabStops(explicitTabs, pageWidth)` - Combine explicit and default tabs
+- `DEFAULT_TAB_INTERVAL_TWIPS` = 720 (0.5 inches)
+
+**Validation:**
+- `isValidTabAlignment(value)` - Type guard for TabStopAlignment
+- `isValidTabLeader(value)` - Type guard for TabLeader
+
+**OOXML Reference:**
+- Tab stops are defined in `w:tabs` element within `w:pPr`
+- Each `w:tab` has: `w:val` (alignment), `w:pos` (position in twips), `w:leader` (optional)
+- Alignment types: left, center, right, decimal, bar, clear, num
+- Leader types: none, dot, hyphen, underscore, heavy, middleDot
+- Tab characters in runs are `w:tab` (different from tab stop definitions)
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

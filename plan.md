@@ -255,7 +255,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Extracts: position, alignment (left, center, right, decimal), leader (dot, hyphen, underscore)
 - Handles w:tab elements in runs (tab characters)
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
