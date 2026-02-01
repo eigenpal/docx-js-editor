@@ -104,7 +104,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Scans runs, styles, theme
 - Returns unique list
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

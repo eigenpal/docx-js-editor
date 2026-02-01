@@ -465,3 +465,32 @@ Created `src/utils/fontResolver.ts` with:
 - bun build exits 0: ✓
 
 ---
+
+### US-06: Font extraction from DOCX
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/utils/fontExtractor.ts` with:
+
+**Main Functions:**
+- `extractFonts(doc)` - Extract all fonts from a parsed Document
+- `extractFontsFromPackage(pkg)` - Extract fonts from DocxPackage (before full parsing)
+- `getFontSummary(doc)` - Get categorized font usage (theme, styles, body)
+
+**Scans For Fonts In:**
+- Theme (majorFont, minorFont) from theme1.xml
+- Style definitions (docDefaults, each style's rPr)
+- Document body (paragraphs, tables)
+- Headers and footers
+- Footnotes and endnotes
+- Hyperlinks and fields
+
+**Font Sources:**
+- w:rFonts (ascii, hAnsi, eastAsia, cs)
+- Theme font scheme (latin, ea, cs fonts)
+- Font table (fontTable.xml)
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
