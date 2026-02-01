@@ -3032,3 +3032,64 @@ Created `src/components/edit/EditableRun.tsx` with editable text run support:
 - bun build exits 0: ✓
 
 ---
+
+### US-61: Formatting toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/Toolbar.tsx` with comprehensive formatting controls:
+
+**Main Component:**
+- `Toolbar` - React component with all formatting controls
+
+**Subcomponents:**
+- `ToolbarButton` - Individual button with active/disabled state and hover effects
+- `ToolbarGroup` - Button group with separator for organization
+- `ToolbarSeparator` - Visual separator between groups
+
+**Props (Toolbar):**
+- `currentFormatting: SelectionFormatting` - Current formatting of selection
+- `onFormat: (action: FormattingAction) => void` - Format action callback
+- `onUndo, onRedo` - History callbacks
+- `canUndo, canRedo` - History state
+- `disabled` - Disable all controls
+- `enableShortcuts` - Enable keyboard shortcuts (default: true)
+- `editorRef` - Reference to editor for keyboard events
+- `children` - Custom toolbar items
+
+**Formatting Buttons:**
+- Bold (Ctrl+B) with active state
+- Italic (Ctrl+I) with active state
+- Underline (Ctrl+U) with active state
+- Strikethrough with active state
+- Superscript (Ctrl+Shift+=) with active state
+- Subscript (Ctrl+=) with active state
+- Clear Formatting button
+
+**History Buttons:**
+- Undo (Ctrl+Z)
+- Redo (Ctrl+Y)
+
+**Features:**
+- Keyboard shortcuts for formatting (Ctrl+B/I/U, etc.)
+- Shows active state for current selection formatting
+- Applies formatting to selection via callback
+- Disabled state support
+- Accessible with ARIA labels and roles
+- SVG icons for all buttons
+- Hover effects on buttons
+
+**Utility Functions:**
+- `getSelectionFormatting(TextFormatting)` - Extract formatting state from document model
+- `applyFormattingAction(formatting, action)` - Apply action to formatting, returns new formatting
+- `hasActiveFormatting(formatting)` - Check if any formatting is active
+
+**Types:**
+- `SelectionFormatting` - Interface for selection formatting state
+- `FormattingAction` - Union type for all formatting actions
+- `ToolbarProps`, `ToolbarButtonProps`, `ToolbarGroupProps`
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
