@@ -1,515 +1,378 @@
 /**
- * Comprehensive TypeScript types for DOCX document representation
- * Based on OOXML (Office Open XML) specification
+ * Comprehensive TypeScript types for full DOCX document representation
+ *
+ * These types represent all elements that can appear in a DOCX file,
+ * supporting full Microsoft Word fidelity including:
+ * - Text and paragraph formatting
+ * - Tables, images, shapes
+ * - Hyperlinks, bookmarks, fields
+ * - Lists, headers/footers, footnotes
+ * - Themes, styles, page layout
  */
 
 // ============================================================================
-// Theme Colors
+// COLOR & STYLING PRIMITIVES
 // ============================================================================
 
-export type ThemeColor =
-  | 'dark1'
-  | 'light1'
-  | 'dark2'
-  | 'light2'
-  | 'accent1'
-  | 'accent2'
-  | 'accent3'
-  | 'accent4'
-  | 'accent5'
-  | 'accent6'
-  | 'hyperlink'
-  | 'followedHyperlink'
-  | 'none'
-  | 'background1'
-  | 'text1'
-  | 'background2'
-  | 'text2';
+/**
+ * Theme color slots from theme1.xml
+ */
+export type ThemeColorSlot =
+  | 'dk1' | 'lt1' | 'dk2' | 'lt2'
+  | 'accent1' | 'accent2' | 'accent3' | 'accent4' | 'accent5' | 'accent6'
+  | 'hlink' | 'folHlink'
+  | 'background1' | 'text1' | 'background2' | 'text2';
 
-// ============================================================================
-// Color Types
-// ============================================================================
-
+/**
+ * Color value - can be direct RGB, theme reference, or auto
+ */
 export interface ColorValue {
-  /** Hex color value (e.g., "FF0000") */
-  val?: string;
-  /** Theme color reference */
-  themeColor?: ThemeColor;
-  /** Theme tint adjustment (0-255 as hex string) */
+  /** RGB hex value without # (e.g., "FF0000") */
+  rgb?: string;
+  /** Theme color slot reference */
+  themeColor?: ThemeColorSlot;
+  /** Tint modifier (0-255 as hex string, e.g., "80") - makes color lighter */
   themeTint?: string;
-  /** Theme shade adjustment (0-255 as hex string) */
+  /** Shade modifier (0-255 as hex string) - makes color darker */
   themeShade?: string;
+  /** Auto color - context-dependent (usually black for text) */
+  auto?: boolean;
 }
 
-// ============================================================================
-// Shading/Background Types
-// ============================================================================
-
-export type ShadingPattern =
-  | 'nil'
-  | 'clear'
-  | 'solid'
-  | 'horzStripe'
-  | 'vertStripe'
-  | 'reverseDiagStripe'
-  | 'diagStripe'
-  | 'horzCross'
-  | 'diagCross'
-  | 'thinHorzStripe'
-  | 'thinVertStripe'
-  | 'thinReverseDiagStripe'
-  | 'thinDiagStripe'
-  | 'thinHorzCross'
-  | 'thinDiagCross'
-  | 'pct5'
-  | 'pct10'
-  | 'pct12'
-  | 'pct15'
-  | 'pct20'
-  | 'pct25'
-  | 'pct30'
-  | 'pct35'
-  | 'pct37'
-  | 'pct40'
-  | 'pct45'
-  | 'pct50'
-  | 'pct55'
-  | 'pct60'
-  | 'pct62'
-  | 'pct65'
-  | 'pct70'
-  | 'pct75'
-  | 'pct80'
-  | 'pct85'
-  | 'pct87'
-  | 'pct90'
-  | 'pct95';
-
-export interface ShadingProperties {
-  /** Foreground color */
-  color?: string | 'auto';
-  /** Background/fill color */
-  fill?: string | 'auto';
-  /** Theme color for foreground */
-  themeColor?: ThemeColor;
-  /** Theme color for fill */
-  themeFill?: ThemeColor;
-  /** Theme fill shade adjustment */
-  themeFillShade?: string;
-  /** Theme fill tint adjustment */
-  themeFillTint?: string;
-  /** Theme shade adjustment */
-  themeShade?: string;
-  /** Theme tint adjustment */
-  themeTint?: string;
-  /** Shading pattern */
-  val?: ShadingPattern;
-}
-
-// ============================================================================
-// Border Types
-// ============================================================================
-
-export type BorderStyle =
-  | 'nil'
-  | 'none'
-  | 'single'
-  | 'thick'
-  | 'double'
-  | 'dotted'
-  | 'dashed'
-  | 'dotDash'
-  | 'dotDotDash'
-  | 'triple'
-  | 'thinThickSmallGap'
-  | 'thickThinSmallGap'
-  | 'thinThickThinSmallGap'
-  | 'thinThickMediumGap'
-  | 'thickThinMediumGap'
-  | 'thinThickThinMediumGap'
-  | 'thinThickLargeGap'
-  | 'thickThinLargeGap'
-  | 'thinThickThinLargeGap'
-  | 'wave'
-  | 'doubleWave'
-  | 'dashSmallGap'
-  | 'dashDotStroked'
-  | 'threeDEmboss'
-  | 'threeDEngrave'
-  | 'outset'
-  | 'inset';
-
+/**
+ * Border specification for any border (paragraph, table, page)
+ */
 export interface BorderSpec {
   /** Border style */
-  val?: BorderStyle;
-  /** Border color (hex) */
-  color?: string;
-  /** Theme color reference */
-  themeColor?: ThemeColor;
-  /** Theme tint adjustment */
-  themeTint?: string;
-  /** Theme shade adjustment */
-  themeShade?: string;
-  /** Border width (eighths of a point) */
-  sz?: number;
-  /** Space from content (points) */
+  style: 'none' | 'single' | 'double' | 'dotted' | 'dashed' | 'thick' | 'triple'
+    | 'thinThickSmallGap' | 'thickThinSmallGap' | 'thinThickMediumGap'
+    | 'thickThinMediumGap' | 'thinThickLargeGap' | 'thickThinLargeGap'
+    | 'wave' | 'doubleWave' | 'dashSmallGap' | 'dashDotStroked' | 'threeDEmboss'
+    | 'threeDEngrave' | 'outset' | 'inset' | 'nil';
+  /** Color of the border */
+  color?: ColorValue;
+  /** Width in eighths of a point (1/8 pt) */
+  size?: number;
+  /** Spacing from text in points */
   space?: number;
   /** Shadow effect */
   shadow?: boolean;
-  /** Frame mode */
+  /** Frame effect */
   frame?: boolean;
 }
 
-export interface ParagraphBorders {
-  top?: BorderSpec;
-  bottom?: BorderSpec;
-  left?: BorderSpec;
-  right?: BorderSpec;
-  between?: BorderSpec;
-  bar?: BorderSpec;
-}
-
-// ============================================================================
-// Font Types
-// ============================================================================
-
-export interface FontSelection {
-  /** ASCII font (Latin text) */
-  ascii?: string;
-  /** High ANSI font */
-  hAnsi?: string;
-  /** East Asian font */
-  eastAsia?: string;
-  /** Complex script font */
-  cs?: string;
-  /** Font hint */
-  hint?: 'default' | 'eastAsia' | 'cs';
-  /** Theme font for ASCII */
-  asciiTheme?: 'majorAscii' | 'minorAscii' | 'majorHAnsi' | 'minorHAnsi';
-  /** Theme font for East Asia */
-  eastAsiaTheme?: 'majorEastAsia' | 'minorEastAsia';
-  /** Theme font for complex script */
-  cstheme?: 'majorBidi' | 'minorBidi';
-}
-
-// ============================================================================
-// Text/Run Formatting (w:rPr)
-// ============================================================================
-
-export type UnderlineStyle =
-  | 'single'
-  | 'words'
-  | 'double'
-  | 'thick'
-  | 'dotted'
-  | 'dottedHeavy'
-  | 'dash'
-  | 'dashedHeavy'
-  | 'dashLong'
-  | 'dashLongHeavy'
-  | 'dotDash'
-  | 'dashDotHeavy'
-  | 'dotDotDash'
-  | 'dashDotDotHeavy'
-  | 'wave'
-  | 'wavyHeavy'
-  | 'wavyDouble'
-  | 'none';
-
-export type VerticalAlign = 'superscript' | 'subscript' | 'baseline';
-
-export type TextEffect =
-  | 'none'
-  | 'blinkBackground'
-  | 'lights'
-  | 'antsBlack'
-  | 'antsRed'
-  | 'shimmer'
-  | 'sparkle';
-
-export interface TextFormatting {
-  /** Character style ID */
-  rStyle?: string;
-  /** Bold */
-  bold?: boolean;
-  /** Bold for complex script */
-  boldCs?: boolean;
-  /** Italic */
-  italic?: boolean;
-  /** Italic for complex script */
-  italicCs?: boolean;
-  /** Underline */
-  underline?: {
-    val?: UnderlineStyle;
-    color?: string;
-    themeColor?: ThemeColor;
-  };
-  /** Strikethrough */
-  strike?: boolean;
-  /** Double strikethrough */
-  dstrike?: boolean;
-  /** Outline */
-  outline?: boolean;
-  /** Shadow */
-  shadow?: boolean;
-  /** Emboss */
-  emboss?: boolean;
-  /** Imprint/engrave */
-  imprint?: boolean;
-  /** Small caps */
-  smallCaps?: boolean;
-  /** All caps */
-  allCaps?: boolean;
-  /** Hidden text */
-  vanish?: boolean;
-  /** Web hidden */
-  webHidden?: boolean;
-  /** Text color */
+/**
+ * Shading/background properties
+ */
+export interface ShadingProperties {
+  /** Pattern fill color */
   color?: ColorValue;
-  /** Character spacing (twips) */
-  spacing?: number;
-  /** Width scaling (percentage) */
-  w?: number;
-  /** Kerning threshold (half-points) */
-  kern?: number;
-  /** Vertical position (half-points) */
-  position?: number;
-  /** Font size (half-points, e.g., 24 = 12pt) */
-  sz?: number;
-  /** Font size for complex script */
-  szCs?: number;
-  /** Highlight color */
-  highlight?: string;
-  /** Text effect */
-  effect?: TextEffect;
-  /** Character border */
-  bdr?: BorderSpec;
-  /** Character shading */
-  shd?: ShadingProperties;
-  /** Vertical alignment (superscript/subscript) */
-  vertAlign?: VerticalAlign;
-  /** Right-to-left */
-  rtl?: boolean;
-  /** Complex script */
-  cs?: boolean;
-  /** Emphasis mark */
-  em?: 'none' | 'dot' | 'comma' | 'circle' | 'underDot';
-  /** Language settings */
-  lang?: {
-    val?: string;
-    eastAsia?: string;
-    bidi?: string;
-  };
-  /** Font selection */
-  rFonts?: FontSelection;
-  /** No proofing */
-  noProof?: boolean;
-  /** Snap to grid */
-  snapToGrid?: boolean;
-  /** Fit text width */
-  fitText?: {
-    val?: number;
-    id?: string;
-  };
-  /** Revision tracking IDs */
-  rsidRPr?: string;
-  rsidDel?: string;
+  /** Background fill color */
+  fill?: ColorValue;
+  /** Shading pattern type */
+  pattern?: 'clear' | 'solid' | 'horzStripe' | 'vertStripe' | 'reverseDiagStripe'
+    | 'diagStripe' | 'horzCross' | 'diagCross' | 'thinHorzStripe' | 'thinVertStripe'
+    | 'thinReverseDiagStripe' | 'thinDiagStripe' | 'thinHorzCross' | 'thinDiagCross'
+    | 'pct5' | 'pct10' | 'pct12' | 'pct15' | 'pct20' | 'pct25' | 'pct30'
+    | 'pct35' | 'pct37' | 'pct40' | 'pct45' | 'pct50' | 'pct55' | 'pct60'
+    | 'pct62' | 'pct65' | 'pct70' | 'pct75' | 'pct80' | 'pct85' | 'pct87'
+    | 'pct90' | 'pct95' | 'nil';
 }
 
 // ============================================================================
-// Paragraph Formatting (w:pPr)
+// TEXT FORMATTING (Run Properties - rPr)
 // ============================================================================
 
-export type Justification = 'left' | 'center' | 'right' | 'both' | 'start' | 'end' | 'distribute';
+/**
+ * Underline style options
+ */
+export type UnderlineStyle =
+  | 'none' | 'single' | 'words' | 'double' | 'thick' | 'dotted'
+  | 'dottedHeavy' | 'dash' | 'dashedHeavy' | 'dashLong' | 'dashLongHeavy'
+  | 'dotDash' | 'dashDotHeavy' | 'dotDotDash' | 'dashDotDotHeavy'
+  | 'wave' | 'wavyHeavy' | 'wavyDouble';
 
+/**
+ * Text effect animations
+ */
+export type TextEffect =
+  | 'none' | 'blinkBackground' | 'lights' | 'antsBlack' | 'antsRed'
+  | 'shimmer' | 'sparkle';
+
+/**
+ * Emphasis mark type
+ */
+export type EmphasisMark = 'none' | 'dot' | 'comma' | 'circle' | 'underDot';
+
+/**
+ * Complete text formatting properties (w:rPr)
+ */
+export interface TextFormatting {
+  // Basic formatting
+  /** Bold (w:b) */
+  bold?: boolean;
+  /** Bold complex script (w:bCs) */
+  boldCs?: boolean;
+  /** Italic (w:i) */
+  italic?: boolean;
+  /** Italic complex script (w:iCs) */
+  italicCs?: boolean;
+
+  // Underline & strikethrough
+  /** Underline style and color (w:u) */
+  underline?: {
+    style: UnderlineStyle;
+    color?: ColorValue;
+  };
+  /** Strikethrough (w:strike) */
+  strike?: boolean;
+  /** Double strikethrough (w:dstrike) */
+  doubleStrike?: boolean;
+
+  // Vertical alignment
+  /** Superscript/subscript (w:vertAlign) */
+  vertAlign?: 'baseline' | 'superscript' | 'subscript';
+
+  // Capitalization
+  /** Small caps (w:smallCaps) */
+  smallCaps?: boolean;
+  /** All caps (w:caps) */
+  allCaps?: boolean;
+
+  // Visibility
+  /** Hidden text (w:vanish) */
+  hidden?: boolean;
+
+  // Colors and highlighting
+  /** Text color (w:color) */
+  color?: ColorValue;
+  /** Highlight/background color (w:highlight) */
+  highlight?: 'black' | 'blue' | 'cyan' | 'darkBlue' | 'darkCyan' | 'darkGray'
+    | 'darkGreen' | 'darkMagenta' | 'darkRed' | 'darkYellow' | 'green' | 'lightGray'
+    | 'magenta' | 'none' | 'red' | 'white' | 'yellow';
+  /** Character shading (w:shd) */
+  shading?: ShadingProperties;
+
+  // Font properties
+  /** Font size in half-points (w:sz) - e.g., 24 = 12pt */
+  fontSize?: number;
+  /** Font size complex script (w:szCs) */
+  fontSizeCs?: number;
+  /** Font family (w:rFonts) */
+  fontFamily?: {
+    ascii?: string;
+    hAnsi?: string;
+    eastAsia?: string;
+    cs?: string;
+    /** Theme font reference */
+    asciiTheme?: 'majorAscii' | 'majorHAnsi' | 'majorEastAsia' | 'majorBidi'
+      | 'minorAscii' | 'minorHAnsi' | 'minorEastAsia' | 'minorBidi';
+    hAnsiTheme?: string;
+    eastAsiaTheme?: string;
+    csTheme?: string;
+  };
+
+  // Spacing and position
+  /** Character spacing in twips (w:spacing) */
+  spacing?: number;
+  /** Raised/lowered text position in half-points (w:position) */
+  position?: number;
+  /** Horizontal text scale percentage (w:w) */
+  scale?: number;
+  /** Kerning threshold in half-points (w:kern) */
+  kerning?: number;
+
+  // Effects
+  /** Text effect animation (w:effect) */
+  effect?: TextEffect;
+  /** Emphasis mark (w:em) */
+  emphasisMark?: EmphasisMark;
+  /** Emboss effect (w:emboss) */
+  emboss?: boolean;
+  /** Imprint/engrave effect (w:imprint) */
+  imprint?: boolean;
+  /** Outline effect (w:outline) */
+  outline?: boolean;
+  /** Shadow effect (w:shadow) */
+  shadow?: boolean;
+
+  // Complex script
+  /** Right-to-left text (w:rtl) */
+  rtl?: boolean;
+  /** Complex script formatting (w:cs) */
+  cs?: boolean;
+
+  // Style reference
+  /** Character style ID (w:rStyle) */
+  styleId?: string;
+}
+
+// ============================================================================
+// PARAGRAPH FORMATTING (Paragraph Properties - pPr)
+// ============================================================================
+
+/**
+ * Tab stop alignment
+ */
+export type TabStopAlignment = 'left' | 'center' | 'right' | 'decimal' | 'bar' | 'clear' | 'num';
+
+/**
+ * Tab leader character
+ */
+export type TabLeader = 'none' | 'dot' | 'hyphen' | 'underscore' | 'heavy' | 'middleDot';
+
+/**
+ * Tab stop definition
+ */
+export interface TabStop {
+  /** Position in twips from left margin */
+  position: number;
+  /** Alignment at tab stop */
+  alignment: TabStopAlignment;
+  /** Leader character */
+  leader?: TabLeader;
+}
+
+/**
+ * Line spacing rule
+ */
 export type LineSpacingRule = 'auto' | 'exact' | 'atLeast';
 
-export type TextDirection = 'lrTb' | 'tbRl' | 'btLr' | 'lrTbV' | 'tbRlV' | 'tbLrV';
+/**
+ * Paragraph alignment/justification
+ */
+export type ParagraphAlignment = 'left' | 'center' | 'right' | 'both' | 'distribute' | 'mediumKashida' | 'highKashida' | 'lowKashida' | 'thaiDistribute';
 
-export interface SpacingProperties {
-  /** Space before paragraph (twips) */
-  before?: number;
-  /** Space after paragraph (twips) */
-  after?: number;
-  /** Line spacing (twips, or 240ths of a line if auto) */
-  line?: number;
-  /** Line spacing rule */
-  lineRule?: LineSpacingRule;
-  /** Auto spacing before */
-  beforeAutospacing?: boolean;
-  /** Auto spacing after */
-  afterAutospacing?: boolean;
-  /** Space before in lines */
-  beforeLines?: number;
-  /** Space after in lines */
-  afterLines?: number;
-}
-
-export interface IndentationProperties {
-  /** Left indent (twips) */
-  left?: number;
-  /** Right indent (twips) */
-  right?: number;
-  /** First line indent (twips, positive) */
-  firstLine?: number;
-  /** Hanging indent (twips) */
-  hanging?: number;
-  /** Start indent for RTL (twips) */
-  start?: number;
-  /** End indent for RTL (twips) */
-  end?: number;
-  /** Left indent in characters */
-  leftChars?: number;
-  /** Right indent in characters */
-  rightChars?: number;
-  /** First line indent in characters */
-  firstLineChars?: number;
-  /** Hanging indent in characters */
-  hangingChars?: number;
-}
-
-export interface TabStop {
-  /** Tab stop position (twips) */
-  pos: number;
-  /** Tab stop type */
-  val: 'left' | 'center' | 'right' | 'decimal' | 'bar' | 'clear' | 'num';
-  /** Tab leader character */
-  leader?: 'none' | 'dot' | 'hyphen' | 'underscore' | 'heavy' | 'middleDot';
-}
-
-export interface NumberingProperties {
-  /** Numbering definition ID */
-  numId?: number | string;
-  /** List level (0-8) */
-  ilvl?: number;
-  /** Abstract numbering ID */
-  abstractNumId?: number | string;
-}
-
+/**
+ * Complete paragraph formatting properties (w:pPr)
+ */
 export interface ParagraphFormatting {
-  /** Paragraph style ID */
-  pStyle?: string;
-  /** Keep with next paragraph */
-  keepNext?: boolean;
-  /** Keep lines together */
-  keepLines?: boolean;
-  /** Page break before */
-  pageBreakBefore?: boolean;
-  /** Widow/orphan control */
-  widowControl?: boolean;
-  /** Numbering/list properties */
-  numPr?: NumberingProperties;
-  /** Suppress line numbers */
-  suppressLineNumbers?: boolean;
-  /** Paragraph borders */
-  pBdr?: ParagraphBorders;
-  /** Paragraph shading */
-  shd?: ShadingProperties;
-  /** Tab stops */
-  tabs?: TabStop[];
-  /** Suppress auto hyphens */
-  suppressAutoHyphens?: boolean;
-  /** Kinsoku (Japanese line breaking) */
-  kinsoku?: boolean;
-  /** Word wrap */
-  wordWrap?: boolean;
-  /** Overflow punctuation */
-  overflowPunct?: boolean;
-  /** Top line punctuation */
-  topLinePunct?: boolean;
-  /** Auto space DE (auto spacing for double-byte/single-byte text) */
-  autoSpaceDE?: boolean;
-  /** Auto space DN */
-  autoSpaceDN?: boolean;
-  /** Bidirectional */
+  // Alignment
+  /** Paragraph alignment (w:jc) */
+  alignment?: ParagraphAlignment;
+  /** Text direction (w:bidi) */
   bidi?: boolean;
-  /** Adjust right indent */
-  adjustRightInd?: boolean;
-  /** Snap to grid */
-  snapToGrid?: boolean;
-  /** Spacing properties */
-  spacing?: SpacingProperties;
-  /** Indentation properties */
-  ind?: IndentationProperties;
-  /** Contextual spacing (ignore spacing between same style paragraphs) */
-  contextualSpacing?: boolean;
-  /** Mirror indents */
-  mirrorIndents?: boolean;
-  /** Suppress overlap */
-  suppressOverlap?: boolean;
-  /** Justification/alignment */
-  jc?: Justification;
-  /** Text direction */
-  textDirection?: TextDirection;
-  /** Text alignment (vertical within line) */
-  textAlignment?: 'auto' | 'baseline' | 'bottom' | 'center' | 'top';
-  /** Outline level (0-9, for headings) */
-  outlineLvl?: number;
-  /** Div ID (for HTML import) */
-  divId?: number;
-  /** Frame properties (for text frames) */
-  framePr?: FrameProperties;
-  /** Default run properties for paragraph */
-  rPr?: TextFormatting;
-  /** Section properties (if last paragraph in section) */
-  sectPr?: SectionProperties;
-  /** Revision tracking IDs */
-  rsidR?: string;
-  rsidRDefault?: string;
-  rsidP?: string;
-  rsidRPr?: string;
-}
 
-export interface FrameProperties {
-  /** Drop cap type */
-  dropCap?: 'none' | 'drop' | 'margin';
-  /** Number of lines for drop cap */
-  lines?: number;
-  /** Width (twips) */
-  w?: number;
-  /** Height (twips) */
-  h?: number;
-  /** Vertical space from text (twips) */
-  vSpace?: number;
-  /** Horizontal space from text (twips) */
-  hSpace?: number;
-  /** Wrap type */
-  wrap?: 'auto' | 'notBeside' | 'around' | 'tight' | 'through' | 'none';
-  /** Horizontal anchor */
-  hAnchor?: 'text' | 'margin' | 'page';
-  /** Vertical anchor */
-  vAnchor?: 'text' | 'margin' | 'page';
-  /** X position (twips) */
-  x?: number;
-  /** X alignment */
-  xAlign?: 'left' | 'center' | 'right' | 'inside' | 'outside';
-  /** Y position (twips) */
-  y?: number;
-  /** Y alignment */
-  yAlign?: 'inline' | 'top' | 'center' | 'bottom' | 'inside' | 'outside';
-  /** Height rule */
-  hRule?: 'auto' | 'exact' | 'atLeast';
-  /** Anchor lock */
-  anchorLock?: boolean;
+  // Spacing
+  /** Spacing before in twips (w:spacing/@w:before) */
+  spaceBefore?: number;
+  /** Spacing after in twips (w:spacing/@w:after) */
+  spaceAfter?: number;
+  /** Line spacing value (w:spacing/@w:line) */
+  lineSpacing?: number;
+  /** Line spacing rule (w:spacing/@w:lineRule) */
+  lineSpacingRule?: LineSpacingRule;
+  /** Auto space before (w:spacing/@w:beforeAutospacing) */
+  beforeAutospacing?: boolean;
+  /** Auto space after (w:spacing/@w:afterAutospacing) */
+  afterAutospacing?: boolean;
+
+  // Indentation
+  /** Left indent in twips (w:ind/@w:left) */
+  indentLeft?: number;
+  /** Right indent in twips (w:ind/@w:right) */
+  indentRight?: number;
+  /** First line indent in twips - positive for indent, negative for hanging (w:ind/@w:firstLine or @w:hanging) */
+  indentFirstLine?: number;
+  /** Whether first line is hanging indent */
+  hangingIndent?: boolean;
+
+  // Borders
+  /** Paragraph borders (w:pBdr) */
+  borders?: {
+    top?: BorderSpec;
+    bottom?: BorderSpec;
+    left?: BorderSpec;
+    right?: BorderSpec;
+    between?: BorderSpec;
+    bar?: BorderSpec;
+  };
+
+  // Background
+  /** Paragraph shading (w:shd) */
+  shading?: ShadingProperties;
+
+  // Tab stops
+  /** Custom tab stops (w:tabs) */
+  tabs?: TabStop[];
+
+  // Page break control
+  /** Keep with next paragraph (w:keepNext) */
+  keepNext?: boolean;
+  /** Keep lines together (w:keepLines) */
+  keepLines?: boolean;
+  /** Widow/orphan control (w:widowControl) */
+  widowControl?: boolean;
+  /** Page break before (w:pageBreakBefore) */
+  pageBreakBefore?: boolean;
+
+  // Numbering/List
+  /** Numbering properties (w:numPr) */
+  numPr?: {
+    /** Numbering definition ID (w:numId) */
+    numId?: number;
+    /** List level (0-8) (w:ilvl) */
+    ilvl?: number;
+  };
+
+  // Outline level (for TOC)
+  /** Outline level 0-9 (w:outlineLvl) */
+  outlineLevel?: number;
+
+  // Style reference
+  /** Paragraph style ID (w:pStyle) */
+  styleId?: string;
+
+  // Frame properties
+  /** Text frame properties (w:framePr) */
+  frame?: {
+    width?: number;
+    height?: number;
+    hAnchor?: 'text' | 'margin' | 'page';
+    vAnchor?: 'text' | 'margin' | 'page';
+    x?: number;
+    y?: number;
+    xAlign?: 'left' | 'center' | 'right' | 'inside' | 'outside';
+    yAlign?: 'top' | 'center' | 'bottom' | 'inside' | 'outside' | 'inline';
+    wrap?: 'around' | 'auto' | 'none' | 'notBeside' | 'through' | 'tight';
+  };
+
+  // Suppress
+  /** Suppress line numbers (w:suppressLineNumbers) */
+  suppressLineNumbers?: boolean;
+  /** Suppress auto hyphens (w:suppressAutoHyphens) */
+  suppressAutoHyphens?: boolean;
+
+  // Default run properties for this paragraph
+  /** Run properties to apply to all runs (w:rPr) */
+  runProperties?: TextFormatting;
 }
 
 // ============================================================================
-// Run (Text) Types
+// RUN CONTENT TYPES
 // ============================================================================
 
-export type RunContentType = 'text' | 'tab' | 'break' | 'image' | 'symbol' | 'field';
-
+/**
+ * Plain text content
+ */
 export interface TextContent {
   type: 'text';
+  /** The text string */
   text: string;
-  /** Preserve spaces */
+  /** Preserve whitespace (xml:space="preserve") */
   preserveSpace?: boolean;
 }
 
+/**
+ * Tab character
+ */
 export interface TabContent {
   type: 'tab';
 }
 
+/**
+ * Line break
+ */
 export interface BreakContent {
   type: 'break';
   /** Break type */
@@ -518,412 +381,270 @@ export interface BreakContent {
   clear?: 'none' | 'left' | 'right' | 'all';
 }
 
+/**
+ * Symbol character (special font character)
+ */
 export interface SymbolContent {
   type: 'symbol';
+  /** Font name */
+  font: string;
   /** Character code */
   char: string;
-  /** Font */
-  font?: string;
 }
 
-export type RunContent = TextContent | TabContent | BreakContent | SymbolContent | Image | Field;
+/**
+ * Footnote or endnote reference
+ */
+export interface NoteReferenceContent {
+  type: 'footnoteRef' | 'endnoteRef';
+  /** Note ID */
+  id: number;
+}
 
+/**
+ * Field character (begin/separate/end)
+ */
+export interface FieldCharContent {
+  type: 'fieldChar';
+  /** Field character type */
+  charType: 'begin' | 'separate' | 'end';
+  /** Field is locked */
+  fldLock?: boolean;
+  /** Field is dirty (needs update) */
+  dirty?: boolean;
+}
+
+/**
+ * Field instruction text
+ */
+export interface InstrTextContent {
+  type: 'instrText';
+  /** Field instruction */
+  text: string;
+}
+
+/**
+ * Soft hyphen
+ */
+export interface SoftHyphenContent {
+  type: 'softHyphen';
+}
+
+/**
+ * Non-breaking hyphen
+ */
+export interface NoBreakHyphenContent {
+  type: 'noBreakHyphen';
+}
+
+/**
+ * Drawing/image reference
+ */
+export interface DrawingContent {
+  type: 'drawing';
+  /** Image data */
+  image: Image;
+}
+
+/**
+ * Shape reference
+ */
+export interface ShapeContent {
+  type: 'shape';
+  /** Shape data */
+  shape: Shape;
+}
+
+/**
+ * All possible run content types
+ */
+export type RunContent =
+  | TextContent
+  | TabContent
+  | BreakContent
+  | SymbolContent
+  | NoteReferenceContent
+  | FieldCharContent
+  | InstrTextContent
+  | SoftHyphenContent
+  | NoBreakHyphenContent
+  | DrawingContent
+  | ShapeContent;
+
+// ============================================================================
+// RUN (w:r)
+// ============================================================================
+
+/**
+ * A run is a contiguous region of text with the same formatting
+ */
 export interface Run {
-  /** Run properties/formatting */
-  properties?: TextFormatting;
-  /** Run content */
+  type: 'run';
+  /** Text formatting properties */
+  formatting?: TextFormatting;
+  /** Run content (text, tabs, breaks, etc.) */
   content: RunContent[];
-  /** Revision tracking ID */
-  rsidR?: string;
-  rsidRPr?: string;
 }
 
 // ============================================================================
-// Hyperlink Types
+// HYPERLINKS & BOOKMARKS
 // ============================================================================
 
+/**
+ * Hyperlink (w:hyperlink)
+ */
 export interface Hyperlink {
-  /** Relationship ID for external URL */
+  type: 'hyperlink';
+  /** Relationship ID for external link */
   rId?: string;
-  /** Actual URL (resolved from relationships) */
+  /** Resolved URL (from relationships) */
   href?: string;
   /** Internal bookmark anchor */
   anchor?: string;
   /** Tooltip text */
   tooltip?: string;
   /** Target frame */
-  tgtFrame?: '_blank' | '_self' | '_parent' | '_top' | string;
-  /** Add to visited hyperlinks history */
+  target?: string;
+  /** Link history tracking */
   history?: boolean;
-  /** Document location (for external document links) */
+  /** Document location */
   docLocation?: string;
   /** Child runs */
-  runs: Run[];
+  children: (Run | BookmarkStart | BookmarkEnd)[];
 }
 
-// ============================================================================
-// Bookmark Types
-// ============================================================================
-
+/**
+ * Bookmark start marker (w:bookmarkStart)
+ */
 export interface BookmarkStart {
+  type: 'bookmarkStart';
   /** Bookmark ID */
-  id: string;
+  id: number;
   /** Bookmark name */
   name: string;
-  /** Column first (for table bookmarks) */
+  /** Column index for table bookmarks */
   colFirst?: number;
-  /** Column last (for table bookmarks) */
   colLast?: number;
 }
 
+/**
+ * Bookmark end marker (w:bookmarkEnd)
+ */
 export interface BookmarkEnd {
-  /** Bookmark ID (matches BookmarkStart.id) */
-  id: string;
+  type: 'bookmarkEnd';
+  /** Bookmark ID */
+  id: number;
 }
 
 // ============================================================================
-// Field Types
+// FIELDS
 // ============================================================================
 
+/**
+ * Known field types
+ */
 export type FieldType =
-  | 'PAGE'
-  | 'NUMPAGES'
-  | 'DATE'
-  | 'TIME'
-  | 'AUTHOR'
-  | 'TITLE'
-  | 'SUBJECT'
-  | 'FILENAME'
-  | 'FILESIZE'
-  | 'CREATEDATE'
-  | 'SAVEDATE'
-  | 'PRINTDATE'
-  | 'DOCPROPERTY'
-  | 'REF'
-  | 'PAGEREF'
-  | 'HYPERLINK'
-  | 'TOC'
-  | 'INDEX'
-  | 'SEQ'
-  | 'MERGEFIELD'
-  | 'IF'
-  | 'FORMTEXT'
-  | 'FORMCHECKBOX'
-  | 'FORMDROPDOWN';
+  | 'PAGE' | 'NUMPAGES' | 'NUMWORDS' | 'NUMCHARS'
+  | 'DATE' | 'TIME' | 'CREATEDATE' | 'SAVEDATE' | 'PRINTDATE'
+  | 'AUTHOR' | 'TITLE' | 'SUBJECT' | 'KEYWORDS' | 'COMMENTS'
+  | 'FILENAME' | 'FILESIZE' | 'TEMPLATE'
+  | 'DOCPROPERTY' | 'DOCVARIABLE'
+  | 'REF' | 'PAGEREF' | 'NOTEREF' | 'HYPERLINK'
+  | 'TOC' | 'TOA' | 'INDEX'
+  | 'SEQ' | 'STYLEREF' | 'AUTONUM' | 'AUTONUMLGL' | 'AUTONUMOUT'
+  | 'IF' | 'MERGEFIELD' | 'NEXT' | 'NEXTIF'
+  | 'ASK' | 'SET' | 'QUOTE' | 'INCLUDETEXT' | 'INCLUDEPICTURE'
+  | 'SYMBOL' | 'ADVANCE' | 'EDITTIME' | 'REVNUM'
+  | 'SECTION' | 'SECTIONPAGES' | 'USERADDRESS' | 'USERNAME' | 'USERINITIALS'
+  | 'UNKNOWN';
 
-export interface Field {
-  type: 'field';
-  /** Field type */
-  fieldType?: FieldType;
-  /** Full field instruction */
-  instruction?: string;
-  /** Current/cached field value */
-  cachedValue?: string;
-  /** Is dirty (needs recalculation) */
-  dirty?: boolean;
-  /** Is locked */
-  locked?: boolean;
-  /** Field result runs (displayed content) */
-  result?: Run[];
-}
-
+/**
+ * Simple field (w:fldSimple)
+ */
 export interface SimpleField {
-  /** Field instruction */
+  type: 'simpleField';
+  /** Field instruction (e.g., "PAGE \\* MERGEFORMAT") */
   instruction: string;
-  /** Child runs (field result) */
-  runs: Run[];
+  /** Parsed field type */
+  fieldType: FieldType;
+  /** Current display value */
+  content: (Run | Hyperlink)[];
+  /** Field is locked */
+  fldLock?: boolean;
+  /** Field is dirty */
+  dirty?: boolean;
 }
 
+/**
+ * Complex field (w:fldChar begin/separate/end with w:instrText)
+ */
 export interface ComplexField {
-  /** Field begin */
-  begin: {
-    dirty?: boolean;
-    locked?: boolean;
-  };
+  type: 'complexField';
   /** Field instruction */
   instruction: string;
-  /** Separate marker present */
-  separate?: boolean;
-  /** Field result */
-  result?: Run[];
-  /** Field end */
-  end: boolean;
+  /** Parsed field type */
+  fieldType: FieldType;
+  /** Field code runs */
+  fieldCode: Run[];
+  /** Display result runs */
+  fieldResult: Run[];
+  /** Field is locked */
+  fldLock?: boolean;
+  /** Field is dirty */
+  dirty?: boolean;
 }
+
+export type Field = SimpleField | ComplexField;
 
 // ============================================================================
-// Table Types
+// IMAGES
 // ============================================================================
 
-export interface TableMeasurement {
-  /** Value */
-  value: number;
-  /** Type: dxa (twips), pct (percentage), auto */
-  type?: 'dxa' | 'pct' | 'auto' | 'nil';
-}
-
-export interface TableBorders {
-  top?: BorderSpec;
-  bottom?: BorderSpec;
-  left?: BorderSpec;
-  right?: BorderSpec;
-  start?: BorderSpec;
-  end?: BorderSpec;
-  insideH?: BorderSpec;
-  insideV?: BorderSpec;
-}
-
-export interface CellMargins {
-  top?: TableMeasurement;
-  bottom?: TableMeasurement;
-  left?: TableMeasurement;
-  right?: TableMeasurement;
-  start?: TableMeasurement;
-  end?: TableMeasurement;
-}
-
-export interface TableLook {
-  /** First column has special formatting */
-  firstColumn?: boolean;
-  /** First row has special formatting (header) */
-  firstRow?: boolean;
-  /** Last column has special formatting */
-  lastColumn?: boolean;
-  /** Last row has special formatting */
-  lastRow?: boolean;
-  /** No horizontal banding */
-  noHBand?: boolean;
-  /** No vertical banding */
-  noVBand?: boolean;
-}
-
-export interface FloatingTableProperties {
-  /** Left margin from text (twips) */
-  leftFromText?: number;
-  /** Right margin from text (twips) */
-  rightFromText?: number;
-  /** Top margin from text (twips) */
-  topFromText?: number;
-  /** Bottom margin from text (twips) */
-  bottomFromText?: number;
-  /** Absolute X position (twips) */
-  tblpX?: number;
-  /** Absolute Y position (twips) */
-  tblpY?: number;
-  /** Horizontal anchor */
-  horzAnchor?: 'margin' | 'page' | 'text';
-  /** Vertical anchor */
-  vertAnchor?: 'margin' | 'page' | 'text';
-  /** Horizontal position specification */
-  tblpXSpec?: 'left' | 'center' | 'right' | 'inside' | 'outside';
-  /** Vertical position specification */
-  tblpYSpec?: 'inline' | 'top' | 'center' | 'bottom' | 'inside' | 'outside';
-}
-
-export interface TableFormatting {
-  /** Table style ID */
-  tblStyle?: string;
-  /** Table position (floating) */
-  tblpPr?: FloatingTableProperties;
-  /** Table overlap setting */
-  tblOverlap?: 'never' | 'overlap';
-  /** Bidirectional (right-to-left) */
-  bidiVisual?: boolean;
-  /** Table width */
-  tblW?: TableMeasurement;
-  /** Table justification */
-  jc?: 'left' | 'center' | 'right' | 'start' | 'end';
-  /** Cell spacing */
-  tblCellSpacing?: TableMeasurement;
-  /** Table indent */
-  tblInd?: TableMeasurement;
-  /** Table borders */
-  tblBorders?: TableBorders;
-  /** Table shading */
-  shd?: ShadingProperties;
-  /** Table layout */
-  tblLayout?: 'fixed' | 'autofit';
-  /** Default cell margins */
-  tblCellMar?: CellMargins;
-  /** Table look/conditional formatting */
-  tblLook?: TableLook;
-  /** Table caption (accessibility) */
-  tblCaption?: string;
-  /** Table description (accessibility) */
-  tblDescription?: string;
-  /** Column band size for alternating styles */
-  tblStyleColBandSize?: number;
-  /** Row band size for alternating styles */
-  tblStyleRowBandSize?: number;
-}
-
-export interface TableRowFormatting {
-  /** Row cannot split across pages */
-  cantSplit?: boolean;
-  /** Row is table header (repeats on each page) */
-  tblHeader?: boolean;
-  /** Row height */
-  trHeight?: {
-    val: number;
-    hRule?: 'auto' | 'exact' | 'atLeast';
-  };
-  /** Row justification */
-  jc?: 'left' | 'center' | 'right' | 'start' | 'end';
-  /** Width before row (for indentation) */
-  wBefore?: TableMeasurement;
-  /** Width after row */
-  wAfter?: TableMeasurement;
-  /** Grid columns before */
-  gridBefore?: number;
-  /** Grid columns after */
-  gridAfter?: number;
-  /** Revision IDs */
-  rsidR?: string;
-  rsidRPr?: string;
-  rsidTr?: string;
-}
-
-export interface ConditionalFormatStyle {
-  /** First row */
-  firstRow?: boolean;
-  /** Last row */
-  lastRow?: boolean;
-  /** First column */
-  firstColumn?: boolean;
-  /** Last column */
-  lastColumn?: boolean;
-  /** Odd vertical band */
-  oddVBand?: boolean;
-  /** Even vertical band */
-  evenVBand?: boolean;
-  /** Odd horizontal band */
-  oddHBand?: boolean;
-  /** Even horizontal band */
-  evenHBand?: boolean;
-  /** First row, first column */
-  firstRowFirstColumn?: boolean;
-  /** First row, last column */
-  firstRowLastColumn?: boolean;
-  /** Last row, first column */
-  lastRowFirstColumn?: boolean;
-  /** Last row, last column */
-  lastRowLastColumn?: boolean;
-}
-
-export interface TableCellFormatting {
-  /** Conditional formatting style */
-  cnfStyle?: ConditionalFormatStyle;
-  /** Cell width */
-  tcW?: TableMeasurement;
-  /** Grid span (columns merged) */
-  gridSpan?: number;
-  /** Horizontal merge */
-  hMerge?: 'restart' | 'continue';
-  /** Vertical merge */
-  vMerge?: 'restart' | 'continue';
-  /** Cell borders */
-  tcBorders?: TableBorders;
-  /** Cell shading */
-  shd?: ShadingProperties;
-  /** No wrap */
-  noWrap?: boolean;
-  /** Cell margins */
-  tcMar?: CellMargins;
-  /** Text direction */
-  textDirection?: 'lrTb' | 'tbRl' | 'btLr' | 'lrTbV' | 'tbRlV' | 'tbLrV';
-  /** Fit text */
-  tcFitText?: boolean;
-  /** Vertical alignment */
-  vAlign?: 'top' | 'center' | 'bottom';
-  /** Hide cell marker */
-  hideMark?: boolean;
-  /** Accessibility headers */
-  headers?: string[];
-}
-
-export interface TableCell {
-  /** Cell formatting */
-  properties?: TableCellFormatting;
-  /** Computed colspan */
-  colspan?: number;
-  /** Computed rowspan */
-  rowspan?: number;
-  /** Cell content (paragraphs) */
-  content: Paragraph[];
-}
-
-export interface TableRow {
-  /** Row formatting */
-  properties?: TableRowFormatting;
-  /** Row cells */
-  cells: TableCell[];
-}
-
-export interface TableGrid {
-  /** Column widths (twips) */
-  gridCol: number[];
-}
-
-export interface Table {
-  /** Table formatting */
-  properties?: TableFormatting;
-  /** Table grid (column definitions) */
-  tblGrid?: TableGrid;
-  /** Table rows */
-  rows: TableRow[];
-}
-
-// ============================================================================
-// Image Types
-// ============================================================================
-
-export type ImageWrapType =
-  | 'inline'
-  | 'square'
-  | 'tight'
-  | 'through'
-  | 'topAndBottom'
-  | 'behind'
-  | 'inFront';
-
+/**
+ * Image size specification
+ */
 export interface ImageSize {
   /** Width in EMUs (English Metric Units) */
-  cx?: number;
+  width: number;
   /** Height in EMUs */
-  cy?: number;
-  /** Width in pixels */
-  width?: number;
-  /** Height in pixels */
-  height?: number;
+  height: number;
 }
 
-export interface ImagePadding {
-  /** Distance from text - left (EMUs) */
-  distL?: number;
-  /** Distance from text - top (EMUs) */
-  distT?: number;
-  /** Distance from text - right (EMUs) */
-  distR?: number;
-  /** Distance from text - bottom (EMUs) */
-  distB?: number;
-}
-
-export interface ImagePosition {
-  /** Horizontal position type */
-  relativeFrom?: 'character' | 'column' | 'insideMargin' | 'leftMargin' | 'margin' | 'outsideMargin' | 'page' | 'rightMargin';
-  /** Horizontal alignment */
-  align?: 'left' | 'right' | 'center' | 'inside' | 'outside';
-  /** Horizontal offset (EMUs) */
-  posOffset?: number;
-}
-
+/**
+ * Image wrap type for floating images
+ */
 export interface ImageWrap {
-  type: ImageWrapType;
-  /** Wrap text side */
-  wrapText?: 'bothSides' | 'largest' | 'left' | 'right';
-  /** Wrap polygon points (for tight/through) */
-  wrapPolygon?: Array<{ x: number; y: number }>;
+  type: 'inline' | 'square' | 'tight' | 'through' | 'topAndBottom' | 'behind' | 'inFront';
+  /** Wrap text direction */
+  wrapText?: 'bothSides' | 'left' | 'right' | 'largest';
+  /** Distance from text */
+  distT?: number;
+  distB?: number;
+  distL?: number;
+  distR?: number;
 }
 
+/**
+ * Position for floating images
+ */
+export interface ImagePosition {
+  /** Horizontal positioning */
+  horizontal: {
+    relativeTo: 'character' | 'column' | 'insideMargin' | 'leftMargin' | 'margin' | 'outsideMargin' | 'page' | 'rightMargin';
+    alignment?: 'left' | 'right' | 'center' | 'inside' | 'outside';
+    posOffset?: number;
+  };
+  /** Vertical positioning */
+  vertical: {
+    relativeTo: 'insideMargin' | 'line' | 'margin' | 'outsideMargin' | 'page' | 'paragraph' | 'topMargin' | 'bottomMargin';
+    alignment?: 'top' | 'bottom' | 'center' | 'inside' | 'outside';
+    posOffset?: number;
+  };
+}
+
+/**
+ * Image transformation
+ */
 export interface ImageTransform {
   /** Rotation in degrees */
   rotation?: number;
@@ -933,434 +654,594 @@ export interface ImageTransform {
   flipV?: boolean;
 }
 
+/**
+ * Image padding/margins
+ */
+export interface ImagePadding {
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+}
+
+/**
+ * Embedded image (w:drawing)
+ */
 export interface Image {
   type: 'image';
-  /** Relationship ID */
-  rId?: string;
-  /** Image source URL or base64 */
+  /** Unique ID */
+  id?: string;
+  /** Relationship ID for the image data */
+  rId: string;
+  /** Resolved image data (base64 or blob URL) */
   src?: string;
-  /** Alt text */
+  /** Image MIME type */
+  mimeType?: string;
+  /** Original filename */
+  filename?: string;
+  /** Alt text for accessibility */
   alt?: string;
   /** Title/description */
   title?: string;
   /** Image size */
-  size?: ImageSize;
-  /** Padding/distance from text */
-  padding?: ImagePadding;
-  /** Horizontal position */
-  positionH?: ImagePosition;
-  /** Vertical position */
-  positionV?: ImagePosition;
-  /** Wrap mode */
-  wrap?: ImageWrap;
-  /** Transform */
+  size: ImageSize;
+  /** Original size before any transforms */
+  originalSize?: ImageSize;
+  /** Wrap settings */
+  wrap: ImageWrap;
+  /** Position for floating images */
+  position?: ImagePosition;
+  /** Image transformations */
   transform?: ImageTransform;
-  /** Is inline (in run) vs anchor (floating) */
-  inline?: boolean;
-  /** Behind document */
-  behindDoc?: boolean;
-  /** Drawing ID */
-  id?: string;
-  /** Name */
-  name?: string;
-  /** Original extension */
-  extension?: string;
+  /** Padding around image */
+  padding?: ImagePadding;
+  /** Whether this is a decorative image */
+  decorative?: boolean;
+  /** Image effects */
+  effects?: {
+    brightness?: number;
+    contrast?: number;
+    saturation?: number;
+  };
 }
 
 // ============================================================================
-// Shape Types
+// SHAPES & TEXT BOXES
 // ============================================================================
 
+/**
+ * Shape types
+ */
 export type ShapeType =
-  | 'rect'
-  | 'roundRect'
-  | 'ellipse'
-  | 'triangle'
-  | 'rtTriangle'
-  | 'parallelogram'
-  | 'trapezoid'
-  | 'pentagon'
-  | 'hexagon'
-  | 'heptagon'
-  | 'octagon'
-  | 'star4'
-  | 'star5'
-  | 'star6'
-  | 'star7'
-  | 'star8'
-  | 'star10'
-  | 'star12'
-  | 'star16'
-  | 'star24'
-  | 'star32'
-  | 'line'
-  | 'straightConnector1'
-  | 'bentConnector2'
-  | 'bentConnector3'
-  | 'curvedConnector2'
-  | 'curvedConnector3'
-  | 'arrow'
-  | 'leftArrow'
-  | 'rightArrow'
-  | 'upArrow'
-  | 'downArrow'
-  | 'leftRightArrow'
-  | 'upDownArrow'
-  | 'quadArrow'
-  | 'cube'
-  | 'can'
-  | 'heart'
-  | 'lightningBolt'
-  | 'sun'
-  | 'moon'
-  | 'cloud'
-  | 'arc'
-  | 'bracketPair'
-  | 'bracePair'
-  | 'frame'
-  | 'callout1'
-  | 'callout2'
-  | 'callout3'
-  | 'wedgeRectCallout'
-  | 'wedgeRoundRectCallout'
-  | 'wedgeEllipseCallout'
-  | 'cloudCallout'
-  | 'flowChartProcess'
-  | 'flowChartDecision'
-  | 'flowChartTerminator'
-  | 'actionButtonBlank';
+  // Basic shapes
+  | 'rect' | 'roundRect' | 'ellipse' | 'triangle' | 'rtTriangle'
+  | 'parallelogram' | 'trapezoid' | 'pentagon' | 'hexagon' | 'heptagon' | 'octagon'
+  | 'decagon' | 'dodecagon' | 'star4' | 'star5' | 'star6' | 'star7' | 'star8'
+  | 'star10' | 'star12' | 'star16' | 'star24' | 'star32'
+  // Lines and connectors
+  | 'line' | 'straightConnector1' | 'bentConnector2' | 'bentConnector3'
+  | 'bentConnector4' | 'bentConnector5' | 'curvedConnector2' | 'curvedConnector3'
+  | 'curvedConnector4' | 'curvedConnector5'
+  // Arrows
+  | 'rightArrow' | 'leftArrow' | 'upArrow' | 'downArrow'
+  | 'leftRightArrow' | 'upDownArrow' | 'quadArrow' | 'leftRightUpArrow'
+  | 'bentArrow' | 'uturnArrow' | 'leftUpArrow' | 'bentUpArrow'
+  | 'curvedRightArrow' | 'curvedLeftArrow' | 'curvedUpArrow' | 'curvedDownArrow'
+  | 'stripedRightArrow' | 'notchedRightArrow' | 'homePlate' | 'chevron'
+  | 'rightArrowCallout' | 'downArrowCallout' | 'leftArrowCallout' | 'upArrowCallout'
+  | 'leftRightArrowCallout' | 'quadArrowCallout' | 'circularArrow'
+  // Flowchart
+  | 'flowChartProcess' | 'flowChartAlternateProcess' | 'flowChartDecision'
+  | 'flowChartInputOutput' | 'flowChartPredefinedProcess' | 'flowChartInternalStorage'
+  | 'flowChartDocument' | 'flowChartMultidocument' | 'flowChartTerminator'
+  | 'flowChartPreparation' | 'flowChartManualInput' | 'flowChartManualOperation'
+  | 'flowChartConnector' | 'flowChartOffpageConnector' | 'flowChartPunchedCard'
+  | 'flowChartPunchedTape' | 'flowChartSummingJunction' | 'flowChartOr'
+  | 'flowChartCollate' | 'flowChartSort' | 'flowChartExtract' | 'flowChartMerge'
+  | 'flowChartOnlineStorage' | 'flowChartDelay' | 'flowChartMagneticTape'
+  | 'flowChartMagneticDisk' | 'flowChartMagneticDrum' | 'flowChartDisplay'
+  // Callouts
+  | 'wedgeRectCallout' | 'wedgeRoundRectCallout' | 'wedgeEllipseCallout'
+  | 'cloudCallout' | 'borderCallout1' | 'borderCallout2' | 'borderCallout3'
+  | 'accentCallout1' | 'accentCallout2' | 'accentCallout3'
+  | 'callout1' | 'callout2' | 'callout3' | 'accentBorderCallout1'
+  | 'accentBorderCallout2' | 'accentBorderCallout3'
+  // Other
+  | 'actionButtonBlank' | 'actionButtonHome' | 'actionButtonHelp'
+  | 'actionButtonInformation' | 'actionButtonBackPrevious' | 'actionButtonForwardNext'
+  | 'actionButtonBeginning' | 'actionButtonEnd' | 'actionButtonReturn'
+  | 'actionButtonDocument' | 'actionButtonSound' | 'actionButtonMovie'
+  | 'irregularSeal1' | 'irregularSeal2'
+  | 'frame' | 'halfFrame' | 'corner' | 'diagStripe' | 'chord' | 'arc' | 'bracketPair'
+  | 'bracePair' | 'leftBracket' | 'rightBracket' | 'leftBrace' | 'rightBrace'
+  | 'can' | 'cube' | 'bevel' | 'donut' | 'noSmoking' | 'blockArc'
+  | 'foldedCorner' | 'smileyFace' | 'heart' | 'lightningBolt' | 'sun' | 'moon'
+  | 'cloud' | 'snip1Rect' | 'snip2SameRect' | 'snip2DiagRect' | 'snipRoundRect'
+  | 'round1Rect' | 'round2SameRect' | 'round2DiagRect' | 'plaque' | 'teardrop'
+  | 'mathPlus' | 'mathMinus' | 'mathMultiply' | 'mathDivide' | 'mathEqual' | 'mathNotEqual'
+  | 'gear6' | 'gear9' | 'funnel' | 'pieWedge' | 'pie' | 'leftCircularArrow'
+  | 'leftRightCircularArrow' | 'swooshArrow' | 'textBox';
 
+/**
+ * Shape fill type
+ */
 export interface ShapeFill {
-  type: 'solid' | 'gradient' | 'pattern' | 'picture' | 'none';
-  color?: string;
-  themeColor?: ThemeColor;
+  type: 'none' | 'solid' | 'gradient' | 'pattern' | 'picture';
+  /** Solid fill color */
+  color?: ColorValue;
   /** Gradient stops for gradient fill */
-  gradientStops?: Array<{
-    position: number;
-    color: string;
-  }>;
-  /** Gradient direction */
-  gradientDirection?: number;
+  gradient?: {
+    type: 'linear' | 'radial' | 'rectangular' | 'path';
+    angle?: number;
+    stops: Array<{
+      position: number; // 0-100000
+      color: ColorValue;
+    }>;
+  };
 }
 
+/**
+ * Shape outline/stroke
+ */
 export interface ShapeOutline {
-  /** Line width (EMUs) */
+  /** Line width in EMUs */
   width?: number;
   /** Line color */
-  color?: string;
-  /** Theme color */
-  themeColor?: ThemeColor;
-  /** Line dash style */
-  dash?: 'solid' | 'dot' | 'dash' | 'lgDash' | 'dashDot' | 'lgDashDot' | 'lgDashDotDot' | 'sysDot' | 'sysDash' | 'sysDashDot' | 'sysDashDotDot';
+  color?: ColorValue;
+  /** Line style */
+  style?: 'solid' | 'dot' | 'dash' | 'lgDash' | 'dashDot' | 'lgDashDot'
+    | 'lgDashDotDot' | 'sysDot' | 'sysDash' | 'sysDashDot' | 'sysDashDotDot';
   /** Line cap */
   cap?: 'flat' | 'round' | 'square';
   /** Line join */
-  join?: 'round' | 'bevel' | 'miter';
-  /** Head end type (for arrows) */
+  join?: 'bevel' | 'miter' | 'round';
+  /** Head arrow */
   headEnd?: {
-    type?: 'none' | 'triangle' | 'stealth' | 'diamond' | 'oval' | 'arrow';
+    type: 'none' | 'triangle' | 'stealth' | 'diamond' | 'oval' | 'arrow';
     width?: 'sm' | 'med' | 'lg';
     length?: 'sm' | 'med' | 'lg';
   };
-  /** Tail end type (for arrows) */
+  /** Tail arrow */
   tailEnd?: {
-    type?: 'none' | 'triangle' | 'stealth' | 'diamond' | 'oval' | 'arrow';
+    type: 'none' | 'triangle' | 'stealth' | 'diamond' | 'oval' | 'arrow';
     width?: 'sm' | 'med' | 'lg';
     length?: 'sm' | 'med' | 'lg';
   };
 }
 
+/**
+ * Text body inside a shape
+ */
 export interface ShapeTextBody {
-  /** Text insets */
-  insets?: {
-    left?: number;
-    top?: number;
-    right?: number;
-    bottom?: number;
-  };
-  /** Vertical alignment */
-  anchor?: 'top' | 'center' | 'bottom';
-  /** Horizontal alignment */
-  anchorCtr?: boolean;
-  /** Word wrap */
-  wrap?: 'none' | 'square';
-  /** Text rotation */
+  /** Text direction */
+  vertical?: boolean;
+  /** Rotation */
   rotation?: number;
-  /** Paragraphs inside shape */
-  paragraphs?: Paragraph[];
+  /** Anchor/vertical alignment */
+  anchor?: 'top' | 'middle' | 'bottom' | 'distributed' | 'justified';
+  /** Anchor center */
+  anchorCenter?: boolean;
+  /** Auto fit */
+  autoFit?: 'none' | 'normal' | 'shape';
+  /** Text margins */
+  margins?: {
+    top?: number;
+    bottom?: number;
+    left?: number;
+    right?: number;
+  };
+  /** Paragraphs inside the shape */
+  content: Paragraph[];
 }
 
+/**
+ * Shape/drawing object (wps:wsp)
+ */
 export interface Shape {
+  type: 'shape';
   /** Shape type preset */
-  type?: ShapeType;
-  /** Custom geometry (if not preset) */
-  customGeometry?: string;
-  /** Drawing ID */
+  shapeType: ShapeType;
+  /** Unique ID */
   id?: string;
-  /** Shape name */
+  /** Name */
   name?: string;
-  /** Hidden */
-  hidden?: boolean;
-  /** Size */
-  size?: ImageSize;
-  /** Position */
-  positionH?: ImagePosition;
-  positionV?: ImagePosition;
+  /** Size in EMUs */
+  size: ImageSize;
+  /** Position for floating shapes */
+  position?: ImagePosition;
+  /** Wrap settings */
+  wrap?: ImageWrap;
   /** Fill */
   fill?: ShapeFill;
-  /** Outline */
+  /** Outline/stroke */
   outline?: ShapeOutline;
-  /** Transform (rotation, flip) */
+  /** Transform */
   transform?: ImageTransform;
-  /** Effect extent */
-  effectExtent?: {
-    left?: number;
-    top?: number;
-    right?: number;
-    bottom?: number;
-  };
-  /** Wrap mode */
-  wrap?: ImageWrap;
-  /** Text content inside shape */
+  /** Text content inside the shape */
   textBody?: ShapeTextBody;
-  /** Behind document */
-  behindDoc?: boolean;
+  /** Custom geometry points */
+  customGeometry?: string;
 }
 
-// ============================================================================
-// Text Box Types
-// ============================================================================
-
+/**
+ * Text box (floating text container)
+ */
 export interface TextBox {
-  /** Text box ID */
+  type: 'textBox';
+  /** Unique ID */
   id?: string;
-  /** Text box name */
-  name?: string;
   /** Size */
-  size?: ImageSize;
+  size: ImageSize;
   /** Position */
-  positionH?: ImagePosition;
-  positionV?: ImagePosition;
+  position?: ImagePosition;
+  /** Wrap settings */
+  wrap?: ImageWrap;
   /** Fill */
   fill?: ShapeFill;
   /** Outline */
   outline?: ShapeOutline;
-  /** Text insets */
-  insets?: {
-    left?: number;
+  /** Text content */
+  content: Paragraph[];
+  /** Internal margins */
+  margins?: {
     top?: number;
-    right?: number;
     bottom?: number;
+    left?: number;
+    right?: number;
   };
-  /** Wrap mode */
-  wrap?: ImageWrap;
-  /** Content */
-  content: Array<Paragraph | Table>;
 }
 
 // ============================================================================
-// List/Numbering Types
+// TABLES
 // ============================================================================
 
-export type NumberFormat =
-  | 'decimal'
-  | 'upperRoman'
-  | 'lowerRoman'
-  | 'upperLetter'
-  | 'lowerLetter'
-  | 'ordinal'
-  | 'cardinalText'
-  | 'ordinalText'
-  | 'bullet'
-  | 'none'
-  | 'chicago'
-  | 'decimalFullWidth'
-  | 'decimalHalfWidth'
-  | 'japaneseCounting'
-  | 'japaneseDigitalTenThousand'
-  | 'decimalEnclosedCircle'
-  | 'decimalEnclosedFullstop'
-  | 'decimalEnclosedParen'
-  | 'decimalZero'
-  | 'ideographDigital'
-  | 'ideographTraditional'
-  | 'ideographLegalTraditional'
-  | 'ideographZodiac'
-  | 'ideographZodiacTraditional'
-  | 'taiwaneseCounting'
-  | 'koreanDigital'
-  | 'koreanCounting'
-  | 'koreanLegal'
-  | 'koreanDigital2'
-  | 'vietnameseCounting'
-  | 'russianLower'
-  | 'russianUpper'
-  | 'hebrew1'
-  | 'hebrew2'
-  | 'arabicAlpha'
-  | 'arabicAbjad'
-  | 'hindiVowels'
-  | 'hindiConsonants'
-  | 'hindiNumbers'
-  | 'hindiCounting'
-  | 'thaiLetters'
-  | 'thaiNumbers'
-  | 'thaiCounting';
+/**
+ * Table width type
+ */
+export type TableWidthType = 'auto' | 'dxa' | 'nil' | 'pct';
 
+/**
+ * Table measurement (width or height)
+ */
+export interface TableMeasurement {
+  /** Value in twips (for dxa) or fifths of a percent (for pct) */
+  value: number;
+  /** Measurement type */
+  type: TableWidthType;
+}
+
+/**
+ * Table borders
+ */
+export interface TableBorders {
+  top?: BorderSpec;
+  bottom?: BorderSpec;
+  left?: BorderSpec;
+  right?: BorderSpec;
+  insideH?: BorderSpec;
+  insideV?: BorderSpec;
+}
+
+/**
+ * Cell margins
+ */
+export interface CellMargins {
+  top?: TableMeasurement;
+  bottom?: TableMeasurement;
+  left?: TableMeasurement;
+  right?: TableMeasurement;
+}
+
+/**
+ * Table look flags (for table styles)
+ */
+export interface TableLook {
+  firstColumn?: boolean;
+  firstRow?: boolean;
+  lastColumn?: boolean;
+  lastRow?: boolean;
+  noHBand?: boolean;
+  noVBand?: boolean;
+}
+
+/**
+ * Floating table properties
+ */
+export interface FloatingTableProperties {
+  /** Horizontal anchor */
+  horzAnchor?: 'margin' | 'page' | 'text';
+  /** Vertical anchor */
+  vertAnchor?: 'margin' | 'page' | 'text';
+  /** Horizontal position */
+  tblpX?: number;
+  tblpXSpec?: 'left' | 'center' | 'right' | 'inside' | 'outside';
+  /** Vertical position */
+  tblpY?: number;
+  tblpYSpec?: 'top' | 'center' | 'bottom' | 'inside' | 'outside' | 'inline';
+  /** Distance from surrounding text */
+  topFromText?: number;
+  bottomFromText?: number;
+  leftFromText?: number;
+  rightFromText?: number;
+}
+
+/**
+ * Table formatting properties (w:tblPr)
+ */
+export interface TableFormatting {
+  /** Table width */
+  width?: TableMeasurement;
+  /** Table justification */
+  justification?: 'left' | 'center' | 'right';
+  /** Cell spacing */
+  cellSpacing?: TableMeasurement;
+  /** Table indent from left margin */
+  indent?: TableMeasurement;
+  /** Table borders */
+  borders?: TableBorders;
+  /** Default cell margins */
+  cellMargins?: CellMargins;
+  /** Table layout */
+  layout?: 'fixed' | 'autofit';
+  /** Table style ID */
+  styleId?: string;
+  /** Table look (conditional formatting flags) */
+  look?: TableLook;
+  /** Shading/background */
+  shading?: ShadingProperties;
+  /** Overlap for floating tables */
+  overlap?: 'never' | 'overlap';
+  /** Floating table properties */
+  floating?: FloatingTableProperties;
+  /** Right to left table */
+  bidi?: boolean;
+}
+
+/**
+ * Table row formatting properties (w:trPr)
+ */
+export interface TableRowFormatting {
+  /** Row height */
+  height?: TableMeasurement;
+  /** Height rule */
+  heightRule?: 'auto' | 'atLeast' | 'exact';
+  /** Header row (repeats on each page) */
+  header?: boolean;
+  /** Allow row to break across pages */
+  cantSplit?: boolean;
+  /** Row justification */
+  justification?: 'left' | 'center' | 'right';
+  /** Hidden row */
+  hidden?: boolean;
+}
+
+/**
+ * Conditional format style
+ */
+export interface ConditionalFormatStyle {
+  /** First row */
+  firstRow?: boolean;
+  /** Last row */
+  lastRow?: boolean;
+  /** First column */
+  firstColumn?: boolean;
+  /** Last column */
+  lastColumn?: boolean;
+  /** Odd horizontal band */
+  oddHBand?: boolean;
+  /** Even horizontal band */
+  evenHBand?: boolean;
+  /** Odd vertical band */
+  oddVBand?: boolean;
+  /** Even vertical band */
+  evenVBand?: boolean;
+  /** Northwest corner */
+  nwCell?: boolean;
+  /** Northeast corner */
+  neCell?: boolean;
+  /** Southwest corner */
+  swCell?: boolean;
+  /** Southeast corner */
+  seCell?: boolean;
+}
+
+/**
+ * Table cell formatting properties (w:tcPr)
+ */
+export interface TableCellFormatting {
+  /** Cell width */
+  width?: TableMeasurement;
+  /** Cell borders */
+  borders?: TableBorders;
+  /** Cell margins (override table default) */
+  margins?: CellMargins;
+  /** Cell shading/background */
+  shading?: ShadingProperties;
+  /** Vertical alignment */
+  verticalAlign?: 'top' | 'center' | 'bottom';
+  /** Text direction */
+  textDirection?: 'lr' | 'lrV' | 'rl' | 'rlV' | 'tb' | 'tbV' | 'tbRl' | 'tbRlV' | 'btLr';
+  /** Grid span (horizontal merge) */
+  gridSpan?: number;
+  /** Vertical merge */
+  vMerge?: 'restart' | 'continue';
+  /** Fit text to cell width */
+  fitText?: boolean;
+  /** Wrap text */
+  noWrap?: boolean;
+  /** Hide cell marker */
+  hideMark?: boolean;
+  /** Conditional format style */
+  conditionalFormat?: ConditionalFormatStyle;
+}
+
+/**
+ * Table cell
+ */
+export interface TableCell {
+  type: 'tableCell';
+  /** Cell formatting */
+  formatting?: TableCellFormatting;
+  /** Cell content (paragraphs, tables, etc.) */
+  content: (Paragraph | Table)[];
+}
+
+/**
+ * Table row
+ */
+export interface TableRow {
+  type: 'tableRow';
+  /** Row formatting */
+  formatting?: TableRowFormatting;
+  /** Cells in this row */
+  cells: TableCell[];
+}
+
+/**
+ * Table (w:tbl)
+ */
+export interface Table {
+  type: 'table';
+  /** Table formatting */
+  formatting?: TableFormatting;
+  /** Column widths in twips */
+  columnWidths?: number[];
+  /** Table rows */
+  rows: TableRow[];
+}
+
+// ============================================================================
+// LISTS & NUMBERING
+// ============================================================================
+
+/**
+ * Number format type
+ */
+export type NumberFormat =
+  | 'decimal' | 'upperRoman' | 'lowerRoman' | 'upperLetter' | 'lowerLetter'
+  | 'ordinal' | 'cardinalText' | 'ordinalText' | 'hex' | 'chicago'
+  | 'ideographDigital' | 'japaneseCounting' | 'aiueo' | 'iroha'
+  | 'decimalFullWidth' | 'decimalHalfWidth' | 'japaneseLegal' | 'japaneseDigitalTenThousand'
+  | 'decimalEnclosedCircle' | 'decimalFullWidth2' | 'aiueoFullWidth' | 'irohaFullWidth'
+  | 'decimalZero' | 'bullet' | 'ganada' | 'chosung'
+  | 'decimalEnclosedFullstop' | 'decimalEnclosedParen' | 'decimalEnclosedCircleChinese'
+  | 'ideographEnclosedCircle' | 'ideographTraditional' | 'ideographZodiac'
+  | 'ideographZodiacTraditional' | 'taiwaneseCounting' | 'ideographLegalTraditional'
+  | 'taiwaneseCountingThousand' | 'taiwaneseDigital' | 'chineseCounting'
+  | 'chineseLegalSimplified' | 'chineseCountingThousand' | 'koreanDigital'
+  | 'koreanCounting' | 'koreanLegal' | 'koreanDigital2' | 'vietnameseCounting'
+  | 'russianLower' | 'russianUpper' | 'none' | 'numberInDash'
+  | 'hebrew1' | 'hebrew2' | 'arabicAlpha' | 'arabicAbjad' | 'hindiVowels'
+  | 'hindiConsonants' | 'hindiNumbers' | 'hindiCounting' | 'thaiLetters'
+  | 'thaiNumbers' | 'thaiCounting';
+
+/**
+ * Multi-level suffix (what follows the number)
+ */
+export type LevelSuffix = 'tab' | 'space' | 'nothing';
+
+/**
+ * List level definition
+ */
 export interface ListLevel {
-  /** Level number (0-8) */
+  /** Level index (0-8) */
   ilvl: number;
   /** Starting number */
   start?: number;
   /** Number format */
-  numFmt?: NumberFormat;
-  /** Restart after level */
+  numFmt: NumberFormat;
+  /** Level text (e.g., "%1." or "•") */
+  lvlText: string;
+  /** Justification */
+  lvlJc?: 'left' | 'center' | 'right';
+  /** Suffix after number */
+  suffix?: LevelSuffix;
+  /** Paragraph properties for this level */
+  pPr?: ParagraphFormatting;
+  /** Run properties for the number/bullet */
+  rPr?: TextFormatting;
+  /** Restart numbering from higher level */
   lvlRestart?: number;
-  /** Paragraph style link */
-  pStyle?: string;
-  /** Is legal numbering */
+  /** Is legal numbering style */
   isLgl?: boolean;
-  /** Suffix (tab, space, nothing) */
-  suff?: 'tab' | 'space' | 'nothing';
-  /** Level text (e.g., "%1.", "%1.%2") */
-  lvlText?: string;
-  /** Level picture bullet */
-  lvlPicBulletId?: number;
   /** Legacy settings */
   legacy?: {
     legacy?: boolean;
     legacySpace?: number;
     legacyIndent?: number;
   };
-  /** Justification */
-  lvlJc?: 'left' | 'center' | 'right' | 'start' | 'end';
-  /** Paragraph properties for this level */
-  pPr?: ParagraphFormatting;
-  /** Run properties for the number/bullet */
-  rPr?: TextFormatting;
 }
 
+/**
+ * Abstract numbering definition (w:abstractNum)
+ */
 export interface AbstractNumbering {
   /** Abstract numbering ID */
-  abstractNumId: number | string;
-  /** Numbering style link */
-  nsid?: string;
+  abstractNumId: number;
   /** Multi-level type */
-  multiLevelType?: 'singleLevel' | 'multilevel' | 'hybridMultilevel';
-  /** Template code */
-  tmpl?: string;
-  /** Name */
-  name?: string;
-  /** Style link */
-  styleLink?: string;
+  multiLevelType?: 'hybridMultilevel' | 'multilevel' | 'singleLevel';
   /** Numbering style link */
   numStyleLink?: string;
-  /** Levels */
-  lvl: ListLevel[];
+  /** Style link */
+  styleLink?: string;
+  /** Level definitions */
+  levels: ListLevel[];
+  /** Name */
+  name?: string;
 }
 
+/**
+ * Numbering instance (w:num)
+ */
 export interface NumberingInstance {
-  /** Numbering instance ID */
-  numId: number | string;
+  /** Numbering ID (referenced by paragraphs) */
+  numId: number;
   /** Reference to abstract numbering */
-  abstractNumId: number | string;
+  abstractNumId: number;
   /** Level overrides */
-  lvlOverride?: Array<{
+  levelOverrides?: Array<{
     ilvl: number;
     startOverride?: number;
     lvl?: ListLevel;
   }>;
 }
 
-export interface NumberingDefinitions {
-  /** Abstract numbering definitions */
-  abstractNum: AbstractNumbering[];
-  /** Numbering instances */
-  num: NumberingInstance[];
-  /** Picture bullets */
-  numPicBullet?: Array<{
-    numPicBulletId: number;
-    pict: Image;
-  }>;
-}
-
+/**
+ * Computed list rendering info
+ */
 export interface ListRendering {
   /** Computed marker text (e.g., "1.", "a)", "•") */
-  markerText?: string;
-  /** Path in list hierarchy */
-  path?: number[];
-  /** Numbering type */
-  numberingType?: NumberFormat;
+  marker: string;
+  /** List level (0-8) */
+  level: number;
+  /** Numbering ID */
+  numId: number;
+  /** Whether this is a bullet or numbered list */
+  isBullet: boolean;
+}
+
+/**
+ * Complete numbering definitions
+ */
+export interface NumberingDefinitions {
+  /** Abstract numbering definitions */
+  abstractNums: AbstractNumbering[];
+  /** Numbering instances */
+  nums: NumberingInstance[];
 }
 
 // ============================================================================
-// Footnote/Endnote Types
+// HEADERS & FOOTERS
 // ============================================================================
 
-export type FootnoteType = 'normal' | 'separator' | 'continuationSeparator' | 'continuationNotice';
-
-export interface FootnoteReference {
-  /** Footnote ID */
-  id: string;
-  /** Custom mark */
-  customMark?: string;
-}
-
-export interface Footnote {
-  /** Footnote ID */
-  id: string;
-  /** Footnote type */
-  type?: FootnoteType;
-  /** Footnote content */
-  content: Paragraph[];
-}
-
-export interface Endnote {
-  /** Endnote ID */
-  id: string;
-  /** Endnote type */
-  type?: FootnoteType;
-  /** Endnote content */
-  content: Paragraph[];
-}
-
-export interface FootnoteProperties {
-  /** Footnote position */
-  pos?: 'pageBottom' | 'beneathText' | 'sectEnd' | 'docEnd';
-  /** Number format */
-  numFmt?: NumberFormat;
-  /** Starting number */
-  numStart?: number;
-  /** Restart numbering */
-  numRestart?: 'continuous' | 'eachSect' | 'eachPage';
-}
-
-export interface EndnoteProperties {
-  /** Endnote position */
-  pos?: 'sectEnd' | 'docEnd';
-  /** Number format */
-  numFmt?: NumberFormat;
-  /** Starting number */
-  numStart?: number;
-  /** Restart numbering */
-  numRestart?: 'continuous' | 'eachSect';
-}
-
-// ============================================================================
-// Header/Footer Types
-// ============================================================================
-
+/**
+ * Header/footer type
+ */
 export type HeaderFooterType = 'default' | 'first' | 'even';
 
-export interface HeaderFooter {
-  /** Header/footer type */
-  type: HeaderFooterType;
-  /** Relationship ID */
-  rId: string;
-  /** Content */
-  content: Array<Paragraph | Table>;
-}
-
+/**
+ * Header or footer reference
+ */
 export interface HeaderReference {
   type: HeaderFooterType;
   rId: string;
@@ -1371,243 +1252,307 @@ export interface FooterReference {
   rId: string;
 }
 
-// ============================================================================
-// Section Properties
-// ============================================================================
-
-export type PageOrientation = 'portrait' | 'landscape';
-
-export type SectionType = 'continuous' | 'nextPage' | 'nextColumn' | 'evenPage' | 'oddPage';
-
-export interface PageSize {
-  /** Width (twips) */
-  w: number;
-  /** Height (twips) */
-  h: number;
-  /** Orientation */
-  orient?: PageOrientation;
-  /** Paper code */
-  code?: number;
-}
-
-export interface PageMargins {
-  /** Top margin (twips) */
-  top: number;
-  /** Bottom margin (twips) */
-  bottom: number;
-  /** Left margin (twips) */
-  left: number;
-  /** Right margin (twips) */
-  right: number;
-  /** Header distance from top (twips) */
-  header?: number;
-  /** Footer distance from bottom (twips) */
-  footer?: number;
-  /** Gutter (twips) */
-  gutter?: number;
-}
-
-export interface PageBorders {
-  top?: BorderSpec;
-  bottom?: BorderSpec;
-  left?: BorderSpec;
-  right?: BorderSpec;
-  /** Apply to */
-  display?: 'allPages' | 'firstPage' | 'notFirstPage';
-  /** Offset from */
-  offsetFrom?: 'page' | 'text';
-  /** Z-ordering */
-  zOrder?: 'front' | 'back';
-}
-
-export interface ColumnDefinition {
-  /** Column width (twips) */
-  w?: number;
-  /** Space after column (twips) */
-  space?: number;
-}
-
-export interface Columns {
-  /** Equal width columns */
-  equalWidth?: boolean;
-  /** Number of columns */
-  num?: number;
-  /** Space between columns (twips) */
-  space?: number;
-  /** Separator line between columns */
-  sep?: boolean;
-  /** Individual column definitions */
-  col?: ColumnDefinition[];
-}
-
-export interface LineNumbers {
-  /** Count by */
-  countBy?: number;
-  /** Starting line number */
-  start?: number;
-  /** Distance from text (twips) */
-  distance?: number;
-  /** Restart */
-  restart?: 'newPage' | 'newSection' | 'continuous';
-}
-
-export interface SectionProperties {
-  /** Section type */
-  type?: SectionType;
-  /** Page size */
-  pgSz?: PageSize;
-  /** Page margins */
-  pgMar?: PageMargins;
-  /** Page borders */
-  pgBorders?: PageBorders;
-  /** Page numbering */
-  pgNumType?: {
-    fmt?: NumberFormat;
-    start?: number;
-    chapStyle?: number;
-    chapSep?: 'hyphen' | 'period' | 'colon' | 'emDash' | 'enDash';
-  };
-  /** Columns */
-  cols?: Columns;
-  /** Line numbers */
-  lnNumType?: LineNumbers;
-  /** Header references */
-  headerReference?: HeaderReference[];
-  /** Footer references */
-  footerReference?: FooterReference[];
-  /** Footnote properties */
-  footnotePr?: FootnoteProperties;
-  /** Endnote properties */
-  endnotePr?: EndnoteProperties;
-  /** Form protection */
-  formProt?: boolean;
-  /** Vertical alignment */
-  vAlign?: 'top' | 'center' | 'both' | 'bottom';
-  /** No endnote */
-  noEndnote?: boolean;
-  /** Title page (different first page header/footer) */
-  titlePg?: boolean;
-  /** Text direction */
-  textDirection?: TextDirection;
-  /** Bidirectional */
-  bidi?: boolean;
-  /** RTL gutter */
-  rtlGutter?: boolean;
-  /** Document grid */
-  docGrid?: {
-    type?: 'default' | 'lines' | 'linesAndChars' | 'snapToChars';
-    linePitch?: number;
-    charSpace?: number;
-  };
-  /** Printer settings relationship */
-  printerSettings?: string;
-  /** Revision IDs */
-  rsidR?: string;
-  rsidSect?: string;
+/**
+ * Header or footer content
+ */
+export interface HeaderFooter {
+  type: 'header' | 'footer';
+  /** Header/footer type */
+  hdrFtrType: HeaderFooterType;
+  /** Content (paragraphs, tables, etc.) */
+  content: (Paragraph | Table)[];
 }
 
 // ============================================================================
-// Paragraph Types
+// FOOTNOTES & ENDNOTES
 // ============================================================================
 
+/**
+ * Footnote position
+ */
+export type FootnotePosition = 'pageBottom' | 'beneathText' | 'sectEnd' | 'docEnd';
+
+/**
+ * Endnote position
+ */
+export type EndnotePosition = 'sectEnd' | 'docEnd';
+
+/**
+ * Number restart type
+ */
+export type NoteNumberRestart = 'continuous' | 'eachSect' | 'eachPage';
+
+/**
+ * Footnote properties
+ */
+export interface FootnoteProperties {
+  position?: FootnotePosition;
+  numFmt?: NumberFormat;
+  numStart?: number;
+  numRestart?: NoteNumberRestart;
+}
+
+/**
+ * Endnote properties
+ */
+export interface EndnoteProperties {
+  position?: EndnotePosition;
+  numFmt?: NumberFormat;
+  numStart?: number;
+  numRestart?: NoteNumberRestart;
+}
+
+/**
+ * Footnote (w:footnote)
+ */
+export interface Footnote {
+  type: 'footnote';
+  /** Footnote ID */
+  id: number;
+  /** Special footnote type */
+  noteType?: 'normal' | 'separator' | 'continuationSeparator' | 'continuationNotice';
+  /** Content */
+  content: Paragraph[];
+}
+
+/**
+ * Endnote (w:endnote)
+ */
+export interface Endnote {
+  type: 'endnote';
+  /** Endnote ID */
+  id: number;
+  /** Special endnote type */
+  noteType?: 'normal' | 'separator' | 'continuationSeparator' | 'continuationNotice';
+  /** Content */
+  content: Paragraph[];
+}
+
+// ============================================================================
+// PARAGRAPH
+// ============================================================================
+
+/**
+ * Paragraph content types
+ */
 export type ParagraphContent =
   | Run
   | Hyperlink
   | BookmarkStart
   | BookmarkEnd
   | SimpleField
-  | { type: 'sdt'; content: ParagraphContent[] }
-  | { type: 'del'; author?: string; date?: string; content: ParagraphContent[] }
-  | { type: 'ins'; author?: string; date?: string; content: ParagraphContent[] };
+  | ComplexField;
 
+/**
+ * Paragraph (w:p)
+ */
 export interface Paragraph {
-  /** Paragraph properties */
-  properties?: ParagraphFormatting;
+  type: 'paragraph';
+  /** Unique paragraph ID */
+  paraId?: string;
+  /** Text ID */
+  textId?: string;
+  /** Paragraph formatting */
+  formatting?: ParagraphFormatting;
   /** Paragraph content */
   content: ParagraphContent[];
-  /** Computed list rendering info */
+  /** Computed list rendering (if this is a list item) */
   listRendering?: ListRendering;
-  /** Section properties (if last paragraph of section) */
-  sectPr?: SectionProperties;
-  /** Revision IDs */
-  rsidR?: string;
-  rsidRDefault?: string;
-  rsidP?: string;
-  rsidRPr?: string;
 }
 
 // ============================================================================
-// Document Structure Types
+// SECTION PROPERTIES
 // ============================================================================
 
-export type DocumentContent = Paragraph | Table | { type: 'sdt'; content: DocumentContent[] };
+/**
+ * Page orientation
+ */
+export type PageOrientation = 'portrait' | 'landscape';
 
-export interface DocumentBody {
-  /** Body content */
-  content: DocumentContent[];
-  /** Body section properties */
-  sectPr?: SectionProperties;
+/**
+ * Section start type
+ */
+export type SectionStart = 'continuous' | 'nextPage' | 'oddPage' | 'evenPage' | 'nextColumn';
+
+/**
+ * Vertical alignment
+ */
+export type VerticalAlign = 'top' | 'center' | 'both' | 'bottom';
+
+/**
+ * Line number restart type
+ */
+export type LineNumberRestart = 'continuous' | 'newPage' | 'newSection';
+
+/**
+ * Column definition
+ */
+export interface Column {
+  /** Column width in twips */
+  width?: number;
+  /** Space after column in twips */
+  space?: number;
 }
 
+/**
+ * Section properties (w:sectPr)
+ */
+export interface SectionProperties {
+  // Page size
+  /** Page width in twips */
+  pageWidth?: number;
+  /** Page height in twips */
+  pageHeight?: number;
+  /** Page orientation */
+  orientation?: PageOrientation;
+
+  // Margins
+  /** Top margin in twips */
+  marginTop?: number;
+  /** Bottom margin in twips */
+  marginBottom?: number;
+  /** Left margin in twips */
+  marginLeft?: number;
+  /** Right margin in twips */
+  marginRight?: number;
+  /** Header distance from top in twips */
+  headerDistance?: number;
+  /** Footer distance from bottom in twips */
+  footerDistance?: number;
+  /** Gutter margin in twips */
+  gutter?: number;
+
+  // Columns
+  /** Number of columns */
+  columnCount?: number;
+  /** Space between columns in twips */
+  columnSpace?: number;
+  /** Equal width columns */
+  equalWidth?: boolean;
+  /** Separator line between columns */
+  separator?: boolean;
+  /** Individual column definitions */
+  columns?: Column[];
+
+  // Section behavior
+  /** Section start type */
+  sectionStart?: SectionStart;
+  /** Vertical alignment of text */
+  verticalAlign?: VerticalAlign;
+  /** Right-to-left section */
+  bidi?: boolean;
+
+  // Headers and footers
+  /** Header references */
+  headerReferences?: HeaderReference[];
+  /** Footer references */
+  footerReferences?: FooterReference[];
+  /** Different first page header/footer */
+  titlePg?: boolean;
+  /** Different odd/even page headers/footers */
+  evenAndOddHeaders?: boolean;
+
+  // Line numbers
+  /** Line numbering settings */
+  lineNumbers?: {
+    start?: number;
+    countBy?: number;
+    distance?: number;
+    restart?: LineNumberRestart;
+  };
+
+  // Page borders
+  /** Page borders */
+  pageBorders?: {
+    top?: BorderSpec;
+    bottom?: BorderSpec;
+    left?: BorderSpec;
+    right?: BorderSpec;
+    /** Display setting */
+    display?: 'allPages' | 'firstPage' | 'notFirstPage';
+    /** Offset from */
+    offsetFrom?: 'page' | 'text';
+    /** Z-order */
+    zOrder?: 'front' | 'back';
+  };
+
+  // Background
+  /** Page background */
+  background?: {
+    color?: ColorValue;
+    themeColor?: ThemeColorSlot;
+    themeTint?: string;
+    themeShade?: string;
+  };
+
+  // Footnote/Endnote properties
+  /** Footnote properties for this section */
+  footnotePr?: FootnoteProperties;
+  /** Endnote properties for this section */
+  endnotePr?: EndnoteProperties;
+
+  // Document grid
+  /** Document grid */
+  docGrid?: {
+    type?: 'default' | 'lines' | 'linesAndChars' | 'snapToChars';
+    linePitch?: number;
+    charSpace?: number;
+  };
+
+  // Paper source
+  /** First page paper source */
+  paperSrcFirst?: number;
+  /** Other pages paper source */
+  paperSrcOther?: number;
+}
+
+// ============================================================================
+// SECTION & DOCUMENT BODY
+// ============================================================================
+
+/**
+ * Block-level content types
+ */
+export type BlockContent = Paragraph | Table;
+
+/**
+ * Section (implicit or explicit based on sectPr)
+ */
 export interface Section {
-  /** Section ID */
-  id?: string;
-  /** Section content */
-  content: DocumentContent[];
   /** Section properties */
   properties: SectionProperties;
+  /** Content in this section */
+  content: BlockContent[];
   /** Headers for this section */
-  headers?: HeaderFooter[];
+  headers?: Map<HeaderFooterType, HeaderFooter>;
   /** Footers for this section */
-  footers?: HeaderFooter[];
+  footers?: Map<HeaderFooterType, HeaderFooter>;
+}
+
+/**
+ * Document body (w:body)
+ */
+export interface DocumentBody {
+  /** All content (paragraphs, tables) */
+  content: BlockContent[];
+  /** Sections (derived from sectPr in paragraphs and final sectPr) */
+  sections?: Section[];
+  /** Final section properties (from body's sectPr) */
+  finalSectionProperties?: SectionProperties;
 }
 
 // ============================================================================
-// Theme Types
+// STYLES
 // ============================================================================
 
-export interface ThemeColorScheme {
-  name: string;
-  dk1: string;
-  lt1: string;
-  dk2: string;
-  lt2: string;
-  accent1: string;
-  accent2: string;
-  accent3: string;
-  accent4: string;
-  accent5: string;
-  accent6: string;
-  hlink: string;
-  folHlink: string;
-}
+/**
+ * Style type
+ */
+export type StyleType = 'paragraph' | 'character' | 'numbering' | 'table';
 
-export interface ThemeFontScheme {
-  name: string;
-  majorFont: {
-    latin: string;
-    ea?: string;
-    cs?: string;
-  };
-  minorFont: {
-    latin: string;
-    ea?: string;
-    cs?: string;
-  };
-}
-
-export interface Theme {
-  name?: string;
-  colorScheme: ThemeColorScheme;
-  fontScheme: ThemeFontScheme;
-}
-
-// ============================================================================
-// Style Types
-// ============================================================================
-
-export type StyleType = 'paragraph' | 'character' | 'table' | 'numbering';
-
+/**
+ * Style definition
+ */
 export interface Style {
   /** Style ID */
   styleId: string;
@@ -1615,36 +1560,26 @@ export interface Style {
   type: StyleType;
   /** Display name */
   name?: string;
-  /** Based on style */
+  /** Based on style ID */
   basedOn?: string;
-  /** Next paragraph style */
+  /** Next style after Enter (for paragraph styles) */
   next?: string;
-  /** Linked style */
+  /** Linked style (paragraph/character pair) */
   link?: string;
-  /** Auto redefine */
-  autoRedefine?: boolean;
-  /** Hidden */
-  hidden?: boolean;
-  /** UI priority */
+  /** UI sort priority */
   uiPriority?: number;
-  /** Semi-hidden */
+  /** Hidden from UI */
+  hidden?: boolean;
+  /** Semi-hidden from UI */
   semiHidden?: boolean;
   /** Unhide when used */
   unhideWhenUsed?: boolean;
-  /** Quick format */
+  /** Quick format in gallery */
   qFormat?: boolean;
-  /** Locked */
-  locked?: boolean;
   /** Is default style */
   default?: boolean;
-  /** Personal style */
+  /** Personal style (custom) */
   personal?: boolean;
-  /** Personal compose */
-  personalCompose?: boolean;
-  /** Personal reply */
-  personalReply?: boolean;
-  /** Custom style */
-  customStyle?: boolean;
   /** Paragraph properties (for paragraph/table styles) */
   pPr?: ParagraphFormatting;
   /** Run properties */
@@ -1655,30 +1590,32 @@ export interface Style {
   trPr?: TableRowFormatting;
   /** Table cell properties */
   tcPr?: TableCellFormatting;
-  /** Table style conditional formatting */
+  /** Conditional table style parts */
   tblStylePr?: Array<{
-    type: string;
+    type: 'band1Horz' | 'band1Vert' | 'band2Horz' | 'band2Vert'
+      | 'firstCol' | 'firstRow' | 'lastCol' | 'lastRow'
+      | 'neCell' | 'nwCell' | 'seCell' | 'swCell';
     pPr?: ParagraphFormatting;
     rPr?: TextFormatting;
     tblPr?: TableFormatting;
     trPr?: TableRowFormatting;
     tcPr?: TableCellFormatting;
   }>;
-  /** Revision ID */
-  rsid?: string;
 }
 
+/**
+ * Document defaults (w:docDefaults)
+ */
 export interface DocDefaults {
   /** Default run properties */
-  rPrDefault?: {
-    rPr?: TextFormatting;
-  };
+  rPr?: TextFormatting;
   /** Default paragraph properties */
-  pPrDefault?: {
-    pPr?: ParagraphFormatting;
-  };
+  pPr?: ParagraphFormatting;
 }
 
+/**
+ * Style definitions from styles.xml
+ */
 export interface StyleDefinitions {
   /** Document defaults */
   docDefaults?: DocDefaults;
@@ -1690,34 +1627,100 @@ export interface StyleDefinitions {
     defUnhideWhenUsed?: boolean;
     defQFormat?: boolean;
     count?: number;
-    lsdException?: Array<{
-      name: string;
-      locked?: boolean;
-      uiPriority?: number;
-      semiHidden?: boolean;
-      unhideWhenUsed?: boolean;
-      qFormat?: boolean;
-    }>;
   };
-  /** Styles */
-  style: Style[];
+  /** Style definitions */
+  styles: Style[];
 }
 
 // ============================================================================
-// Font Table Types
+// THEME
 // ============================================================================
 
+/**
+ * Theme color scheme (a:clrScheme)
+ */
+export interface ThemeColorScheme {
+  /** Dark 1 color (usually black) */
+  dk1?: string;
+  /** Light 1 color (usually white) */
+  lt1?: string;
+  /** Dark 2 color */
+  dk2?: string;
+  /** Light 2 color */
+  lt2?: string;
+  /** Accent colors 1-6 */
+  accent1?: string;
+  accent2?: string;
+  accent3?: string;
+  accent4?: string;
+  accent5?: string;
+  accent6?: string;
+  /** Hyperlink color */
+  hlink?: string;
+  /** Followed hyperlink color */
+  folHlink?: string;
+}
+
+/**
+ * Theme font (with script variants)
+ */
+export interface ThemeFont {
+  /** Latin font */
+  latin?: string;
+  /** East Asian font */
+  ea?: string;
+  /** Complex script font */
+  cs?: string;
+  /** Script-specific fonts */
+  fonts?: Record<string, string>;
+}
+
+/**
+ * Theme font scheme (a:fontScheme)
+ */
+export interface ThemeFontScheme {
+  /** Major font (headings) */
+  majorFont?: ThemeFont;
+  /** Minor font (body text) */
+  minorFont?: ThemeFont;
+}
+
+/**
+ * Theme (from theme1.xml)
+ */
+export interface Theme {
+  /** Theme name */
+  name?: string;
+  /** Color scheme */
+  colorScheme?: ThemeColorScheme;
+  /** Font scheme */
+  fontScheme?: ThemeFontScheme;
+  /** Format scheme (fills, lines, effects) - simplified */
+  formatScheme?: {
+    name?: string;
+  };
+}
+
+// ============================================================================
+// FONT TABLE
+// ============================================================================
+
+/**
+ * Font info from fontTable.xml
+ */
 export interface FontInfo {
   /** Font name */
   name: string;
-  /** Font family */
-  family?: 'auto' | 'decorative' | 'modern' | 'roman' | 'script' | 'swiss';
+  /** Alternate names */
+  altName?: string;
+  /** Panose-1 classification */
+  panose1?: string;
   /** Character set */
   charset?: string;
-  /** Pitch */
+  /** Font family type */
+  family?: 'decorative' | 'modern' | 'roman' | 'script' | 'swiss' | 'auto';
+  /** Pitch (fixed or variable) */
   pitch?: 'default' | 'fixed' | 'variable';
-  /** Panose-1 number */
-  panose1?: string;
   /** Signature */
   sig?: {
     usb0?: string;
@@ -1727,93 +1730,93 @@ export interface FontInfo {
     csb0?: string;
     csb1?: string;
   };
-  /** Embedded font */
-  embedRegular?: {
-    fontKey?: string;
-    rId: string;
-    subsetted?: boolean;
-  };
-  /** Embedded bold font */
-  embedBold?: {
-    fontKey?: string;
-    rId: string;
-    subsetted?: boolean;
-  };
-  /** Embedded italic font */
-  embedItalic?: {
-    fontKey?: string;
-    rId: string;
-    subsetted?: boolean;
-  };
-  /** Embedded bold italic font */
-  embedBoldItalic?: {
-    fontKey?: string;
-    rId: string;
-    subsetted?: boolean;
-  };
-  /** Alternate name */
-  altName?: string;
+  /** Embedded font data reference */
+  embedRegular?: string;
+  embedBold?: string;
+  embedItalic?: string;
+  embedBoldItalic?: string;
 }
 
+/**
+ * Font table from fontTable.xml
+ */
 export interface FontTable {
-  font: FontInfo[];
+  fonts: FontInfo[];
 }
 
 // ============================================================================
-// Relationship Types
+// RELATIONSHIPS
 // ============================================================================
 
+/**
+ * Relationship type
+ */
 export type RelationshipType =
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument'
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles'
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme'
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable'
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering'
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes'
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/endnotes'
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/header'
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer'
   | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image'
   | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink'
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/header'
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer'
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes'
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/endnotes'
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles'
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering'
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable'
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme'
   | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings'
   | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/webSettings'
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments'
-  | 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties'
-  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties'
-  | string;
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject'
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart'
+  | 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramData'
+  | string; // Allow other relationship types
 
+/**
+ * Relationship entry
+ */
 export interface Relationship {
-  /** Relationship ID */
+  /** Relationship ID (e.g., "rId1") */
   id: string;
-  /** Relationship type */
+  /** Relationship type URI */
   type: RelationshipType;
-  /** Target path */
+  /** Target path or URL */
   target: string;
-  /** Target mode (external for hyperlinks) */
+  /** Target mode */
   targetMode?: 'External' | 'Internal';
 }
 
-export interface RelationshipMap {
-  [rId: string]: Relationship;
-}
+/**
+ * Relationship map (keyed by rId)
+ */
+export type RelationshipMap = Map<string, Relationship>;
 
 // ============================================================================
-// Document Package Types
+// MEDIA
 // ============================================================================
 
+/**
+ * Media file from word/media/
+ */
 export interface MediaFile {
-  /** File path within package */
+  /** File path in ZIP */
   path: string;
-  /** File content */
-  data: Uint8Array | ArrayBuffer;
-  /** Content type */
-  contentType: string;
+  /** MIME type */
+  mimeType: string;
+  /** Binary data */
+  data: ArrayBuffer;
+  /** Base64 encoded data for rendering */
+  base64?: string;
 }
 
+// ============================================================================
+// DOCX PACKAGE
+// ============================================================================
+
+/**
+ * Complete DOCX package structure
+ */
 export interface DocxPackage {
   /** Document body */
-  body: DocumentBody;
-  /** Styles */
+  document: DocumentBody;
+  /** Style definitions */
   styles?: StyleDefinitions;
   /** Theme */
   theme?: Theme;
@@ -1821,22 +1824,20 @@ export interface DocxPackage {
   numbering?: NumberingDefinitions;
   /** Font table */
   fontTable?: FontTable;
-  /** Headers */
-  headers: Map<string, HeaderFooter>;
-  /** Footers */
-  footers: Map<string, HeaderFooter>;
   /** Footnotes */
-  footnotes: Map<string, Footnote>;
+  footnotes?: Footnote[];
   /** Endnotes */
-  endnotes: Map<string, Endnote>;
-  /** Media files */
-  media: Map<string, MediaFile>;
-  /** Relationships */
-  relationships: RelationshipMap;
+  endnotes?: Endnote[];
+  /** Headers by relationship ID */
+  headers?: Map<string, HeaderFooter>;
+  /** Footers by relationship ID */
+  footers?: Map<string, HeaderFooter>;
   /** Document relationships */
-  documentRelationships: RelationshipMap;
-  /** Core properties */
-  coreProperties?: {
+  relationships?: RelationshipMap;
+  /** Media files */
+  media?: Map<string, MediaFile>;
+  /** Document properties */
+  properties?: {
     title?: string;
     subject?: string;
     creator?: string;
@@ -1844,38 +1845,25 @@ export interface DocxPackage {
     description?: string;
     lastModifiedBy?: string;
     revision?: number;
-    created?: string;
-    modified?: string;
+    created?: Date;
+    modified?: Date;
   };
-  /** App properties */
-  appProperties?: {
-    application?: string;
-    appVersion?: string;
-    pages?: number;
-    words?: number;
-    characters?: number;
-    lines?: number;
-    paragraphs?: number;
-  };
-  /** Settings */
-  settings?: Record<string, unknown>;
-  /** Web settings */
-  webSettings?: Record<string, unknown>;
 }
 
 // ============================================================================
-// Complete Document Type
+// TOP-LEVEL DOCUMENT
 // ============================================================================
 
+/**
+ * Complete parsed DOCX document
+ */
 export interface Document {
-  /** Document package data */
+  /** DOCX package with all parsed content */
   package: DocxPackage;
-  /** Sections */
-  sections: Section[];
-  /** All bookmarks in document */
-  bookmarks: Map<string, BookmarkStart>;
-  /** Detected template variables */
+  /** Original ArrayBuffer for round-trip */
+  originalBuffer?: ArrayBuffer;
+  /** Detected template variables ({{...}}) */
   templateVariables?: string[];
-  /** Original ZIP for round-trip */
-  originalZip?: unknown;
+  /** Parsing warnings/errors */
+  warnings?: string[];
 }

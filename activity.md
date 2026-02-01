@@ -317,3 +317,80 @@ Recreated project scaffold:
 - bun build exits 0: ✓
 
 ---
+
+### US-02: DOCX exploration utility (Fresh)
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+`src/docx/explorer.ts` exists with:
+- `exploreDocx(buffer): Promise<DocxExploration>` - Main exploration function
+- `extractXml(exploration, path, format?)` - Extract and format XML files
+- `printExplorationSummary(exploration)` - Console output for debugging
+- `getKeyFiles(exploration)` - Quick check for key DOCX components
+- `extractBinary(exploration, path)` - Extract binary files (images, etc.)
+- `getXmlPaths(exploration)` - List all XML paths
+- `getMediaPaths(exploration)` - List all media paths
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
+
+### US-03: Comprehensive document types (Fresh)
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/types/document.ts` with comprehensive TypeScript types (~1500 lines):
+
+**Color & Styling Primitives:**
+- `ThemeColorSlot`, `ColorValue`, `BorderSpec`, `ShadingProperties`
+
+**Text Formatting (rPr):**
+- `TextFormatting` with: bold, italic, underline (with styles), strike, doubleStrike, vertAlign (superscript/subscript), smallCaps, allCaps, hidden, color, highlight, shading, fontSize, fontFamily (with theme support), spacing, position, scale, kerning, effects, rtl, cs, styleId
+
+**Paragraph Formatting (pPr):**
+- `ParagraphFormatting` with: alignment, bidi, spacing (before/after/line), indentation (left/right/firstLine/hanging), borders (top/bottom/left/right/between/bar), shading, tabs, keepNext, keepLines, widowControl, pageBreakBefore, numPr, outlineLevel, styleId, frame properties
+
+**Run Content Types:**
+- `TextContent`, `TabContent`, `BreakContent`, `SymbolContent`, `NoteReferenceContent`, `FieldCharContent`, `InstrTextContent`, `SoftHyphenContent`, `NoBreakHyphenContent`, `DrawingContent`, `ShapeContent`
+
+**Document Elements:**
+- `Run`, `Hyperlink`, `BookmarkStart`, `BookmarkEnd`
+- `SimpleField`, `ComplexField` with all `FieldType` values
+- `Image` with size, wrap, position, transform, padding
+- `Shape` with all shape types, fill, outline, text body
+- `TextBox`
+
+**Tables:**
+- `Table`, `TableRow`, `TableCell`
+- `TableFormatting`, `TableRowFormatting`, `TableCellFormatting`
+- `TableBorders`, `CellMargins`, `TableLook`, `FloatingTableProperties`
+
+**Lists & Numbering:**
+- `ListLevel`, `AbstractNumbering`, `NumberingInstance`
+- `NumberingDefinitions`, `ListRendering`
+- All `NumberFormat` types
+
+**Headers, Footers, Notes:**
+- `HeaderFooter`, `HeaderReference`, `FooterReference`
+- `Footnote`, `Endnote`, `FootnoteProperties`, `EndnoteProperties`
+
+**Document Structure:**
+- `Paragraph`, `ParagraphContent`
+- `Section`, `SectionProperties` (page size, margins, columns, headers/footers, line numbers, page borders, background)
+- `DocumentBody`, `BlockContent`
+
+**Supporting Types:**
+- `Style`, `DocDefaults`, `StyleDefinitions`
+- `Theme`, `ThemeColorScheme`, `ThemeFontScheme`
+- `FontInfo`, `FontTable`
+- `Relationship`, `RelationshipMap`
+- `MediaFile`
+- `DocxPackage`, `Document`
+
+Updated `src/types/index.ts` to export all types.
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
