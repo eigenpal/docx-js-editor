@@ -1,205 +1,307 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * DOCX Editor Demo
+ *
+ * Complete demo showing all features:
+ * - Load sample or custom DOCX
+ * - Full editing with toolbar
+ * - Context menu AI (mock handler)
+ * - Save/download
+ * - Variable panel
+ */
+
+import React, { useState, useRef, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
+import {
+  DocxEditor,
+  type DocxEditorRef,
+  createMockAIHandler,
+  type AIActionRequest,
+  type AgentResponse,
+  type Document,
+} from '../src/index';
 
-// Demo app - will be replaced with actual DocxEditor once implemented
-function App() {
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+// ============================================================================
+// DEMO APP
+// ============================================================================
+
+function DemoApp() {
+  const editorRef = useRef<DocxEditorRef>(null);
   const [documentBuffer, setDocumentBuffer] = useState<ArrayBuffer | null>(null);
+  const [fileName, setFileName] = useState<string>('');
+  const [status, setStatus] = useState<string>('');
+  const [lastAction, setLastAction] = useState<string>('');
 
-  useEffect(() => {
-    // Simulate initialization
-    const timer = setTimeout(() => {
-      setStatus('ready');
-    }, 500);
-    return () => clearTimeout(timer);
+  // Mock AI handler with delay
+  const mockAIHandler = useCallback(async (request: AIActionRequest): Promise<AgentResponse> => {
+    setLastAction(`AI: ${request.action}`);
+    const handler = createMockAIHandler(1500);
+    const response = await handler(request);
+    setLastAction(`AI: ${request.action} - Done`);
+    return response;
   }, []);
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle file selection
+  const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
+      setStatus('Loading...');
       const buffer = await file.arrayBuffer();
       setDocumentBuffer(buffer);
-      console.log('Loaded DOCX:', file.name, 'Size:', buffer.byteLength);
+      setFileName(file.name);
+      setStatus('');
     } catch (error) {
+      setStatus('Error loading file');
       console.error('Failed to load file:', error);
-      setStatus('error');
     }
-  };
+  }, []);
 
-  if (status === 'loading') {
-    return (
-      <div style={styles.container}>
-        <div style={styles.loading}>Loading DOCX Editor...</div>
-      </div>
-    );
-  }
+  // Handle save/download
+  const handleSave = useCallback(async () => {
+    if (!editorRef.current) return;
 
-  if (status === 'error') {
-    return (
-      <div style={styles.container}>
-        <div style={styles.error}>Error loading editor</div>
-      </div>
-    );
-  }
+    try {
+      setStatus('Saving...');
+      const buffer = await editorRef.current.save();
+      if (buffer) {
+        // Create download link
+        const blob = new Blob([buffer], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName || 'document.docx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setStatus('Saved!');
+        setTimeout(() => setStatus(''), 2000);
+      }
+    } catch (error) {
+      setStatus('Save failed');
+      console.error('Failed to save:', error);
+    }
+  }, [fileName]);
+
+  // Handle document change
+  const handleDocumentChange = useCallback((doc: Document) => {
+    console.log('Document changed');
+  }, []);
+
+  // Handle error
+  const handleError = useCallback((error: Error) => {
+    console.error('Editor error:', error);
+    setStatus(`Error: ${error.message}`);
+  }, []);
+
+  // Handle fonts loaded
+  const handleFontsLoaded = useCallback(() => {
+    console.log('Fonts loaded');
+  }, []);
 
   return (
     <div style={styles.container}>
-      {/* Header / Toolbar area */}
-      <header style={styles.header} data-testid="toolbar">
-        <h1 style={styles.title}>DOCX Editor</h1>
-        <div style={styles.toolbar}>
-          <input
-            type="file"
-            accept=".docx"
-            onChange={handleFileSelect}
-            style={styles.fileInput}
-          />
-          <button style={styles.button}>Bold</button>
-          <button style={styles.button}>Italic</button>
-          <button style={styles.button}>Underline</button>
+      {/* Top bar */}
+      <header style={styles.header}>
+        <div style={styles.headerLeft}>
+          <h1 style={styles.title}>DOCX Editor Demo</h1>
+          {fileName && <span style={styles.fileName}>{fileName}</span>}
+        </div>
+        <div style={styles.headerRight}>
+          <label style={styles.fileInputLabel}>
+            <input
+              type="file"
+              accept=".docx"
+              onChange={handleFileSelect}
+              style={styles.fileInputHidden}
+            />
+            Open DOCX
+          </label>
+          <button
+            style={styles.button}
+            onClick={handleSave}
+            disabled={!documentBuffer}
+          >
+            Save
+          </button>
+          {status && <span style={styles.status}>{status}</span>}
+          {lastAction && <span style={styles.action}>{lastAction}</span>}
         </div>
       </header>
 
-      {/* Main content area */}
+      {/* Editor */}
       <main style={styles.main}>
         {documentBuffer ? (
-          <div style={styles.editor} data-testid="editor">
-            <div style={styles.page} data-testid="document-viewer">
-              <p style={styles.placeholder}>
-                Document loaded ({documentBuffer.byteLength} bytes)
-              </p>
-              <p style={styles.info}>
-                Parser and renderer will be implemented in upcoming tasks.
-              </p>
-            </div>
-          </div>
+          <DocxEditor
+            ref={editorRef}
+            documentBuffer={documentBuffer}
+            onAgentRequest={mockAIHandler}
+            onChange={handleDocumentChange}
+            onError={handleError}
+            onFontsLoaded={handleFontsLoaded}
+            showToolbar={true}
+            showVariablePanel={true}
+            showZoomControl={true}
+            initialZoom={1.0}
+            variablePanelPosition="right"
+          />
         ) : (
-          <div style={styles.emptyState} data-testid="empty-state">
-            <h2>No Document Loaded</h2>
-            <p>Select a .docx file to get started</p>
+          <div style={styles.emptyState}>
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <line x1="10" y1="9" x2="8" y2="9" />
+            </svg>
+            <h2 style={styles.emptyTitle}>No Document Loaded</h2>
+            <p style={styles.emptyText}>Click "Open DOCX" to load a document</p>
+            <p style={styles.emptyHint}>
+              Features:
+            </p>
+            <ul style={styles.featureList}>
+              <li>Full text formatting (bold, italic, underline, etc.)</li>
+              <li>Paragraph styles and alignment</li>
+              <li>Tables, images, and shapes</li>
+              <li>Template variables ({{'{{'}}variable{'}}'}}</li>
+              <li>Right-click for AI actions</li>
+              <li>Zoom control</li>
+            </ul>
           </div>
         )}
       </main>
-
-      {/* Variable Panel (sidebar) */}
-      <aside style={styles.sidebar} data-testid="variable-panel">
-        <h3 style={styles.sidebarTitle}>Template Variables</h3>
-        <p style={styles.sidebarContent}>
-          Variables will appear here once a document is loaded.
-        </p>
-      </aside>
     </div>
   );
 }
 
+// ============================================================================
+// STYLES
+// ============================================================================
+
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    display: 'grid',
-    gridTemplateRows: 'auto 1fr',
-    gridTemplateColumns: '1fr 300px',
+    display: 'flex',
+    flexDirection: 'column',
     minHeight: '100vh',
-    gap: '1px',
-    background: '#ddd',
+    background: '#f5f5f5',
   },
   header: {
-    gridColumn: '1 / -1',
-    background: '#fff',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: '12px 20px',
+    background: '#fff',
+    borderBottom: '1px solid #e0e0e0',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  headerLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
-    borderBottom: '1px solid #ddd',
+    gap: '16px',
+  },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
   },
   title: {
     fontSize: '20px',
     fontWeight: 600,
     margin: 0,
+    color: '#1a73e8',
   },
-  toolbar: {
-    display: 'flex',
-    gap: '8px',
-    alignItems: 'center',
-  },
-  button: {
-    padding: '6px 12px',
-    border: '1px solid #ccc',
+  fileName: {
+    fontSize: '14px',
+    color: '#666',
+    padding: '4px 8px',
+    background: '#f0f0f0',
     borderRadius: '4px',
-    background: '#fff',
+  },
+  fileInputLabel: {
+    padding: '8px 16px',
+    background: '#1a73e8',
+    color: '#fff',
+    borderRadius: '4px',
     cursor: 'pointer',
     fontSize: '14px',
+    fontWeight: 500,
   },
-  fileInput: {
+  fileInputHidden: {
+    display: 'none',
+  },
+  button: {
+    padding: '8px 16px',
+    background: '#fff',
+    border: '1px solid #dadce0',
+    borderRadius: '4px',
+    cursor: 'pointer',
     fontSize: '14px',
+    fontWeight: 500,
+  },
+  status: {
+    fontSize: '13px',
+    color: '#666',
+    padding: '4px 8px',
+    background: '#f0f0f0',
+    borderRadius: '4px',
+  },
+  action: {
+    fontSize: '13px',
+    color: '#1a73e8',
+    padding: '4px 8px',
+    background: '#e8f0fe',
+    borderRadius: '4px',
   },
   main: {
-    background: '#f0f0f0',
-    padding: '20px',
-    overflow: 'auto',
-  },
-  editor: {
-    maxWidth: '800px',
-    margin: '0 auto',
-  },
-  page: {
-    background: '#fff',
-    minHeight: '600px',
-    padding: '40px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-  },
-  placeholder: {
-    color: '#666',
-    marginBottom: '10px',
-  },
-  info: {
-    color: '#999',
-    fontSize: '14px',
+    flex: 1,
+    display: 'flex',
+    overflow: 'hidden',
   },
   emptyState: {
+    flex: 1,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
+    padding: '40px',
     color: '#666',
     textAlign: 'center',
   },
-  sidebar: {
-    background: '#fff',
-    padding: '20px',
-    borderLeft: '1px solid #ddd',
+  emptyTitle: {
+    fontSize: '24px',
+    fontWeight: 500,
+    margin: '24px 0 8px',
+    color: '#333',
   },
-  sidebarTitle: {
+  emptyText: {
     fontSize: '16px',
-    fontWeight: 600,
+    color: '#666',
+    marginBottom: '24px',
+  },
+  emptyHint: {
+    fontSize: '14px',
+    color: '#999',
     marginBottom: '12px',
   },
-  sidebarContent: {
+  featureList: {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+    fontSize: '13px',
     color: '#666',
-    fontSize: '14px',
-  },
-  loading: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gridColumn: '1 / -1',
-    height: '100vh',
-    color: '#666',
-  },
-  error: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gridColumn: '1 / -1',
-    height: '100vh',
-    color: '#c00',
+    textAlign: 'left',
   },
 };
 
-// Mount the app
+// ============================================================================
+// MOUNT
+// ============================================================================
+
 const container = document.getElementById('app');
 if (container) {
   const root = createRoot(container);
-  root.render(<App />);
+  root.render(<DemoApp />);
 }

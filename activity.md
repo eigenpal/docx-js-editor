@@ -4701,3 +4701,47 @@ Updated `src/index.ts` with comprehensive public API exports.
 - bun build exits 0: ✓
 
 ---
+
+### US-91: Demo page
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Updated `demo/main.tsx` with complete demo using DocxEditor.
+
+**Features:**
+- File picker to load any DOCX file
+- Full DocxEditor integration with all features
+- Mock AI handler with createMockAIHandler
+- Save/download functionality
+- Toolbar, variable panel, zoom control
+- Status display for actions
+
+**Integration Example:**
+```tsx
+<DocxEditor
+  ref={editorRef}
+  documentBuffer={documentBuffer}
+  onAgentRequest={mockAIHandler}
+  onChange={handleDocumentChange}
+  onError={handleError}
+  onFontsLoaded={handleFontsLoaded}
+  showToolbar={true}
+  showVariablePanel={true}
+  showZoomControl={true}
+  initialZoom={1.0}
+/>
+```
+
+**Empty State:**
+- Shows feature list when no document loaded
+- Instructions for loading a DOCX
+
+**Header:**
+- Open DOCX button
+- Save button
+- Status indicators
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

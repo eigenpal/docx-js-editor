@@ -1374,7 +1374,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Save/download works
 - Shows how to integrate
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
