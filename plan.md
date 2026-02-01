@@ -877,7 +877,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Delete at end merges with next
 - Tracks cursor position
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
