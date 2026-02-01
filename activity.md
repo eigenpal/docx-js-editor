@@ -3946,3 +3946,55 @@ Created `src/components/VariablePanel.tsx` with comprehensive variable managemen
 - bun build exits 0: ✓
 
 ---
+
+### US-76: docxtemplater integration
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/utils/processTemplate.ts` with comprehensive template processing:
+
+**Main Functions:**
+- `processTemplate(buffer, variables, options): ArrayBuffer` - Main processing function
+- `processTemplateDetailed(buffer, variables, options): ProcessTemplateResult` - Detailed result
+- `processTemplateAsBlob(buffer, variables, options): Blob` - Return as Blob
+- `processTemplateAndDownload(buffer, variables, filename, options)` - Process and download
+
+**Options:**
+- `nullGetter: 'keep' | 'empty' | 'error'` - How to handle undefined variables
+- `linebreaks: boolean` - Convert \n to w:br
+- `delimiters: { start, end }` - Custom delimiters
+
+**Result Types:**
+- `ProcessTemplateResult` - Detailed result with buffer, replaced/unreplaced variables, warnings
+- `TemplateError` - Error with message, variable, type, originalError
+
+**Validation Functions:**
+- `getTemplateTags(buffer): string[]` - Get all tags without processing
+- `validateTemplate(buffer): { valid, errors, tags }` - Validate template structure
+- `getMissingVariables(tags, variables): string[]` - Find missing values
+- `previewTemplate(buffer, variables): string` - Preview text output
+
+**Advanced Features:**
+- `processTemplateAdvanced(buffer, data, options)` - Supports conditionals, loops
+- `createTemplateProcessor(defaultOptions)` - Create preset processor
+
+**Error Handling:**
+- Parse errors (unclosed tags, syntax)
+- Render errors (docxtemplater errors)
+- Undefined variable errors
+- Formatted error messages with variable names
+- Original error preservation
+
+**Features:**
+- Uses PizZip + Docxtemplater
+- Preserves all formatting (fonts, styles, colors, tables)
+- DEFLATE compression on output
+- Paragraph loop support
+- Line break conversion
+- Custom delimiter support
+- Download helper function
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
