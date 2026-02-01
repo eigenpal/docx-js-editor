@@ -494,3 +494,45 @@ Created `src/utils/fontExtractor.ts` with:
 - bun build exits 0: ✓
 
 ---
+
+### US-07: XML parser utilities
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/xmlParser.ts` with:
+
+**Core Functions:**
+- `parseXml(xml)` - Parse XML string to element tree using xml-js
+- `parseXmlDocument(xml)` - Parse and return root element
+
+**Element Search Functions:**
+- `findChild(parent, namespace, localName)` - Find first matching child
+- `findChildren(parent, namespace, localName)` - Find all matching children
+- `findChildByLocalName(parent, localName)` - Find by local name only
+- `findChildrenByLocalName(parent, localName)` - Find all by local name
+- `getChildElements(parent)` - Get all child elements
+- `findDeep(root, namespace, localName)` - Recursive search
+- `findAllDeep(root, namespace, localName)` - Find all recursively
+
+**Attribute Functions:**
+- `getAttribute(element, namespace, name)` - Get attribute value
+- `getAttributeAny(element, names)` - Try multiple attribute names
+- `getAttributes(element)` - Get all attributes
+- `parseNumericAttribute(element, namespace, name, scale)` - Parse numeric
+- `hasFlag(element, namespace, name)` - Check boolean attribute
+
+**Content Functions:**
+- `getTextContent(element)` - Get concatenated text content
+- `parseBooleanElement(element)` - Parse OOXML boolean element
+- `parseColorElement(element)` - Parse color with theme support
+
+**Namespace Support:**
+- All OOXML namespaces defined: w:, a:, r:, wp:, wps:, wpc:, wpg:, pic:, m:, mc:, v:, o:
+- `getLocalName(name)` - Extract local name from prefixed name
+- `getNamespacePrefix(name)` - Extract namespace prefix
+- `matchesName(element, namespace, localName)` - Check element name
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
