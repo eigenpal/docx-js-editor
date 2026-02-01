@@ -297,7 +297,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Recognizes field types: PAGE, NUMPAGES, DATE, TIME, DOCPROPERTY, REF, TOC
 - Extracts current field value for display
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

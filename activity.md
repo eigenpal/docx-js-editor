@@ -887,3 +887,64 @@ Created `src/docx/bookmarkParser.ts` with comprehensive bookmark parsing:
 - bun build exits 0: ✓
 
 ---
+
+### US-18: Field parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/fieldParser.ts` with comprehensive field parsing:
+
+**Main Functions:**
+- `parseFieldType(instruction)` - Extract field type from instruction string
+- `parseFieldInstruction(instruction)` - Full instruction parsing with arguments and switches
+- `parseSimpleField(node, styles, theme)` - Parse w:fldSimple elements
+
+**Field Type Detection:**
+- All known field types defined in `KNOWN_FIELD_TYPES` constant
+- Recognizes: PAGE, NUMPAGES, DATE, TIME, CREATEDATE, SAVEDATE, PRINTDATE, EDITTIME
+- Document properties: AUTHOR, TITLE, SUBJECT, KEYWORDS, FILENAME, DOCPROPERTY
+- Cross-references: REF, PAGEREF, NOTEREF, HYPERLINK
+- TOC/Index: TOC, TOA, INDEX
+- Mail merge: MERGEFIELD, IF, NEXT, NEXTIF, ASK, SET
+- Numbering: SEQ, STYLEREF, AUTONUM
+
+**Field Instruction Parsing:**
+- `ParsedFieldInstruction` interface with type, raw, argument, switches
+- `FieldSwitch` interface for parsed switches
+- `getFormatSwitch(instruction)` - Get format switch (\* or \@)
+- `hasMergeFormat(instruction)` - Check for MERGEFORMAT preservation
+
+**Complex Field State Tracking:**
+- `ComplexFieldContext` interface for tracking parsing state
+- `createComplexFieldContext()` - Initialize new context
+- `resetComplexFieldContext(ctx)` - Reset for new field
+- `finalizeComplexField(ctx)` - Create ComplexField from context
+
+**Field Value Extraction:**
+- `getFieldDisplayValue(field)` - Get current display text
+- `isPageNumberField(field)` - Check if PAGE field
+- `isTotalPagesField(field)` - Check if NUMPAGES field
+- `isDateTimeField(field)` - Check for date/time fields
+- `isDocPropertyField(field)` - Check for document property fields
+- `isReferenceField(field)` - Check for cross-reference fields
+- `isMergeField(field)` - Check for mail merge fields
+- `isHyperlinkField(field)` - Check for HYPERLINK fields
+- `isTocField(field)` - Check for TOC/index fields
+
+**Field Value Computation:**
+- `computePageNumber(pageNumber, instruction)` - Format page numbers
+- `formatDate(date, format)` - Format dates using OOXML format codes
+- `toRoman(num)` - Convert to Roman numerals
+- `toLetter(num)` - Convert to letter (A-Z, AA-AZ, etc.)
+
+**Field Collection Utilities:**
+- `collectFields(content)` - Collect all fields from content array
+- `getFieldsByType(fields, type)` - Filter fields by type
+- `getPageNumberFields(fields)` - Get all PAGE fields
+- `getMergeFields(fields)` - Get all MERGEFIELD fields
+- `getMergeFieldNames(fields)` - Extract merge field names
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
