@@ -42,7 +42,8 @@ while true; do
   echo ""
   echo "───────────────────────────────────────────"
   echo "  📍 Current Task:"
-  CURRENT=$(grep -B3 '\*\*passes:\*\* false' plan.md 2>/dev/null | grep "^### US-" | head -1 | sed 's/### /  /')
+  # Get the first task with passes: false - need more context lines
+  CURRENT=$(grep -B20 '\*\*passes:\*\* false' plan.md 2>/dev/null | grep "^### US-" | head -1 | sed 's/### /  /')
   if [ -n "$CURRENT" ]; then
     echo "$CURRENT"
   else
@@ -51,7 +52,8 @@ while true; do
   echo ""
   echo "───────────────────────────────────────────"
   echo "  📋 Recently Completed:"
-  COMPLETED=$(grep -B2 '\*\*passes:\*\* true' plan.md 2>/dev/null | grep "^### US-" | tail -5 | sed 's/### /  ✓ /')
+  # Get the last 5 tasks with passes: true
+  COMPLETED=$(grep -B20 '\*\*passes:\*\* true' plan.md 2>/dev/null | grep "^### US-" | tail -5 | sed 's/### /  ✓ /')
   if [ -n "$COMPLETED" ]; then
     echo "$COMPLETED"
   else
@@ -60,7 +62,13 @@ while true; do
   echo ""
   echo "───────────────────────────────────────────"
   echo "  📝 Latest Activity:"
-  tail -30 activity.md 2>/dev/null | grep -A1 "^### US-" | grep -v "^--$" | tail -6
+  # Get last entries from activity.md
+  ACTIVITY=$(grep -A2 "^### US-" activity.md 2>/dev/null | grep -v "^--$" | tail -8)
+  if [ -n "$ACTIVITY" ]; then
+    echo "$ACTIVITY" | sed 's/^/  /'
+  else
+    echo "  (no activity yet)"
+  fi
   echo ""
   echo "═══════════════════════════════════════════"
   echo "  $(date '+%H:%M:%S') | Refreshing every 5s"

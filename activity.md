@@ -1326,3 +1326,73 @@ Note types:
 - bun build exits 0: ✓
 
 ---
+
+### US-24: Header/Footer parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/headerFooterParser.ts` with comprehensive header and footer parsing:
+
+**Main Functions:**
+- `parseHeader(xml, hdrFtrType, styles, theme, numbering, rels, media)` - Parse word/header*.xml
+- `parseFooter(xml, hdrFtrType, styles, theme, numbering, rels, media)` - Parse word/footer*.xml
+- `parseHeaderFooter(xml, isHeader, hdrFtrType, ...)` - Generic parser for either
+
+**Reference Parsing:**
+- `parseHeaderReference(element)` - Parse w:headerReference from sectPr
+- `parseFooterReference(element)` - Parse w:footerReference from sectPr
+- `parseHeaderReferences(sectPr)` - Get all header refs from section
+- `parseFooterReferences(sectPr)` - Get all footer refs from section
+
+**HeaderFooterMap Interface:**
+- `byId: Map<string, HeaderFooter>` - Lookup by rId
+- `get(rId)` - Get header/footer by rId
+- `has(rId)` - Check if exists
+- `getAll()` - Get all headers/footers
+- `getByType(type)` - Get by type (default, first, even)
+
+**Content Parsing:**
+- Parses paragraphs via `parseParagraph()`
+- Parses tables via `parseTable()`
+- Handles SDT (structured document tags) wrapper elements
+- Supports images, shapes, page number fields
+
+**Utility Functions:**
+- `getHeaderFooterText(hf)` - Get plain text content
+- `isEmptyHeaderFooter(hf)` - Check if empty
+- `hasPageNumberField(hf)` - Check for PAGE/NUMPAGES fields
+- `getHeaderForPage(headers, pageNum, isFirst, hasDiffFirst, hasDiffOddEven)` - Get correct header for page
+- `getFooterForPage(...)` - Get correct footer for page
+- `headerFooterMapToTypeMap(map)` - Convert rId map to type map
+- `hasImages(hf)` - Check for images
+- `hasTables(hf)` - Check for tables
+- `createEmptyHeaderFooterMap()` - Create empty map
+- `buildHeaderFooterMap(refs, xmlContents, ...)` - Build map from refs and content
+
+**OOXML Structure Reference:**
+```
+word/header1.xml:
+  w:hdr
+    └── w:p (paragraphs)
+    └── w:tbl (tables)
+    └── w:sdt > w:sdtContent > ... (structured content)
+
+word/footer1.xml:
+  w:ftr
+    └── w:p (paragraphs)
+    └── w:tbl (tables)
+
+sectPr references:
+  w:headerReference[@w:type="default|first|even"][@r:id="rIdX"]
+  w:footerReference[@w:type="default|first|even"][@r:id="rIdX"]
+```
+
+**Header/Footer Types:**
+- `default` - Used for all pages unless first/even specified
+- `first` - Used only for first page of section (if enabled)
+- `even` - Used for even-numbered pages (if odd/even enabled)
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
