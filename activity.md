@@ -394,3 +394,35 @@ Updated `src/types/index.ts` to export all types.
 - bun build exits 0: ✓
 
 ---
+
+### US-04: Google Fonts loader
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/utils/fontLoader.ts` with:
+
+**Main Functions:**
+- `loadFont(fontFamily, options?)` - Load a single font from Google Fonts
+- `loadFonts(families, options?)` - Load multiple fonts in parallel
+- `isFontLoaded(fontFamily)` - Check if a font is loaded
+- `onFontsLoaded(callback)` - Register callback for font load notifications
+- `isLoading()` - Check if any fonts are currently loading
+- `getLoadedFonts()` - Get list of all loaded fonts
+
+**Additional Utilities:**
+- `canRenderFont(fontFamily)` - Canvas-based font availability detection
+- `loadFontFromBuffer(fontFamily, buffer, options?)` - Load font from raw buffer (for embedded DOCX fonts)
+- `preloadCommonFonts()` - Preload common document fonts (Carlito, Caladea, Arimo, Tinos, Cousine)
+
+**Features:**
+- Uses Google Fonts CSS2 API with `display=swap`
+- Tracks loaded fonts to avoid duplicate requests
+- Tracks loading state with promises for concurrent requests
+- Uses CSS Font Loading API with canvas fallback
+- Supports custom weights and styles
+- Timeout handling for slow loads
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
