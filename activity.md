@@ -3604,3 +3604,73 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
 - bun build exits 0: ✓
 
 ---
+
+### US-71: Table editing toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+`src/components/ui/TableToolbar.tsx` exists with comprehensive table manipulation controls:
+
+**Main Components:**
+- `TableToolbar` - Main component with all table editing controls
+- `TableToolbarButton` - Individual button component with hover/disabled states
+
+**Table Actions Supported:**
+- Add row above/below
+- Add column left/right
+- Delete row/column
+- Merge cells (when multiple cells selected)
+- Split cell (when cell is merged)
+- Delete table
+
+**Context Detection:**
+- Uses `TableContext` interface to track:
+  - Current table and selection
+  - Whether multiple cells are selected
+  - Whether current cell can be split
+  - Row and column counts
+
+**SVG Icons:**
+- `AddRowAboveIcon`, `AddRowBelowIcon` - Row insertion icons
+- `AddColumnLeftIcon`, `AddColumnRightIcon` - Column insertion icons
+- `DeleteRowIcon`, `DeleteColumnIcon` - Deletion icons with red accent
+- `MergeCellsIcon`, `SplitCellIcon` - Merge/split icons
+- `DeleteTableIcon` - Full table deletion icon
+
+**Utility Functions:**
+- `createTableContext(table, selection)` - Create context from table and selection
+- `getColumnCount(table)` - Get column count accounting for merged cells
+- `getCellAt(table, row, col)` - Get cell at specific position
+- `isMultiCellSelection(selection)` - Check for multi-cell selection
+- `getSelectionBounds(selection)` - Get selection boundaries
+- `isCellInSelection(row, col, selection)` - Check if cell in selection
+- `createEmptyRow(template, colCount)` - Create new row from template
+- `createEmptyCell()` - Create empty cell with paragraph
+- `addRow(table, index, position)` - Add row before/after
+- `deleteRow(table, rowIndex)` - Delete row from table
+- `addColumn(table, index, position)` - Add column before/after
+- `deleteColumn(table, columnIndex)` - Delete column from table
+- `mergeCells(table, selection)` - Merge selected cells
+- `splitCell(table, row, col)` - Split merged cell
+- `getActionLabel(action)` - Get display label for action
+- `isDeleteAction(action)` - Check if action is destructive
+
+**CSS Classes:**
+- `docx-table-toolbar` - Main container
+- `docx-table-toolbar-compact` - Compact mode
+- `docx-table-toolbar-floating` - Floating position
+- `docx-table-toolbar-button` - Individual button
+
+**Features:**
+- Shows when cursor is in a table (via context prop)
+- Disables row/column deletion when only one row/column remains
+- Disables merge when single cell selected
+- Disables split when cell not merged
+- Supports compact mode for dense UIs
+- Supports floating mode for popup positioning
+- ARIA labels for accessibility
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
