@@ -949,7 +949,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Applies to selection
 - Shows current font of selection
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

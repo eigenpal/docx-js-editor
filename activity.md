@@ -3093,3 +3093,46 @@ Created `src/components/Toolbar.tsx` with comprehensive formatting controls:
 - bun build exits 0: ✓
 
 ---
+
+### US-62: Font picker
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ui/FontPicker.tsx` with comprehensive font family selection:
+
+**Main Component:**
+- `FontPicker` - React component with dropdown for selecting font families
+
+**Props:**
+- `value?: string` - Currently selected font family
+- `onChange?: (fontFamily: string) => void` - Callback when font is selected
+- `fonts?: FontOption[]` - Custom font options (defaults provided)
+- `disabled?: boolean` - Whether picker is disabled
+- `placeholder?: string` - Placeholder text
+- `width?: number | string` - Dropdown width
+- `showPreview?: boolean` - Show fonts in their own typeface
+
+**Features:**
+- Dropdown with available fonts grouped by category (sans-serif, serif, monospace)
+- Shows fonts in their own typeface for preview
+- Keyboard navigation (Arrow keys, Enter, Escape)
+- Shows current font of selection
+- Google Fonts integration via fontLoader and fontResolver
+- Hover and focus states
+- Accessible with ARIA attributes
+
+**Default Fonts Included:**
+- Sans-serif: Arial, Calibri, Helvetica, Verdana, Tahoma, Trebuchet MS, Open Sans, Roboto, Lato
+- Serif: Times New Roman, Cambria, Georgia, Palatino, Garamond, Book Antiqua
+- Monospace: Courier New, Consolas, Monaco, Source Code Pro
+
+**Utility Functions:**
+- `getDefaultFonts()` - Get default font options
+- `createFontOption(fontName)` - Create option from font name
+- `mergeFontOptions(customFonts, includeDefaults)` - Merge custom with defaults
+- `isFontAvailable(fontName)` - Check if font is loaded
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
