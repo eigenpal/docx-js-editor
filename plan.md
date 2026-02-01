@@ -450,7 +450,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - `halfPointsToPixels(hp)`, `pointsToPixels(pt)`
 - Standard 96 DPI assumption
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

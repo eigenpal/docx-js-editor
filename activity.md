@@ -1551,3 +1551,66 @@ Created `src/docx/parser.ts` with complete parsing orchestration:
 - bun build exits 0: ✓
 
 ---
+
+### US-28: Unit conversion utilities
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/utils/units.ts` with comprehensive OOXML unit conversions:
+
+**Twips Conversions:**
+- `twipsToPixels(twips)` - Twips to pixels (96 DPI)
+- `pixelsToTwips(px)` - Pixels to twips
+- `twipsToPoints(twips)` - Twips to points
+- `twipsToInches(twips)`, `twipsToCm(twips)` - Twips to inches/cm
+
+**EMU Conversions:**
+- `emuToPixels(emu)` - EMU to pixels (96 DPI)
+- `pixelsToEmu(px)` - Pixels to EMU
+- `emuToPoints(emu)` - EMU to points
+- `emuToInches(emu)`, `emuToCm(emu)` - EMU to inches/cm
+- `emuToTwips(emu)`, `twipsToEmu(twips)` - EMU/twips conversion
+
+**Half-Point Conversions:**
+- `halfPointsToPixels(hp)` - Half-points to pixels
+- `halfPointsToPoints(hp)` - Half-points to points
+- `pixelsToHalfPoints(px)` - Pixels to half-points
+
+**Point Conversions:**
+- `pointsToPixels(pt)` - Points to pixels
+- `pixelsToPoints(px)` - Pixels to points
+
+**Eighths Conversions (for border widths):**
+- `eighthsToPixels(eighths)` - 1/8 points to pixels
+- `eighthsToPoints(eighths)` - 1/8 points to points
+
+**Angle Conversions:**
+- `ooxmlAngleToDegrees(ooxml60000ths)` - 60000ths of degree to degrees
+- `degreesToRadians(deg)` - Degrees to radians
+
+**Percentage Conversions:**
+- `ooxmlPercentToDecimal(ooxml1000ths)` - 1000ths percent to decimal
+- `ooxmlPercent50000ToDecimal(ooxml50000ths)` - 50000ths to decimal
+
+**CSS Formatters:**
+- `formatPx(px)`, `formatPt(pt)` - Format as CSS strings
+- `twipsToCss(twips)`, `emuToCss(emu)` - Direct to CSS
+- `halfPointsToCss(hp)`, `halfPointsToPtCss(hp)` - Font size helpers
+
+**Page Size Utilities:**
+- `PAGE_SIZES` - Standard sizes (LETTER, LEGAL, A4, A5, EXECUTIVE)
+- `getPageSizePixels(width, height)` - Convert to pixels
+- `getStandardPageSize(name)` - Get standard page size
+
+**Constants:**
+- `STANDARD_DPI = 96`
+- `TWIPS_PER_INCH = 1440`
+- `EMUS_PER_INCH = 914400`
+- `POINTS_PER_INCH = 72`
+- `HALF_POINTS_PER_INCH = 144`
+- `EIGHTHS_PER_INCH = 576`
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
