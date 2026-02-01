@@ -1396,3 +1396,158 @@ sectPr references:
 - bun build exits 0: ✓
 
 ---
+
+### US-25: Section properties parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/sectionParser.ts` with comprehensive section properties parsing:
+
+**Main Function:**
+- `parseSectionProperties(sectPr, rels): SectionProperties` - Parse w:sectPr element
+
+**Page Layout Parsing:**
+- w:pgSz (page width, height, orientation - portrait/landscape)
+- w:pgMar (all margins: top, bottom, left, right, header, footer, gutter)
+- w:cols (column count, spacing, widths, equal width, separator)
+- Individual column definitions (w:col elements)
+
+**Section Properties:**
+- w:type (section start: continuous, nextPage, oddPage, evenPage, nextColumn)
+- w:vAlign (vertical alignment: top, center, both, bottom)
+- w:bidi (bidirectional support)
+- w:titlePg (different first page header/footer)
+- w:evenAndOddHeaders (different odd/even headers)
+
+**References:**
+- w:headerReference parsing (default, first, even types)
+- w:footerReference parsing (default, first, even types)
+
+**Additional Properties:**
+- w:lnNumType (line numbers: start, countBy, distance, restart)
+- w:pgBorders (page borders: top, bottom, left, right, display, offsetFrom, zOrder)
+- w:background (page background with color and theme color support)
+- w:footnotePr, w:endnotePr (note properties)
+- w:docGrid (document grid: type, linePitch, charSpace)
+- w:paperSrc (paper source for first and other pages)
+
+**Utility Functions:**
+- `getPageWidthPixels(props)` - Convert page width to pixels
+- `getPageHeightPixels(props)` - Convert page height to pixels
+- `getContentWidthPixels(props)` - Get content area width
+- `getContentHeightPixels(props)` - Get content area height
+- `getMarginsPixels(props)` - Get all margins in pixels
+- `hasDifferentFirstPage(props)` - Check for title page setting
+- `hasDifferentOddEven(props)` - Check for odd/even headers
+- `getColumnCount(props)` - Get effective column count
+- `isLandscape(props)` - Check orientation
+- `hasPageBorders(props)` - Check for page borders
+- `hasLineNumbers(props)` - Check for line numbering
+- `getDefaultSectionProperties()` - US Letter defaults
+- `mergeSectionProperties(base, override)` - Merge section properties
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
+
+### US-26: Document body parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/documentParser.ts` with comprehensive document body parsing:
+
+**Main Function:**
+- `parseDocumentBody(xml, styles, theme, numbering, rels, media): DocumentBody`
+
+**Content Parsing:**
+- Parses w:document root element
+- Parses w:body content
+- Handles w:p (paragraphs via paragraphParser)
+- Handles w:tbl (tables via tableParser)
+- Handles w:sdt (structured document tags - unwraps content)
+- Parses final w:sectPr (section properties at body level)
+
+**Section Building:**
+- `buildSections(content, finalSectPr)` - Build sections from content
+- Detects section breaks via w:pPr/w:sectPr in paragraphs
+- Creates Section objects with properties and content
+
+**Template Variable Detection:**
+- `extractTemplateVariables(text)` - Extract {{...}} patterns
+- `extractAllTemplateVariables(content)` - Scan all content for variables
+- Recursively scans tables for variables
+
+**Utility Functions:**
+- `getAllParagraphs(body)` - Flatten paragraphs (including from tables)
+- `getAllTables(body)` - Get all tables (including nested)
+- `getDocumentText(body)` - Get plain text of entire document
+- `getParagraphCount(body)` - Count paragraphs
+- `getWordCount(body)` - Count words (approximate)
+- `getCharacterCount(body)` - Count characters
+- `getSectionCount(body)` - Count sections
+- `hasTemplateVariables(body)` - Check for template variables
+- `getDocumentOutline(body, maxChars, maxParagraphs)` - Get document preview
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
+
+### US-27: Main parser orchestrator
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/parser.ts` with complete parsing orchestration:
+
+**Main Function:**
+- `parseDocx(buffer, options): Promise<Document>` - Parse DOCX to Document model
+
+**Parsing Options:**
+- `onProgress` - Progress callback for tracking stages
+- `preloadFonts` - Whether to load fonts (default: true)
+- `parseHeadersFooters` - Whether to parse headers/footers (default: true)
+- `parseNotes` - Whether to parse footnotes/endnotes (default: true)
+- `detectVariables` - Whether to detect template variables (default: true)
+
+**Parsing Stages (with progress):**
+1. Unzip DOCX package (0-10%)
+2. Parse relationships (10-15%)
+3. Parse theme (15-20%)
+4. Parse styles with docDefaults (20-30%)
+5. Parse numbering/lists (30-35%)
+6. Build media file map (35-40%)
+7. Parse document body (40-55%)
+8. Parse headers/footers (55-65%)
+9. Parse footnotes/endnotes (65-75%)
+10. Detect template variables (75-80%)
+11. Extract and load fonts (80-95%)
+12. Assemble final Document (95-100%)
+
+**Helper Functions:**
+- `buildMediaMap(raw, rels)` - Build media file map with data URLs
+- `parseHeadersAndFooters(raw, ...)` - Parse all headers/footers
+- `parseNotesContent(raw, ...)` - Parse footnotes/endnotes
+- `loadDocumentFonts(theme, styles, body)` - Extract and load fonts
+
+**Convenience Functions:**
+- `quickParseDocx(buffer)` - Parse without fonts/headers/notes
+- `fullParseDocx(buffer, onProgress)` - Parse everything
+- `getDocxVariables(buffer)` - Get only template variables
+- `getDocxSummary(buffer)` - Get quick document summary
+
+**Document Model:**
+- Returns `Document` with:
+  - `package` - DocxPackage with all parsed content
+  - `originalBuffer` - Original DOCX for round-trip
+  - `templateVariables` - Detected {{variables}}
+  - `warnings` - Any parsing warnings
+
+**Error Handling:**
+- Wraps all parsing in try/catch
+- Returns descriptive error messages
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

@@ -404,7 +404,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Parses w:pgBorders (page borders)
 - Parses w:background (page background)
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -418,7 +418,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles all content types (hyperlinks, fields, images, shapes)
 - Detects template variables {{...}}
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -434,7 +434,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Returns complete Document
 - Error handling with descriptive messages
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
