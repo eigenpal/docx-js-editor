@@ -849,7 +849,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - `setSelection(range)` to programmatically select
 - Works with contentEditable
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

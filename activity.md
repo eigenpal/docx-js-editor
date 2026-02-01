@@ -2916,3 +2916,66 @@ Created `src/docx/rezip.ts` with comprehensive DOCX repacking:
 - bun build exits 0: ✓
 
 ---
+
+### US-55: Selection manager
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/hooks/useSelection.ts` with comprehensive selection tracking:
+
+**Main Hook:**
+- `useSelection(options)` - React hook for tracking DOM selection
+
+**Types Defined:**
+- `DocumentPosition` - Position within document (paragraphIndex, contentIndex, offset)
+- `DocumentRange` - Range with start/end positions and collapsed flag
+- `SelectionState` - Full selection state (selectedText, selectedRange, hasSelection, isWithinEditor, nativeSelection)
+- `UseSelectionOptions` - Hook configuration options
+
+**Hook Returns:**
+- `selectedText` - Currently selected text (empty if collapsed)
+- `selectedRange` - Document range of selection
+- `hasSelection` - Whether there's an active selection
+- `isWithinEditor` - Whether selection is within editor container
+- `nativeSelection` - The DOM Selection object
+- `setSelection(range)` - Set selection programmatically
+- `collapseSelection(toStart)` - Collapse to start or end
+- `selectAll()` - Select all content
+- `processSelection()` - Force reprocess current selection
+
+**Data Attributes for DOM Mapping:**
+- `PARAGRAPH_INDEX` - `data-paragraph-index`
+- `CONTENT_INDEX` - `data-content-index`
+- `RUN_INDEX` - `data-run-index` (deprecated)
+- `EDITOR_ROOT` - `data-docx-editor`
+- `PAGE_NUMBER` - `data-page-number`
+
+**Helper Functions:**
+- `findParagraphElement(node)` - Find containing paragraph element
+- `findContentElement(node)` - Find containing content element
+- `calculateOffset(container, targetNode, targetOffset)` - Calculate char offset
+- `domToDocumentPosition(node, offset, container)` - Convert DOM to document position
+- `comparePositions(a, b)` - Compare two positions
+- `isSelectionWithinContainer(selection, container)` - Check containment
+- `findElementAtPosition(container, position)` - Find DOM element at position
+- `findTextNodeAtOffset(element, offset)` - Find text node at offset
+
+**Utility Exports:**
+- `positionsEqual(a, b)` - Check position equality
+- `rangesEqual(a, b)` - Check range equality
+- `createCollapsedRange(position)` - Create cursor-only range
+- `createRange(start, end)` - Create range from positions
+- `getRangeLength(range)` - Get character length of range
+
+**Features:**
+- Works with contentEditable elements
+- Listens for `selectionchange` events
+- Converts DOM Selection to document positions
+- Handles backwards selections (focus before anchor)
+- Provides programmatic selection control
+- Supports selection callbacks via `onSelectionChange`
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
