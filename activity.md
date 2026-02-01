@@ -2052,3 +2052,112 @@ Created `src/components/render/Shape.tsx` with SVG-based shape rendering:
 - bun build exits 0: ✓
 
 ---
+
+### US-38: TextBox component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/TextBox.tsx` with floating text container rendering:
+
+**Main Component:**
+- `TextBox` - React component rendering floating text containers
+
+**Props:**
+- `textBox: TextBoxType` - The text box data to render
+- `className?: string` - Additional CSS class
+- `style?: CSSProperties` - Additional inline styles
+- `selected?: boolean` - Whether text box is selected (for editing)
+- `onClick?: () => void` - Callback for text box clicks
+- `renderParagraph?: (paragraph, index) => ReactNode` - Render function for paragraphs
+- `renderTable?: (table, index) => ReactNode` - Render function for tables
+
+**Features:**
+- Positioned absolutely for floating text boxes
+- Configurable dimensions from EMUs
+- Fill/background color support
+- Border/outline with color and width
+- Internal margins/padding
+- Text wrapping modes (square, tight, behind, inFront)
+- Wrap distance margins
+- Float for square/tight wrapping
+- Z-index for behind/inFront layering
+
+**CSS Classes:**
+- `docx-textbox` - Base class
+- `docx-textbox-floating` - Floating text boxes
+- `docx-textbox-selected` - Selection state
+
+**Utility Functions:**
+- `hasVisibleStyling(textBox)` - Check for fill/outline
+- `isEmptyTextBox(textBox)` - Check for empty content
+- `getTextBoxAspectRatio(textBox)` - Get aspect ratio
+- `getTextBoxDescription(textBox)` - Get accessible description
+- `needsTextWrapping(textBox)` - Check for text wrapping
+- `isBehindText(textBox)` / `isInFrontOfText(textBox)` - Z-order checks
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
+
+### US-39: Paragraph component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/Paragraph.tsx` with comprehensive paragraph rendering:
+
+**Main Component:**
+- `Paragraph` - React component rendering paragraphs with all formatting and content
+
+**Props:**
+- `paragraph: ParagraphType` - The paragraph data to render
+- `theme?: Theme` - Theme for resolving colors and fonts
+- `className?: string` - Additional CSS class
+- `style?: CSSProperties` - Additional inline styles
+- `pageNumber?: number` - Current page number (for PAGE fields)
+- `totalPages?: number` - Total page count (for NUMPAGES fields)
+- `pageWidth?: number` - Page width in twips (for tab calculations)
+- `onBookmarkClick?: (bookmarkName: string) => void` - Callback for internal links
+- `disableLinks?: boolean` - Whether to disable hyperlinks
+- `renderImage?: (image, index) => ReactNode` - Custom image renderer
+- `renderShape?: (shape, index) => ReactNode` - Custom shape renderer
+- `renderTextBox?: (textBox, index) => ReactNode` - Custom text box renderer
+
+**Features:**
+- Applies all paragraph styling (alignment, spacing, indent, borders, shading)
+- Contains runs, tabs, hyperlinks, fields, images, shapes
+- Handles empty paragraphs (renders as line break)
+- Handles right-to-left text (bidi support)
+- List item rendering with markers
+- Bookmark start/end markers
+- Tab character rendering with tab stops
+- Image and shape rendering within runs
+- Default run properties from paragraph formatting
+
+**CSS Classes:**
+- `docx-paragraph` - Base class
+- `docx-align-*` - Alignment classes (left, center, right, both)
+- `docx-rtl` - Right-to-left text
+- `docx-style-*` - Style reference classes
+- `docx-page-break-before` - Page break before
+- `docx-keep-next`, `docx-keep-lines` - Keep controls
+- `docx-list-item`, `docx-list-level-*`, `docx-list-bullet`, `docx-list-numbered`
+- `docx-paragraph-empty` - Empty paragraphs
+
+**Utility Functions:**
+- `getParagraphText(paragraph)` - Get plain text content
+- `isEmptyParagraph(paragraph)` - Check if empty
+- `isListItem(paragraph)` - Check if list item
+- `getListLevel(paragraph)` - Get list level (0-8)
+- `hasStyle(paragraph, styleId)` - Check for specific style
+- `isRtlParagraph(paragraph)` - Check if RTL
+- `getTemplateVariables(paragraph)` - Get {{variables}}
+- `hasImages(paragraph)` - Check for images
+- `hasShapes(paragraph)` - Check for shapes
+- `getWordCount(paragraph)` - Word count
+- `getCharacterCount(paragraph, includeSpaces)` - Character count
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
