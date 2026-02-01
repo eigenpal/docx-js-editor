@@ -48,3 +48,28 @@ This file tracks the progress of the Ralph autonomous development loop.
 - Build passes: `bun install && bun build ./src/main.tsx --outdir ./dist --loader:.css=css` exits 0
 
 ---
+
+### US-03: SuperDoc viewer
+**Date:** 2026-02-01
+**Status:** COMPLETE
+
+**Changes:**
+- Created `src/components/DocxViewer.tsx`:
+  - Imports `SuperDoc` from `superdoc` and `superdoc/style.css` (full CSS)
+  - Accepts a `File` prop and passes it directly to SuperDoc's `document` config
+  - Initializes SuperDoc with `documentMode: 'editing'`
+  - Shows a placeholder when no file is loaded
+  - Properly cleans up SuperDoc instance on unmount or when file changes using `destroy()`
+  - Uses `useRef` to track the SuperDoc instance and container element
+- Updated `src/main.tsx`:
+  - Added state for `file` (File object) alongside `rawBuffer`
+  - Integrated `DocxViewer` component, passing the File object as prop
+  - Increased max width to 1200px for better document display
+
+**Notes:**
+- Investigated SuperDoc source at `~/superdoc` to understand the API (constructor options, document passing, destroy method)
+- SuperDoc accepts File objects directly via the `document` config option
+- SuperDoc uses Vue internally and mounts into the provided selector
+- Build passes: `bun install && bun build ./src/main.tsx --outdir ./dist --loader:.css=css` exits 0
+
+---

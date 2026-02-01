@@ -45,7 +45,7 @@
 - Shows a placeholder when no file is loaded
 - Cleans up SuperDoc instance properly on unmount or when document changes
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
