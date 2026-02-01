@@ -2394,3 +2394,59 @@ Created `src/layout/lineBreaker.ts` with comprehensive line breaking:
 - bun build exits 0: ✓
 
 ---
+
+### US-45: Page layout engine
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/layout/pageLayout.ts` with comprehensive page layout:
+
+**Main Function:**
+- `calculatePages(doc, options): PageLayoutResult` - Calculate page layout
+
+**Page Interface:**
+- `pageNumber: number` - 1-indexed page number
+- `sectionIndex: number` - Section this page belongs to
+- `sectionProps: SectionProperties` - Section properties
+- `content: PageContent[]` - Content blocks on this page
+- `header, footer: HeaderFooter | null` - Header/footer for page
+- `isFirstPageOfSection, isLastPage` - Page flags
+- `widthPx, heightPx` - Page dimensions
+- `contentWidthPx, contentHeightPx` - Content area dimensions
+- `contentTopPx, contentLeftPx` - Content area offsets
+
+**PageContent Interface:**
+- `type: 'paragraph' | 'table'` - Content type
+- `block: Paragraph | Table` - Original block
+- `blockIndex: number` - Index in document
+- `y: number` - Y position on page
+- `height: number` - Height of content
+- `isContinuation, continuesOnNextPage` - Split flags
+- `lines?: Line[]` - Lines for paragraphs
+- `startLineIndex?: number` - First line if continuation
+
+**Features:**
+- Respects page size and margins from section properties
+- Handles explicit page breaks (pageBreakBefore)
+- Natural page breaks when content overflows
+- Places headers/footers per page
+- Different first page header/footer (titlePage)
+- Odd/even page headers/footers (evenAndOddHeaders)
+- Keep-lines-together support for paragraphs
+- Paragraph splitting across pages with line tracking
+- Table layout (keeps together when possible)
+
+**Utility Functions:**
+- `getPageCount(result)` - Get total page count
+- `getPage(result, pageNumber)` - Get specific page
+- `getPagesForSection(result, sectionIndex)` - Get section pages
+- `blockSpansPages(result, blockIndex)` - Check if block spans pages
+- `getPagesForBlock(result, blockIndex)` - Get pages with block
+- `getTotalHeight(result)` - Calculate total document height
+- `getPageAtY(result, y, gap)` - Get page at Y position
+- `getYForPage(result, pageNumber, gap)` - Get Y position for page
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
