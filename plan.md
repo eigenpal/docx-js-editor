@@ -359,7 +359,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Contains paragraphs/tables like document body
 - Extracts position and dimensions
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

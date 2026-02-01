@@ -1184,3 +1184,68 @@ w:drawing
 - bun build exits 0: ✓
 
 ---
+
+### US-22: Text box parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/textBoxParser.ts` with comprehensive text box parsing:
+
+**Main Functions:**
+- `parseTextBox(drawingEl)` - Parse text box from w:drawing element
+- `parseTextBoxFromShape(wsp, size, position?, wrap?)` - Parse from shape element directly
+- `parseTextBoxContent(txbxContent, parseParagraph, parseTable, ...)` - Parse content with external parsers
+- `extractTextBoxContentElements(txbxContent)` - Extract raw paragraph/table elements
+- `getTextBoxContentElement(wsp)` - Get w:txbxContent element from shape
+
+**Detection Functions:**
+- `isTextBoxDrawing(drawingEl)` - Check if drawing contains a text box
+- `isShapeTextBox(wsp)` - Check if a shape element is a text box
+
+**Parsing Components:**
+- Position parsing (horizontal/vertical with posOffset and alignment)
+- Wrap settings (square, tight, through, topAndBottom, behind, inFront)
+- Fill parsing (solid, gradient, none)
+- Outline parsing (width, color, style)
+- Body properties (margins/insets)
+
+**Utility Functions:**
+- `getTextBoxWidthPx(textBox)`, `getTextBoxHeightPx(textBox)` - Get dimensions in pixels
+- `getTextBoxDimensionsPx(textBox)` - Get both dimensions
+- `getTextBoxMarginsPx(textBox)` - Get margins in pixels
+- `isFloatingTextBox(textBox)` - Check if text box is anchored
+- `hasTextBoxFill(textBox)`, `hasTextBoxOutline(textBox)` - Check for styling
+- `hasTextBoxContent(textBox)` - Check if text box has content
+- `getTextBoxText(textBox)` - Get plain text for search/indexing
+- `resolveTextBoxFillColor(textBox)` - Resolve fill to CSS color
+- `resolveTextBoxOutlineColor(textBox)` - Resolve outline to CSS color
+- `getTextBoxOutlineWidthPx(textBox)` - Get outline width in pixels
+
+**Design Notes:**
+- Avoids circular dependencies by accepting parser functions as parameters
+- Content parsing delegated to document parser via `parseTextBoxContent()`
+- Uses placeholder content array that document parser fills in
+
+**OOXML Structure Reference:**
+```
+w:drawing
+  └── wp:inline or wp:anchor
+      └── a:graphic
+          └── a:graphicData
+              └── wps:wsp (shape)
+                  ├── wps:spPr (shape properties)
+                  │   ├── a:xfrm (transform: position, size)
+                  │   ├── a:prstGeom (preset geometry)
+                  │   ├── a:solidFill / a:noFill
+                  │   └── a:ln (outline)
+                  ├── wps:txbx (text box container)
+                  │   └── w:txbxContent (text content)
+                  │       ├── w:p (paragraphs)
+                  │       └── w:tbl (tables)
+                  └── wps:bodyPr (body properties - margins)
+```
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
