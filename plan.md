@@ -283,7 +283,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Extracts bookmark name and ID
 - Used for internal hyperlink targets
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
