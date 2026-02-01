@@ -905,7 +905,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Ctrl+Z for undo, Ctrl+Y / Ctrl+Shift+Z for redo
 - Groups rapid changes
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
