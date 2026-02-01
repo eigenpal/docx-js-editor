@@ -891,7 +891,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - onChange callback on any edit
 - Handles keyboard navigation between paragraphs
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
