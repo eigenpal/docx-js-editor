@@ -948,3 +948,74 @@ Created `src/docx/fieldParser.ts` with comprehensive field parsing:
 - bun build exits 0: ✓
 
 ---
+
+### US-19: Table parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/tableParser.ts` with comprehensive table parsing:
+
+**Main Functions:**
+- `parseTable(node, styles, theme, numbering, rels, media)` - Parse w:tbl element
+- `parseTableRow(node, styles, theme, numbering, rels, media)` - Parse w:tr element
+- `parseTableCell(node, styles, theme, numbering, rels, media)` - Parse w:tc element
+
+**Table Properties (w:tblPr):**
+- `parseTableProperties(element)` - Full table property parsing
+- Width, justification, cell spacing, indent
+- Table borders, default cell margins
+- Layout (fixed/autofit), style ID
+- Table look flags, shading
+- Floating table properties (w:tblpPr)
+- Bidirectional support
+
+**Row Properties (w:trPr):**
+- `parseTableRowProperties(element)` - Row property parsing
+- Row height with height rule
+- Header row, can't split
+- Row justification, hidden
+
+**Cell Properties (w:tcPr):**
+- `parseTableCellProperties(element)` - Cell property parsing
+- Cell width, borders, margins
+- Shading, vertical alignment
+- Text direction
+- Grid span (horizontal merge)
+- Vertical merge (restart/continue)
+- Fit text, no wrap, hide mark
+- Conditional format style
+
+**Supporting Parsers:**
+- `parseTableMeasurement(element)` - Width/height values
+- `parseBorderSpec(element)` - Individual border
+- `parseTableBorders(element)` - All borders
+- `parseCellMargins(element)` - Cell margins
+- `parseShading(element)` - Background shading
+- `parseTableLook(element)` - Style flags
+- `parseFloatingTableProperties(element)` - Floating positioning
+- `parseConditionalFormatStyle(element)` - Conditional formatting
+- `parseTableGrid(element)` - Column widths
+
+**Table Utilities:**
+- `getTableColumnCount(table)` - Count columns
+- `getTableRowCount(table)` - Count rows
+- `isCellMergeContinuation(cell)` - Check vertical merge
+- `isCellMergeStart(cell)` - Check merge start
+- `isCellHorizontallyMerged(cell)` - Check gridSpan
+- `getTableText(table)` - Plain text extraction
+- `hasHeaderRow(table)` - Check for header
+- `getHeaderRows(table)` - Get all headers
+- `isFloatingTable(table)` - Check floating
+
+**Features:**
+- Full cell content parsing (paragraphs, nested tables)
+- Recursive nested table support
+- Horizontal merge via gridSpan
+- Vertical merge via vMerge (restart/continue)
+- Floating table positioning
+- Conditional formatting for table styles
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

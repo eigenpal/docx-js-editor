@@ -314,7 +314,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Cells contain paragraphs (recursive)
 - Handles nested tables
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
