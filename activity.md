@@ -2495,3 +2495,50 @@ Created `src/layout/columnLayout.ts` with multi-column layout support:
 - bun build exits 0: ✓
 
 ---
+
+### US-47: Page component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/Page.tsx` with single page rendering:
+
+**Main Component:**
+- `Page` - React component rendering a single page from layout data
+
+**Alternative Component:**
+- `SimplePage` - Standalone page rendering with children
+
+**Props:**
+- `page: PageData` - Page data from layout engine
+- `theme?: Theme` - Theme for resolving colors
+- `zoom?: number` - Zoom level (1.0 = 100%)
+- `showShadow?: boolean` - Whether to show page shadow
+- `renderParagraph, renderTable` - Custom content renderers
+- `renderHeader, renderFooter` - Custom header/footer renderers
+- `onClick?: (e, page) => void` - Click handler
+
+**Features:**
+- Renders at correct page dimensions with zoom support
+- Content area respects margins from section properties
+- Header at top, footer at bottom with proper positioning
+- Page background color from section properties
+- Page borders support (top/bottom/left/right)
+- White background with shadow for document appearance
+
+**CSS Classes:**
+- `docx-page` - Base class
+- `docx-page-first` / `docx-page-last` - Position flags
+- `docx-page-header-area` / `docx-page-footer-area` - Header/footer areas
+- `docx-page-content` - Content area
+- `docx-page-borders` - Page borders overlay
+
+**Utility Functions:**
+- `getPageDimensionsPx(sectionProps, zoom)` - Get page dimensions
+- `getContentAreaPx(sectionProps, zoom)` - Get content area dimensions
+- `isLandscape(sectionProps)` - Check if landscape
+- `getPageSizeName(sectionProps)` - Get standard page size name
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
