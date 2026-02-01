@@ -2227,3 +2227,62 @@ Created `src/components/render/ListItem.tsx` with comprehensive list item render
 - bun build exits 0: ✓
 
 ---
+
+### US-41: Table component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+`src/components/render/DocTable.tsx` exists with comprehensive table rendering.
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
+
+### US-42: Footnote reference component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/FootnoteRef.tsx` with footnote/endnote reference rendering:
+
+**Main Component:**
+- `FootnoteRef` - React component rendering footnote/endnote reference markers
+
+**Props:**
+- `id: number` - The footnote/endnote ID being referenced
+- `type: 'footnote' | 'endnote'` - Type of note
+- `noteContent?: Footnote | Endnote` - The content (for tooltip preview)
+- `customMark?: string` - Custom reference mark (overrides number)
+- `displayNumber?: number` - Display number (may differ from ID)
+- `theme?: Theme` - Theme for styling
+- `onClick?: (id, type) => void` - Callback when reference is clicked
+- `showTooltip?: boolean` - Whether to show tooltip on hover
+- `tooltipContent?: ReactNode` - Custom tooltip content
+
+**Features:**
+- Renders superscript numbered references
+- Clickable to jump to footnote/endnote content
+- Tooltip preview of footnote content on hover
+- Custom reference marks support
+- Display number calculation (excluding separator notes)
+- Number formatting (decimal, roman, letter, chicago)
+
+**CSS Classes:**
+- `docx-note-ref` - Base class
+- `docx-footnote-ref` / `docx-endnote-ref` - Type-specific
+- `docx-note-ref-clickable` - When clickable
+
+**Utility Functions:**
+- `getFootnoteDisplayNumber(id, allFootnotes, properties)` - Calculate display number
+- `getEndnoteDisplayNumber(id, allEndnotes, properties)` - Calculate display number
+- `formatNoteNumber(number, format)` - Format according to settings
+- `isSeparatorNote(note)` - Check if separator (not content)
+- `needsSuperscriptNumber(note)` - Check if needs superscript
+- `getDisplayableFootnotes(footnotes)` - Filter out separators
+- `getFootnoteElementId(id)` - Generate element ID for scroll targeting
+- `getFootnoteRefElementId(id, index)` - Generate ref element ID for back-linking
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
