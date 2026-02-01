@@ -4521,3 +4521,48 @@ Created `src/components/ErrorBoundary.tsx` with comprehensive error handling.
 - bun build exits 0: ✓
 
 ---
+
+### US-87: Accessibility
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Accessibility features are implemented across the codebase.
+
+**ARIA Labels on Controls:**
+- Toolbar.tsx: `aria-label="Formatting toolbar"`, `aria-pressed`, `aria-label` on buttons
+- ContextMenu.tsx: `role="menu"`, `aria-label="AI actions menu"`, `role="menuitem"`
+- All dialogs: proper ARIA labels
+- UI components: ColorPicker, FontPicker, StylePicker all have ARIA attributes
+
+**Keyboard Navigation:**
+- ContextMenu: Arrow up/down navigation, Enter to select, Escape to close
+- Dialogs: Tab navigation, Escape to close
+- Toolbar buttons: Standard button keyboard interaction
+
+**Focus Visible Indicators:**
+- Button states with hover/active styling
+- Focus ring on form inputs
+
+**Screen Reader Friendly Structure:**
+- Semantic HTML elements
+- Role attributes: toolbar, menu, menuitem, group, separator
+- Proper heading hierarchy
+- Descriptive button labels
+
+**Components with Accessibility:**
+- Toolbar.tsx
+- ContextMenu.tsx
+- VariablePanel.tsx
+- FontPicker.tsx
+- ColorPicker.tsx
+- StylePicker.tsx
+- AlignmentButtons.tsx
+- ListButtons.tsx
+- ZoomControl.tsx
+- FindReplaceDialog.tsx
+- HyperlinkDialog.tsx
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
