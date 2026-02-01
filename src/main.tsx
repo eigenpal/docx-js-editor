@@ -1,5 +1,14 @@
-// Entry point for build verification
-// The actual library exports are in index.ts
-// The demo app is in demo/main.tsx
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+
+function App() {
+  return <div id="app" />;
+}
+
+const rootElement = document.getElementById('app');
+if (rootElement) {
+  const root = createRoot(rootElement);
+  root.render(<App />);
+}
 
 export * from './index';

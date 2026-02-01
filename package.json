@@ -32,7 +32,10 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
+    "superdoc": "^1.10.0",
+    "docxtemplater": "^3.50.0",
     "jszip": "^3.10.1",
+    "pizzip": "^3.1.7",
     "prosemirror-commands": "^1.5.2",
     "prosemirror-history": "^1.4.0",
     "prosemirror-keymap": "^1.2.2",
