@@ -1240,7 +1240,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Document summary
 - Suggested actions based on content
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -1255,7 +1255,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Edit text before accepting
 - Loading state while waiting
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -1269,7 +1269,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Applies changes on accept
 - Full flow works end-to-end
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -1284,7 +1284,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Loading state in AI response preview
 - Progress indication for large documents
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -1298,7 +1298,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Unsupported features show warning, don't crash
 - Error toast/notification system
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

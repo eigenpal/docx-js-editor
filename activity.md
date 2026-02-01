@@ -4462,3 +4462,62 @@ Loading states are implemented across multiple components.
 - bun build exits 0: ✓
 
 ---
+
+### US-86: Error handling
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ErrorBoundary.tsx` with comprehensive error handling.
+
+**Main Components:**
+
+1. **ErrorBoundary** (class component):
+   - `getDerivedStateFromError()` - Catch errors
+   - `componentDidCatch()` - Log and notify
+   - `resetError()` - Reset to try again
+   - `fallback` prop for custom fallback UI
+   - `onError` callback for error handling
+   - `showDetails` prop to show/hide error details
+
+2. **ErrorProvider** (context):
+   - Provides error notification context
+   - Manages notification list state
+   - Auto-dismiss for info/warning (5 seconds)
+
+3. **NotificationContainer**:
+   - Fixed position top-right
+   - Stacked notifications with gap
+   - Slide-in animation
+
+4. **NotificationToast**:
+   - Severity-based colors (error/warning/info)
+   - Icon per severity
+   - Expandable details
+   - Dismiss button
+
+5. **ParseErrorDisplay**:
+   - Dedicated component for parse errors
+   - Helpful message and details
+   - Optional retry button
+
+6. **UnsupportedFeatureWarning**:
+   - Non-blocking warning banner
+   - Shows feature name and description
+   - Yellow/warning styling
+
+**Hook:**
+- `useErrorNotifications()` - Access error context
+  - `showError(message, details)` - Show error toast
+  - `showWarning(message, details)` - Show warning toast
+  - `showInfo(message, details)` - Show info toast
+  - `dismissNotification(id)` - Dismiss specific notification
+  - `clearNotifications()` - Clear all notifications
+
+**Utility Functions:**
+- `isParseError(error)` - Check if error is parse-related
+- `getUserFriendlyMessage(error)` - Get user-friendly message
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
