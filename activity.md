@@ -536,3 +536,42 @@ Created `src/docx/xmlParser.ts` with:
 - bun build exits 0: ✓
 
 ---
+
+### US-11: Style parser with full inheritance
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/styleParser.ts` with comprehensive style parsing:
+
+**Main Functions:**
+- `parseStyles(stylesXml, theme)` - Returns StyleMap with resolved inheritance
+- `parseStyleDefinitions(stylesXml, theme)` - Returns full StyleDefinitions including docDefaults
+
+**Style Parsing:**
+- Parses all style types: paragraph, character, table, numbering
+- Parses complete run properties (w:rPr): bold, italic, underline, strike, vertAlign, caps, color, highlight, shading, fontSize, fontFamily with theme refs, spacing, effects, etc.
+- Parses complete paragraph properties (w:pPr): alignment, spacing, indentation, borders, shading, tabs, keepNext/Lines, numPr, outlineLevel, etc.
+- Parses table properties (w:tblPr): width, justification, borders, cellMargins, look flags
+- Parses table row properties (w:trPr): height, header, cantSplit
+- Parses table cell properties (w:tcPr): width, borders, margins, shading, vAlign, gridSpan, vMerge
+- Parses conditional table formatting (w:tblStylePr)
+
+**Inheritance Resolution:**
+- `resolveStyleInheritance()` - Fully resolves basedOn chains
+- `mergeTextFormatting()` - Deep merge for run properties
+- `mergeParagraphFormatting()` - Deep merge for paragraph properties
+- Circular inheritance protection with visited set
+
+**DocDefaults:**
+- `parseDocDefaults()` - Extracts default run and paragraph properties
+
+**Helper Functions:**
+- `getResolvedStyle(styleId, styleMap)` - Look up resolved style
+- `getDefaultParagraphStyle(styleMap)` - Get default/Normal style
+- `getDefaultCharacterStyle(styleMap)` - Get default character style
+- `getStylesByType(styleMap, type)` - Get all styles of a type
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

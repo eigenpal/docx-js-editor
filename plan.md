@@ -177,7 +177,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Resolves theme font/color references
 - Extracts docDefaults
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
