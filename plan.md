@@ -1192,7 +1192,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Variables: `setVariable()`, `applyVariables()`
 - Export: `toBuffer()`
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

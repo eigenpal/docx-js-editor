@@ -4101,3 +4101,66 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - bun build exits 0: ✓
 
 ---
+
+### US-79: DocumentAgent class
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+`src/agent/DocumentAgent.ts` already existed with a comprehensive implementation.
+
+**Reading Methods:**
+- `getText()` - Get plain text content of the document
+- `getFormattedText()` - Get text segments with formatting info
+- `getVariables()` - Get detected template variables
+- `getStyles()` - Get available styles from the document
+- `getPageCount()` - Get approximate page count (estimated)
+- `getWordCount()` - Get word count
+- `getCharacterCount()` - Get character count
+- `getParagraphCount()` - Get paragraph count
+- `getTableCount()` - Get table count
+- `getAgentContext()` - Get full document context for AI agents
+
+**Writing Methods:**
+- `insertText(position, text, options)` - Insert text at position
+- `replaceRange(range, text, options)` - Replace text in range
+- `deleteRange(range)` - Delete text in range
+- `applyFormatting(range, formatting)` - Apply text formatting
+- `applyStyle(paragraphIndex, styleId)` - Apply named style
+- `applyParagraphFormatting(paragraphIndex, formatting)` - Apply paragraph formatting
+
+**Complex Operations:**
+- `insertTable(position, rows, cols, options)` - Insert table at position
+- `insertImage(position, src, options)` - Insert image at position
+- `insertHyperlink(range, url, options)` - Insert hyperlink
+- `removeHyperlink(range)` - Remove hyperlink keeping text
+- `insertParagraphBreak(position)` - Insert paragraph break
+- `mergeParagraphs(startIndex, count)` - Merge consecutive paragraphs
+
+**Variable Methods:**
+- `setVariable(name, value)` - Set template variable value
+- `setVariables(variables)` - Set multiple variables
+- `getPendingVariables()` - Get pending variable values
+- `clearPendingVariables()` - Clear pending variables
+- `applyVariables(variables?)` - Apply all template variables
+
+**Export Methods:**
+- `toBuffer()` - Export document to DOCX ArrayBuffer
+- `toBlob(mimeType?)` - Export document to Blob
+- `executeCommands(commands)` - Execute multiple commands
+
+**Factory Functions:**
+- `DocumentAgent.fromBuffer(buffer)` - Create from ArrayBuffer (async)
+- `DocumentAgent.fromDocument(document)` - Create from Document
+- `createAgent(buffer)` - Convenience function for buffer
+- `createAgentFromDocument(document)` - Convenience function for Document
+
+**Design Notes:**
+- Fluent API - most methods return new DocumentAgent for chaining
+- Immutable operations - commands create new Document instances
+- Async variable application via docxtemplater for proper template processing
+- Uses executor.ts for command execution
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
