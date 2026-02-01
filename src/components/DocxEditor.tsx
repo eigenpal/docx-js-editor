@@ -1,0 +1,617 @@
+/**
+ * DocxEditor Component
+ *
+ * Main component integrating all editor features:
+ * - Toolbar for formatting
+ * - Editor for content editing
+ * - VariablePanel for template variables
+ * - Context menu for AI actions
+ * - Zoom control
+ * - Error boundary
+ * - Loading states
+ */
+
+import React, { useRef, useCallback, useState, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import type { Document, Theme, TextFormatting, ParagraphFormatting } from '../types/document';
+import type { AIAction, AIActionRequest, AgentResponse, SelectionContext } from '../types/agentApi';
+
+import { Toolbar, type ToolbarProps } from './Toolbar';
+import { AIEditor, type AIEditorRef, type AIEditorProps, type AIRequestHandler } from './AIEditor';
+import { VariablePanel, type VariablePanelProps } from './VariablePanel';
+import { ErrorBoundary, ErrorProvider, useErrorNotifications } from './ErrorBoundary';
+import { ZoomControl } from './ui/ZoomControl';
+import { DocumentAgent } from '../agent/DocumentAgent';
+import { parseDocx } from '../docx/parser';
+import { onFontsLoaded, isLoading as isFontsLoading } from '../utils/fontLoader';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+/**
+ * DocxEditor props
+ */
+export interface DocxEditorProps {
+  /** Document buffer (ArrayBuffer from file read) */
+  documentBuffer?: ArrayBuffer | null;
+  /** Pre-parsed document (alternative to documentBuffer) */
+  document?: Document | null;
+  /** Callback when document is saved */
+  onSave?: (buffer: ArrayBuffer) => void;
+  /** Handler for AI requests */
+  onAgentRequest?: AIRequestHandler;
+  /** Callback when document changes */
+  onChange?: (document: Document) => void;
+  /** Callback when selection changes */
+  onSelectionChange?: (context: SelectionContext | null) => void;
+  /** Callback on error */
+  onError?: (error: Error) => void;
+  /** Callback when fonts are loaded */
+  onFontsLoaded?: () => void;
+  /** Theme for styling */
+  theme?: Theme | null;
+  /** Whether to show toolbar (default: true) */
+  showToolbar?: boolean;
+  /** Whether to show variable panel (default: true) */
+  showVariablePanel?: boolean;
+  /** Whether to show zoom control (default: true) */
+  showZoomControl?: boolean;
+  /** Initial zoom level (default: 1.0) */
+  initialZoom?: number;
+  /** Whether the editor is read-only */
+  readOnly?: boolean;
+  /** Custom toolbar actions */
+  toolbarExtra?: ReactNode;
+  /** Variable panel position (default: 'right') */
+  variablePanelPosition?: 'left' | 'right';
+  /** Variable descriptions */
+  variableDescriptions?: Record<string, string>;
+  /** Additional CSS class name */
+  className?: string;
+  /** Additional inline styles */
+  style?: CSSProperties;
+  /** Placeholder when no document */
+  placeholder?: ReactNode;
+  /** Loading indicator */
+  loadingIndicator?: ReactNode;
+}
+
+/**
+ * DocxEditor ref interface
+ */
+export interface DocxEditorRef {
+  /** Get the DocumentAgent for programmatic access */
+  getAgent: () => DocumentAgent | null;
+  /** Get the current document */
+  getDocument: () => Document | null;
+  /** Get the editor ref */
+  getEditorRef: () => AIEditorRef | null;
+  /** Save the document to buffer */
+  save: () => Promise<ArrayBuffer | null>;
+  /** Set zoom level */
+  setZoom: (zoom: number) => void;
+  /** Get current zoom level */
+  getZoom: () => number;
+  /** Focus the editor */
+  focus: () => void;
+  /** Get current selection context */
+  getSelectionContext: () => SelectionContext | null;
+  /** Trigger an AI action */
+  triggerAIAction: (action: AIAction, customPrompt?: string) => Promise<void>;
+}
+
+/**
+ * Editor internal state
+ */
+interface EditorState {
+  document: Document | null;
+  isLoading: boolean;
+  parseError: string | null;
+  zoom: number;
+  variableValues: Record<string, string>;
+  isApplyingVariables: boolean;
+  currentFormatting: Partial<TextFormatting>;
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+/**
+ * DocxEditor - Complete DOCX editor component
+ */
+export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function DocxEditor(
+  {
+    documentBuffer,
+    document: initialDocument,
+    onSave,
+    onAgentRequest,
+    onChange,
+    onSelectionChange,
+    onError,
+    onFontsLoaded: onFontsLoadedCallback,
+    theme,
+    showToolbar = true,
+    showVariablePanel = true,
+    showZoomControl = true,
+    initialZoom = 1.0,
+    readOnly = false,
+    toolbarExtra,
+    variablePanelPosition = 'right',
+    variableDescriptions,
+    className = '',
+    style,
+    placeholder,
+    loadingIndicator,
+  },
+  ref
+) {
+  // State
+  const [state, setState] = useState<EditorState>({
+    document: initialDocument || null,
+    isLoading: !!documentBuffer,
+    parseError: null,
+    zoom: initialZoom,
+    variableValues: {},
+    isApplyingVariables: false,
+    currentFormatting: {},
+  });
+
+  // Refs
+  const editorRef = useRef<AIEditorRef>(null);
+  const agentRef = useRef<DocumentAgent | null>(null);
+
+  // Parse document buffer
+  useEffect(() => {
+    if (!documentBuffer) {
+      if (initialDocument) {
+        setState((prev) => ({ ...prev, document: initialDocument, isLoading: false }));
+      }
+      return;
+    }
+
+    setState((prev) => ({ ...prev, isLoading: true, parseError: null }));
+
+    const parseDocument = async () => {
+      try {
+        const doc = await parseDocx(documentBuffer);
+        setState((prev) => ({
+          ...prev,
+          document: doc,
+          isLoading: false,
+          parseError: null,
+        }));
+
+        // Extract initial variable values
+        if (doc.package.document) {
+          const variables = extractVariables(doc);
+          setState((prev) => ({ ...prev, variableValues: variables }));
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to parse document';
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          parseError: message,
+        }));
+        onError?.(error instanceof Error ? error : new Error(message));
+      }
+    };
+
+    parseDocument();
+  }, [documentBuffer, initialDocument, onError]);
+
+  // Update document when initialDocument changes
+  useEffect(() => {
+    if (initialDocument && !documentBuffer) {
+      setState((prev) => ({ ...prev, document: initialDocument }));
+    }
+  }, [initialDocument, documentBuffer]);
+
+  // Create/update agent when document changes
+  useEffect(() => {
+    if (state.document) {
+      agentRef.current = new DocumentAgent(state.document);
+    } else {
+      agentRef.current = null;
+    }
+  }, [state.document]);
+
+  // Listen for font loading
+  useEffect(() => {
+    const cleanup = onFontsLoaded(() => {
+      onFontsLoadedCallback?.();
+    });
+    return cleanup;
+  }, [onFontsLoadedCallback]);
+
+  // Handle document change
+  const handleDocumentChange = useCallback(
+    (newDocument: Document) => {
+      setState((prev) => ({ ...prev, document: newDocument }));
+      onChange?.(newDocument);
+    },
+    [onChange]
+  );
+
+  // Handle formatting change from toolbar
+  const handleFormatChange = useCallback(
+    (formatting: Partial<TextFormatting>) => {
+      if (!editorRef.current) return;
+      // The Editor will apply formatting to selection
+      setState((prev) => ({ ...prev, currentFormatting: formatting }));
+    },
+    []
+  );
+
+  // Handle paragraph formatting change
+  const handleParagraphFormatChange = useCallback(
+    (formatting: Partial<ParagraphFormatting>) => {
+      // Apply paragraph formatting
+      // This would be handled by the editor
+    },
+    []
+  );
+
+  // Handle variable values change
+  const handleVariableValuesChange = useCallback((values: Record<string, string>) => {
+    setState((prev) => ({ ...prev, variableValues: values }));
+  }, []);
+
+  // Handle apply variables
+  const handleApplyVariables = useCallback(
+    async (values: Record<string, string>) => {
+      if (!agentRef.current) return;
+
+      setState((prev) => ({ ...prev, isApplyingVariables: true }));
+
+      try {
+        const newDoc = agentRef.current.setVariables(values).getDocument();
+        handleDocumentChange(newDoc);
+      } catch (error) {
+        onError?.(error instanceof Error ? error : new Error('Failed to apply variables'));
+      } finally {
+        setState((prev) => ({ ...prev, isApplyingVariables: false }));
+      }
+    },
+    [handleDocumentChange, onError]
+  );
+
+  // Handle zoom change
+  const handleZoomChange = useCallback((zoom: number) => {
+    setState((prev) => ({ ...prev, zoom }));
+  }, []);
+
+  // Handle save
+  const handleSave = useCallback(async (): Promise<ArrayBuffer | null> => {
+    if (!agentRef.current) return null;
+
+    try {
+      const buffer = await agentRef.current.toBuffer();
+      onSave?.(buffer);
+      return buffer;
+    } catch (error) {
+      onError?.(error instanceof Error ? error : new Error('Failed to save document'));
+      return null;
+    }
+  }, [onSave, onError]);
+
+  // Handle error from editor
+  const handleEditorError = useCallback(
+    (error: Error) => {
+      onError?.(error);
+    },
+    [onError]
+  );
+
+  // Expose ref methods
+  useImperativeHandle(
+    ref,
+    () => ({
+      getAgent: () => agentRef.current,
+      getDocument: () => state.document,
+      getEditorRef: () => editorRef.current,
+      save: handleSave,
+      setZoom: (zoom: number) => setState((prev) => ({ ...prev, zoom })),
+      getZoom: () => state.zoom,
+      focus: () => editorRef.current?.focus(),
+      getSelectionContext: () => editorRef.current?.getSelectionContext() || null,
+      triggerAIAction: async (action: AIAction, customPrompt?: string) => {
+        await editorRef.current?.triggerAIAction(action, customPrompt);
+      },
+    }),
+    [state.document, state.zoom, handleSave]
+  );
+
+  // Get detected variables from document
+  const detectedVariables = useMemo(() => {
+    if (!state.document) return [];
+    return extractVariableNames(state.document);
+  }, [state.document]);
+
+  // Container styles
+  const containerStyle: CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%',
+    width: '100%',
+    overflow: 'hidden',
+    backgroundColor: '#f5f5f5',
+    ...style,
+  };
+
+  const mainContentStyle: CSSProperties = {
+    display: 'flex',
+    flex: 1,
+    overflow: 'hidden',
+    flexDirection: variablePanelPosition === 'left' ? 'row-reverse' : 'row',
+  };
+
+  const editorContainerStyle: CSSProperties = {
+    flex: 1,
+    overflow: 'auto',
+    position: 'relative',
+  };
+
+  const variablePanelStyle: CSSProperties = {
+    width: '300px',
+    borderLeft: variablePanelPosition === 'right' ? '1px solid #e0e0e0' : undefined,
+    borderRight: variablePanelPosition === 'left' ? '1px solid #e0e0e0' : undefined,
+    overflow: 'auto',
+    backgroundColor: '#fff',
+  };
+
+  const zoomControlStyle: CSSProperties = {
+    position: 'absolute',
+    bottom: '16px',
+    right: '16px',
+    zIndex: 100,
+  };
+
+  // Render loading state
+  if (state.isLoading) {
+    return (
+      <div className={`docx-editor docx-editor-loading ${className}`} style={containerStyle}>
+        {loadingIndicator || <DefaultLoadingIndicator />}
+      </div>
+    );
+  }
+
+  // Render error state
+  if (state.parseError) {
+    return (
+      <div className={`docx-editor docx-editor-error ${className}`} style={containerStyle}>
+        <ParseError message={state.parseError} />
+      </div>
+    );
+  }
+
+  // Render placeholder when no document
+  if (!state.document) {
+    return (
+      <div className={`docx-editor docx-editor-empty ${className}`} style={containerStyle}>
+        {placeholder || <DefaultPlaceholder />}
+      </div>
+    );
+  }
+
+  return (
+    <ErrorProvider>
+      <ErrorBoundary onError={handleEditorError}>
+        <div className={`docx-editor ${className}`} style={containerStyle}>
+          {/* Toolbar */}
+          {showToolbar && (
+            <Toolbar
+              formatting={state.currentFormatting}
+              onFormatChange={handleFormatChange}
+              onParagraphFormatChange={handleParagraphFormatChange}
+              disabled={readOnly}
+              extra={toolbarExtra}
+            />
+          )}
+
+          {/* Main content area */}
+          <div style={mainContentStyle}>
+            {/* Editor */}
+            <div style={editorContainerStyle}>
+              <AIEditor
+                ref={editorRef}
+                document={state.document}
+                onChange={handleDocumentChange}
+                onAgentRequest={onAgentRequest}
+                editable={!readOnly}
+                zoom={state.zoom}
+              />
+
+              {/* Zoom control */}
+              {showZoomControl && (
+                <div style={zoomControlStyle}>
+                  <ZoomControl
+                    zoom={state.zoom}
+                    onChange={handleZoomChange}
+                    min={0.25}
+                    max={3}
+                    step={0.25}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Variable panel */}
+            {showVariablePanel && detectedVariables.length > 0 && (
+              <div style={variablePanelStyle}>
+                <VariablePanel
+                  variables={detectedVariables}
+                  values={state.variableValues}
+                  onValuesChange={handleVariableValuesChange}
+                  onApply={handleApplyVariables}
+                  isApplying={state.isApplyingVariables}
+                  descriptions={variableDescriptions}
+                  disabled={readOnly}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </ErrorBoundary>
+    </ErrorProvider>
+  );
+});
+
+// ============================================================================
+// HELPER COMPONENTS
+// ============================================================================
+
+/**
+ * Default loading indicator
+ */
+function DefaultLoadingIndicator(): React.ReactElement {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        color: '#666',
+      }}
+    >
+      <div
+        style={{
+          width: '40px',
+          height: '40px',
+          border: '3px solid #e0e0e0',
+          borderTop: '3px solid #1a73e8',
+          borderRadius: '50%',
+          animation: 'docx-spin 1s linear infinite',
+        }}
+      />
+      <style>
+        {`
+          @keyframes docx-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+      <div style={{ marginTop: '16px' }}>Loading document...</div>
+    </div>
+  );
+}
+
+/**
+ * Default placeholder
+ */
+function DefaultPlaceholder(): React.ReactElement {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        color: '#999',
+      }}
+    >
+      <svg
+        width="64"
+        height="64"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+      </svg>
+      <div style={{ marginTop: '16px' }}>No document loaded</div>
+    </div>
+  );
+}
+
+/**
+ * Parse error display
+ */
+function ParseError({ message }: { message: string }): React.ReactElement {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        padding: '20px',
+        textAlign: 'center',
+      }}
+    >
+      <div style={{ color: '#c5221f', marginBottom: '16px' }}>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4M12 16v.01" />
+        </svg>
+      </div>
+      <h3 style={{ color: '#c5221f', marginBottom: '8px' }}>Failed to Load Document</h3>
+      <p style={{ color: '#666', maxWidth: '400px' }}>{message}</p>
+    </div>
+  );
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Extract variable names from document
+ */
+function extractVariableNames(doc: Document): string[] {
+  const variables = new Set<string>();
+  const regex = /\{\{([^}]+)\}\}/g;
+
+  const extractFromParagraph = (paragraph: any) => {
+    for (const item of paragraph.content || []) {
+      if (item.type === 'run') {
+        for (const content of item.content || []) {
+          if (content.type === 'text') {
+            let match;
+            while ((match = regex.exec(content.text)) !== null) {
+              variables.add(match[1].trim());
+            }
+          }
+        }
+      }
+    }
+  };
+
+  const body = doc.package.document;
+  for (const block of body.content || []) {
+    if (block.type === 'paragraph') {
+      extractFromParagraph(block);
+    }
+  }
+
+  return Array.from(variables);
+}
+
+/**
+ * Extract current variable values (placeholders with current text)
+ */
+function extractVariables(doc: Document): Record<string, string> {
+  const values: Record<string, string> = {};
+  const names = extractVariableNames(doc);
+
+  for (const name of names) {
+    values[name] = ''; // Default empty
+  }
+
+  return values;
+}
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export default DocxEditor;

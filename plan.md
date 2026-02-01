@@ -1311,7 +1311,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Focus visible indicators
 - Screen reader friendly structure
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -1328,7 +1328,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Loading states
 - Exposes DocumentAgent via ref
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

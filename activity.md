@@ -4566,3 +4566,59 @@ Accessibility features are implemented across the codebase.
 - bun build exits 0: ✓
 
 ---
+
+### US-88: Main DocxEditor component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/DocxEditor.tsx` - the main component integrating all editor features.
+
+**Props:**
+- `documentBuffer` - ArrayBuffer from file read
+- `document` - Pre-parsed Document (alternative)
+- `onSave` - Callback when saving
+- `onAgentRequest` - AI request handler
+- `onChange` - Document change callback
+- `onSelectionChange` - Selection change callback
+- `onError` - Error callback
+- `onFontsLoaded` - Font loading callback
+- `theme` - Theme for styling
+- `showToolbar` - Show toolbar (default: true)
+- `showVariablePanel` - Show variable panel (default: true)
+- `showZoomControl` - Show zoom control (default: true)
+- `initialZoom` - Initial zoom level
+- `readOnly` - Read-only mode
+- `variablePanelPosition` - 'left' or 'right'
+- `variableDescriptions` - Variable descriptions
+
+**Ref Methods:**
+- `getAgent()` - Get DocumentAgent
+- `getDocument()` - Get current document
+- `getEditorRef()` - Get editor ref
+- `save()` - Save to buffer
+- `setZoom()` / `getZoom()` - Zoom control
+- `focus()` - Focus editor
+- `getSelectionContext()` - Get selection context
+- `triggerAIAction()` - Trigger AI action
+
+**Integration:**
+- Toolbar - Formatting controls
+- AIEditor - Editor with AI context menu
+- VariablePanel - Template variable editing
+- ZoomControl - Zoom slider
+- ErrorBoundary - Error handling
+- ErrorProvider - Notification context
+
+**States:**
+- Loading: Shown while parsing document
+- Error: Shown on parse failure
+- Empty: Placeholder when no document
+
+**Helper Functions:**
+- `extractVariableNames(doc)` - Extract {{variable}} names
+- `extractVariables(doc)` - Get variable values
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
