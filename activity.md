@@ -1850,3 +1850,48 @@ Created `src/components/render/Tab.tsx` with comprehensive tab rendering:
 - bun build exits 0: ✓
 
 ---
+
+### US-34: Hyperlink component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/Hyperlink.tsx` with comprehensive hyperlink rendering:
+
+**Main Component:**
+- `Hyperlink` - React component rendering clickable hyperlinks
+
+**Props:**
+- `hyperlink: HyperlinkType` - The hyperlink data to render
+- `theme?: Theme | null` - Theme for resolving colors and fonts
+- `className?: string` - Additional CSS class
+- `style?: CSSProperties` - Additional inline styles
+- `onBookmarkClick?: (bookmarkName: string) => void` - Callback for internal links
+- `disabled?: boolean` - Whether links are non-interactive
+
+**Features:**
+- External links: Opens in new tab with `target="_blank"` and `rel="noopener noreferrer"`
+- Internal bookmark links: Triggers `onBookmarkClick` callback or scrolls to target element
+- Tooltip support: Shows `title` attribute on hover from `w:tooltip`
+- Contains Run children: Renders child runs with their formatting
+- Bookmark markers: Renders invisible `<span>` elements for bookmarkStart/End
+- Accessibility: ARIA labels for external links
+
+**CSS Classes:**
+- `docx-hyperlink` - Base class
+- `docx-hyperlink-external` - External links
+- `docx-hyperlink-internal` - Internal bookmark links
+- `docx-hyperlink-disabled` - Disabled links
+
+**Utility Functions:**
+- `hasVisibleContent(hyperlink)` - Check if hyperlink has visible runs
+- `getTargetBookmark(hyperlink)` - Get internal bookmark name
+- `isEmptyHyperlink(hyperlink)` - Check if link has no destination
+- `getHyperlinkAccessibleText(hyperlink)` - Get text for accessibility
+
+**Re-exports from parser:**
+- `getHyperlinkText`, `getHyperlinkUrl`, `isExternalLink`, `isInternalLink`
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
