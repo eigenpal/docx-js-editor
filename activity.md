@@ -2161,3 +2161,69 @@ Created `src/components/render/Paragraph.tsx` with comprehensive paragraph rende
 - bun build exits 0: ✓
 
 ---
+
+### US-40: List item component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/ListItem.tsx` with comprehensive list item rendering:
+
+**Main Component:**
+- `ListItem` - React component rendering paragraphs as list items with markers
+
+**Props:**
+- `paragraph: ParagraphType` - The paragraph data to render as list item
+- `theme?: Theme` - Theme for resolving colors and fonts
+- `levelDefinition?: ListLevel` - Level definition for detailed styling
+- `counterValue?: number` - Counter value for numbered lists
+- `allCounters?: number[]` - Array of counter values for multi-level patterns
+- `allFormats?: NumberFormat[]` - Array of formats for multi-level patterns
+- Standard paragraph props (pageNumber, totalPages, pageWidth, onBookmarkClick, etc.)
+
+**Bullet Support:**
+- Default bullets by level: • (solid), ○ (circle), ▪ (square)
+- Unicode character mapping for Wingdings/Symbol fonts
+- Handles special characters: ●, ◆, ✓, ■, →, etc.
+- Falls back to getBulletCharacter from numberingParser
+
+**Number Format Support:**
+- All standard formats: decimal, upperRoman, lowerRoman, upperLetter, lowerLetter
+- Special formats: ordinal (1st, 2nd, 3rd), numberInDash (-1-), decimalEnclosedParen ((1))
+- Multi-level patterns: Renders %1.%2.%3 style markers correctly
+
+**Indentation:**
+- Base indentation: 36px per level (~0.5 inch)
+- Uses level definition pPr.indentLeft if available (converted from twips)
+- Handles hanging indents for marker positioning
+
+**Marker Styling:**
+- Applies run properties (rPr) from level definition
+- Supports justification (left, center, right)
+- Minimum width with proper text alignment
+- Flexbox layout for proper spacing
+
+**CSS Classes:**
+- `docx-list-item` - Base class
+- `docx-list-level-*` - Level-specific (0-8)
+- `docx-list-bullet` - Bullet lists
+- `docx-list-numbered` - Numbered lists
+- `docx-list-marker` - Marker span
+- `docx-list-content` - Content wrapper
+
+**Utility Functions:**
+- `unicodeToChar(codePoint)` - Convert Unicode hex to character
+- `isListItemParagraph(paragraph)` - Check if should render as list item
+- `getDefaultBullet(level)` - Get default bullet for level
+- `toUpperRoman(num)`, `toLowerRoman(num)` - Roman numeral conversion
+- `toUpperLetter(num)`, `toLowerLetter(num)` - Letter conversion
+- `getMarkerForFormat(value, format, lvlText)` - Get marker string
+- `getListIndent(level, levelDefinition)` - Calculate indent in pixels
+- `getHangingIndent(levelDefinition)` - Get hanging indent
+- `isBulletFormat(format)` - Check if format is bullet type
+- `getCommonBulletChars()` - Get common bullets for UI
+- `getCommonNumberFormats()` - Get number formats for UI
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
