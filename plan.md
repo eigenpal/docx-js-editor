@@ -479,7 +479,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Waits for font to load
 - Caches measurements
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

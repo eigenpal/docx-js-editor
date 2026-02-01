@@ -1657,3 +1657,47 @@ Created `src/utils/colorResolver.ts` with comprehensive color resolution:
 - bun build exits 0: ✓
 
 ---
+
+### US-30: Text measurement
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/utils/textMeasure.ts` with canvas-based text measurement:
+
+**Main Functions:**
+- `measureText(text, formatting, options): Promise<TextMeasurement>` - Async measurement with font wait
+- `measureTextSync(text, formatting, theme): TextMeasurement` - Synchronous measurement
+- `measureChar(char, formatting, theme)` - Measure single character
+- `measureSpace(formatting, theme)` - Measure space width
+- `getLineHeight(formatting, theme)` - Get line height for formatting
+- `getBaseline(formatting, theme)` - Get baseline position
+
+**TextMeasurement Interface:**
+- `width` - Width of text in pixels
+- `height` - Height based on font metrics
+- `baseline` - Distance from top to baseline
+- `actualBoundingBox` - Optional detailed bounds (if browser supports)
+
+**Features:**
+- Uses Canvas 2D context for accurate measurements
+- LRU cache (10,000 entries) for performance
+- Font loading awareness via `isFontLoaded()` and CSS Font Loading API
+- Resolves DOCX font names via `fontResolver.ts`
+- Converts half-points to pixels via `units.ts`
+- Handles theme font references
+- Fallback estimation for non-browser environments
+
+**Bulk/Utility Functions:**
+- `measureTexts(texts, formatting, theme)` - Measure multiple strings
+- `measureTextWidth(text, formatting, theme)` - Width-only (faster)
+- `calculateTextToWidth(text, targetWidth, ...)` - Find chars fitting width
+- `estimateLineWidth(charCount, fontSize)` - Estimation without canvas
+
+**Cache Management:**
+- `clearMeasurementCache()` - Clear after font changes
+- `getMeasurementCacheSize()` - Get current cache size
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
