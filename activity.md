@@ -1019,3 +1019,80 @@ Created `src/docx/tableParser.ts` with comprehensive table parsing:
 - bun build exits 0: ✓
 
 ---
+
+### US-20: Image parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/imageParser.ts` with comprehensive image parsing:
+
+**Main Functions:**
+- `parseImage(node, rels, media): Image | null` - Main entry point for image parsing
+- `parseDrawing(drawingEl, rels, media)` - Parse w:drawing element
+- `parseInline(inlineEl, rels, media)` - Parse wp:inline (inline images)
+- `parseAnchor(anchorEl, rels, media)` - Parse wp:anchor (floating images)
+
+**EMU Conversions:**
+- `emuToPixels(emu)` - Convert EMU to CSS pixels (914400 EMU = 1 inch, 96 DPI)
+- `pixelsToEmu(px)` - Convert pixels back to EMU
+
+**Size & Position Parsing:**
+- `parseExtent(extent)` - Parse wp:extent for image dimensions
+- `parseEffectExtent(effectExtent)` - Parse effect margins
+- `parsePositionH(posH)` - Parse horizontal position for anchored images
+- `parsePositionV(posV)` - Parse vertical position for anchored images
+
+**Wrap Mode Parsing:**
+- `parseWrapElement(wrapEl, behindDoc)` - Parse wrap mode
+- Supports: wrapNone, wrapSquare, wrapTight, wrapThrough, wrapTopAndBottom
+- Extracts wrap distances (distT, distB, distL, distR)
+- Maps to ImageWrap types: inline, square, tight, through, topAndBottom, behind, inFront
+
+**Transform Parsing:**
+- `parseTransform(xfrm)` - Parse a:xfrm for rotation and flip
+- Rotation in 60000ths of a degree → degrees
+
+**Blip Extraction:**
+- `findBlipElement(container)` - Navigate to a:blip (a:graphic → a:graphicData → pic:pic → pic:blipFill → a:blip)
+- `extractBlipRId(blip)` - Extract r:embed or r:link attribute
+
+**Media Resolution:**
+- `resolveImageData(rId, rels, media)` - Resolve rId to actual image data
+- `normalizeMediaPath(targetPath)` - Normalize paths to word/media/...
+- `getMimeType(path)` - Get MIME type from extension
+
+**Document Properties:**
+- `parseDocProps(docPr)` - Extract id, name, alt text, title, decorative flag
+
+**Utility Functions:**
+- `isInlineImage(image)`, `isFloatingImage(image)` - Check image type
+- `isBehindText(image)`, `isInFrontOfText(image)` - Check z-order
+- `getImageWidthPx(image)`, `getImageHeightPx(image)` - Get dimensions in pixels
+- `getImageDimensionsPx(image)` - Get both dimensions
+- `hasAltText(image)`, `isDecorativeImage(image)` - Accessibility checks
+- `getWrapDistancesPx(image)` - Get wrap distances in pixels
+- `needsTextWrapping(image)` - Check if text wrapping needed
+
+**OOXML Structure Reference:**
+```
+w:drawing
+  └── wp:inline or wp:anchor
+      ├── wp:extent (size: cx, cy in EMUs)
+      ├── wp:effectExtent (effect margins)
+      ├── wp:docPr (document properties: id, name, descr, title)
+      ├── wp:positionH / wp:positionV (for anchor only)
+      ├── wp:wrap* (wrapping mode for anchor)
+      └── a:graphic
+          └── a:graphicData
+              └── pic:pic
+                  ├── pic:nvPicPr (non-visual properties)
+                  ├── pic:blipFill
+                  │   └── a:blip (r:embed = rId)
+                  └── pic:spPr
+                      └── a:xfrm (transform: rotation, flip)
+```
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

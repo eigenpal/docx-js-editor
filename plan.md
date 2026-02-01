@@ -330,7 +330,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles text wrapping mode for anchored images
 - Extracts alt text if present
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
