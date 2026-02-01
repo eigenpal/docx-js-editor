@@ -1701,3 +1701,54 @@ Created `src/utils/textMeasure.ts` with canvas-based text measurement:
 - bun build exits 0: ✓
 
 ---
+
+### US-31: Formatting to CSS converter
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/utils/formatToStyle.ts` with comprehensive formatting to CSS conversion:
+
+**Main Functions:**
+- `textToStyle(formatting, theme): CSSProperties` - Convert TextFormatting to CSS
+- `paragraphToStyle(formatting, theme): CSSProperties` - Convert ParagraphFormatting to CSS
+- `borderToStyle(border, side, theme): CSSProperties` - Convert BorderSpec to CSS
+- `resolveShadingFill(shading, theme): string` - Convert shading to CSS background
+- `tableCellToStyle(formatting, theme): CSSProperties` - Convert table cell formatting
+- `sectionToStyle(sectionProps, theme): CSSProperties` - Convert section properties
+- `mergeStyles(...styles): CSSProperties` - Merge multiple style objects
+
+**Text Formatting (textToStyle) Handles:**
+- Font: family (with theme font resolution), size (half-points to pt)
+- Weight: bold → fontWeight: 'bold'
+- Style: italic → fontStyle: 'italic'
+- Color: theme colors, RGB, auto → color
+- Background: highlight colors, character shading → backgroundColor
+- Text decoration: underline (with style and color), strikethrough, double-strike
+- Vertical alignment: superscript → verticalAlign: 'super', subscript → 'sub'
+- Position: raised/lowered text via relative positioning
+- Capitalization: allCaps → textTransform: 'uppercase', smallCaps → fontVariant
+- Spacing: letter-spacing from twips
+- Scale: horizontal text scale via CSS transform
+- Visibility: hidden → display: 'none'
+- Effects: emboss, imprint, outline, shadow via textShadow and WebkitTextStroke
+- Direction: rtl → direction: 'rtl'
+
+**Paragraph Formatting (paragraphToStyle) Handles:**
+- Alignment: left, center, right, both → textAlign
+- Spacing: spaceBefore → marginTop, spaceAfter → marginBottom
+- Line spacing: exact/atLeast/auto → lineHeight
+- Indentation: left, right → marginLeft/Right, firstLine/hanging → textIndent
+- Borders: top, bottom, left, right with color, width, style
+- Background: paragraph shading → backgroundColor
+- Direction: bidi → direction: 'rtl'
+- Page breaks: pageBreakBefore, keepNext, keepLines
+
+**Border Style Mapping:**
+- Maps OOXML border styles (single, double, dotted, dashed, etc.) to CSS
+- Converts eighths of a point to pixels
+- Resolves border colors via theme
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
