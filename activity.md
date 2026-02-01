@@ -834,3 +834,56 @@ Created `src/docx/hyperlinkParser.ts` with comprehensive hyperlink parsing:
 - bun build exits 0: ✓
 
 ---
+
+### US-17: Bookmark parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/bookmarkParser.ts` with comprehensive bookmark parsing:
+
+**Main Functions:**
+- `parseBookmarkStart(node): BookmarkStart` - Parse w:bookmarkStart element
+- `parseBookmarkEnd(node): BookmarkEnd` - Parse w:bookmarkEnd element
+
+**BookmarkMap Interface:**
+- `byId: Map<number, BookmarkStart>` - Lookup by ID
+- `byName: Map<string, BookmarkStart>` - Lookup by name (for hyperlink resolution)
+- `bookmarks: BookmarkStart[]` - All bookmarks in document order
+
+**Bookmark Collection Functions:**
+- `createBookmarkMap()` - Create empty bookmark map
+- `addBookmark(map, bookmark)` - Add bookmark to map
+- `getBookmarkByName(map, name)` - Get bookmark by name
+- `getBookmarkById(map, id)` - Get bookmark by ID
+- `hasBookmark(map, name)` - Check if bookmark exists
+- `getAllBookmarkNames(map)` - Get all bookmark names
+
+**Utility Functions:**
+- `isPointBookmark(start, end, contents)` - Check if bookmark is point bookmark
+- `isTableBookmark(bookmark)` - Check if bookmark has column range
+- `bookmarkToHref(name)` - Convert name to #anchor href
+- `hrefToBookmarkName(href)` - Extract name from href
+
+**Built-in Bookmark Detection:**
+- `isBuiltInBookmark(name)` - Check for Word internal bookmarks (_*)
+- `isTocBookmark(name)` - Check for _Toc* bookmarks
+- `isRefBookmark(name)` - Check for _Ref* bookmarks
+- `getBookmarkType(name)` - Returns 'user' | 'toc' | 'ref' | 'goBack' | 'internal'
+
+**Validation:**
+- `validateBookmarkPairs(starts, ends)` - Check start/end matching
+- `validateBookmarkName(name)` - Validate name format (40 char limit, alphanumeric)
+
+**Integration:**
+- Updated `paragraphParser.ts` to import and use `bookmarkParser.ts` module
+- Delegates parseBookmarkStart/End to the new module
+
+**OOXML Reference:**
+- w:bookmarkStart: id (numeric), name (string), colFirst/colLast (optional)
+- w:bookmarkEnd: id (numeric, matches start)
+- Internal hyperlinks reference bookmarks via w:anchor attribute
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

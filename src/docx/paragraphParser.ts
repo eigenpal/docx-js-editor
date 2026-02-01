@@ -46,6 +46,10 @@ import {
 } from './xmlParser';
 import { parseRun, parseRunProperties } from './runParser';
 import { parseHyperlink as parseHyperlinkFromModule } from './hyperlinkParser';
+import {
+  parseBookmarkStart as parseBookmarkStartFromModule,
+  parseBookmarkEnd as parseBookmarkEndFromModule,
+} from './bookmarkParser';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -502,37 +506,18 @@ function parseHyperlink(
 
 /**
  * Parse bookmark start (w:bookmarkStart)
+ * Delegates to bookmarkParser module.
  */
 function parseBookmarkStart(node: XmlElement): BookmarkStart {
-  const id = parseNumericAttribute(node, 'w', 'id') ?? 0;
-  const name = getAttribute(node, 'w', 'name') ?? '';
-
-  const bookmark: BookmarkStart = {
-    type: 'bookmarkStart',
-    id,
-    name,
-  };
-
-  // Table column bookmarks
-  const colFirst = parseNumericAttribute(node, 'w', 'colFirst');
-  if (colFirst !== undefined) bookmark.colFirst = colFirst;
-
-  const colLast = parseNumericAttribute(node, 'w', 'colLast');
-  if (colLast !== undefined) bookmark.colLast = colLast;
-
-  return bookmark;
+  return parseBookmarkStartFromModule(node);
 }
 
 /**
  * Parse bookmark end (w:bookmarkEnd)
+ * Delegates to bookmarkParser module.
  */
 function parseBookmarkEnd(node: XmlElement): BookmarkEnd {
-  const id = parseNumericAttribute(node, 'w', 'id') ?? 0;
-
-  return {
-    type: 'bookmarkEnd',
-    id,
-  };
+  return parseBookmarkEndFromModule(node);
 }
 
 /**
