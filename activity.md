@@ -687,3 +687,58 @@ Created `src/docx/runParser.ts` with comprehensive run parsing:
 - bun build exits 0: ✓
 
 ---
+
+### US-14: Paragraph parser with full formatting
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/paragraphParser.ts` with comprehensive paragraph parsing:
+
+**Main Functions:**
+- `parseParagraph(node, styles, theme, numbering): Paragraph` - Main parsing function
+- `parseParagraphProperties(pPr, theme, styles): ParagraphFormatting` - Parse w:pPr element
+
+**Parses ALL Paragraph Properties (w:pPr):**
+- w:jc (alignment: left, center, right, both/justify, distribute)
+- w:bidi (right-to-left text direction)
+- w:spacing (before, after, line, lineRule, beforeAutospacing, afterAutospacing)
+- w:ind (left, right, firstLine, hanging, start, end)
+- w:pBdr (paragraph borders: top, bottom, left, right, between, bar)
+- w:shd (paragraph shading/background)
+- w:tabs (tab stops with position, alignment, leader)
+- w:keepNext, w:keepLines, w:widowControl, w:pageBreakBefore (page break control)
+- w:numPr (numbering/list properties: numId, ilvl)
+- w:outlineLvl (outline level for TOC)
+- w:pStyle (paragraph style reference)
+- w:framePr (frame properties: width, height, anchors, alignment, wrap)
+- w:suppressLineNumbers, w:suppressAutoHyphens
+- w:rPr (default run properties for paragraph)
+
+**Parses All Paragraph Content Types:**
+- w:r (runs via parseRun)
+- w:hyperlink (with rId, anchor, tooltip, target, history, docLocation)
+- w:bookmarkStart, w:bookmarkEnd (bookmark markers with id, name, column info)
+- w:fldSimple (simple fields with instruction, content)
+- Complex fields (w:fldChar begin/separate/end with w:instrText) - properly tracked and assembled
+
+**Field Type Detection:**
+- Recognizes all OOXML field types: PAGE, NUMPAGES, DATE, TIME, REF, HYPERLINK, TOC, MERGEFIELD, etc.
+- Parses field instructions to determine type
+- Tracks field lock and dirty states
+
+**List Rendering Computation:**
+- If paragraph has numPr, looks up numbering level from NumberingMap
+- Populates listRendering with: isListItem, level, marker, isBullet, indent, hanging
+
+**Utility Functions:**
+- `getParagraphText(paragraph)` - Get plain text from paragraph (including hyperlinks and fields)
+- `isEmptyParagraph(paragraph)` - Check if paragraph has no visible content
+- `isListItem(paragraph)` - Check if paragraph is a list item
+- `getListLevel(paragraph)` - Get list level (0-8)
+- `hasStyle(paragraph, styleId)` - Check if paragraph has specific style
+- `getTemplateVariable(paragraph)` - Extract {{variable}} from text
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
