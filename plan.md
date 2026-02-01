@@ -542,7 +542,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Opens external links in new tab
 - Shows tooltip on hover
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -555,7 +555,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Styled to indicate it's a field (subtle background?)
 - Handles page numbers (placeholder until pagination)
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -569,7 +569,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles alt text
 - Handles floating images with wrapping
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -583,7 +583,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Renders text inside shapes
 - Handles positioning (inline or floating)
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -596,7 +596,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Contains paragraphs/tables
 - Applies borders and background
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -610,7 +610,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles empty paragraphs (line break)
 - Handles right-to-left text
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -643,7 +643,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Merged cells (colspan, rowspan)
 - Nested tables
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
