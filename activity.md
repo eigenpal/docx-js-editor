@@ -1998,3 +1998,57 @@ Created `src/components/render/DocImage.tsx` with comprehensive image rendering:
 - bun build exits 0: ✓
 
 ---
+
+### US-37: Shape component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/Shape.tsx` with SVG-based shape rendering:
+
+**Main Component:**
+- `Shape` - React component rendering drawing objects using SVG
+
+**Props:**
+- `shape: ShapeType` - The shape data to render
+- `className?: string` - Additional CSS class
+- `style?: CSSProperties` - Additional inline styles
+- `selected?: boolean` - Whether shape is selected (for editing)
+- `onClick?: () => void` - Callback for shape clicks
+- `renderParagraph?: (paragraph, index) => ReactNode` - Render function for text content
+
+**Shapes Rendered:**
+- Rectangle (rect) - Basic rectangle
+- Rounded Rectangle (roundRect) - Rectangle with rounded corners
+- Ellipse - Circle/oval
+- Triangle - Three-sided polygon
+- Line - Straight line with optional arrows
+- Stars (star5, etc.) - Multi-pointed stars
+- Arrows (rightArrow, leftArrow) - Arrow shapes
+
+**Features:**
+- SVG rendering for all shapes
+- Fill support (solid colors)
+- Stroke/outline with color, width, and dash styles
+- Arrow markers on lines (headEnd, tailEnd)
+- Text content inside shapes with vertical alignment
+- Transform support (rotation, flipH, flipV)
+
+**CSS Classes:**
+- `docx-shape` - Base class
+- `docx-shape-{shapeType}` - Type-specific class
+- `docx-shape-line` - Line shapes
+- `docx-shape-textbox` - Text box shapes
+- `docx-shape-floating` - Floating shapes
+- `docx-shape-selected` - Selection state
+
+**Utility Functions:**
+- `hasVisualContent(shape)` - Check for fill/outline/text
+- `getShapeDescription(shape)` - Get accessible description
+- `isRectangleShape(shape)` - Check for rect/roundRect
+- `isEllipseShape(shape)` - Check for ellipse
+- `isPolygonShape(shape)` - Check for polygon shapes
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
