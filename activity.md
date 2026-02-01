@@ -4223,3 +4223,51 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - bun build exits 0: ✓
 
 ---
+
+### US-81: Context menu component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+`src/components/ContextMenu.tsx` already existed with comprehensive implementation.
+
+**Main Component:**
+- `ContextMenu` - Right-click context menu for AI actions
+
+**Features:**
+- Shows on right-click when text selected (via useContextMenu hook)
+- Positioned near cursor with viewport boundary checks
+- Options: Ask AI, Rewrite, Expand, Summarize, Translate, Explain
+- Custom prompt option with dialog
+- Keyboard Escape to close
+- Arrow key navigation (Up/Down)
+- Enter to select action
+- Click outside to close
+- Mouse hover highlighting
+
+**Props:**
+- `isOpen` - Visibility state
+- `position` - Menu position {x, y}
+- `selectedText` - Currently selected text
+- `selectionContext` - Selection context for AI
+- `onAction` - Action selection callback
+- `onClose` - Close callback
+- `actions` - Available actions (defaults to DEFAULT_AI_ACTIONS)
+- `showCustomPrompt` - Show custom prompt option
+
+**Icons:**
+- SVG icons for each action: AskAI, Rewrite, Expand, Summarize, Translate, Explain, Grammar, Formal, Casual, Custom
+
+**Hook:**
+- `useContextMenu()` - Hook to manage context menu state
+  - Returns: isOpen, position, selectedText, selectionContext, openMenu, closeMenu
+
+**Utility Functions:**
+- `getActionShortcut(action)` - Get keyboard shortcut for action
+- `isActionAvailable(action, selectedText, context)` - Check if action available
+- `getDefaultActions()` - Get default action list
+- `getAllActions()` - Get all available actions
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
