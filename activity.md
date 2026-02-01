@@ -1,75 +1,204 @@
 # Activity Log - EigenPal DOCX Editor
 
-## Progress Tracking
+## Product Vision
 
-This file tracks the progress of the Ralph autonomous development loop.
+A **complete WYSIWYG DOCX editor** with full Microsoft Word fidelity:
+
+### Document Features
+- **Full text formatting** - bold, italic, underline, strikethrough, superscript, subscript, small caps, highlight, colors, fonts
+- **Full paragraph formatting** - alignment, spacing, indentation, borders, shading, tabs
+- **Tables** - borders, shading, merged cells, nested tables
+- **Images** - embedded with sizing, floating
+- **Shapes & text boxes** - basic drawing objects
+- **Hyperlinks & bookmarks** - internal and external links
+- **Fields** - page numbers, dates, document properties
+- **Footnotes/endnotes**
+- **Lists** - bullets, numbers, multi-level
+- **Headers/footers** - per section, first/even page variants
+- **Page layout** - size, margins, orientation, columns
+
+### Editor Features
+- **Full toolbar** - all formatting controls
+- **Font/size/color pickers**
+- **Style picker** - apply named styles
+- **Find/replace**
+- **Zoom control**
+- **Table editing** - add/remove rows/columns, merge cells
+- **Image editing** - resize handles
+- **Copy/paste** - with formatting preservation
+- **Undo/redo**
+- **Keyboard shortcuts**
+
+### AI/Agent Features
+- **DocumentAgent API** - programmatic editing
+- **Context menu** - right-click AI actions
+- **Template variables** - docxtemplater integration
 
 ---
+
+## Development Approach
+
+**Exploratory implementation** - DOCX/OOXML is complex, we discover as we build.
+
+1. Explore actual DOCX files with explorer utility
+2. **Reference ~/superdoc when unsure** - it's a working implementation
+3. Document findings here
+4. Implement parser + renderer (your own code)
+5. Adapt plan as needed
+
+---
+
+## SuperDoc Reference Guide
+
+**Always check ~/superdoc when unsure how to implement something:**
+
+```
+~/superdoc/
+├── packages/
+│   ├── super-editor/src/
+│   │   ├── core/converters/    # DOCX import/export
+│   │   │   └── v2/importer/    # Main parsing logic
+│   │   └── extensions/         # Editor features
+│   ├── layout-engine/src/      # Page layout, line breaking
+│   ├── style-engine/src/       # Style cascade resolution
+│   └── pm-adapter/src/         # ProseMirror integration
+├── shared/
+│   └── font-utils/             # Font resolution & loading
+└── README.md
+```
+
+**Quick searches:**
+```bash
+# Find how they parse something
+grep -r "w:hyperlink" ~/superdoc/packages/
+grep -r "parseRun" ~/superdoc/packages/
+
+# Read a specific file
+cat ~/superdoc/packages/super-editor/src/core/converters/v2/importer/docxImporter.js
+```
+
+**Learn the approach, write your own code.**
+
+---
+
+## OOXML Quick Reference
+
+### Namespaces
+- `w:` - WordprocessingML (main content)
+- `a:` - DrawingML (graphics)
+- `r:` - Relationships
+- `wp:` - Word Drawing positioning
+- `wps:` - Word Drawing shapes
+- `m:` - Math
+
+### Key Elements
+| Element | Purpose |
+|---------|---------|
+| `w:document` | Root document |
+| `w:body` | Main content |
+| `w:p` | Paragraph |
+| `w:pPr` | Paragraph properties |
+| `w:r` | Run (text with formatting) |
+| `w:rPr` | Run properties |
+| `w:t` | Text content |
+| `w:tbl` | Table |
+| `w:hyperlink` | Hyperlink |
+| `w:drawing` | Image/shape container |
+| `w:fldSimple` | Simple field |
+| `w:sectPr` | Section properties |
+
+*(Add discoveries as you explore)*
+
+---
+
+## Discoveries
+
+*(Document unexpected DOCX structures here as found)*
+
+---
+
+## Font Mappings
+
+| DOCX Font | Google Font | CSS Fallback |
+|-----------|-------------|--------------|
+| Calibri | Carlito | Carlito, Calibri, sans-serif |
+| Cambria | Caladea | Caladea, Cambria, serif |
+| Arial | Arimo | Arimo, Arial, sans-serif |
+| Times New Roman | Tinos | Tinos, Times New Roman, serif |
+| Courier New | Cousine | Cousine, Courier New, monospace |
+
+---
+
+## Public API
+
+```jsx
+import DocxEditor, { DocumentAgent, loadFonts } from '@eigenpal/docx-editor';
+
+// Optional: preload fonts
+await loadFonts(['Roboto', 'Open Sans']);
+
+// Editor component
+<DocxEditor
+  documentBuffer={buffer}
+  onSave={(buf) => download(buf)}
+  onChange={(doc) => console.log('Changed')}
+  onAgentRequest={async (action, context) => {
+    const result = await myAI.process(action, context);
+    return { newText: result };
+  }}
+/>
+
+// Programmatic API
+const agent = new DocumentAgent(buffer);
+agent.getText();
+agent.getWordCount();
+agent.insertText(pos, "Hello", { bold: true });
+agent.insertTable(pos, 3, 4);
+agent.applyStyle(range, "Heading 1");
+const newBuffer = await agent.toBuffer();
+```
+
+---
+
+**CRITICAL:** No SuperDoc imports. Custom implementation. Reference ~/superdoc for learning only.
+
+---
+
+## Progress Log
 
 ### Session Start
 **Date:** 2026-02-01
-**Initial State:** Project has existing scaffold with some components. Starting Ralph loop for systematic development.
+**Status:** Comprehensive 91-task plan across 14 phases
 
 ---
 
-### US-01: Project scaffold
+### US-02: DOCX exploration utility
 **Date:** 2026-02-01
-**Status:** COMPLETE
+**Status:** Complete ✅
 
-**Changes:**
-- Updated package.json to add required dependencies: `superdoc` (npm package name for SuperDoc), `docxtemplater`, `pizzip`
-- Updated src/main.tsx to be a proper React entry point that imports React and renders into #app
-- Created index.html at root that loads the bundled JS from dist/main.js
+Created `src/docx/explorer.ts` with:
+- `exploreDocx(buffer): Promise<DocxExploration>` - Main exploration function
+- `extractXml(exploration, path, format?)` - Extract and format XML files
+- `printExplorationSummary(exploration)` - Console output for debugging
+- `getKeyFiles(exploration)` - Quick check for key DOCX components
 
-**Notes:**
-- The plan.md referenced `@harbour-enterprises/superdoc` but the actual npm package is named `superdoc` (per the SuperDoc README)
-- Build passes: `bun install && bun build ./src/main.tsx --outdir ./dist --loader:.css=css` exits 0
+**DocxExploration interface includes:**
+- `fileCount` - Total files in ZIP
+- `totalSize` - Uncompressed size
+- `files` - Array of DocxFileInfo with path, size, type flags
+- `directories` - Files grouped by directory
+- `xmlCache` - Pre-loaded XML content for quick access
 
----
-
-### US-02: DOCX file loader
-**Date:** 2026-02-01
-**Status:** COMPLETE
-
-**Changes:**
-- Updated `src/components/FileLoader.tsx` to:
-  - Read files as ArrayBuffer via FileReader
-  - Call `onFileLoaded` callback with both File object and ArrayBuffer
-  - Display loaded filename in the UI
-  - Simplified styling using inline styles (removed Tailwind/lucide dependencies for this component)
-- Updated `src/main.tsx` to:
-  - Import and use the FileLoader component
-  - Manage state for `rawBuffer` (ArrayBuffer) and `fileName`
-  - Pass `handleFileLoaded` callback to FileLoader
-  - Display buffer size when loaded
-
-**Notes:**
-- Component supports both file input and drag-and-drop
-- Build passes: `bun install && bun build ./src/main.tsx --outdir ./dist --loader:.css=css` exits 0
-
----
-
-### US-03: SuperDoc viewer
-**Date:** 2026-02-01
-**Status:** COMPLETE
-
-**Changes:**
-- Created `src/components/DocxViewer.tsx`:
-  - Imports `SuperDoc` from `superdoc` and `superdoc/style.css` (full CSS)
-  - Accepts a `File` prop and passes it directly to SuperDoc's `document` config
-  - Initializes SuperDoc with `documentMode: 'editing'`
-  - Shows a placeholder when no file is loaded
-  - Properly cleans up SuperDoc instance on unmount or when file changes using `destroy()`
-  - Uses `useRef` to track the SuperDoc instance and container element
-- Updated `src/main.tsx`:
-  - Added state for `file` (File object) alongside `rawBuffer`
-  - Integrated `DocxViewer` component, passing the File object as prop
-  - Increased max width to 1200px for better document display
-
-**Notes:**
-- Investigated SuperDoc source at `~/superdoc` to understand the API (constructor options, document passing, destroy method)
-- SuperDoc accepts File objects directly via the `document` config option
-- SuperDoc uses Vue internally and mounts into the provided selector
-- Build passes: `bun install && bun build ./src/main.tsx --outdir ./dist --loader:.css=css` exits 0
+**Key DOCX structure detected:**
+- `[Content_Types].xml` - Content type declarations
+- `word/document.xml` - Main document content
+- `word/styles.xml` - Style definitions
+- `word/theme/theme1.xml` - Theme colors and fonts
+- `word/numbering.xml` - List definitions
+- `word/fontTable.xml` - Font declarations
+- `word/header*.xml`, `word/footer*.xml` - Headers/footers
+- `word/footnotes.xml`, `word/endnotes.xml` - Notes
+- `word/media/*` - Embedded images
+- `word/_rels/document.xml.rels` - Relationships
 
 ---
