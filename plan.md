@@ -497,7 +497,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
   - Spacing: letter-spacing
   - Paragraph: alignment, line-height, margins, padding, borders, background
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -514,7 +514,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles highlight backgrounds
 - Template variables {{...}} styled distinctively
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

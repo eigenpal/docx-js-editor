@@ -1752,3 +1752,51 @@ Created `src/utils/formatToStyle.ts` with comprehensive formatting to CSS conver
 - bun build exits 0: ✓
 
 ---
+
+### US-32: Run component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/Run.tsx` with comprehensive run rendering:
+
+**Main Component:**
+- `Run` - React component rendering a text run with all formatting
+
+**Props:**
+- `run: RunType` - The run data to render
+- `theme?: Theme` - Theme for resolving colors and fonts
+- `className?: string` - Additional CSS class
+- `style?: CSSProperties` - Additional inline styles
+- `inline?: boolean` - Whether to render as inline-block
+
+**Content Types Rendered:**
+- `text` - Plain text with template variable detection
+- `tab` - Tab characters with whitespace preservation
+- `break` - Line, page, and column breaks
+- `symbol` - Symbol characters with specific fonts
+- `footnoteRef` / `endnoteRef` - Superscript note references
+- `softHyphen` / `noBreakHyphen` - Special hyphens
+- `drawing` / `shape` - Placeholders for images and shapes
+
+**Template Variable Support:**
+- Detects `{{...}}` patterns in text
+- Applies distinctive styling (yellow background, monospace, brown text)
+- Uses regex-based splitting to preserve surrounding text
+
+**CSS Classes Applied:**
+- `docx-run` - Base class
+- `docx-run-bold`, `docx-run-italic`, `docx-run-underline` - Formatting indicators
+- `docx-run-strike`, `docx-run-superscript`, `docx-run-subscript`
+- `docx-run-small-caps`, `docx-run-all-caps`
+- `docx-run-highlighted`, `docx-run-hidden`
+- `docx-run-has-variable` - When contains template variables
+
+**Utility Functions:**
+- `getRunPlainText(run)` - Extract plain text from run
+- `hasVisibleContent(run)` - Check if run has visible content
+- `isWhitespaceOnly(run)` - Check if run is whitespace only
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
