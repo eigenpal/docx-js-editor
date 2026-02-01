@@ -2591,3 +2591,110 @@ Created `src/components/render/FootnoteArea.tsx` with footnote/endnote rendering
 - bun build exits 0: ✓
 
 ---
+
+### US-49: Document viewer
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/DocumentViewer.tsx` with full paginated document view:
+
+**Main Component:**
+- `DocumentViewer` - React component rendering paginated document
+
+**Props:**
+- `document?: Document` - The document to render
+- `theme?: Theme` - Theme for resolving colors and fonts
+- `zoom?: number` - Zoom level (1.0 = 100%)
+- `pageGap?: number` - Gap between pages in pixels
+- `showPageShadows?: boolean` - Whether to show page shadows
+- `showPageNumbers?: boolean` - Whether to show page numbers
+- `isLoading?: boolean` - Loading state
+- `loadingIndicator?: ReactNode` - Custom loading indicator
+- `placeholder?: ReactNode` - Custom placeholder for no document
+- `renderParagraph, renderTable` - Custom content renderers
+- `renderHeader, renderFooter` - Custom header/footer renderers
+- `onPageVisible?: (pageNumber) => void` - Callback when page visible
+- `onDocumentClick?: (e, page) => void` - Callback for clicks
+
+**Features:**
+- Renders all pages vertically with configurable gap
+- Scrollable container with gray background
+- Shows loading state while parsing (with spinner)
+- Shows placeholder when no document loaded
+- Zoom control support
+- Page number indicators below each page
+- Scroll tracking with current page detection
+
+**CSS Classes:**
+- `docx-viewer` - Container
+- `docx-viewer-loading` / `docx-viewer-empty` - State classes
+- `docx-viewer-content` - Pages container
+- `docx-page-wrapper` - Individual page wrapper
+- `docx-page-number-indicator` - Page number display
+
+**Utility Functions:**
+- `scrollToPage(containerRef, pageNumber, layoutResult, zoom, gap)` - Scroll to page
+- `getVisiblePages(containerRef, layoutResult, zoom, gap)` - Get visible page numbers
+- `calculateFitWidthZoom(containerWidth, pageWidth, padding)` - Calculate zoom for width
+- `calculateFitPageZoom(containerWidth, containerHeight, pageWidth, pageHeight)` - Zoom for page
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
+
+### US-50: Run serializer
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/serializer/runSerializer.ts` with comprehensive run serialization:
+
+**Main Functions:**
+- `serializeRun(run): string` - Serialize a single run to OOXML XML
+- `serializeRuns(runs): string` - Serialize multiple runs
+- `serializeTextFormatting(formatting): string` - Serialize w:rPr element
+
+**Text Formatting Serialization (w:rPr):**
+- w:rStyle (character style reference)
+- w:rFonts (font family with theme references)
+- w:b, w:bCs (bold)
+- w:i, w:iCs (italic)
+- w:caps, w:smallCaps (capitalization)
+- w:strike, w:dstrike (strikethrough)
+- w:outline, w:shadow, w:emboss, w:imprint (effects)
+- w:vanish (hidden text)
+- w:color (text color with theme support)
+- w:spacing, w:w, w:kern, w:position (spacing/positioning)
+- w:sz, w:szCs (font size)
+- w:highlight (text highlight)
+- w:u (underline with style and color)
+- w:effect, w:em (effects and emphasis)
+- w:shd (character shading)
+- w:vertAlign (superscript/subscript)
+- w:rtl, w:cs (right-to-left and complex script)
+
+**Run Content Serialization:**
+- w:t (text with xml:space="preserve" when needed)
+- w:tab (tab characters)
+- w:br (line/page/column breaks)
+- w:sym (symbol characters)
+- w:footnoteReference, w:endnoteReference
+- w:fldChar (field characters)
+- w:instrText (field instructions)
+- w:softHyphen, w:noBreakHyphen
+- w:drawing (placeholder for images)
+- Shape content (placeholder)
+
+**Utility Functions:**
+- `hasRunContent(run)` - Check if run has content
+- `hasRunFormatting(run)` - Check if run has formatting
+- `getRunPlainText(run)` - Get plain text for debugging
+- `createEmptyRun()` - Create empty run
+- `createTextRun(text, formatting)` - Create text run
+- `createBreakRun(breakType, formatting)` - Create break run
+- `createTabRun(formatting)` - Create tab run
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

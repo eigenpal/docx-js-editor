@@ -656,7 +656,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Clickable to jump to footnote
 - Tooltip with footnote preview
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -669,7 +669,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles page number fields
 - Positioned in header/footer area
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -686,7 +686,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles tabs and their alignment
 - Handles non-breaking spaces
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -705,7 +705,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Updates PAGE and NUMPAGES fields
 - Handles keep-with-next, keep-lines-together
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -718,7 +718,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles column breaks
 - Handles column widths and spacing
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -734,7 +734,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Page borders if specified
 - White background with shadow (page appearance)
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -747,7 +747,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Separator line above footnotes
 - Footnotes are smaller text
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -762,7 +762,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Shows loading state while parsing
 - Shows placeholder when no document
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
@@ -777,7 +777,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Serializes ALL formatting properties
 - Handles images, tabs
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
