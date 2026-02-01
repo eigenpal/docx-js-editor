@@ -818,7 +818,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - All content in order
 - Section properties
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

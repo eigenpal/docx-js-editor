@@ -2818,3 +2818,58 @@ Created `src/docx/serializer/tableSerializer.ts` with comprehensive table serial
 - bun build exits 0: ✓
 
 ---
+
+### US-53: Document serializer
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/serializer/documentSerializer.ts` with complete document.xml serialization:
+
+**Main Functions:**
+- `serializeDocument(doc): string` - Serialize complete document.xml with all namespaces
+- `serializeDocumentBody(body): string` - Serialize w:body content
+- `serializeDocumentBodyElement(body): string` - Serialize w:body element with tags
+- `serializeSectionProperties(props): string` - Serialize w:sectPr element
+
+**XML Namespaces:**
+- All standard OOXML namespaces included (w:, r:, wp:, wps:, wpg:, m:, etc.)
+- Minimal set for smaller output: wpc, mc, o, r, m, v, wp14, wp, w10, w, w14, w15, wpg, wps
+- mc:Ignorable declaration for extensibility
+
+**Section Properties Serialization (w:sectPr):**
+- w:headerReference, w:footerReference (by type: default, first, even)
+- w:footnotePr, w:endnotePr (position, numFmt, numStart, numRestart)
+- w:type (section start: continuous, nextPage, oddPage, evenPage, nextColumn)
+- w:pgSz (page width, height, orientation)
+- w:pgMar (all margins: top, bottom, left, right, header, footer, gutter)
+- w:paperSrc (first and other pages paper source)
+- w:pgBorders (page borders with display, offsetFrom, zOrder)
+- w:lnNumType (line numbers: countBy, start, distance, restart)
+- w:cols (column count, spacing, individual column definitions)
+- w:docGrid (type, linePitch, charSpace)
+- w:vAlign (vertical alignment)
+- w:bidi (bidirectional section)
+- w:titlePg (different first page header/footer)
+- w:evenAndOddHeaders (odd/even page headers)
+
+**Content Serialization:**
+- Serializes all BlockContent (paragraphs and tables) in document order
+- Delegates to `serializeParagraph()` from paragraphSerializer.ts
+- Delegates to `serializeTable()` from tableSerializer.ts
+- Final section properties at end of body
+
+**Utility Functions:**
+- `hasDocumentContent(doc)` - Check if document has any content
+- `hasDocumentSections(doc)` - Check if document has sections
+- `hasSectionProperties(doc)` - Check if document has section properties
+- `getDocumentContentCount(doc)` - Get total blocks count
+- `getDocumentParagraphCount(doc)` - Get paragraph count
+- `getDocumentTableCount(doc)` - Get table count
+- `getDocumentPlainText(doc)` - Get plain text for debugging
+- `createEmptyDocument()` - Create empty document
+- `createSimpleDocument(paragraphs)` - Create document with text paragraphs
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
