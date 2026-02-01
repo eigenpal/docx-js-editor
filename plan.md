@@ -1060,7 +1060,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Scales page rendering
 - Persists zoom preference
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

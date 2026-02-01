@@ -3531,3 +3531,76 @@ Created `src/components/dialogs/FindReplaceDialog.tsx` with comprehensive find a
 - bun build exits 0: ✓
 
 ---
+
+### US-70: Zoom control
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control functionality:
+
+**Main Component:**
+- `ZoomControl` - React component with dropdown and zoom in/out buttons
+
+**Props:**
+- `value?: number` - Current zoom level (1.0 = 100%)
+- `onChange?: (zoom: number) => void` - Callback when zoom changes
+- `levels?: ZoomLevel[]` - Custom zoom levels
+- `disabled?: boolean` - Whether the control is disabled
+- `minZoom?: number` - Minimum zoom level (default: 0.25)
+- `maxZoom?: number` - Maximum zoom level (default: 4.0)
+- `showButtons?: boolean` - Show zoom in/out buttons (default: true)
+- `persistZoom?: boolean` - Persist zoom preference to localStorage
+- `storageKey?: string` - Storage key for persisting zoom
+- `compact?: boolean` - Compact mode (smaller size)
+
+**Features:**
+- Dropdown with zoom levels (50%, 75%, 100%, 125%, 150%, 200%)
+- Zoom in/out buttons with proper limits
+- Scales page rendering (via onChange callback)
+- Persists zoom preference to localStorage (configurable)
+- Keyboard navigation (Arrow keys, Enter, Escape)
+- Accessible with ARIA attributes
+- Compact mode for dense toolbars
+
+**Default Zoom Levels:**
+- 50%, 75%, 100%, 125%, 150%, 200%
+
+**Extended Zoom Levels (available via getExtendedZoomLevels):**
+- 25%, 50%, 75%, 90%, 100%, 110%, 125%, 150%, 175%, 200%, 300%, 400%
+
+**Utility Functions:**
+- `getDefaultZoomLevels()` - Get default zoom levels
+- `getExtendedZoomLevels()` - Get extended zoom levels
+- `createZoomLevel(value)` - Create zoom level from decimal
+- `createZoomLevelsFromPercentages(percentages)` - Create levels from percentages
+- `isValidZoom(zoom, min, max)` - Check if zoom is valid
+- `clampZoom(zoom, min, max)` - Clamp zoom to valid range
+- `zoomToPercentage(zoom)` - Convert zoom to percentage string
+- `percentageToZoom(percentage)` - Convert percentage to zoom decimal
+- `parseZoom(input)` - Parse zoom from string (handles "100%" and "1.0")
+- `nearestZoomLevel(zoom, levels)` - Find nearest predefined zoom level
+- `calculateFitWidthZoom(containerWidth, pageWidth, padding)` - Calculate fit-width zoom
+- `calculateFitPageZoom(containerWidth, containerHeight, pageWidth, pageHeight, padding)` - Calculate fit-page zoom
+- `getStoredZoom(storageKey)` - Get zoom from localStorage
+- `storeZoom(zoom, storageKey)` - Store zoom to localStorage
+- `clearStoredZoom(storageKey)` - Clear stored zoom
+- `hasZoomLevel(zoom, levels)` - Check if zoom level exists
+- `getZoomStep()` - Get zoom increment step (0.25)
+- `applyZoomTransform(style, zoom)` - Apply zoom transform to CSS
+- `getZoomedDimensions(width, height, zoom)` - Calculate zoomed dimensions
+
+**Exported Icons:**
+- `ZoomInIcon` - SVG icon for zoom in
+- `ZoomOutIcon` - SVG icon for zoom out
+
+**CSS Classes:**
+- `docx-zoom-control` - Container
+- `docx-zoom-out-button` - Zoom out button
+- `docx-zoom-in-button` - Zoom in button
+- `docx-zoom-dropdown-trigger` - Dropdown trigger
+- `docx-zoom-dropdown-menu` - Dropdown menu
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
