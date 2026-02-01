@@ -3136,3 +3136,49 @@ Created `src/components/ui/FontPicker.tsx` with comprehensive font family select
 - bun build exits 0: ✓
 
 ---
+
+### US-63: Font size picker
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ui/FontSizePicker.tsx` with comprehensive font size selection:
+
+**Main Component:**
+- `FontSizePicker` - React component with dropdown/input for selecting font sizes
+
+**Props:**
+- `value?: number` - Currently selected font size (in points)
+- `onChange?: (size: number) => void` - Callback when size is selected
+- `sizes?: number[]` - Custom size options (defaults provided)
+- `disabled?: boolean` - Whether picker is disabled
+- `placeholder?: string` - Placeholder text
+- `width?: number | string` - Picker width
+- `minSize?: number` - Minimum allowed size (default: 1)
+- `maxSize?: number` - Maximum allowed size (default: 999)
+
+**Features:**
+- Dropdown with common sizes (8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36, 48, 72)
+- Text input for custom sizes
+- Keyboard navigation (Arrow keys, Enter, Escape)
+- Shows current size of selection
+- Input validation and clamping
+- Hover and focus states
+- Accessible with ARIA attributes
+
+**Utility Functions:**
+- `getDefaultSizes()` - Get default size options
+- `isValidFontSize(size, min, max)` - Validate font size
+- `clampFontSize(size, min, max)` - Clamp to valid range
+- `halfPointsToPoints(hp)` - Convert OOXML half-points to points
+- `pointsToHalfPoints(pt)` - Convert points to half-points
+- `formatFontSize(size)` - Format for display
+- `parseFontSize(input)` - Parse from string input
+- `getSizePresets()` - Get sizes grouped by category
+- `nearestStandardSize(size)` - Find nearest standard size
+- `nextLargerSize(currentSize)` - Get next larger standard size
+- `nextSmallerSize(currentSize)` - Get next smaller standard size
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
