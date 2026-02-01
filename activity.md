@@ -4622,3 +4622,27 @@ Created `src/components/DocxEditor.tsx` - the main component integrating all edi
 - bun build exits 0: ✓
 
 ---
+
+### US-89: Events and callbacks
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+All event callbacks are implemented in DocxEditor.tsx.
+
+**Implemented Callbacks:**
+- `onSelectionChange(context: SelectionContext | null)` - Selection change callback
+- `onChange(document: Document)` - Content change callback (onContentChange)
+- `onSave(buffer: ArrayBuffer)` - Save callback
+- `onError(error: Error)` - Error callback
+- `onFontsLoaded()` - Font loading complete callback
+
+**Additional Callbacks:**
+- `onAIActionStart(action, context)` - AI action start (in AIEditor)
+- `onAIActionComplete(action, response)` - AI action complete (in AIEditor)
+- `onAIActionError(action, error)` - AI action error (in AIEditor)
+- `onFocus()` / `onBlur()` - Focus callbacks (in Editor)
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
