@@ -28,7 +28,7 @@
 - Calls a callback prop (e.g. onFileLoaded) with the File object and ArrayBuffer
 - Displays the loaded filename in the UI
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
