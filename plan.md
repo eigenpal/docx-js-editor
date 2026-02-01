@@ -527,7 +527,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Handles leader characters (dots, dashes)
 - Aligns to tab stop positions
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

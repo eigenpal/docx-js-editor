@@ -1800,3 +1800,53 @@ Created `src/components/render/Run.tsx` with comprehensive run rendering:
 - bun build exits 0: ✓
 
 ---
+
+### US-33: Tab component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/render/Tab.tsx` with comprehensive tab rendering:
+
+**Main Component:**
+- `Tab` - React component rendering tab characters with proper spacing
+
+**Props:**
+- `currentPosition?: number` - Current horizontal position in twips from left margin
+- `tabStops?: TabStop[]` - Defined tab stops for this paragraph
+- `pageWidth?: number` - Page content width in twips
+- `className?: string` - Additional CSS class
+- `style?: CSSProperties` - Additional inline styles
+- `index?: number` - Index for key generation
+
+**Tab Render Info Interface:**
+- `width` - Width of the tab in pixels
+- `alignment` - Tab stop alignment (left, center, right, decimal)
+- `leader` - Leader character type (dot, hyphen, underscore, etc.)
+- `tabStopPosition` - Position of the tab stop in twips
+- `hasLeader` - Whether the tab has a visible leader
+- `leaderString` - Leader string to display
+
+**Main Functions:**
+- `calculateTabRenderInfo(currentPosition, tabStops, pageWidth)` - Calculate tab rendering info
+- `getTabStyle(info, additionalStyle)` - Get CSS styles for tab
+- `getPositionAfterTab(currentPosition, tabStops, pageWidth)` - Get position after tab
+- `getDefaultTabWidthPx()` - Get default tab width in pixels
+- `estimateFollowingContentWidth(text, fontSize)` - Estimate content width for alignment
+- `isDefaultTabPosition(position)` - Check if at default tab interval
+- `getLeaderCssContent(leader)` - Get CSS content string for leader
+- `createSimpleTab(widthPx, leader, className)` - Create tab with known width
+- `createBarTab(position, height, color)` - Create vertical bar tab
+
+**Features:**
+- Calculates width based on tab stop definitions
+- Uses `getNextTabStop()` and `calculateTabWidth()` from tabParser
+- Handles leader characters (dots, dashes, underscores, heavy, middleDot)
+- Aligns to tab stop positions (left, center, right, decimal, bar)
+- Supports default tab stops when no explicit stops defined
+- Minimum tab width enforcement (8px)
+- CSS classes for styling: `docx-tab`, `docx-tab-leader-*`, `docx-tab-align-*`
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
