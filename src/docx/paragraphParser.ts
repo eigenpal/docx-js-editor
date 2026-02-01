@@ -31,6 +31,7 @@ import type {
   LineSpacingRule,
   ParagraphAlignment,
   RelationshipMap,
+  MediaFile,
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import type { NumberingMap } from './numberingParser';
@@ -50,6 +51,7 @@ import {
   parseBookmarkStart as parseBookmarkStartFromModule,
   parseBookmarkEnd as parseBookmarkEndFromModule,
 } from './bookmarkParser';
+import { parseSectionProperties } from './sectionParser';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -795,6 +797,12 @@ export function parseParagraph(
   const pPr = findChild(node, 'w', 'pPr');
   if (pPr) {
     paragraph.formatting = parseParagraphProperties(pPr, theme, styles ?? undefined);
+
+    // Check for section properties within paragraph (marks end of a section)
+    const sectPr = findChild(pPr, 'w', 'sectPr');
+    if (sectPr) {
+      paragraph.sectionProperties = parseSectionProperties(sectPr, rels);
+    }
   }
 
   // Parse paragraph contents (runs, hyperlinks, bookmarks, fields)
