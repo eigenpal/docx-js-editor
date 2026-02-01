@@ -2450,3 +2450,48 @@ Created `src/layout/pageLayout.ts` with comprehensive page layout:
 - bun build exits 0: ✓
 
 ---
+
+### US-46: Column layout
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/layout/columnLayout.ts` with multi-column layout support:
+
+**Main Function:**
+- `layoutColumns(content, options): ColumnLayoutResult` - Layout content in columns
+
+**Column Interface:**
+- `index: number` - 0-indexed column
+- `widthPx, xPx, heightPx` - Column dimensions
+- `content: ColumnContent[]` - Content in this column
+- `currentY: number` - Current filled height
+
+**ColumnContent Interface:**
+- `type: 'paragraph' | 'table'`
+- `block: Paragraph | Table` - Original block
+- `y, height` - Position and size
+- `lines?: Line[]` - Lines for paragraphs
+- `isContinuation, continuesOnNextColumn` - Split flags
+
+**Features:**
+- Distributes content across columns
+- Handles explicit column breaks
+- Equal and custom column widths
+- Column spacing configuration
+- Content overflow to next page
+- Paragraph splitting across columns
+- Table layout in columns
+
+**Utility Functions:**
+- `getColumnCount(sectionProps)` - Get column count
+- `isMultiColumn(sectionProps)` - Check if multi-column
+- `getColumnWidths(sectionProps, contentWidthPx)` - Get widths
+- `getColumnSpacing(sectionProps)` - Get spacing in pixels
+- `hasColumnSeparator(sectionProps)` - Check for separator line
+- `getColumnAtX(result, x)` - Get column at X position
+- `getContentAtPosition(result, x, y)` - Get content at position
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
