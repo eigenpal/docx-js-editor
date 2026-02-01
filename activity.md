@@ -4271,3 +4271,157 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - bun build exits 0: ✓
 
 ---
+
+### US-82: Selection context builder
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+`src/agent/selectionContext.ts` already existed with comprehensive implementation.
+
+**Main Functions:**
+- `buildSelectionContext(doc, range, options)` - Build selection context for AI operations
+- `buildExtendedSelectionContext(doc, range, options)` - Extended context with additional details
+- `getSelectionFormattingSummary(doc, range)` - Get formatting summary for selection
+
+**SelectionContext Interface:**
+- `selectedText` - The selected text
+- `range` - Selection range (start/end positions)
+- `formatting` - Text formatting at selection start
+- `paragraphFormatting` - Paragraph formatting
+- `textBefore` - Context before selection (configurable chars)
+- `textAfter` - Context after selection (configurable chars)
+- `paragraph` - Paragraph context (index, fullText, style, wordCount)
+- `inTable` - Whether selection is in a table
+- `inHyperlink` - Whether selection is in a hyperlink
+- `suggestedActions` - AI actions suggested based on content
+
+**ExtendedSelectionContext:**
+- Extends SelectionContext with:
+  - `documentSummary` - Overall document summary
+  - `wordCount` / `characterCount` - Selection stats
+  - `isMultiParagraph` - Spans multiple paragraphs
+  - `paragraphIndices` - All paragraph indices in selection
+  - `detectedLanguage` - Language detection hint
+  - `contentType` - prose / list / heading / table / mixed
+
+**Helper Functions:**
+- `extractSelectedText()` - Extract text from range
+- `getTextBefore() / getTextAfter()` - Get surrounding context
+- `getFormattingAtPosition()` - Get formatting at position
+- `getSuggestedActions()` - Get AI action suggestions
+- `detectContentType()` - Detect content type
+- `detectLanguage()` - Simple language detection heuristic
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
+
+### US-83: Response preview component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+`src/components/ResponsePreview.tsx` already existed with comprehensive implementation.
+
+**Main Component:**
+- `ResponsePreview` - Shows AI response preview with diff view
+
+**Props:**
+- `originalText` - Original selected text
+- `response` - AI response (or null if loading/error)
+- `action` - Action that was performed
+- `isLoading` - Loading state
+- `error` - Error message if failed
+- `onAccept` - Accept callback
+- `onReject` - Reject callback
+- `onRetry` - Retry callback
+- `allowEdit` - Allow editing before accepting
+- `showDiff` - Show diff view
+- `position` - Position for the preview
+
+**States:**
+- Loading: Shows spinner with action label
+- Error: Shows error message with retry/close buttons
+- Success: Shows diff view with accept/reject/edit options
+
+**Diff View:**
+- Word-level diff calculation
+- Removed text: strikethrough, red background
+- Added text: green background
+- Merged consecutive segments of same type
+
+**Features:**
+- Edit mode: textarea to modify response before accepting
+- Keyboard shortcuts: Escape to close/cancel, Ctrl+Enter to accept
+- Warnings display for AI responses
+
+**Hook:**
+- `useResponsePreview()` - State management for response preview
+  - `showPreview(text, action, position)` - Show loading preview
+  - `setResponse(response)` - Set AI response
+  - `setError(error)` - Set error state
+  - `hidePreview()` - Hide preview
+
+**Utility Functions:**
+- `createMockResponse(newText, warnings)` - Create mock response
+- `createErrorResponse(error)` - Create error response
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
+
+### US-84: Context menu integration
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+`src/components/AIEditor.tsx` already existed with comprehensive implementation.
+
+**Main Component:**
+- `AIEditor` - Editor with integrated AI context menu
+
+**Props (extends EditorProps):**
+- `onAgentRequest` - Handler for AI requests
+- `availableActions` - Available AI actions
+- `showCustomPrompt` - Show custom prompt option
+- `onAIActionStart` - Callback when AI action starts
+- `onAIActionComplete` - Callback when AI action completes
+- `onAIActionError` - Callback when AI action fails
+
+**Ref Methods:**
+- `triggerAIAction(action, customPrompt)` - Trigger AI action programmatically
+- `getSelectionContext()` - Get current selection context
+
+**Full Flow Implementation:**
+1. User selects text in editor
+2. Right-click triggers context menu
+3. Selection context is built from document and range
+4. User selects AI action from context menu
+5. Loading preview is shown
+6. AI request is sent via onAgentRequest
+7. Response preview shows diff
+8. User can accept, reject, or edit response
+9. On accept, document is updated via executeCommand
+
+**Helper Functions:**
+- `getSelectedText()` - Get selected text from DOM
+- `getSelectionRange()` - Convert DOM selection to document range
+  - Finds paragraph indices from data attributes
+  - Calculates character offsets within paragraphs
+  - Handles forward and backward selections
+
+**Mock Handler:**
+- `createMockAIHandler(delay)` - Create mock AI handler for testing
+  - Simulates network delay
+  - Returns mock responses for each action type
+
+**Integration:**
+- Uses ContextMenu component
+- Uses ResponsePreview component
+- Uses buildSelectionContext from selectionContext.ts
+- Uses executeCommand from executor.ts
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
