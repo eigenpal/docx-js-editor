@@ -2748,3 +2748,73 @@ Created `src/docx/serializer/paragraphSerializer.ts` with comprehensive paragrap
 - bun build exits 0: ✓
 
 ---
+
+### US-52: Table serializer
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/serializer/tableSerializer.ts` with comprehensive table serialization:
+
+**Main Functions:**
+- `serializeTable(table): string` - Serialize a single table to OOXML XML (w:tbl)
+- `serializeTables(tables): string` - Serialize multiple tables
+- `serializeTableFormatting(formatting): string` - Serialize w:tblPr element
+- `serializeTableRowFormatting(formatting): string` - Serialize w:trPr element
+- `serializeTableCellFormatting(formatting): string` - Serialize w:tcPr element
+
+**Table Properties Serialization (w:tblPr):**
+- w:tblStyle (table style reference)
+- w:tblpPr (floating table properties)
+- w:bidiVisual (bidirectional)
+- w:tblW (table width)
+- w:jc (justification)
+- w:tblCellSpacing (cell spacing)
+- w:tblInd (table indent)
+- w:tblBorders (top, bottom, left, right, insideH, insideV)
+- w:tblCellMar (default cell margins)
+- w:tblLayout (fixed or autofit)
+- w:shd (shading)
+- w:tblLook (conditional formatting flags)
+- w:tblOverlap (overlap)
+
+**Row Properties Serialization (w:trPr):**
+- w:cantSplit (prevent row split)
+- w:tblHeader (header row)
+- w:trHeight (row height with height rule)
+- w:jc (row justification)
+- w:hidden (hidden row)
+
+**Cell Properties Serialization (w:tcPr):**
+- w:cnfStyle (conditional format style)
+- w:tcW (cell width)
+- w:gridSpan (horizontal merge)
+- w:vMerge (vertical merge: restart or continue)
+- w:tcBorders (cell borders)
+- w:shd (cell shading)
+- w:noWrap (no text wrap)
+- w:tcMar (cell margins)
+- w:textDirection (text direction)
+- w:tcFitText (fit text)
+- w:vAlign (vertical alignment)
+- w:hideMark (hide mark)
+
+**Cell Content Handling:**
+- Recursively serializes paragraphs and nested tables
+- Ensures at least one empty paragraph per cell (Word requirement)
+
+**Utility Functions:**
+- `hasTableRows(table)` - Check if table has rows
+- `hasTableFormatting(table)` - Check if table has formatting
+- `hasRowCells(row)` - Check if row has cells
+- `hasRowFormatting(row)` - Check if row has formatting
+- `hasCellContent(cell)` - Check if cell has content
+- `hasCellFormatting(cell)` - Check if cell has formatting
+- `getTableColumnCount(table)` - Get column count
+- `getTableRowCount(table)` - Get row count
+- `createEmptyTable(rows, cols)` - Create empty table
+- `createTextCell(text, formatting)` - Create cell with text
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
