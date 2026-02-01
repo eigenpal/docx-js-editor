@@ -1358,6 +1358,8 @@ export interface Paragraph {
   content: ParagraphContent[];
   /** Computed list rendering (if this is a list item) */
   listRendering?: ListRendering;
+  /** Section properties (if this paragraph ends a section) */
+  sectionProperties?: SectionProperties;
 }
 
 // ============================================================================
