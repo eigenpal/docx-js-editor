@@ -1249,3 +1249,80 @@ w:drawing
 - bun build exits 0: ✓
 
 ---
+
+### US-23: Footnote/Endnote parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/footnoteParser.ts` with comprehensive footnote and endnote parsing:
+
+**Main Functions:**
+- `parseFootnotes(xml, styles?, theme?, numbering?, rels?, media?)` - Parse word/footnotes.xml
+- `parseEndnotes(xml, styles?, theme?, numbering?, rels?, media?)` - Parse word/endnotes.xml
+- `parseFootnoteProperties(element)` - Parse w:footnotePr from section properties
+- `parseEndnoteProperties(element)` - Parse w:endnotePr from section properties
+
+**FootnoteMap Interface:**
+- `byId: Map<number, Footnote>` - Lookup by ID
+- `footnotes: Footnote[]` - All footnotes in document order
+- `getFootnote(id)` - Get footnote by ID
+- `hasFootnote(id)` - Check if footnote exists
+- `getNormalFootnotes()` - Get non-separator footnotes
+- `getSeparator()` - Get separator footnote if exists
+- `getContinuationSeparator()` - Get continuation separator
+
+**EndnoteMap Interface:**
+- Same structure as FootnoteMap but for endnotes
+
+**Note Types Supported:**
+- `normal` - Regular footnote/endnote content
+- `separator` - Line separating notes from body text
+- `continuationSeparator` - Separator for continued notes
+- `continuationNotice` - Notice for continued notes
+
+**Properties Parsing:**
+- Position (pageBottom, beneathText, sectEnd, docEnd)
+- Number format (decimal, upperRoman, lowerRoman, etc.)
+- Start number (numStart)
+- Number restart (continuous, eachSect, eachPage)
+
+**Utility Functions:**
+- `getFootnoteText(footnote)` - Get plain text content
+- `getEndnoteText(endnote)` - Get plain text content
+- `isSeparatorFootnote(footnote)` - Check if separator type
+- `isSeparatorEndnote(endnote)` - Check if separator type
+- `getFootnoteDisplayNumber(footnote, map, startNumber)` - Get display number
+- `getEndnoteDisplayNumber(endnote, map, startNumber)` - Get display number
+- `createEmptyFootnoteMap()` - Create empty map
+- `createEmptyEndnoteMap()` - Create empty map
+- `mergeFootnoteMaps(...maps)` - Merge multiple footnote maps
+- `mergeEndnoteMaps(...maps)` - Merge multiple endnote maps
+
+**OOXML Structure Reference:**
+```
+word/footnotes.xml:
+  w:footnotes
+    └── w:footnote[@w:id][@w:type]
+        └── w:p (paragraphs)
+
+word/endnotes.xml:
+  w:endnotes
+    └── w:endnote[@w:id][@w:type]
+        └── w:p (paragraphs)
+
+Note types:
+  - normal (default)
+  - separator (horizontal line)
+  - continuationSeparator
+  - continuationNotice
+```
+
+**Integration Notes:**
+- Footnote/endnote references in document body are already parsed by runParser as NoteReferenceContent
+- This parser handles the actual footnote/endnote content definitions
+- Content is parsed using paragraphParser for full formatting support
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
