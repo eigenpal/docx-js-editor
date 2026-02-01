@@ -788,3 +788,49 @@ Created `src/docx/tabParser.ts` with comprehensive tab stop handling:
 - bun build exits 0: ✓
 
 ---
+
+### US-16: Hyperlink parser
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/hyperlinkParser.ts` with comprehensive hyperlink parsing:
+
+**Main Function:**
+- `parseHyperlink(node, rels, styles?, theme?): Hyperlink` - Parse w:hyperlink element with URL resolution
+
+**Features:**
+- Resolves r:id to actual URL via RelationshipMap
+- External links: Uses r:id → looks up in rels → gets target URL (for External targetMode)
+- Internal links: Uses w:anchor → creates #anchor href for bookmark links
+- Extracts tooltip (w:tooltip attribute)
+- Extracts target frame (w:tgtFrame - _blank, _self, etc.)
+- Extracts history tracking (w:history)
+- Extracts document location (w:docLocation)
+- Parses child runs for display text
+- Handles nested bookmarks within hyperlinks
+
+**Utility Functions:**
+- `getHyperlinkText(hyperlink)` - Get plain text from hyperlink
+- `isExternalLink(hyperlink)` - Check if URL is external (http/mailto/tel)
+- `isInternalLink(hyperlink)` - Check if link points to internal bookmark
+- `getHyperlinkUrl(hyperlink)` - Get resolved URL
+- `hasContent(hyperlink)` - Check if hyperlink has child runs
+- `getHyperlinkRuns(hyperlink)` - Get all runs from hyperlink
+- `resolveHyperlinkUrl(hyperlink, rels)` - Resolve URL post-parsing
+- `createInternalHyperlink(anchor, children, options?)` - Create bookmark link
+- `createExternalHyperlink(url, children, options?)` - Create external link
+
+**Integration:**
+- Updated `paragraphParser.ts` to use new `hyperlinkParser.ts` module
+- Added `rels` parameter to `parseParagraph()` function signature
+- Updated `parseParagraphContents()` to pass relationships for URL resolution
+
+**OOXML Reference:**
+- w:hyperlink element contains r:id (external) or w:anchor (internal)
+- External links stored in word/_rels/document.xml.rels with TargetMode="External"
+- Internal links reference bookmarks by name
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

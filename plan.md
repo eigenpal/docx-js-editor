@@ -270,7 +270,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Extracts tooltip if present
 - Contains child runs for link text
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 

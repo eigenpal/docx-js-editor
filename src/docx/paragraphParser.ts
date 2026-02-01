@@ -30,6 +30,7 @@ import type {
   TabLeader,
   LineSpacingRule,
   ParagraphAlignment,
+  RelationshipMap,
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import type { NumberingMap } from './numberingParser';
@@ -44,6 +45,7 @@ import {
   type XmlElement,
 } from './xmlParser';
 import { parseRun, parseRunProperties } from './runParser';
+import { parseHyperlink as parseHyperlinkFromModule } from './hyperlinkParser';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -486,75 +488,16 @@ function getLocalName(name: string | undefined): string {
 
 /**
  * Parse hyperlink element (w:hyperlink)
+ *
+ * Delegates to hyperlinkParser module which resolves URLs via relationships.
  */
 function parseHyperlink(
   node: XmlElement,
+  rels: RelationshipMap | null,
   styles: StyleMap | null,
-  theme: Theme | null,
-  numbering: NumberingMap | null
+  theme: Theme | null
 ): Hyperlink {
-  const hyperlink: Hyperlink = {
-    type: 'hyperlink',
-    children: [],
-  };
-
-  // Get relationship ID for external links
-  const rId = getAttribute(node, 'r', 'id');
-  if (rId) {
-    hyperlink.rId = rId;
-  }
-
-  // Get internal bookmark anchor
-  const anchor = getAttribute(node, 'w', 'anchor');
-  if (anchor) {
-    hyperlink.anchor = anchor;
-  }
-
-  // Get tooltip
-  const tooltip = getAttribute(node, 'w', 'tooltip');
-  if (tooltip) {
-    hyperlink.tooltip = tooltip;
-  }
-
-  // Get target frame
-  const tgtFrame = getAttribute(node, 'w', 'tgtFrame');
-  if (tgtFrame) {
-    hyperlink.target = tgtFrame;
-  }
-
-  // Get history
-  const history = getAttribute(node, 'w', 'history');
-  if (history === '1' || history === 'true') {
-    hyperlink.history = true;
-  }
-
-  // Get document location
-  const docLocation = getAttribute(node, 'w', 'docLocation');
-  if (docLocation) {
-    hyperlink.docLocation = docLocation;
-  }
-
-  // Parse children (runs, bookmarks)
-  const children = getChildElements(node);
-  for (const child of children) {
-    const localName = getLocalName(child.name);
-
-    switch (localName) {
-      case 'r':
-        hyperlink.children.push(parseRun(child, styles, theme));
-        break;
-
-      case 'bookmarkStart':
-        hyperlink.children.push(parseBookmarkStart(child));
-        break;
-
-      case 'bookmarkEnd':
-        hyperlink.children.push(parseBookmarkEnd(child));
-        break;
-    }
-  }
-
-  return hyperlink;
+  return parseHyperlinkFromModule(node, rels, styles, theme);
 }
 
 /**
@@ -675,7 +618,8 @@ function parseParagraphContents(
   paraElement: XmlElement,
   styles: StyleMap | null,
   theme: Theme | null,
-  numbering: NumberingMap | null
+  numbering: NumberingMap | null,
+  rels: RelationshipMap | null
 ): ParagraphContent[] {
   const contents: ParagraphContent[] = [];
   const children = getChildElements(paraElement);
@@ -773,7 +717,7 @@ function parseParagraphContents(
       }
 
       case 'hyperlink':
-        contents.push(parseHyperlink(child, styles, theme, numbering));
+        contents.push(parseHyperlink(child, rels, styles, theme));
         break;
 
       case 'bookmarkStart':
@@ -836,13 +780,15 @@ function parseParagraphContents(
  * @param styles - Style map for resolving style references
  * @param theme - Theme for resolving theme colors/fonts
  * @param numbering - Numbering definitions for list info
+ * @param rels - Relationship map for resolving hyperlink URLs
  * @returns Parsed Paragraph object
  */
 export function parseParagraph(
   node: XmlElement,
   styles: StyleMap | null,
   theme: Theme | null,
-  numbering: NumberingMap | null
+  numbering: NumberingMap | null,
+  rels: RelationshipMap | null = null
 ): Paragraph {
   const paragraph: Paragraph = {
     type: 'paragraph',
@@ -867,7 +813,7 @@ export function parseParagraph(
   }
 
   // Parse paragraph contents (runs, hyperlinks, bookmarks, fields)
-  paragraph.content = parseParagraphContents(node, styles, theme, numbering);
+  paragraph.content = parseParagraphContents(node, styles, theme, numbering, rels);
 
   // Compute list rendering if this is a list item
   if (paragraph.formatting?.numPr && numbering) {
