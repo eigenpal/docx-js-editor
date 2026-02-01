@@ -2979,3 +2979,56 @@ Created `src/hooks/useSelection.ts` with comprehensive selection tracking:
 - bun build exits 0: ✓
 
 ---
+
+
+### US-56: Editable run component
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/edit/EditableRun.tsx` with editable text run support:
+
+**Main Component:**
+- `EditableRun` - React component with contentEditable span for text editing
+
+**Props:**
+- `run: RunType` - The run data to render
+- `runIndex: number` - Index in parent content array
+- `paragraphIndex: number` - Index of parent paragraph
+- `theme?: Theme` - Theme for resolving colors and fonts
+- `editable?: boolean` - Whether editing is enabled
+- `onChange?: (newRun, runIndex) => void` - Callback when content changes
+- `onKeyDown?: (event, runIndex) => void` - Callback for key events
+- `onFocus?: (runIndex) => void` - Callback when focused
+- `onBlur?: (runIndex) => void` - Callback when blurred
+- `onSelectionChange?: (offset, runIndex) => void` - Callback when cursor moves
+
+**Features:**
+- contentEditable span for text editing
+- Syncs text changes to document model via onChange
+- Preserves formatting during edits
+- Handles IME composition (for CJK input)
+- Template variable highlighting (non-editable within)
+- Non-text content (images, shapes) rendered as non-editable
+- Selection tracking within run
+- Uses data attributes for DOM-to-document position mapping
+
+**Utility Functions:**
+- `isEditableRun(run)` - Check if run can be edited
+- `getEditableRunText(run)` - Get plain text content
+- `updateRunText(run, newText)` - Create run with new text preserving formatting
+- `createEmptyRun(formatting)` - Create empty run
+- `createTextRun(text, formatting)` - Create text run
+- `mergeRuns(run1, run2)` - Merge runs with same formatting
+- `splitRunAtOffset(run, offset)` - Split run at character offset
+
+**Design Notes:**
+- Only runs with text-only content are editable
+- Runs with images, shapes, fields render as non-editable placeholders
+- Uses contentEditable warning suppression for React
+- Tracks last text value to avoid duplicate onChange calls
+- Composition events handled for proper IME support
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
