@@ -1017,7 +1017,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Shows current style of selection
 - Applies style to paragraph
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
