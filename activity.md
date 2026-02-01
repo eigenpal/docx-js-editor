@@ -2873,3 +2873,46 @@ Created `src/docx/serializer/documentSerializer.ts` with complete document.xml s
 - bun build exits 0: ✓
 
 ---
+
+### US-54: DOCX repacker
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/docx/rezip.ts` with comprehensive DOCX repacking:
+
+**Main Functions:**
+- `repackDocx(doc, options): Promise<ArrayBuffer>` - Main repacker function
+- `repackDocxFromRaw(doc, rawContent, options): Promise<ArrayBuffer>` - Repack using raw content
+- `updateDocumentXml(buffer, newXml, options): Promise<ArrayBuffer>` - Update only document.xml
+- `updateXmlFile(buffer, path, content, options): Promise<ArrayBuffer>` - Update specific file
+- `updateMultipleFiles(buffer, updates, options): Promise<ArrayBuffer>` - Update multiple files
+
+**Relationship Management:**
+- `addRelationship(buffer, relationship): Promise<{ buffer, rId }>` - Add new relationship
+- `addMedia(buffer, filename, data, mimeType): Promise<{ buffer, rId, path }>` - Add media file
+
+**Validation:**
+- `validateDocx(buffer): Promise<{ valid, errors, warnings }>` - Validate DOCX structure
+- `isDocxBuffer(buffer): boolean` - Quick check for ZIP signature
+
+**Create New DOCX:**
+- `createEmptyDocx(): Promise<ArrayBuffer>` - Create minimal valid DOCX
+- `createDocx(doc): Promise<ArrayBuffer>` - Create DOCX from Document
+
+**Features:**
+- Preserves all original files (styles.xml, theme1.xml, fontTable.xml, etc.)
+- Only updates document.xml with serialized content
+- Maintains round-trip fidelity for WYSIWYG editing
+- Optionally updates modification date in docProps/core.xml
+- Supports configurable compression level
+- Handles content types and relationships properly
+
+**Options:**
+- `compressionLevel` - Compression level 0-9 (default: 6)
+- `updateModifiedDate` - Update modification timestamp (default: true)
+- `modifiedBy` - Custom modifier name for lastModifiedBy
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

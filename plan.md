@@ -833,7 +833,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - Updates relationships if needed
 - Result opens in Word
 - bun build exits 0
-**passes:** false
+**passes:** true
 
 ---
 
