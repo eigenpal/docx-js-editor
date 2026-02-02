@@ -21,7 +21,7 @@
     "dev": "vite",
     "build": "tsup && bun run build:css",
     "build:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
-    "build:demo": "bun build ./demo/main.tsx --outdir ./demo/dist --target browser",
+    "build:demo": "vite build",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:e2e": "npx playwright test",
@@ -41,6 +41,8 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
+    "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-select": "^2.2.6",
     "docxtemplater": "^3.50.0",
     "jszip": "^3.10.1",
     "pizzip": "^3.1.7",

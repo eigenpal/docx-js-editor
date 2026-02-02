@@ -20,6 +20,7 @@ import { ListButtons, type ListState, createDefaultListState } from './ui/ListBu
 import { LineSpacingPicker } from './ui/LineSpacingPicker';
 import { StylePicker } from './ui/StylePicker';
 import { MaterialSymbol } from './ui/MaterialSymbol';
+import { ZoomControl } from './ui/ZoomControl';
 import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
 import { cn } from '../lib/utils';
@@ -137,6 +138,12 @@ export interface ToolbarProps {
   onPrint?: () => void;
   /** Whether to show print button (default: true) */
   showPrintButton?: boolean;
+  /** Whether to show zoom control (default: true) */
+  showZoomControl?: boolean;
+  /** Current zoom level (1.0 = 100%) */
+  zoom?: number;
+  /** Callback when zoom changes */
+  onZoomChange?: (zoom: number) => void;
 }
 
 /**
@@ -207,9 +214,9 @@ export function ToolbarButton({
       variant="ghost"
       size="icon-sm"
       className={cn(
-        'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
-        active && 'bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700',
-        disabled && 'opacity-40 cursor-not-allowed',
+        'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80',
+        active && 'bg-slate-900 text-white hover:bg-slate-800 hover:text-white',
+        disabled && 'opacity-30 cursor-not-allowed',
         className
       )}
       onClick={disabled ? undefined : onClick}
@@ -236,7 +243,7 @@ export function ToolbarGroup({ label, children, className }: ToolbarGroupProps) 
   return (
     <div
       className={cn(
-        'flex items-center gap-0.5 px-1.5 border-r border-slate-200 mr-1.5 last:border-r-0 last:mr-0',
+        'flex items-center gap-0.5 px-1 border-r border-slate-200/50 last:border-r-0',
         className
       )}
       role="group"
@@ -292,6 +299,9 @@ export function Toolbar({
   theme,
   onPrint,
   showPrintButton = true,
+  showZoomControl = true,
+  zoom,
+  onZoomChange,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -522,8 +532,7 @@ export function Toolbar({
     <div
       ref={toolbarRef}
       className={cn(
-        'flex items-center gap-1 px-3 py-2 bg-white border-b border-slate-200 flex-wrap min-h-[48px]',
-        'shadow-sm',
+        'flex items-center gap-0 px-2 py-2 bg-white border-b border-slate-100 flex-wrap min-h-[44px]',
         className
       )}
       style={style}
@@ -561,17 +570,32 @@ export function Toolbar({
         )}
       </ToolbarGroup>
 
+      {/* Zoom Control */}
+      {showZoomControl && (
+        <ToolbarGroup label="Zoom">
+          <ZoomControl
+            value={zoom}
+            onChange={onZoomChange}
+            minZoom={0.5}
+            maxZoom={2}
+            disabled={disabled}
+            compact
+            showButtons={false}
+          />
+        </ToolbarGroup>
+      )}
+
       {/* Style Picker */}
       {showStylePicker && (
         <ToolbarGroup label="Styles">
           <StylePicker
-            value={currentFormatting.styleId}
+            value={currentFormatting.styleId || 'Normal'}
             onChange={handleStyleChange}
             styles={documentStyles}
             theme={theme}
             disabled={disabled}
-            width={140}
-            placeholder="Styles"
+            width={90}
+            placeholder="Normal"
             showPreview={true}
             quickFormatOnly={true}
           />
@@ -583,11 +607,11 @@ export function Toolbar({
         <ToolbarGroup label="Font">
           {showFontPicker && (
             <FontPicker
-              value={currentFormatting.fontFamily}
+              value={currentFormatting.fontFamily || 'Arial'}
               onChange={handleFontFamilyChange}
               disabled={disabled}
-              width={140}
-              placeholder="Font"
+              width={85}
+              placeholder="Arial"
             />
           )}
           {showFontSizePicker && (
@@ -595,12 +619,12 @@ export function Toolbar({
               value={
                 currentFormatting.fontSize !== undefined
                   ? halfPointsToPoints(currentFormatting.fontSize)
-                  : undefined
+                  : 11
               }
               onChange={handleFontSizeChange}
               disabled={disabled}
-              width={70}
-              placeholder="Size"
+              width={50}
+              placeholder="11"
             />
           )}
         </ToolbarGroup>
@@ -696,31 +720,29 @@ export function Toolbar({
         </ToolbarGroup>
       )}
 
-      {/* List Buttons */}
-      {showListButtons && (
+      {/* List Buttons and Line Spacing */}
+      {(showListButtons || showLineSpacingPicker) && (
         <ToolbarGroup label="List formatting">
-          <ListButtons
-            listState={currentFormatting.listState || createDefaultListState()}
-            onBulletList={handleBulletList}
-            onNumberedList={handleNumberedList}
-            onIndent={handleIndent}
-            onOutdent={handleOutdent}
-            disabled={disabled}
-            showIndentButtons={true}
-            compact
-          />
-        </ToolbarGroup>
-      )}
-
-      {/* Line Spacing */}
-      {showLineSpacingPicker && (
-        <ToolbarGroup label="Line spacing">
-          <LineSpacingPicker
-            value={currentFormatting.lineSpacing}
-            onChange={handleLineSpacingChange}
-            disabled={disabled}
-            width={100}
-          />
+          {showListButtons && (
+            <ListButtons
+              listState={currentFormatting.listState || createDefaultListState()}
+              onBulletList={handleBulletList}
+              onNumberedList={handleNumberedList}
+              onIndent={handleIndent}
+              onOutdent={handleOutdent}
+              disabled={disabled}
+              showIndentButtons={true}
+              compact
+            />
+          )}
+          {showLineSpacingPicker && (
+            <LineSpacingPicker
+              value={currentFormatting.lineSpacing}
+              onChange={handleLineSpacingChange}
+              disabled={disabled}
+              width={80}
+            />
+          )}
         </ToolbarGroup>
       )}
 

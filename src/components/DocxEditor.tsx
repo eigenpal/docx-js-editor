@@ -34,7 +34,6 @@ import {
 import { AIEditor, type AIEditorRef, type AIRequestHandler } from './AIEditor';
 import { VariablePanel } from './VariablePanel';
 import { ErrorBoundary, ErrorProvider } from './ErrorBoundary';
-import { ZoomControl } from './ui/ZoomControl';
 import { TableToolbar, type TableContext, type TableAction } from './ui/TableToolbar';
 import {
   PageNumberIndicator,
@@ -47,7 +46,7 @@ import {
   type PageNavigatorVariant,
 } from './ui/PageNavigator';
 import { HorizontalRuler } from './ui/HorizontalRuler';
-import { PrintPreview, PrintButton, type PrintOptions } from './ui/PrintPreview';
+import { PrintPreview, type PrintOptions } from './ui/PrintPreview';
 import {
   FindReplaceDialog,
   useFindReplace,
@@ -1011,17 +1010,14 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     backgroundColor: '#fff',
   };
 
-  const zoomControlStyle: CSSProperties = {
-    position: 'absolute',
-    bottom: '16px',
-    right: '16px',
-    zIndex: 100,
-  };
-
   // Render loading state
   if (state.isLoading) {
     return (
-      <div className={`docx-editor docx-editor-loading ${className}`} style={containerStyle}>
+      <div
+        className={`docx-editor docx-editor-loading ${className}`}
+        style={containerStyle}
+        data-testid="docx-editor"
+      >
         {loadingIndicator || <DefaultLoadingIndicator />}
       </div>
     );
@@ -1030,7 +1026,11 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   // Render error state
   if (state.parseError) {
     return (
-      <div className={`docx-editor docx-editor-error ${className}`} style={containerStyle}>
+      <div
+        className={`docx-editor docx-editor-error ${className}`}
+        style={containerStyle}
+        data-testid="docx-editor"
+      >
         <ParseError message={state.parseError} />
       </div>
     );
@@ -1039,7 +1039,11 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   // Render placeholder when no document
   if (!history.state) {
     return (
-      <div className={`docx-editor docx-editor-empty ${className}`} style={containerStyle}>
+      <div
+        className={`docx-editor docx-editor-empty ${className}`}
+        style={containerStyle}
+        data-testid="docx-editor"
+      >
         {placeholder || <DefaultPlaceholder />}
       </div>
     );
@@ -1048,28 +1052,33 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   return (
     <ErrorProvider>
       <ErrorBoundary onError={handleEditorError}>
-        <div ref={containerRef} className={`docx-editor ${className}`} style={containerStyle}>
+        <div
+          ref={containerRef}
+          className={`docx-editor ${className}`}
+          style={containerStyle}
+          data-testid="docx-editor"
+        >
           {/* Toolbar */}
           {showToolbar && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Toolbar
-                  currentFormatting={state.selectionFormatting}
-                  onFormat={handleFormat}
-                  onUndo={handleUndo}
-                  onRedo={handleRedo}
-                  canUndo={history.canUndo}
-                  canRedo={history.canRedo}
-                  disabled={readOnly}
-                  documentStyles={history.state?.package.styles?.styles}
-                  theme={history.state?.package.theme || theme}
-                >
-                  {toolbarExtra}
-                </Toolbar>
-                {showPrintButton && (
-                  <PrintButton onPrint={handleOpenPrintPreview} disabled={!history.state} compact />
-                )}
-              </div>
+              <Toolbar
+                currentFormatting={state.selectionFormatting}
+                onFormat={handleFormat}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+                canUndo={history.canUndo}
+                canRedo={history.canRedo}
+                disabled={readOnly}
+                documentStyles={history.state?.package.styles?.styles}
+                theme={history.state?.package.theme || theme}
+                showPrintButton={showPrintButton}
+                onPrint={handleOpenPrintPreview}
+                showZoomControl={showZoomControl}
+                zoom={state.zoom}
+                onZoomChange={handleZoomChange}
+              >
+                {toolbarExtra}
+              </Toolbar>
 
               {/* Table Toolbar - shows when a table cell is selected */}
               {tableSelection.tableContext && (
@@ -1148,18 +1157,6 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                       floating
                     />
                   ))}
-
-                {/* Zoom control */}
-                {showZoomControl && (
-                  <div style={zoomControlStyle}>
-                    <ZoomControl
-                      value={state.zoom}
-                      onChange={handleZoomChange}
-                      minZoom={0.25}
-                      maxZoom={3}
-                    />
-                  </div>
-                )}
               </div>
             </div>
 

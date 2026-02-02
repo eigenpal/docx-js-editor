@@ -9,6 +9,7 @@
  * - Variable panel
  */
 
+import './styles.css';
 import React, { useState, useRef, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
@@ -120,7 +121,14 @@ function DemoApp() {
       {/* Top bar */}
       <header style={styles.header}>
         <div style={styles.headerLeft}>
-          <h1 style={styles.title}>DOCX Editor Demo</h1>
+          <a
+            href="https://github.com/eigenpal/docx-js-editor"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={styles.titleLink}
+          >
+            <h1 style={styles.title}>docx-js-editor</h1>
+          </a>
           {fileName && <span style={styles.fileName}>{fileName}</span>}
         </div>
         <div style={styles.headerRight}>
@@ -174,7 +182,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     minHeight: '100vh',
-    background: '#f5f5f5',
+    background: '#f8fafc',
   },
   header: {
     display: 'flex',
@@ -182,8 +190,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     padding: '12px 20px',
     background: '#fff',
-    borderBottom: '1px solid #e0e0e0',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    borderBottom: '1px solid #e2e8f0',
   },
   headerLeft: {
     display: 'flex',
@@ -193,64 +200,73 @@ const styles: Record<string, React.CSSProperties> = {
   headerRight: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
+    gap: '8px',
   },
   title: {
-    fontSize: '20px',
+    fontSize: '18px',
     fontWeight: 600,
     margin: 0,
-    color: '#1a73e8',
+    color: '#0f172a',
+    letterSpacing: '-0.025em',
+  },
+  titleLink: {
+    textDecoration: 'none',
+    color: 'inherit',
   },
   fileName: {
-    fontSize: '14px',
-    color: '#666',
-    padding: '4px 8px',
-    background: '#f0f0f0',
-    borderRadius: '4px',
+    fontSize: '13px',
+    color: '#64748b',
+    padding: '4px 10px',
+    background: '#f1f5f9',
+    borderRadius: '6px',
   },
   fileInputLabel: {
-    padding: '8px 16px',
-    background: '#1a73e8',
+    padding: '8px 14px',
+    background: '#0f172a',
     color: '#fff',
-    borderRadius: '4px',
+    borderRadius: '6px',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: '13px',
     fontWeight: 500,
+    transition: 'background 0.15s',
   },
   fileInputHidden: {
     display: 'none',
   },
   button: {
-    padding: '8px 16px',
+    padding: '8px 14px',
     background: '#fff',
-    border: '1px solid #dadce0',
-    borderRadius: '4px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '6px',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: '13px',
     fontWeight: 500,
+    color: '#334155',
+    transition: 'all 0.15s',
   },
   newButton: {
-    padding: '8px 16px',
-    background: '#34a853',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '4px',
+    padding: '8px 14px',
+    background: '#f1f5f9',
+    color: '#334155',
+    border: '1px solid #e2e8f0',
+    borderRadius: '6px',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: '13px',
     fontWeight: 500,
+    transition: 'all 0.15s',
   },
   status: {
-    fontSize: '13px',
-    color: '#666',
+    fontSize: '12px',
+    color: '#64748b',
     padding: '4px 8px',
-    background: '#f0f0f0',
+    background: '#f1f5f9',
     borderRadius: '4px',
   },
   action: {
-    fontSize: '13px',
-    color: '#1a73e8',
+    fontSize: '12px',
+    color: '#475569',
     padding: '4px 8px',
-    background: '#e8f0fe',
+    background: '#f1f5f9',
     borderRadius: '4px',
   },
   main: {
