@@ -5132,3 +5132,55 @@ Added the HighlightColorPicker component to the Toolbar for text highlight/backg
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-114: Add Text Alignment buttons to toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added the AlignmentButtons component to the Toolbar for paragraph alignment controls (left/center/right/justify).
+
+**Implementation:**
+
+1. **Updated `src/components/Toolbar.tsx`:**
+   - Imported `AlignmentButtons` component from `./ui/AlignmentButtons`
+   - Imported `ParagraphAlignment` type from document types
+   - Added `showAlignmentButtons` prop (default: true)
+   - Extended `FormattingAction` type to support `{ type: 'alignment'; value: ParagraphAlignment }`
+   - Extended `SelectionFormatting` to include `alignment?: ParagraphAlignment`
+   - Added `handleAlignmentChange` callback
+   - Added AlignmentButtons in a new group after Superscript/Subscript group
+   - Added keyboard shortcuts for alignment (Ctrl+L/E/R/J)
+
+2. **Updated `getSelectionFormatting`:**
+   - Now accepts optional `paragraphFormatting` parameter
+   - Extracts alignment from paragraph formatting
+
+3. **Updated `src/components/DocxEditor.tsx`:**
+   - Updated `handleFormat` to detect alignment actions
+   - Alignment uses `formatParagraph` command instead of `formatText`
+   - Selection change handler now passes `paragraphFormatting` to `getSelectionFormatting`
+
+**Features:**
+- Left, Center, Right, Justify buttons with SVG icons
+- Active state shows current paragraph alignment
+- Keyboard shortcuts: Ctrl+L (left), Ctrl+E (center), Ctrl+R (right), Ctrl+J (justify)
+- Compact mode for toolbar integration
+- ARIA attributes for accessibility
+
+**Props Added to Toolbar:**
+- `showAlignmentButtons?: boolean` - Whether to show alignment buttons (default: true)
+
+**Formatting Flow:**
+- User clicks alignment button or uses shortcut
+- `handleAlignmentChange(alignment)` called
+- `onFormat({ type: 'alignment', value: alignment })` triggers
+- DocxEditor's `handleFormat` detects alignment action
+- Uses `executeCommand` with `formatParagraph` command (not `formatText`)
+- Updates paragraph's alignment property
+- Toolbar active state reflects new alignment
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
