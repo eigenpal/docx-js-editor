@@ -304,3 +304,13 @@
 [2026-02-02 14:21] NOTES: Need to add table styles to editor.css
 [2026-02-02 14:22] STATUS: done
 [2026-02-02 14:22] NOTES: Added table CSS styles to editor.css
+[2026-02-02 14:22] TASK: Basic table editing
+[2026-02-02 14:22] STATUS: starting
+[2026-02-02 14:22] NOTES: Need to enable cursor navigation in tables and Tab to move between cells
+[2026-02-02 14:22] STATUS: researching-superdoc
+[2026-02-02 14:22] NOTES: Checking how SuperDoc handles table navigation
+[2026-02-02 14:23] NOTES: SuperDoc uses prosemirror-tables goToNextCell command
+[2026-02-02 14:23] NOTES: Will implement simple table navigation without full prosemirror-tables package
+[2026-02-02 14:23] STATUS: editing
+[2026-02-02 14:24] STATUS: done
+[2026-02-02 14:24] NOTES: Added goToNextCell and goToPrevCell commands for table navigation with Tab/Shift-Tab

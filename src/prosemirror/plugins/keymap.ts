@@ -20,7 +20,7 @@ import {
   selectParentNode,
 } from 'prosemirror-commands';
 import { undo, redo } from 'prosemirror-history';
-import type { Command } from 'prosemirror-state';
+import { Selection, type Command } from 'prosemirror-state';
 import type { Schema } from 'prosemirror-model';
 
 /**
@@ -190,10 +190,164 @@ export function decreaseListIndent(): Command {
  */
 export function createListKeymap() {
   return keymap({
-    Tab: increaseListIndent(),
-    'Shift-Tab': decreaseListIndent(),
+    Tab: chainCommands(goToNextCell(), increaseListIndent()),
+    'Shift-Tab': chainCommands(goToPrevCell(), decreaseListIndent()),
     'Shift-Enter': () => false, // Let base keymap handle this
   });
+}
+
+// ============================================================================
+// TABLE NAVIGATION COMMANDS
+// ============================================================================
+
+/**
+ * Check if cursor is inside a table cell
+ */
+function isInTableCell(state: Parameters<Command>[0]): boolean {
+  const { $from } = state.selection;
+  for (let d = $from.depth; d > 0; d--) {
+    const node = $from.node(d);
+    if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Find the table cell containing the cursor
+ * Returns the depth and position of the cell
+ */
+function findCellInfo(
+  state: Parameters<Command>[0]
+): { cellDepth: number; cellPos: number; rowDepth: number; tableDepth: number } | null {
+  const { $from } = state.selection;
+  let cellDepth = -1;
+  let rowDepth = -1;
+  let tableDepth = -1;
+
+  for (let d = $from.depth; d > 0; d--) {
+    const node = $from.node(d);
+    if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+      cellDepth = d;
+    } else if (node.type.name === 'tableRow') {
+      rowDepth = d;
+    } else if (node.type.name === 'table') {
+      tableDepth = d;
+      break;
+    }
+  }
+
+  if (cellDepth === -1 || rowDepth === -1 || tableDepth === -1) {
+    return null;
+  }
+
+  return {
+    cellDepth,
+    cellPos: $from.before(cellDepth),
+    rowDepth,
+    tableDepth,
+  };
+}
+
+/**
+ * Command to move to the next cell in a table (Tab key)
+ */
+export function goToNextCell(): Command {
+  return (state, dispatch) => {
+    if (!isInTableCell(state)) {
+      return false;
+    }
+
+    const info = findCellInfo(state);
+    if (!info) return false;
+
+    const { $from } = state.selection;
+    const table = $from.node(info.tableDepth);
+    const row = $from.node(info.rowDepth);
+    const cellIndex = $from.index(info.rowDepth);
+    const rowIndex = $from.index(info.tableDepth);
+
+    // Try to move to next cell in same row
+    if (cellIndex < row.childCount - 1) {
+      // Move to next cell
+      const nextCellPos = info.cellPos + $from.node(info.cellDepth).nodeSize;
+      if (dispatch) {
+        // Position cursor at start of first paragraph in next cell
+        const textPos = nextCellPos + 1 + 1; // +1 for cell, +1 for paragraph
+        const tr = state.tr.setSelection(Selection.near(state.doc.resolve(textPos)));
+        dispatch(tr.scrollIntoView());
+      }
+      return true;
+    }
+
+    // Try to move to first cell of next row
+    if (rowIndex < table.childCount - 1) {
+      const rowPos = $from.before(info.rowDepth);
+      const nextRowPos = rowPos + row.nodeSize;
+      if (dispatch) {
+        // Position cursor at start of first paragraph in first cell of next row
+        const textPos = nextRowPos + 1 + 1 + 1; // +1 for row, +1 for cell, +1 for paragraph
+        const tr = state.tr.setSelection(Selection.near(state.doc.resolve(textPos)));
+        dispatch(tr.scrollIntoView());
+      }
+      return true;
+    }
+
+    // At last cell of last row - don't handle (let other handlers take over)
+    return false;
+  };
+}
+
+/**
+ * Command to move to the previous cell in a table (Shift+Tab key)
+ */
+export function goToPrevCell(): Command {
+  return (state, dispatch) => {
+    if (!isInTableCell(state)) {
+      return false;
+    }
+
+    const info = findCellInfo(state);
+    if (!info) return false;
+
+    const { $from } = state.selection;
+    const table = $from.node(info.tableDepth);
+    const cellIndex = $from.index(info.rowDepth);
+    const rowIndex = $from.index(info.tableDepth);
+
+    // Try to move to previous cell in same row
+    if (cellIndex > 0) {
+      const row = $from.node(info.rowDepth);
+      const prevCell = row.child(cellIndex - 1);
+      const cellStartPos = info.cellPos - prevCell.nodeSize;
+      if (dispatch) {
+        // Position cursor at end of last paragraph in previous cell
+        const textPos = cellStartPos + prevCell.nodeSize - 2; // -1 for cell end, -1 for paragraph end
+        const tr = state.tr.setSelection(Selection.near(state.doc.resolve(textPos), -1));
+        dispatch(tr.scrollIntoView());
+      }
+      return true;
+    }
+
+    // Try to move to last cell of previous row
+    if (rowIndex > 0) {
+      const prevRow = table.child(rowIndex - 1);
+      const rowPos = $from.before(info.rowDepth);
+      const prevRowPos = rowPos - prevRow.nodeSize;
+      if (dispatch) {
+        // Position cursor at end of last paragraph in last cell of previous row
+        const cellEndPos = prevRowPos + prevRow.nodeSize - 1; // -1 for row end
+        const textPos = cellEndPos - 1; // -1 for cell end
+        const tr = state.tr.setSelection(Selection.near(state.doc.resolve(textPos), -1));
+        dispatch(tr.scrollIntoView());
+      }
+      return true;
+    }
+
+    // At first cell of first row - don't handle
+    return false;
+  };
 }
 
 /**

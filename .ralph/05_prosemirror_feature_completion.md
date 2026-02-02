@@ -77,7 +77,7 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
   - Handle borders, cell padding, alignment
   - **Verify**: Tables render with proper borders and spacing
 
-- [ ] **Task 9: Basic table editing**
+- [x] **Task 9: Basic table editing**
   - Enable cursor navigation in tables
   - Tab to move between cells
   - **Verify**: Can click in cells and type
