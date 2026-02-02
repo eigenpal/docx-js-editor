@@ -6646,3 +6646,65 @@ Implemented paragraph-level triple-click selection for the editor.
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-153: Wire Find & Replace dialog
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Wired the Find & Replace dialog to the editor with keyboard shortcuts (Ctrl+F for find, Ctrl+H for replace).
+
+**Updated Files:**
+
+1. **`src/components/dialogs/FindReplaceDialog.tsx`:**
+   - Added `useFindReplace` hook for managing find/replace state:
+     - `openFind(selectedText?)` - Opens find dialog
+     - `openReplace(selectedText?)` - Opens find/replace dialog
+     - `close()` - Closes dialog
+     - `setSearchText()`, `setReplaceText()` - Update text
+     - `setMatches()` - Set search results
+     - `goToNextMatch()`, `goToPreviousMatch()` - Navigate matches
+     - `getCurrentMatch()`, `hasMatches()` - Query match state
+   - Added `FindReplaceState`, `FindReplaceOptions`, `UseFindReplaceReturn` types
+   - Added document search utilities:
+     - `findInDocument(document, searchText, options)` - Find all matches in document
+     - `findInParagraph(paragraph, searchText, options, paragraphIndex)` - Find in single paragraph
+     - `scrollToMatch(containerElement, match)` - Scroll to a match
+
+2. **`src/components/DocxEditor.tsx`:**
+   - Added imports for FindReplaceDialog, useFindReplace, findInDocument, scrollToMatch
+   - Added `containerRef` for scrolling to matches
+   - Added `findReplace` state via `useFindReplace()` hook
+   - Added keyboard shortcut handler for Ctrl+F (find) and Ctrl+H (replace)
+   - Added find/replace callback handlers:
+     - `handleFind()` - Searches document and updates results
+     - `handleFindNext()` - Navigate to next match
+     - `handleFindPrevious()` - Navigate to previous match
+     - `handleReplace()` - Replace current match using executeCommand
+     - `handleReplaceAll()` - Replace all matches (from end to start to preserve indices)
+   - Added `<FindReplaceDialog>` component with all props wired
+
+3. **`src/index.ts`:**
+   - Expanded FindReplaceDialog exports to include all new types and functions
+
+**Features:**
+- Ctrl+F opens Find dialog (with selected text if any)
+- Ctrl+H opens Find & Replace dialog (with selected text if any)
+- Find with options: Match case, Whole words
+- Navigate matches with Enter (next) and Shift+Enter (previous)
+- Replace single match or replace all
+- Scroll to match location in document
+- Match count display ("X of Y matches")
+- Escape to close dialog
+
+**Keyboard Shortcuts:**
+- `Ctrl/Cmd+F` - Open Find dialog
+- `Ctrl/Cmd+H` - Open Find & Replace dialog
+- `Enter` - Find next
+- `Shift+Enter` - Find previous
+- `Escape` - Close dialog
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

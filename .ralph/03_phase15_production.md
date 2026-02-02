@@ -68,7 +68,7 @@
 - [x] US-150: Improve text selection highlighting - P1 - Visual highlighting across runs
 - [x] US-151: Add word-level double-click selection - P2 - Double-click selects word
 - [x] US-152: Add paragraph-level triple-click selection - P2 - Triple-click selects paragraph
-- [ ] US-153: Wire Find & Replace dialog - P2 - Ctrl+F find and replace
+- [x] US-153: Wire Find & Replace dialog - P2 - Ctrl+F find and replace
 - [ ] US-154: Improve keyboard navigation - P2 - Ctrl+Arrow, Home/End
 
 ## Category 7: Clipboard & History

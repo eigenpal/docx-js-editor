@@ -213,7 +213,30 @@ export {
 // DIALOGS
 // ============================================================================
 
-export { FindReplaceDialog, type FindReplaceDialogProps, type FindReplaceOptions, useFindReplace } from './components/dialogs/FindReplaceDialog';
+export {
+  FindReplaceDialog,
+  type FindReplaceDialogProps,
+  type FindReplaceOptions,
+  type FindOptions,
+  type FindMatch,
+  type FindResult,
+  type FindReplaceState,
+  type UseFindReplaceReturn,
+  useFindReplace,
+  findInDocument,
+  findInParagraph,
+  findAllMatches,
+  scrollToMatch,
+  createDefaultFindOptions,
+  createSearchPattern,
+  replaceAllInContent,
+  replaceFirstInContent,
+  getMatchCountText,
+  isEmptySearch,
+  escapeRegexString,
+  getDefaultHighlightOptions,
+  type HighlightOptions,
+} from './components/dialogs/FindReplaceDialog';
 export { HyperlinkDialog, type HyperlinkDialogProps, type HyperlinkData, useHyperlinkDialog } from './components/dialogs/HyperlinkDialog';
 export {
   InsertTableDialog,

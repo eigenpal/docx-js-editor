@@ -26,6 +26,15 @@ import { PageNumberIndicator, type PageIndicatorPosition, type PageIndicatorVari
 import { PageNavigator, type PageNavigatorPosition, type PageNavigatorVariant } from './ui/PageNavigator';
 import { HorizontalRuler } from './ui/HorizontalRuler';
 import { PrintPreview, PrintButton, type PrintOptions } from './ui/PrintPreview';
+import {
+  FindReplaceDialog,
+  useFindReplace,
+  findInDocument,
+  scrollToMatch,
+  type FindMatch,
+  type FindOptions,
+  type FindResult,
+} from './dialogs/FindReplaceDialog';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import { parseDocx } from '../docx/parser';
 import { onFontsLoaded, isLoading as isFontsLoading } from '../utils/fontLoader';
@@ -227,6 +236,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   // Refs
   const editorRef = useRef<AIEditorRef>(null);
   const agentRef = useRef<DocumentAgent | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Find/Replace hook
+  const findReplace = useFindReplace();
 
   // Parse document buffer
   useEffect(() => {
@@ -321,6 +334,36 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       document.removeEventListener('selectionchange', handleSelectionChangeEvent);
     };
   }, [onSelectionChange]);
+
+  // Keyboard shortcuts for Find/Replace (Ctrl+F, Ctrl+H)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Ctrl+F (Find) or Ctrl+H (Replace)
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+
+      if (cmdOrCtrl && !e.shiftKey && !e.altKey) {
+        if (e.key.toLowerCase() === 'f') {
+          e.preventDefault();
+          // Get selected text if any
+          const selection = window.getSelection();
+          const selectedText = selection && !selection.isCollapsed ? selection.toString() : '';
+          findReplace.openFind(selectedText);
+        } else if (e.key.toLowerCase() === 'h') {
+          e.preventDefault();
+          // Get selected text if any
+          const selection = window.getSelection();
+          const selectedText = selection && !selection.isCollapsed ? selection.toString() : '';
+          findReplace.openReplace(selectedText);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [findReplace]);
 
   // Handle document change
   const handleDocumentChange = useCallback(
@@ -701,6 +744,162 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     onPrint?.();
   }, [onPrint]);
 
+  // ============================================================================
+  // FIND/REPLACE HANDLERS
+  // ============================================================================
+
+  // Store the current find result for navigation
+  const findResultRef = useRef<FindResult | null>(null);
+
+  // Handle find operation
+  const handleFind = useCallback(
+    (searchText: string, options: FindOptions): FindResult | null => {
+      if (!history.state || !searchText.trim()) {
+        findResultRef.current = null;
+        return null;
+      }
+
+      const matches = findInDocument(history.state, searchText, options);
+      const result: FindResult = {
+        matches,
+        totalCount: matches.length,
+        currentIndex: 0,
+      };
+
+      findResultRef.current = result;
+      findReplace.setMatches(matches, 0);
+
+      // Scroll to first match
+      if (matches.length > 0 && containerRef.current) {
+        scrollToMatch(containerRef.current, matches[0]);
+      }
+
+      return result;
+    },
+    [history.state, findReplace]
+  );
+
+  // Handle find next
+  const handleFindNext = useCallback((): FindMatch | null => {
+    if (!findResultRef.current || findResultRef.current.matches.length === 0) {
+      return null;
+    }
+
+    const newIndex = findReplace.goToNextMatch();
+    const match = findResultRef.current.matches[newIndex];
+
+    // Scroll to the match
+    if (match && containerRef.current) {
+      scrollToMatch(containerRef.current, match);
+    }
+
+    return match || null;
+  }, [findReplace]);
+
+  // Handle find previous
+  const handleFindPrevious = useCallback((): FindMatch | null => {
+    if (!findResultRef.current || findResultRef.current.matches.length === 0) {
+      return null;
+    }
+
+    const newIndex = findReplace.goToPreviousMatch();
+    const match = findResultRef.current.matches[newIndex];
+
+    // Scroll to the match
+    if (match && containerRef.current) {
+      scrollToMatch(containerRef.current, match);
+    }
+
+    return match || null;
+  }, [findReplace]);
+
+  // Handle replace current match
+  const handleReplace = useCallback(
+    (replaceText: string): boolean => {
+      if (!history.state || !findResultRef.current || findResultRef.current.matches.length === 0) {
+        return false;
+      }
+
+      const currentMatch = findResultRef.current.matches[findResultRef.current.currentIndex];
+      if (!currentMatch) return false;
+
+      // Execute replace command
+      try {
+        const newDoc = executeCommand(history.state, {
+          type: 'replaceText',
+          range: {
+            start: {
+              paragraphIndex: currentMatch.paragraphIndex,
+              offset: currentMatch.startOffset,
+            },
+            end: {
+              paragraphIndex: currentMatch.paragraphIndex,
+              offset: currentMatch.endOffset,
+            },
+          },
+          text: replaceText,
+        });
+
+        handleDocumentChange(newDoc);
+        return true;
+      } catch (error) {
+        console.error('Replace failed:', error);
+        return false;
+      }
+    },
+    [history.state, handleDocumentChange]
+  );
+
+  // Handle replace all matches
+  const handleReplaceAll = useCallback(
+    (searchText: string, replaceText: string, options: FindOptions): number => {
+      if (!history.state || !searchText.trim()) {
+        return 0;
+      }
+
+      // Find all matches first
+      const matches = findInDocument(history.state, searchText, options);
+      if (matches.length === 0) return 0;
+
+      // Replace from end to start to maintain correct indices
+      let doc = history.state;
+      const sortedMatches = [...matches].sort((a, b) => {
+        if (a.paragraphIndex !== b.paragraphIndex) {
+          return b.paragraphIndex - a.paragraphIndex;
+        }
+        return b.startOffset - a.startOffset;
+      });
+
+      for (const match of sortedMatches) {
+        try {
+          doc = executeCommand(doc, {
+            type: 'replaceText',
+            range: {
+              start: {
+                paragraphIndex: match.paragraphIndex,
+                offset: match.startOffset,
+              },
+              end: {
+                paragraphIndex: match.paragraphIndex,
+                offset: match.endOffset,
+              },
+            },
+            text: replaceText,
+          });
+        } catch (error) {
+          console.error('Replace failed for match:', match, error);
+        }
+      }
+
+      handleDocumentChange(doc);
+      findResultRef.current = null;
+      findReplace.setMatches([], 0);
+
+      return matches.length;
+    },
+    [history.state, handleDocumentChange, findReplace]
+  );
+
   // Expose ref methods
   useImperativeHandle(
     ref,
@@ -804,7 +1003,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   return (
     <ErrorProvider>
       <ErrorBoundary onError={handleEditorError}>
-        <div className={`docx-editor ${className}`} style={containerStyle}>
+        <div ref={containerRef} className={`docx-editor ${className}`} style={containerStyle}>
           {/* Toolbar */}
           {showToolbar && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -947,6 +1146,20 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               onPrint={handlePrint}
             />
           )}
+
+          {/* Find/Replace Dialog */}
+          <FindReplaceDialog
+            isOpen={findReplace.state.isOpen}
+            onClose={findReplace.close}
+            onFind={handleFind}
+            onFindNext={handleFindNext}
+            onFindPrevious={handleFindPrevious}
+            onReplace={handleReplace}
+            onReplaceAll={handleReplaceAll}
+            initialSearchText={findReplace.state.searchText}
+            replaceMode={findReplace.state.replaceMode}
+            currentResult={findResultRef.current}
+          />
         </div>
       </ErrorBoundary>
     </ErrorProvider>
