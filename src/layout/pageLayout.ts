@@ -151,7 +151,7 @@ export function calculatePages(
 ): PageLayoutResult {
   const { theme, headers, footers, updatePageNumbers = true } = options;
 
-  const body = doc.package.body;
+  const body = doc.package.document;
   if (!body) {
     return { pages: [], totalPages: 0 };
   }

@@ -1,9 +1,9 @@
 /**
  * VariableInserter Component
  *
- * UI for inserting template variables {{variable_name}} into the document:
+ * UI for inserting template variables {variable_name} into the document:
  * - Variable name input in toolbar
- * - Insert button adds {{name}} at cursor
+ * - Insert button adds {name} at cursor
  * - Styled distinctively
  * - Also usable in context menu
  */
@@ -443,7 +443,7 @@ export function VariableInserter({
                   onMouseEnter={() => setSelectedIndex(index)}
                 >
                   <span style={STYLES.variableTag}>
-                    {`{{${suggestion}}}`}
+                    {`{${suggestion}}`}
                   </span>
                 </li>
               ))}
@@ -694,7 +694,7 @@ export function VariableContextMenuItem({
                   border: '1px solid #e4b416',
                 }}
               >
-                {`{{${v}}}`}
+                {`{${v}}`}
               </button>
             ))}
           </div>
@@ -840,14 +840,14 @@ export function isValidVariableName(name: string): boolean {
  * Format a variable name as a template variable
  */
 export function formatVariable(name: string): string {
-  return `{{${name}}}`;
+  return `{${name}}`;
 }
 
 /**
  * Parse a template variable to get the name
  */
 export function parseVariable(template: string): string | null {
-  const match = template.match(/^\{\{(.+?)\}\}$/);
+  const match = template.match(/^\{(.+?)\}$/);
   return match ? match[1] : null;
 }
 
@@ -855,14 +855,14 @@ export function parseVariable(template: string): string | null {
  * Check if a string is a template variable
  */
 export function isTemplateVariable(text: string): boolean {
-  return /^\{\{.+?\}\}$/.test(text);
+  return /^\{.+?\}$/.test(text);
 }
 
 /**
  * Extract all variable names from text
  */
 export function extractVariables(text: string): string[] {
-  const matches = text.matchAll(/\{\{(.+?)\}\}/g);
+  const matches = text.matchAll(/\{(.+?)\}/g);
   const variables = new Set<string>();
   for (const match of matches) {
     variables.add(match[1]);

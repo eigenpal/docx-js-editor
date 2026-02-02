@@ -31,7 +31,20 @@ export type TableAction =
   | 'deleteColumn'
   | 'mergeCells'
   | 'splitCell'
-  | 'deleteTable';
+  | 'deleteTable'
+  | 'borderAll'
+  | 'borderOutside'
+  | 'borderInside'
+  | 'borderNone'
+  | 'borderTop'
+  | 'borderBottom'
+  | 'borderLeft'
+  | 'borderRight';
+
+/**
+ * Border style preset
+ */
+export type BorderPreset = 'all' | 'outside' | 'inside' | 'none' | 'top' | 'bottom' | 'left' | 'right';
 
 /**
  * Selection within a table

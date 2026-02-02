@@ -46,8 +46,8 @@ export {
 // ============================================================================
 
 export { parseDocx } from './docx/parser';
-export { serializeDocx } from './docx/serializer';
-export { processTemplate, type TemplateOptions } from './docx/templateProcessor';
+export { serializeDocument as serializeDocx } from './docx/serializer/documentSerializer';
+export { processTemplate, type ProcessTemplateOptions as TemplateOptions } from './utils/processTemplate';
 
 // ============================================================================
 // FONT LOADER
@@ -102,7 +102,7 @@ export {
 // ============================================================================
 
 export { ZoomControl, type ZoomControlProps } from './components/ui/ZoomControl';
-export { FontPicker, type FontPickerProps, useFontSearch, type FontInfo } from './components/ui/FontPicker';
+export { FontPicker, type FontPickerProps, type FontOption } from './components/ui/FontPicker';
 export { FontSizePicker, type FontSizePickerProps } from './components/ui/FontSizePicker';
 export { ColorPicker, type ColorPickerProps, type ColorPreset } from './components/ui/ColorPicker';
 export { StylePicker, type StylePickerProps, type StyleOption } from './components/ui/StylePicker';
@@ -113,8 +113,8 @@ export { ListButtons, type ListButtonsProps } from './components/ui/ListButtons'
 // DIALOGS
 // ============================================================================
 
-export { FindReplaceDialog, type FindReplaceDialogProps, type FindReplaceOptions, useFindReplace } from './components/dialogs/FindReplaceDialog';
-export { HyperlinkDialog, type HyperlinkDialogProps, type HyperlinkData, useHyperlinkDialog } from './components/dialogs/HyperlinkDialog';
+export { FindReplaceDialog, type FindReplaceDialogProps, type FindOptions, type FindResult } from './components/dialogs/FindReplaceDialog';
+export { HyperlinkDialog, type HyperlinkDialogProps, type HyperlinkData } from './components/dialogs/HyperlinkDialog';
 
 // ============================================================================
 // TYPES
@@ -186,5 +186,5 @@ export type {
 // UTILITIES
 // ============================================================================
 
-export { twipsToPixels, pixelsToTwips, formatPx, parseEmu, emuToPixels, pointsToPixels, halfPointsToPixels } from './utils/units';
-export { resolveThemeColor, getThemeColorName, resolveColor, hexToRgb, rgbToHex, colorWithOpacity, parseHighlightColor } from './utils/colors';
+export { twipsToPixels, pixelsToTwips, formatPx, emuToPixels, pointsToPixels, halfPointsToPixels } from './utils/units';
+export { resolveColor, resolveHighlightColor, parseColorString, createThemeColor, createRgbColor, darkenColor, lightenColor } from './utils/colorResolver';

@@ -737,8 +737,6 @@ function getSuggestedActions(
 
 export {
   getAgentContext as default,
-  buildSelectionContext,
-  getDocumentSummary,
   getParagraphText,
   getRunText,
   calculateWordCount,

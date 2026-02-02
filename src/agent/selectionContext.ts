@@ -650,8 +650,6 @@ function formatEqual(
 
 export {
   buildSelectionContext as default,
-  buildExtendedSelectionContext,
-  getSelectionFormattingSummary,
   extractSelectedText,
   getTextBefore,
   getTextAfter,

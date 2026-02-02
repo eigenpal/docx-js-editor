@@ -322,12 +322,12 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
 
   // Get theme and section properties
   const theme = doc.package?.theme || null;
-  const sectionProps = doc.package?.body?.sectionProperties || getDefaultSectionProperties();
+  const sectionProps = doc.package?.document?.sectionProperties || getDefaultSectionProperties();
 
   // Get paragraph count
   const paragraphCount = useMemo(() => {
-    return doc.package?.body ? countParagraphs(doc.package.body) : 0;
-  }, [doc.package?.body]);
+    return doc.package?.document ? countParagraphs(doc.package.document) : 0;
+  }, [doc.package?.document]);
 
   /**
    * Update document and notify parent
@@ -345,9 +345,9 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
    */
   const handleParagraphChange = useCallback(
     (newParagraph: ParagraphType, paragraphIndex: number) => {
-      if (!doc.package?.body) return;
+      if (!doc.package?.document) return;
 
-      const newBody = updateParagraphInBody(doc.package.body, paragraphIndex, newParagraph);
+      const newBody = updateParagraphInBody(doc.package.document, paragraphIndex, newParagraph);
       const newDoc: Document = {
         ...doc,
         package: {
@@ -366,10 +366,10 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
    */
   const handleParagraphSplit = useCallback(
     (splitResult: ParagraphSplitResult, paragraphIndex: number) => {
-      if (!doc.package?.body) return;
+      if (!doc.package?.document) return;
 
       // Update the current paragraph with the "before" content
-      let newBody = updateParagraphInBody(doc.package.body, paragraphIndex, splitResult.before);
+      let newBody = updateParagraphInBody(doc.package.document, paragraphIndex, splitResult.before);
 
       // Insert the "after" content as a new paragraph
       newBody = insertParagraphAfter(newBody, paragraphIndex, splitResult.after);
@@ -400,10 +400,10 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
    */
   const handleMergeWithPrevious = useCallback(
     (paragraphIndex: number) => {
-      if (!doc.package?.body || paragraphIndex === 0) return;
+      if (!doc.package?.document || paragraphIndex === 0) return;
 
-      const currentPara = getParagraphAt(doc.package.body, paragraphIndex);
-      const prevPara = getParagraphAt(doc.package.body, paragraphIndex - 1);
+      const currentPara = getParagraphAt(doc.package.document, paragraphIndex);
+      const prevPara = getParagraphAt(doc.package.document, paragraphIndex - 1);
 
       if (!currentPara || !prevPara) return;
 
@@ -411,7 +411,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       const { merged, cursorPosition: newCursorPos } = mergeParagraphs(prevPara, currentPara);
 
       // Update the previous paragraph with merged content
-      let newBody = updateParagraphInBody(doc.package.body, paragraphIndex - 1, merged);
+      let newBody = updateParagraphInBody(doc.package.document, paragraphIndex - 1, merged);
 
       // Remove the current paragraph
       newBody = removeParagraph(newBody, paragraphIndex);
@@ -442,13 +442,13 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
    */
   const handleMergeWithNext = useCallback(
     (paragraphIndex: number) => {
-      if (!doc.package?.body) return;
+      if (!doc.package?.document) return;
 
-      const paragraphCount = countParagraphs(doc.package.body);
+      const paragraphCount = countParagraphs(doc.package.document);
       if (paragraphIndex >= paragraphCount - 1) return;
 
-      const currentPara = getParagraphAt(doc.package.body, paragraphIndex);
-      const nextPara = getParagraphAt(doc.package.body, paragraphIndex + 1);
+      const currentPara = getParagraphAt(doc.package.document, paragraphIndex);
+      const nextPara = getParagraphAt(doc.package.document, paragraphIndex + 1);
 
       if (!currentPara || !nextPara) return;
 
@@ -456,7 +456,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       const { merged, cursorPosition: newCursorPos } = mergeParagraphs(currentPara, nextPara);
 
       // Update the current paragraph with merged content
-      let newBody = updateParagraphInBody(doc.package.body, paragraphIndex, merged);
+      let newBody = updateParagraphInBody(doc.package.document, paragraphIndex, merged);
 
       // Remove the next paragraph
       newBody = removeParagraph(newBody, paragraphIndex + 1);
@@ -593,7 +593,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
 
   // Render document content
   const renderContent = () => {
-    if (!doc.package?.body) {
+    if (!doc.package?.document) {
       return (
         <div className="docx-editor-empty">
           No document loaded
@@ -604,8 +604,8 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     const content: ReactNode[] = [];
     let paragraphIndex = 0;
 
-    for (let blockIndex = 0; blockIndex < doc.package.body.content.length; blockIndex++) {
-      const block = doc.package.body.content[blockIndex];
+    for (let blockIndex = 0; blockIndex < doc.package.document.content.length; blockIndex++) {
+      const block = doc.package.document.content[blockIndex];
 
       if (block.type === 'paragraph') {
         const currentIndex = paragraphIndex;
@@ -710,11 +710,11 @@ export function createEmptyDocument(): Document {
  * Check if a document is empty
  */
 export function isDocumentEmpty(doc: Document): boolean {
-  if (!doc.package?.body?.content) return true;
-  if (doc.package.body.content.length === 0) return true;
+  if (!doc.package?.document?.content) return true;
+  if (doc.package.document.content.length === 0) return true;
 
   // Check if all paragraphs are empty
-  return doc.package.body.content.every((block) => {
+  return doc.package.document.content.every((block) => {
     if (block.type === 'paragraph') {
       return !block.content || block.content.length === 0;
     }
@@ -726,10 +726,10 @@ export function isDocumentEmpty(doc: Document): boolean {
  * Get word count of document
  */
 export function getDocumentWordCount(doc: Document): number {
-  if (!doc.package?.body?.content) return 0;
+  if (!doc.package?.document?.content) return 0;
 
   let count = 0;
-  for (const block of doc.package.body.content) {
+  for (const block of doc.package.document.content) {
     if (block.type === 'paragraph') {
       const text = block.content
         ?.map((c) => (c.type === 'run' ? c.content.map((rc) => (rc.type === 'text' ? rc.text : '')).join('') : ''))
@@ -744,10 +744,10 @@ export function getDocumentWordCount(doc: Document): number {
  * Get character count of document
  */
 export function getDocumentCharacterCount(doc: Document, includeSpaces = true): number {
-  if (!doc.package?.body?.content) return 0;
+  if (!doc.package?.document?.content) return 0;
 
   let count = 0;
-  for (const block of doc.package.body.content) {
+  for (const block of doc.package.document.content) {
     if (block.type === 'paragraph') {
       const text = block.content
         ?.map((c) => (c.type === 'run' ? c.content.map((rc) => (rc.type === 'text' ? rc.text : '')).join('') : ''))
