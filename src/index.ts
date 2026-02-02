@@ -324,3 +324,22 @@ export {
 
 export { twipsToPixels, pixelsToTwips, formatPx, parseEmu, emuToPixels, pointsToPixels, halfPointsToPixels } from './utils/units';
 export { resolveThemeColor, getThemeColorName, resolveColor, hexToRgb, rgbToHex, colorWithOpacity, parseHighlightColor } from './utils/colors';
+export {
+  createPageBreak,
+  createColumnBreak,
+  createLineBreak,
+  createPageBreakRun,
+  createPageBreakParagraph,
+  insertPageBreak,
+  createHorizontalRule,
+  insertHorizontalRule,
+  isPageBreak,
+  isColumnBreak,
+  isLineBreak,
+  isBreakContent,
+  hasPageBreakBefore,
+  countPageBreaks,
+  findPageBreaks,
+  removePageBreak,
+  type InsertPosition,
+} from './utils/insertOperations';

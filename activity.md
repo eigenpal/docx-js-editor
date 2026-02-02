@@ -6343,3 +6343,47 @@ Added `useHyperlinkDialog` hook to complete the existing HyperlinkDialog compone
 - bun build exits 0: ✓
 
 ---
+
+### US-143: Add Insert Page Break
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/utils/insertOperations.ts` with comprehensive insert operations utilities.
+
+**New File:**
+- `src/utils/insertOperations.ts` - Utility functions for inserting content
+
+**Types:**
+- `InsertPosition` - Position in document (paragraphIndex, runIndex?, offset?)
+
+**Page Break Functions:**
+- `createPageBreak()` - Create a BreakContent with type 'page'
+- `createColumnBreak()` - Create a column break
+- `createLineBreak(clear?)` - Create a text wrapping break
+- `createPageBreakRun()` - Create a Run containing a page break
+- `createPageBreakParagraph()` - Create paragraph with pageBreakBefore: true
+- `insertPageBreak(doc, position)` - Insert page break at position
+
+**Horizontal Rule Functions:**
+- `createHorizontalRule()` - Create HR paragraph with bottom border
+- `insertHorizontalRule(doc, position)` - Insert HR at position
+
+**Query Functions:**
+- `isPageBreak(content)` - Check if content is a page break
+- `isColumnBreak(content)` - Check if content is a column break
+- `isLineBreak(content)` - Check if content is a line break
+- `isBreakContent(content)` - Check if content is any break
+- `hasPageBreakBefore(paragraph)` - Check for pageBreakBefore
+- `countPageBreaks(doc)` - Count all page breaks
+- `findPageBreaks(doc)` - Find all page break positions
+
+**Modification Functions:**
+- `removePageBreak(doc, position)` - Remove a page break
+
+**Exports Added to `src/index.ts`:**
+- All functions and InsertPosition type
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
