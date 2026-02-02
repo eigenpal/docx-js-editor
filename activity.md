@@ -5379,3 +5379,56 @@ Added Line Spacing dropdown picker to the Toolbar for adjusting paragraph line s
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-119: Connect Style picker to toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Wired the StylePicker component to the Toolbar and DocxEditor, allowing users to apply named paragraph styles (Normal, Heading 1, etc.) from the document.
+
+**Implementation:**
+
+1. **Updated `src/components/Toolbar.tsx`:**
+   - Imported `StylePicker` component from `./ui/StylePicker`
+   - Imported `Style` and `Theme` types from document types
+   - Added `styleId` field to `SelectionFormatting` interface
+   - Extended `FormattingAction` type to support `{ type: 'applyStyle'; value: string }`
+   - Added `showStylePicker` prop (default: true)
+   - Added `documentStyles` prop to pass document styles to picker
+   - Added `theme` prop for style preview color resolution
+   - Added `handleStyleChange` callback that calls `onFormat({ type: 'applyStyle', value: styleId })`
+   - Added StylePicker to toolbar between Undo/Redo group and Font group
+   - Updated `getSelectionFormatting` to extract `styleId` from paragraph formatting
+
+2. **Updated `src/components/DocxEditor.tsx`:**
+   - Added handler for `'applyStyle'` action in `handleFormat`
+   - Uses `executeCommand` with `applyStyle` command (already implemented in executor)
+   - Passes `documentStyles` from `history.state?.package.styles?.styles` to Toolbar
+   - Passes `theme` from document package or props to Toolbar
+   - Updates selection formatting state with new styleId after applying
+
+**StylePicker Integration:**
+- Displays current paragraph style from selection
+- Dropdown with available styles from document, grouped by category (Headings, Paragraph, Quotes, Lists & TOC)
+- Shows styles in their own formatting (preview mode)
+- Quick format styles only (qFormat) for cleaner UI
+- Keyboard navigation support (Arrow keys, Enter, Escape)
+- Width: 140px, placeholder: "Styles"
+
+**Props Added to Toolbar:**
+- `showStylePicker?: boolean` - Whether to show style picker (default: true)
+- `documentStyles?: Style[]` - Document styles for the picker
+- `theme?: Theme | null` - Theme for style preview
+
+**Style Application Flow:**
+1. User selects style from dropdown
+2. `handleStyleChange(styleId)` called → `onFormat({ type: 'applyStyle', value: styleId })`
+3. DocxEditor's `handleFormat` detects applyStyle action
+4. Uses `executeCommand` with `applyStyle` command which sets `pPr.styleId` on paragraph
+5. Toolbar shows selected style as current
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

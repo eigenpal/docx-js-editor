@@ -11,13 +11,14 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import type { TextFormatting, ParagraphAlignment } from '../types/document';
+import type { TextFormatting, ParagraphAlignment, Style, Theme } from '../types/document';
 import { FontPicker } from './ui/FontPicker';
 import { FontSizePicker, halfPointsToPoints, pointsToHalfPoints } from './ui/FontSizePicker';
 import { TextColorPicker, HighlightColorPicker } from './ui/ColorPicker';
 import { AlignmentButtons } from './ui/AlignmentButtons';
 import { ListButtons, type ListState, createDefaultListState } from './ui/ListButtons';
 import { LineSpacingPicker } from './ui/LineSpacingPicker';
+import { StylePicker } from './ui/StylePicker';
 
 // ============================================================================
 // TYPES
@@ -53,6 +54,8 @@ export interface SelectionFormatting {
   listState?: ListState;
   /** Line spacing in twips (OOXML value, 240 = single spacing) */
   lineSpacing?: number;
+  /** Paragraph style ID */
+  styleId?: string;
 }
 
 /**
@@ -75,7 +78,8 @@ export type FormattingAction =
   | { type: 'textColor'; value: string }
   | { type: 'highlightColor'; value: string }
   | { type: 'alignment'; value: ParagraphAlignment }
-  | { type: 'lineSpacing'; value: number };
+  | { type: 'lineSpacing'; value: number }
+  | { type: 'applyStyle'; value: string };
 
 /**
  * Props for the Toolbar component
@@ -119,6 +123,12 @@ export interface ToolbarProps {
   showListButtons?: boolean;
   /** Whether to show line spacing picker (default: true) */
   showLineSpacingPicker?: boolean;
+  /** Whether to show style picker (default: true) */
+  showStylePicker?: boolean;
+  /** Document styles for the style picker */
+  documentStyles?: Style[];
+  /** Theme for the style picker */
+  theme?: Theme | null;
 }
 
 /**
@@ -379,6 +389,9 @@ export function Toolbar({
   showAlignmentButtons = true,
   showListButtons = true,
   showLineSpacingPicker = true,
+  showStylePicker = true,
+  documentStyles,
+  theme,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -521,6 +534,18 @@ export function Toolbar({
   );
 
   /**
+   * Handle style change
+   */
+  const handleStyleChange = useCallback(
+    (styleId: string) => {
+      if (!disabled && onFormat) {
+        onFormat({ type: 'applyStyle', value: styleId });
+      }
+    },
+    [disabled, onFormat]
+  );
+
+  /**
    * Keyboard shortcuts handler
    */
   useEffect(() => {
@@ -620,6 +645,23 @@ export function Toolbar({
           <RedoIcon />
         </ToolbarButton>
       </ToolbarGroup>
+
+      {/* Style Picker */}
+      {showStylePicker && (
+        <ToolbarGroup label="Styles">
+          <StylePicker
+            value={currentFormatting.styleId}
+            onChange={handleStyleChange}
+            styles={documentStyles}
+            theme={theme}
+            disabled={disabled}
+            width={140}
+            placeholder="Styles"
+            showPreview={true}
+            quickFormatOnly={true}
+          />
+        </ToolbarGroup>
+      )}
 
       {/* Font Family and Size Pickers */}
       {(showFontPicker || showFontSizePicker) && (
@@ -842,6 +884,11 @@ export function getSelectionFormatting(
     // Extract line spacing
     if (paragraphFormatting.lineSpacing !== undefined) {
       result.lineSpacing = paragraphFormatting.lineSpacing;
+    }
+
+    // Extract paragraph style ID
+    if (paragraphFormatting.styleId) {
+      result.styleId = paragraphFormatting.styleId;
     }
 
     // Extract list state from numPr

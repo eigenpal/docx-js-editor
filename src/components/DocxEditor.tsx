@@ -303,6 +303,28 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
 
       const { range } = selectionContext;
 
+      // Handle applyStyle action (paragraph-level - applies a named style)
+      if (typeof action === 'object' && action.type === 'applyStyle') {
+        // Apply style using applyStyle command
+        const newDoc = executeCommand(history.state, {
+          type: 'applyStyle',
+          paragraphIndex: range.start.paragraphIndex,
+          styleId: action.value,
+        });
+
+        handleDocumentChange(newDoc);
+
+        // Update selection formatting state
+        setState((prev) => ({
+          ...prev,
+          selectionFormatting: {
+            ...prev.selectionFormatting,
+            styleId: action.value,
+          },
+        }));
+        return;
+      }
+
       // Handle alignment action (paragraph-level formatting)
       if (typeof action === 'object' && action.type === 'alignment') {
         // Apply paragraph formatting using formatParagraph command
@@ -698,6 +720,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 canUndo={history.canUndo}
                 canRedo={history.canRedo}
                 disabled={readOnly}
+                documentStyles={history.state?.package.styles?.styles}
+                theme={history.state?.package.theme || theme}
               >
                 {toolbarExtra}
               </Toolbar>
