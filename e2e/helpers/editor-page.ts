@@ -398,10 +398,11 @@ export class EditorPage {
    * Set font family
    */
   async setFontFamily(fontFamily: string): Promise<void> {
-    // Click on font picker and select font
-    const fontPicker = this.toolbar.locator('.font-picker');
+    // Click on font picker trigger (uses Radix Select with aria-label)
+    const fontPicker = this.toolbar.locator('[aria-label="Select font family"]');
     await fontPicker.click();
-    await this.page.locator(`text="${fontFamily}"`).click();
+    // Wait for dropdown to open and select the font by its text
+    await this.page.locator(`[role="option"]:has-text("${fontFamily}")`).click();
   }
 
   /**

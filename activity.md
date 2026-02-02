@@ -7782,3 +7782,34 @@ Verified that the clear formatting button selector is correctly configured.
 - Selector verification test passes ✓
 
 ---
+
+### Test Infrastructure: Fix font picker selector
+
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Fixed the font picker selector in `e2e/helpers/editor-page.ts` for the FontPicker component.
+
+**Issue:**
+
+- Tests used `.font-picker` class selector which doesn't exist
+- Actual component uses Radix Select with `aria-label="Select font family"` on the trigger
+- Font options are rendered as Radix SelectItem with `role="option"`
+
+**Fix:**
+
+- Updated `setFontFamily()` selector from `.font-picker` to `[aria-label="Select font family"]`
+- Updated font option selection to use `[role="option"]:has-text("${fontFamily}")` for Radix compatibility
+
+**Test Results:**
+
+- 7 font family tests passed (basic operations working)
+- Remaining failures are functional issues (partial selection, combined operations) - not selector issues
+
+**Verified:**
+
+- bun run typecheck: ✓
+- bun build exits 0: ✓
+- `npx playwright test --grep "font family"` - 7 tests pass ✓
+
+---
