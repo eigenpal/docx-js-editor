@@ -83,6 +83,10 @@ export interface EditorProps {
   showPageShadows?: boolean;
   /** Whether to show page numbers */
   showPageNumbers?: boolean;
+  /** Whether to show page margin guides/boundaries */
+  showMarginGuides?: boolean;
+  /** Color for margin guides (default: #c0c0c0) */
+  marginGuideColor?: string;
   /** Whether to enable pagination (default: true) - renders content across multiple pages */
   enablePagination?: boolean;
   /** Custom page renderer */
@@ -308,6 +312,8 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     pageGap = 20,
     showPageShadows = true,
     showPageNumbers = false,
+    showMarginGuides = false,
+    marginGuideColor,
     enablePagination = true,
     renderPage,
     renderImage,
@@ -794,10 +800,79 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
           <div className="docx-page-content-area" style={contentAreaStyle}>
             {pageContent}
           </div>
+
+          {/* Margin guides */}
+          {showMarginGuides && (
+            <div
+              className="docx-page-margin-guides"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                pointerEvents: 'none',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Top margin line */}
+              <div
+                className="docx-margin-guide docx-margin-guide-top"
+                style={{
+                  position: 'absolute',
+                  top: formatPx(marginTop),
+                  left: 0,
+                  right: 0,
+                  height: 0,
+                  borderTop: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                  pointerEvents: 'none',
+                }}
+              />
+              {/* Bottom margin line */}
+              <div
+                className="docx-margin-guide docx-margin-guide-bottom"
+                style={{
+                  position: 'absolute',
+                  bottom: formatPx(marginBottom),
+                  left: 0,
+                  right: 0,
+                  height: 0,
+                  borderTop: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                  pointerEvents: 'none',
+                }}
+              />
+              {/* Left margin line */}
+              <div
+                className="docx-margin-guide docx-margin-guide-left"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  left: formatPx(marginLeft),
+                  width: 0,
+                  borderLeft: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                  pointerEvents: 'none',
+                }}
+              />
+              {/* Right margin line */}
+              <div
+                className="docx-margin-guide docx-margin-guide-right"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  right: formatPx(marginRight),
+                  width: 0,
+                  borderLeft: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
+          )}
         </div>
       );
     },
-    [zoom, showPageShadows, renderPageContent, renderPage]
+    [zoom, showPageShadows, showMarginGuides, marginGuideColor, renderPageContent, renderPage]
   );
 
   /**
@@ -849,14 +924,90 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
 
     // Single page fallback
     const pageContent = renderAllContent();
+
+    // Calculate margins for margin guides
+    const marginTop = twipsToPixels(sectionProps.marginTop) * zoom;
+    const marginBottom = twipsToPixels(sectionProps.marginBottom) * zoom;
+    const marginLeft = twipsToPixels(sectionProps.marginLeft) * zoom;
+    const marginRight = twipsToPixels(sectionProps.marginRight) * zoom;
+
     const renderedPage = renderPage
       ? renderPage(pageContent, 0, sectionProps)
       : (
         <div
           className="docx-editor-page"
-          style={getPageStyle(sectionProps, zoom, showPageShadows)}
+          style={{ ...getPageStyle(sectionProps, zoom, showPageShadows), position: 'relative' }}
         >
           {pageContent}
+
+          {/* Margin guides for single page mode */}
+          {showMarginGuides && (
+            <div
+              className="docx-page-margin-guides"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                pointerEvents: 'none',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Top margin line */}
+              <div
+                className="docx-margin-guide docx-margin-guide-top"
+                style={{
+                  position: 'absolute',
+                  top: formatPx(marginTop),
+                  left: 0,
+                  right: 0,
+                  height: 0,
+                  borderTop: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                  pointerEvents: 'none',
+                }}
+              />
+              {/* Bottom margin line */}
+              <div
+                className="docx-margin-guide docx-margin-guide-bottom"
+                style={{
+                  position: 'absolute',
+                  bottom: formatPx(marginBottom),
+                  left: 0,
+                  right: 0,
+                  height: 0,
+                  borderTop: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                  pointerEvents: 'none',
+                }}
+              />
+              {/* Left margin line */}
+              <div
+                className="docx-margin-guide docx-margin-guide-left"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  left: formatPx(marginLeft),
+                  width: 0,
+                  borderLeft: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                  pointerEvents: 'none',
+                }}
+              />
+              {/* Right margin line */}
+              <div
+                className="docx-margin-guide docx-margin-guide-right"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  right: formatPx(marginRight),
+                  width: 0,
+                  borderLeft: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
+          )}
         </div>
       );
 
@@ -870,7 +1021,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         )}
       </>
     );
-  }, [enablePagination, pageLayout, renderAllContent, renderPage, sectionProps, zoom, showPageShadows, showPageNumbers, pageGap]);
+  }, [enablePagination, pageLayout, renderAllContent, renderPage, sectionProps, zoom, showPageShadows, showPageNumbers, showMarginGuides, marginGuideColor, pageGap]);
 
   return (
     <div

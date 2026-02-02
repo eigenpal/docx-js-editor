@@ -61,6 +61,10 @@ export interface DocxEditorProps {
   showVariablePanel?: boolean;
   /** Whether to show zoom control (default: true) */
   showZoomControl?: boolean;
+  /** Whether to show page margin guides/boundaries (default: false) */
+  showMarginGuides?: boolean;
+  /** Color for margin guides (default: '#c0c0c0') */
+  marginGuideColor?: string;
   /** Initial zoom level (default: 1.0) */
   initialZoom?: number;
   /** Whether the editor is read-only */
@@ -139,6 +143,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     showToolbar = true,
     showVariablePanel = true,
     showZoomControl = true,
+    showMarginGuides = false,
+    marginGuideColor,
     initialZoom = 1.0,
     readOnly = false,
     toolbarExtra,
@@ -749,6 +755,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 onAgentRequest={onAgentRequest}
                 editable={!readOnly}
                 zoom={state.zoom}
+                showMarginGuides={showMarginGuides}
+                marginGuideColor={marginGuideColor}
                 onTableCellClick={tableSelection.handleCellClick}
                 isTableCellSelected={tableSelection.isCellSelected}
               />

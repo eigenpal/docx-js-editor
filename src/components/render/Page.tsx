@@ -42,6 +42,10 @@ export interface PageProps {
   zoom?: number;
   /** Whether to show page shadow */
   showShadow?: boolean;
+  /** Whether to show margin guides/boundaries */
+  showMarginGuides?: boolean;
+  /** Color for margin guides (default: #e0e0e0) */
+  marginGuideColor?: string;
   /** Render function for paragraphs */
   renderParagraph?: (paragraph: Paragraph, index: number, pageContent: PageContent) => ReactNode;
   /** Render function for tables */
@@ -82,6 +86,10 @@ export interface SimplePageProps {
   zoom?: number;
   /** Whether to show page shadow */
   showShadow?: boolean;
+  /** Whether to show margin guides/boundaries */
+  showMarginGuides?: boolean;
+  /** Color for margin guides (default: #e0e0e0) */
+  marginGuideColor?: string;
 }
 
 // ============================================================================
@@ -107,6 +115,8 @@ export function Page({
   style: additionalStyle,
   zoom = 1,
   showShadow = true,
+  showMarginGuides = false,
+  marginGuideColor,
   renderParagraph,
   renderTable,
   renderHeader,
@@ -221,6 +231,11 @@ export function Page({
         </div>
       )}
 
+      {/* Margin guides */}
+      {showMarginGuides && (
+        <PageMarginGuides sectionProps={sectionProps} zoom={zoom} color={marginGuideColor} />
+      )}
+
       {/* Page borders */}
       {sectionProps.pageBorders && (
         <PageBorders borders={sectionProps.pageBorders} theme={theme} zoom={zoom} />
@@ -245,6 +260,8 @@ export function SimplePage({
   style: additionalStyle,
   zoom = 1,
   showShadow = true,
+  showMarginGuides = false,
+  marginGuideColor,
 }: SimplePageProps): React.ReactElement {
   const effectiveSectionProps: SectionProperties = sectionProps ?? {
     pageSize: {
@@ -316,6 +333,198 @@ export function SimplePage({
           {footer}
         </div>
       )}
+
+      {/* Margin guides */}
+      {showMarginGuides && (
+        <PageMarginGuides sectionProps={effectiveSectionProps} zoom={zoom} color={marginGuideColor} />
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// PAGE MARGIN GUIDES
+// ============================================================================
+
+/**
+ * Default color for margin guides
+ */
+const DEFAULT_MARGIN_GUIDE_COLOR = '#c0c0c0';
+
+interface PageMarginGuidesProps {
+  sectionProps: SectionProperties;
+  zoom: number;
+  color?: string;
+}
+
+/**
+ * PageMarginGuides component - renders dotted lines showing margin boundaries
+ */
+function PageMarginGuides({ sectionProps, zoom, color = DEFAULT_MARGIN_GUIDE_COLOR }: PageMarginGuidesProps): React.ReactElement {
+  const margins = sectionProps.pageMargins ?? {};
+  const topMargin = margins.top ?? DEFAULT_MARGIN_TWIPS;
+  const bottomMargin = margins.bottom ?? DEFAULT_MARGIN_TWIPS;
+  const leftMargin = margins.left ?? DEFAULT_MARGIN_TWIPS;
+  const rightMargin = margins.right ?? DEFAULT_MARGIN_TWIPS;
+
+  // Convert to pixels
+  const topPx = twipsToPixels(topMargin) * zoom;
+  const bottomPx = twipsToPixels(bottomMargin) * zoom;
+  const leftPx = twipsToPixels(leftMargin) * zoom;
+  const rightPx = twipsToPixels(rightMargin) * zoom;
+
+  // Common style for guide lines
+  const guideLineStyle: CSSProperties = {
+    position: 'absolute',
+    borderColor: color,
+    borderStyle: 'dashed',
+    borderWidth: 0,
+    pointerEvents: 'none',
+    boxSizing: 'border-box',
+  };
+
+  return (
+    <div
+      className="docx-page-margin-guides"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        pointerEvents: 'none',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Top margin line (horizontal) */}
+      <div
+        className="docx-margin-guide docx-margin-guide-top"
+        style={{
+          ...guideLineStyle,
+          top: formatPx(topPx),
+          left: 0,
+          right: 0,
+          height: 0,
+          borderTopWidth: 1,
+        }}
+      />
+
+      {/* Bottom margin line (horizontal) */}
+      <div
+        className="docx-margin-guide docx-margin-guide-bottom"
+        style={{
+          ...guideLineStyle,
+          bottom: formatPx(bottomPx),
+          left: 0,
+          right: 0,
+          height: 0,
+          borderTopWidth: 1,
+        }}
+      />
+
+      {/* Left margin line (vertical) */}
+      <div
+        className="docx-margin-guide docx-margin-guide-left"
+        style={{
+          ...guideLineStyle,
+          top: 0,
+          bottom: 0,
+          left: formatPx(leftPx),
+          width: 0,
+          borderLeftWidth: 1,
+        }}
+      />
+
+      {/* Right margin line (vertical) */}
+      <div
+        className="docx-margin-guide docx-margin-guide-right"
+        style={{
+          ...guideLineStyle,
+          top: 0,
+          bottom: 0,
+          right: formatPx(rightPx),
+          width: 0,
+          borderLeftWidth: 1,
+        }}
+      />
+
+      {/* Corner markers for better visibility */}
+      <MarginCorner position="top-left" top={topPx} left={leftPx} color={color} />
+      <MarginCorner position="top-right" top={topPx} right={rightPx} color={color} />
+      <MarginCorner position="bottom-left" bottom={bottomPx} left={leftPx} color={color} />
+      <MarginCorner position="bottom-right" bottom={bottomPx} right={rightPx} color={color} />
+    </div>
+  );
+}
+
+interface MarginCornerProps {
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+  color: string;
+}
+
+/**
+ * Small corner marker showing where margins intersect
+ */
+function MarginCorner({ position, top, bottom, left, right, color }: MarginCornerProps): React.ReactElement {
+  const size = 6; // Corner marker size in pixels
+
+  const style: CSSProperties = {
+    position: 'absolute',
+    width: size,
+    height: size,
+    pointerEvents: 'none',
+  };
+
+  // Position the corner marker at the intersection
+  if (top !== undefined) {
+    style.top = formatPx(top - size / 2);
+  }
+  if (bottom !== undefined) {
+    style.bottom = formatPx(bottom - size / 2);
+  }
+  if (left !== undefined) {
+    style.left = formatPx(left - size / 2);
+  }
+  if (right !== undefined) {
+    style.right = formatPx(right - size / 2);
+  }
+
+  // Draw corner lines based on position
+  let borderStyle = '';
+  switch (position) {
+    case 'top-left':
+      borderStyle = `border-top: 1px solid ${color}; border-left: 1px solid ${color};`;
+      break;
+    case 'top-right':
+      borderStyle = `border-top: 1px solid ${color}; border-right: 1px solid ${color};`;
+      break;
+    case 'bottom-left':
+      borderStyle = `border-bottom: 1px solid ${color}; border-left: 1px solid ${color};`;
+      break;
+    case 'bottom-right':
+      borderStyle = `border-bottom: 1px solid ${color}; border-right: 1px solid ${color};`;
+      break;
+  }
+
+  return (
+    <div
+      className={`docx-margin-corner docx-margin-corner-${position}`}
+      style={style}
+    >
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          ...(position === 'top-left' && { borderTop: `1px solid ${color}`, borderLeft: `1px solid ${color}` }),
+          ...(position === 'top-right' && { borderTop: `1px solid ${color}`, borderRight: `1px solid ${color}` }),
+          ...(position === 'bottom-left' && { borderBottom: `1px solid ${color}`, borderLeft: `1px solid ${color}` }),
+          ...(position === 'bottom-right' && { borderBottom: `1px solid ${color}`, borderRight: `1px solid ${color}` }),
+        }}
+      />
     </div>
   );
 }
