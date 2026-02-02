@@ -10,7 +10,7 @@ You are running inside a Ralph autonomous loop. Each iteration you must:
 4. Implement ONLY that one task.
 5. Run the **fast verify**: `bun run typecheck` (catches most errors in <5s)
 6. Run **targeted tests only** - see "Test Strategy" below
-7. If tests pass, mark task done, commit, update progress.txt
+7. If tests pass, mark task done, commit, update `.ralph/progress.txt`
 8. Output RALPH_STATUS block.
 
 ```
@@ -19,6 +19,61 @@ RALPH_STATUS: {
   "current_task": "<task title>" | "none",
   "exit_signal": false | true
 }
+```
+
+---
+
+## Progress Tracking — So User Knows What's Happening
+
+**ALWAYS update `.ralph/progress.txt` after each task.** This lets the user monitor progress.
+
+Format (append to file):
+
+```
+[TIMESTAMP] TASK: <task title>
+[TIMESTAMP] STATUS: starting | investigating | implementing | testing | done | failed
+[TIMESTAMP] NOTES: <brief description of what you did/found>
+```
+
+Example:
+
+```
+[2024-02-02 10:15] TASK: Fix getSelectionRange for cursor-only
+[2024-02-02 10:15] STATUS: investigating
+[2024-02-02 10:16] NOTES: Reading AIEditor.tsx line 105, found selection.isCollapsed check
+[2024-02-02 10:18] STATUS: implementing
+[2024-02-02 10:22] STATUS: testing
+[2024-02-02 10:23] NOTES: Tests pass - 11/11 cursor-only tests now green
+[2024-02-02 10:23] STATUS: done
+```
+
+**User can monitor progress with:**
+
+```bash
+tail -f .ralph/progress.txt
+```
+
+---
+
+## Subagents — Use For Complex Tasks
+
+You can spin up **subagents** for parallel work. Use the Task tool with appropriate agent types:
+
+- **Explore agent** - For codebase exploration, finding files, understanding architecture
+- **Plan agent** - For designing implementation approaches
+- **Bash agent** - For running commands, git operations
+
+**When to use subagents:**
+
+- Searching across multiple files for a pattern
+- Investigating how a feature works across the codebase
+- Running parallel test suites
+- Complex research tasks
+
+**Example:**
+
+```
+Use Task tool with subagent_type="Explore" to find all files that handle selection
 ```
 
 ---
@@ -42,18 +97,19 @@ npx playwright test --grep "test name pattern" --timeout=30000
 
 ### Test File Mapping
 
-| Feature Area          | Test File                  | Quick Verify Pattern    |
-| --------------------- | -------------------------- | ----------------------- |
-| Bold/Italic/Underline | `formatting.spec.ts`       | `--grep "apply bold"`   |
-| Alignment             | `alignment.spec.ts`        | `--grep "align text"`   |
-| Lists                 | `lists.spec.ts`            | `--grep "bullet list"`  |
-| Colors                | `colors.spec.ts`           | `--grep "text color"`   |
-| Fonts                 | `fonts.spec.ts`            | `--grep "font family"`  |
-| Enter/Paragraphs      | `text-editing.spec.ts`     | `--grep "Enter"`        |
-| Undo/Redo             | `scenario-driven.spec.ts`  | `--grep "undo"`         |
-| Line spacing          | `line-spacing.spec.ts`     | `--grep "line spacing"` |
-| Paragraph styles      | `paragraph-styles.spec.ts` | `--grep "Heading"`      |
-| Toolbar state         | `toolbar-state.spec.ts`    | `--grep "toolbar"`      |
+| Feature Area          | Test File                      | Quick Verify Pattern    |
+| --------------------- | ------------------------------ | ----------------------- |
+| Bold/Italic/Underline | `formatting.spec.ts`           | `--grep "apply bold"`   |
+| Alignment             | `alignment.spec.ts`            | `--grep "align text"`   |
+| Lists                 | `lists.spec.ts`                | `--grep "bullet list"`  |
+| Colors                | `colors.spec.ts`               | `--grep "text color"`   |
+| Fonts                 | `fonts.spec.ts`                | `--grep "font family"`  |
+| Enter/Paragraphs      | `text-editing.spec.ts`         | `--grep "Enter"`        |
+| Undo/Redo             | `scenario-driven.spec.ts`      | `--grep "undo"`         |
+| Line spacing          | `line-spacing.spec.ts`         | `--grep "line spacing"` |
+| Paragraph styles      | `paragraph-styles.spec.ts`     | `--grep "Heading"`      |
+| Toolbar state         | `toolbar-state.spec.ts`        | `--grep "toolbar"`      |
+| **Cursor-only ops**   | `cursor-paragraph-ops.spec.ts` | `--grep "cursor only"`  |
 
 ### Avoid Hanging
 
@@ -67,9 +123,22 @@ npx playwright test --grep "test name pattern" --timeout=30000
 
 ## SuperDoc Reference — ⚠️ LEGAL: CLEAN ROOM ONLY ⚠️
 
-### Primary Reference: SuperDoc (`reference/superdoc`)
+### Live Demo — Check Expected Behavior First!
 
-When stuck on implementation, **first check SuperDoc** — it's a working OOXML editor:
+**Before implementing, check how it SHOULD work:**
+
+🌐 **https://www.superdoc.dev/** — Live working DOCX editor
+
+Use this to:
+
+- See expected UX behavior (click button → what happens?)
+- Verify cursor-only operations work (click in paragraph, click alignment)
+- Check how lists, indentation, formatting should behave
+- Compare your implementation against working reference
+
+### Local Reference: SuperDoc (`reference/superdoc`)
+
+When stuck on implementation, **check SuperDoc source** — it's a working OOXML editor:
 
 ```bash
 # Understand repo structure
@@ -88,6 +157,7 @@ grep -r "selectionChanged" reference/superdoc/packages --include="*.ts" -l
 - Edge cases that specs don't make clear
 - DOM APIs and event sequences used
 - Architecture patterns for editor components
+- **How selection works with cursor-only (no text selected)**
 
 ### ⚠️ CRITICAL LEGAL RULES — AGPL-3.0 COPYLEFT ⚠️
 
@@ -109,19 +179,21 @@ SuperDoc is licensed under **AGPL-3.0**, a strong copyleft license. If you copy 
 **The process:**
 
 ```
-1. READ SuperDoc to understand the concept
-2. CLOSE the file
-3. WRITE your own implementation from memory/understanding
+1. CHECK superdoc.dev to see expected behavior
+2. READ SuperDoc source to understand the concept
+3. CLOSE the file
+4. WRITE your own implementation from memory/understanding
 ```
 
 **✅ GOOD — Clean room approach:**
 
 ```
-I read SuperDoc and understand that selection across runs requires
-checking nodeType to handle Element vs Text nodes differently.
+I checked superdoc.dev - clicking Center button with cursor (no selection)
+centers the current paragraph. I read SuperDoc source and understand that
+selection handling needs to work even when selection.isCollapsed is true.
 
 My implementation (written fresh):
-function getSelectionOffset(node: Node): number {
+function getSelectionRange(...) {
   // My own logic based on understanding...
 }
 ```
@@ -179,14 +251,27 @@ This is a WYSIWYG editor. Output must look identical to Microsoft Word.
 
 ---
 
-## Known Bugs to Fix (Multi-Selection Issue)
+## Known Critical Bugs
 
-**Multi-selection with different formatting:**
+### 1. Cursor-Only Paragraph Operations (ROOT CAUSE)
 
-- User cannot select text spanning multiple runs with different formatting
-- When selecting across bold → normal → italic, the selection breaks
-- This is likely in `getSelectionRange()` or selection restoration logic
-- **Reference:** ECMA-376 Part 1 for run structure, DOM Selection API spec for browser behavior
+**Problem:** In Word/Google Docs, paragraph operations (lists, alignment, indent) work when cursor is in a paragraph WITHOUT selecting text. Our editor requires text selection.
+
+**Root cause:** `getSelectionRange()` in `AIEditor.tsx:105` returns `null` when `selection.isCollapsed` is true:
+
+```tsx
+if (!selection || selection.isCollapsed) return null; // ← THE BUG
+```
+
+**To verify expected behavior:** Go to https://www.superdoc.dev/, click in a paragraph, click Center button — it should center without selection.
+
+### 2. Multi-Paragraph Formatting
+
+Only first paragraph gets formatted when multiple are selected. Need to loop from `start.paragraphIndex` to `end.paragraphIndex`.
+
+### 3. Multi-Selection Across Formatting
+
+When selecting text spanning multiple runs with different formatting (bold → normal → italic), selection breaks.
 
 ---
 
@@ -202,6 +287,12 @@ bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --wo
 
 ```bash
 bun run typecheck && npx playwright test tests/formatting.spec.ts --timeout=30000
+```
+
+**Cursor-only operations (new critical tests):**
+
+```bash
+npx playwright test tests/cursor-paragraph-ops.spec.ts --timeout=30000 --workers=4
 ```
 
 **Full suite (only for final validation):**
@@ -220,6 +311,7 @@ bun run typecheck && npx playwright test --timeout=60000 --workers=4
 - Do NOT delete files from previous tasks unless required
 - Client-side only. No backend.
 - No collaboration, comments, tracked changes, or PDF export
+- **Check superdoc.dev for expected behavior before implementing**
 
 ---
 
@@ -249,9 +341,11 @@ EOF
 
 ## When Stuck
 
-1. **Type error?** Read the actual types, don't guess
-2. **Test failing?** Run with `--debug` and check console output
-3. **Selection bug?** Add `console.log` in `getSelectionRange()` to trace
-4. **Implementation question?** Check `reference/superdoc` first (read → close → write fresh!)
-5. **OOXML spec question?** Check `reference/quick-ref/` or ECMA-376 schemas
-6. **Timeout?** Kill command, narrow test scope, retry
+1. **Check expected behavior first** — Visit https://www.superdoc.dev/ to see how it should work
+2. **Type error?** Read the actual types, don't guess
+3. **Test failing?** Run with `--debug` and check console output
+4. **Selection bug?** Add `console.log` in `getSelectionRange()` to trace
+5. **Implementation question?** Check `reference/superdoc` (read → close → write fresh!)
+6. **OOXML spec question?** Check `reference/quick-ref/` or ECMA-376 schemas
+7. **Timeout?** Kill command, narrow test scope, retry
+8. **Complex task?** Spin up a subagent with Task tool

@@ -70,15 +70,57 @@ bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --wo
 
 ---
 
+## ⚠️ PHASE 4B: CRITICAL - Cursor-Only Paragraph Operations (ROOT CAUSE)
+
+**This is the root cause of lists, alignment, and indentation not working in real usage.**
+
+In Word/Google Docs, paragraph operations work on the current paragraph where your cursor is, even WITHOUT selecting text. Our editor requires text selection, which breaks expected UX.
+
+**Root Cause:** `getSelectionRange()` in `AIEditor.tsx:105` returns `null` when `selection.isCollapsed` is true (cursor without selection):
+
+```tsx
+// AIEditor.tsx line 105 - THE BUG:
+if (!selection || selection.isCollapsed) return null; // ← Fails on cursor-only!
+```
+
+**Files to fix:**
+
+- `src/components/AIEditor.tsx` - `getSelectionRange()` function
+- `src/components/DocxEditor.tsx` - `handleFormat()` function
+
+**What needs to change:**
+
+1. `getSelectionRange()` should return a valid range even when `selection.isCollapsed` (cursor only)
+2. For paragraph operations (lists, alignment, indent), get the paragraph index from cursor position
+3. For multi-paragraph selections, apply formatting to ALL paragraphs (currently only applies to first)
+
+**New tests added:** `e2e/tests/cursor-paragraph-ops.spec.ts`
+
+- [ ] **Fix getSelectionRange for cursor-only** - Modify `getSelectionRange()` to return a valid range when cursor is positioned (selection.isCollapsed). Return `{ start: cursorPosition, end: cursorPosition }`. Verify: `npx playwright test tests/cursor-paragraph-ops.spec.ts --grep "cursor only" --timeout=30000`
+
+- [ ] **Fix alignment with cursor only** - After getSelectionRange fix, alignment should work. Verify: `npx playwright test --grep "align center with cursor only" --timeout=30000`
+
+- [ ] **Fix bullet list with cursor only** - After getSelectionRange fix, lists should work. Verify: `npx playwright test --grep "bullet list applies with cursor only" --timeout=30000`
+
+- [ ] **Fix indent with cursor only** - After getSelectionRange fix, indent should work. Verify: `npx playwright test --grep "indent paragraph with cursor only" --timeout=30000`
+
+- [ ] **Fix multi-paragraph formatting** - Update `handleFormat()` to loop from `range.start.paragraphIndex` to `range.end.paragraphIndex` instead of only applying to start. Verify: `npx playwright test --grep "align multiple paragraphs" --timeout=30000`
+
+---
+
 ## PHASE 5: FUNCTIONAL FIXES - Lists
 
-- [x] **Fix bullet list creation** - Basic bullet list creation passes (15/32 list tests pass). Multi-item tests fail due to Enter key not creating new paragraphs (Phase 10 dependency). Verify: `npx playwright test --grep "create bullet list" --timeout=30000`
+**⚠️ STATUS: BROKEN** - Tests that pass only work because they select text first. Real-world usage (click in paragraph → click button) does NOT work due to Phase 4B bug.
 
-- [x] **Fix numbered list creation** - Basic numbered list creation passes. Multi-item tests need Enter key support. Verify: `npx playwright test --grep "create numbered list" --timeout=30000`
+- [ ] **Fix bullet list creation** - BLOCKED by Phase 4B. Current status: Only works if text is selected. Verify: `npx playwright test --grep "create bullet list" --timeout=30000`
 
-- [x] **Fix list indentation** - Indent/outdent buttons work for single items. Multi-level nested lists need Enter key support. Verify: `npx playwright test --grep "nested bullet" --timeout=30000`
+- [ ] **Fix numbered list creation** - BLOCKED by Phase 4B. Verify: `npx playwright test --grep "create numbered list" --timeout=30000`
 
-- [x] **Fix list to paragraph conversion** - Toggle list off passes. Verify: `npx playwright test --grep "toggle bullet list off" --timeout=30000`
+- [ ] **Fix list indentation** - BLOCKED by Phase 4B. Indent/outdent don't work with cursor only. Verify: `npx playwright test --grep "nested bullet" --timeout=30000`
+
+- [ ] **Fix list to paragraph conversion** - BLOCKED by Phase 4B. Verify: `npx playwright test --grep "toggle bullet list off" --timeout=30000`
+
+- [ ] **Fix hardcoded numId values** - Lists use hardcoded `numId: 1` (bullet) and `numId: 2` (numbered) in DocxEditor.tsx:516. Should detect actual numbering definitions from document. Verify: Load DOCX with custom numbering, check lists render correctly.
 
 ---
 
@@ -96,7 +138,11 @@ bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --wo
 
 ## PHASE 7: FUNCTIONAL FIXES - Paragraph & Alignment
 
-- [x] **Fix text alignment application** - 22/29 alignment tests pass. Basic alignment operations work. Multi-paragraph tests need Enter key. Verify: `npx playwright test --grep "align text left" --timeout=30000`
+**⚠️ STATUS: BROKEN** - Same root cause as Phase 5. Alignment only works if text is selected.
+
+- [ ] **Fix text alignment application** - BLOCKED by Phase 4B. Currently fails with cursor-only. Verify: `npx playwright test --grep "align text left" --timeout=30000`
+
+- [ ] **Fix multi-paragraph alignment** - BLOCKED by Phase 4B. Only first paragraph gets aligned. Verify: `npx playwright test --grep "align multiple paragraphs" --timeout=30000`
 
 - [x] **Fix line spacing application** - Line spacing tests pass. Verify: `npx playwright test --grep "single line spacing" --timeout=30000`
 
@@ -182,6 +228,8 @@ bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --wo
 
 ## PHASE 14: Batch Validation
 
+- [ ] **Validate cursor-paragraph-ops.spec.ts** - `npx playwright test tests/cursor-paragraph-ops.spec.ts --timeout=60000 --workers=4` - NEW TEST FILE
+
 - [ ] **Validate text-editing.spec.ts** - `npx playwright test tests/text-editing.spec.ts --timeout=60000 --workers=4` - Fix any failures
 
 - [ ] **Validate formatting.spec.ts** - `npx playwright test tests/formatting.spec.ts --timeout=60000 --workers=4` - Fix any failures
@@ -218,9 +266,8 @@ bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --wo
 
 ## Notes
 
-- Task 1 (backwards text) is likely root cause of many failures - fix first
-- Selector fixes (Phase 2-3) should be quick wins
-- Functional fixes (Phase 4-11) may require deeper investigation
-- Each task should be verified before moving to next
-- If deeper issues found, document in progress.txt and adapt
+- **Phase 4B is the ROOT CAUSE** - Fix this first before Phase 5 and 7 can work
+- Selector fixes (Phase 2-3) are done
+- Text formatting (Phase 4) works because it uses character-level selection
+- Paragraph operations (lists, alignment, indent) require Phase 4B fix
 - **Reference reference/superdoc for concepts but DO NOT COPY CODE** - legal protection
