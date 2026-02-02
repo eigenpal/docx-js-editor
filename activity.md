@@ -44,7 +44,7 @@ A **complete WYSIWYG DOCX editor** with full Microsoft Word fidelity:
 **Exploratory implementation** - DOCX/OOXML is complex, we discover as we build.
 
 1. Explore actual DOCX files with explorer utility
-2. **Reference ~/superdoc when unsure** - it's a working implementation
+2. **Reference reference/superdoc when unsure** - it's a working implementation
 3. Document findings here
 4. Implement parser + renderer (your own code)
 5. Adapt plan as needed
@@ -53,10 +53,10 @@ A **complete WYSIWYG DOCX editor** with full Microsoft Word fidelity:
 
 ## SuperDoc Reference Guide
 
-**Always check ~/superdoc when unsure how to implement something:**
+**Always check reference/superdoc when unsure how to implement something:**
 
 ```
-~/superdoc/
+reference/superdoc/
 ├── packages/
 │   ├── super-editor/src/
 │   │   ├── core/converters/    # DOCX import/export
@@ -74,11 +74,11 @@ A **complete WYSIWYG DOCX editor** with full Microsoft Word fidelity:
 
 ```bash
 # Find how they parse something
-grep -r "w:hyperlink" ~/superdoc/packages/
-grep -r "parseRun" ~/superdoc/packages/
+grep -r "w:hyperlink" reference/superdoc/packages/
+grep -r "parseRun" reference/superdoc/packages/
 
 # Read a specific file
-cat ~/superdoc/packages/super-editor/src/core/converters/v2/importer/docxImporter.js
+cat reference/superdoc/packages/super-editor/src/core/converters/v2/importer/docxImporter.js
 ```
 
 **Learn the approach, write your own code.**
@@ -91,7 +91,7 @@ cat ~/superdoc/packages/super-editor/src/core/converters/v2/importer/docxImporte
 
 ```
 # Explore SuperDoc implementation
-Task(subagent_type="Explore", prompt="How does ~/superdoc parse tables? Find tableParser and explain the approach.")
+Task(subagent_type="Explore", prompt="How does reference/superdoc parse tables? Find tableParser and explain the approach.")
 
 # Understand OOXML structure
 Task(subagent_type="Explore", prompt="Explore word/numbering.xml structure in a sample DOCX. Document the XML format.")
@@ -185,7 +185,7 @@ const newBuffer = await agent.toBuffer();
 
 ---
 
-**CRITICAL:** No SuperDoc imports. Custom implementation. Reference ~/superdoc for learning only.
+**CRITICAL:** No SuperDoc imports. Custom implementation. Reference reference/superdoc for learning only.
 
 ---
 

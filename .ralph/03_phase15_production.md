@@ -1,6 +1,7 @@
 # PHASE 15: PRODUCTION READINESS (50 Tickets)
 
 **Context:** Investigation via Playwright revealed critical gaps:
+
 - Toolbar buttons don't apply formatting (props mismatch)
 - No visible cursor when editing
 - Text fragmented into 252 tiny spans
@@ -8,7 +9,7 @@
 - No headers/footers rendered
 - No table editing UI
 
-**Approach:** Use `~/superdoc` as reference only - implement everything ourselves.
+**Approach:** Use `reference/superdoc` as reference only - implement everything ourselves.
 
 ---
 

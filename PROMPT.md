@@ -4,12 +4,12 @@ We are building a **complete WYSIWYG DOCX editor** with an exploratory approach.
 
 **CRITICAL:** No SuperDoc imports. Write all code from scratch.
 
-## Reference Implementation: ~/superdoc
+## Reference Implementation: reference/superdoc
 
-**ALWAYS reference ~/superdoc when unsure how to implement something.** This is a working DOCX editor you can learn from:
+**ALWAYS reference reference/superdoc when unsure how to implement something.** This is a working DOCX editor you can learn from:
 
 ```
-~/superdoc/
+reference/superdoc/
 ├── packages/
 │   ├── super-editor/      # Main editor, DOCX import/export
 │   ├── layout-engine/     # Page layout, line breaking
@@ -22,8 +22,8 @@ We are building a **complete WYSIWYG DOCX editor** with an exploratory approach.
 
 **How to use it:**
 
-1. `ls ~/superdoc/packages` - see package structure
-2. `cat ~/superdoc/packages/super-editor/src/...` - read implementation
+1. `ls reference/superdoc/packages` - see package structure
+2. `cat reference/superdoc/packages/super-editor/src/...` - read implementation
 3. Look for: parsers, converters, renderers, layout logic
 
 **CRITICAL: Learn from SuperDoc, but write your own code.** Understand their approach, then implement it yourself. **NEVER copy-paste code verbatim** - this is for legal protection. Read, understand, close the file, then write your own implementation from memory.
@@ -123,24 +123,24 @@ If unsure how to implement a feature:
 
    ```bash
    # Search for keywords
-   grep -r "hyperlink" ~/superdoc/packages/super-editor/src/
-   grep -r "parseTable" ~/superdoc/packages/
+   grep -r "hyperlink" reference/superdoc/packages/super-editor/src/
+   grep -r "parseTable" reference/superdoc/packages/
    ```
 
 2. **Read the implementation:**
 
    ```bash
-   cat ~/superdoc/packages/super-editor/src/core/converters/v2/importer/...
+   cat reference/superdoc/packages/super-editor/src/core/converters/v2/importer/...
    ```
 
 3. **Understand the approach, then write your own code**
 
 **Key SuperDoc locations:**
 
-- DOCX parsing: `~/superdoc/packages/super-editor/src/core/converters/`
-- Style resolution: `~/superdoc/packages/style-engine/src/`
-- Layout: `~/superdoc/packages/layout-engine/`
-- Font handling: `~/superdoc/shared/font-utils/`
+- DOCX parsing: `reference/superdoc/packages/super-editor/src/core/converters/`
+- Style resolution: `reference/superdoc/packages/style-engine/src/`
+- Layout: `reference/superdoc/packages/layout-engine/`
+- Font handling: `reference/superdoc/shared/font-utils/`
 
 ---
 
@@ -153,7 +153,7 @@ If unsure how to implement a feature:
 1. **Exploring SuperDoc implementation:**
 
    ```
-   Task(subagent_type="Explore", prompt="Investigate how ~/superdoc handles table parsing. Look at the tableParser, cell merging, borders. Summarize the approach.")
+   Task(subagent_type="Explore", prompt="Investigate how reference/superdoc handles table parsing. Look at the tableParser, cell merging, borders. Summarize the approach.")
    ```
 
 2. **Understanding OOXML structure:**
@@ -165,12 +165,12 @@ If unsure how to implement a feature:
 3. **Researching a specific feature:**
 
    ```
-   Task(subagent_type="Explore", prompt="How does SuperDoc handle theme color resolution? Find the relevant code in ~/superdoc and explain the approach.")
+   Task(subagent_type="Explore", prompt="How does SuperDoc handle theme color resolution? Find the relevant code in reference/superdoc and explain the approach.")
    ```
 
 4. **Comparing implementations:**
    ```
-   Task(subagent_type="Explore", prompt="Compare how ~/superdoc handles hyperlinks vs bookmarks. What's the difference in parsing and rendering?")
+   Task(subagent_type="Explore", prompt="Compare how reference/superdoc handles hyperlinks vs bookmarks. What's the difference in parsing and rendering?")
    ```
 
 **Benefits:**

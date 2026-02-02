@@ -1,6 +1,6 @@
 # Development Plan - EigenPal DOCX Editor
 
-**IMPORTANT:** Custom implementation. Reference `~/superdoc` for OOXML understanding. No SuperDoc imports.
+**IMPORTANT:** Custom implementation. Reference `reference/superdoc` for OOXML understanding. No SuperDoc imports.
 
 ## Development Approach
 
@@ -1631,7 +1631,7 @@ This plan is **exploratory and dynamic**. DOCX/OOXML is complex - we discover st
 - No headers/footers rendered
 - No table editing UI
 
-**Approach:** Use `~/superdoc` as reference only - implement everything ourselves.
+**Approach:** Use `reference/superdoc` as reference only - implement everything ourselves.
 
 ---
 

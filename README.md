@@ -79,7 +79,7 @@ Each iteration ralph spawns a fresh Claude Code session. Claude:
 
 1. Reads `.ralph/fix_plan.md`, finds the first unchecked task
 2. Reads `prd.json` for that task's full description and acceptance criteria
-3. Investigates `~/superdoc` source for SuperDoc API details (not guessing)
+3. Investigates `reference/superdoc` source for SuperDoc API details (not guessing)
 4. Implements the task, runs `bun build` to verify
 5. On success: checks off the task in `fix_plan.md`, commits, logs learnings to `progress.txt`
 6. Outputs a `RALPH_STATUS` block — ralph's exit detector reads `exit_signal: true` when all tasks are done

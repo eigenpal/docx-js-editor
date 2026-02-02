@@ -37,3 +37,9 @@ screenshots/
 
 # Lock files (optional - uncomment if you want to track)
 # bun.lock
+
+# Reference documentation (large files - can be re-downloaded)
+reference/ecma-376/*.zip
+
+# Local-only: SuperDoc symlink (not committed - each dev sets up locally)
+reference/superdoc

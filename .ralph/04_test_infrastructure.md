@@ -14,7 +14,7 @@ bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --wo
 2. Use `--grep "<pattern>"` - run only relevant tests
 3. Use `--workers=4` - parallel execution
 4. Never run all 500+ tests unless final validation
-5. Reference `~/superdoc` for concepts (DO NOT COPY CODE)
+5. Reference `reference/superdoc` for concepts (DO NOT COPY CODE)
 
 ---
 
@@ -140,13 +140,13 @@ bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --wo
 
 **These bugs break Word-like rendering. Must fix for production.**
 
-- [ ] **Fix paragraph indentation parsing** - "Miesto:" and "Dátum a čas:" should be left-aligned, but appear centered/indented. Check `w:ind` (indent) parsing in paragraphParser.ts. The `left`, `firstLine`, `hanging` attributes are likely not being applied correctly. Compare with Word's actual XML. Reference `~/superdoc` paragraph formatting (DO NOT COPY CODE). Verify: Load sample DOCX, check paragraphs render left-aligned as in Word.
+- [ ] **Fix paragraph indentation parsing** - "Miesto:" and "Dátum a čas:" should be left-aligned, but appear centered/indented. Check `w:ind` (indent) parsing in paragraphParser.ts. The `left`, `firstLine`, `hanging` attributes are likely not being applied correctly. Compare with Word's actual XML. Reference `reference/superdoc` paragraph formatting (DO NOT COPY CODE). Verify: Load sample DOCX, check paragraphs render left-aligned as in Word.
 
 - [ ] **Fix tab stops rendering** - Word uses `w:tab` elements and `w:tabs` definitions for alignment (like aligning colons). Currently tabs may render as spaces or not at all. Check tabParser.ts and Tab.tsx component. Tab stops have positions (in twips) and alignment types (left, center, right, decimal). Verify: Tab-aligned text matches Word layout.
 
 - [ ] **Fix missing spaces around template variables** - Text like "spoločnosti{businessLine_company}(ďalej" is missing spaces. This may be a run parsing issue where whitespace between runs is lost, OR a rendering issue where runs aren't separated. Check runParser.ts for whitespace handling. Verify: Spaces preserved around {{variables}}.
 
-- [ ] **Fix page structure/layout** - Editor doesn't show page boundaries, margins, or proper page dimensions like Word. Need to implement page layout with visible page borders, white page on gray background, proper margins. Check `~/superdoc` layout-engine for concepts. Files: Editor.tsx, pageLayout.ts. Verify: Pages render with visible boundaries.
+- [ ] **Fix page structure/layout** - Editor doesn't show page boundaries, margins, or proper page dimensions like Word. Need to implement page layout with visible page borders, white page on gray background, proper margins. Check `reference/superdoc` layout-engine for concepts. Files: Editor.tsx, pageLayout.ts. Verify: Pages render with visible boundaries.
 
 - [ ] **Implement headers/footers rendering** - Headers and footers from DOCX are not displayed. Need to parse header*.xml/footer*.xml and render at top/bottom of each page. Check headerFooterParser.ts exists, wire it to page rendering. Verify: Headers/footers appear on pages.
 
@@ -154,7 +154,7 @@ bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --wo
 
 ## PHASE 11B: CRITICAL - Multi-Selection Bug
 
-- [ ] **Fix multi-selection across different formatting** - When selecting text that spans multiple runs with different formatting (e.g., "normal **bold** normal"), the selection breaks or formatting operations fail. Debug `getSelectionRange()` in AIEditor.tsx. Check how selection is calculated when anchor and focus are in different runs. Reference `~/superdoc`'s selection handling for concepts (DO NOT COPY CODE). Verify: `npx playwright test --grep "partial" --timeout=30000 --workers=4`
+- [ ] **Fix multi-selection across different formatting** - When selecting text that spans multiple runs with different formatting (e.g., "normal **bold** normal"), the selection breaks or formatting operations fail. Debug `getSelectionRange()` in AIEditor.tsx. Check how selection is calculated when anchor and focus are in different runs. Reference `reference/superdoc`'s selection handling for concepts (DO NOT COPY CODE). Verify: `npx playwright test --grep "partial" --timeout=30000 --workers=4`
 
 ---
 
@@ -223,4 +223,4 @@ bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --wo
 - Functional fixes (Phase 4-11) may require deeper investigation
 - Each task should be verified before moving to next
 - If deeper issues found, document in progress.txt and adapt
-- **Reference ~/superdoc for concepts but DO NOT COPY CODE** - legal protection
+- **Reference reference/superdoc for concepts but DO NOT COPY CODE** - legal protection
