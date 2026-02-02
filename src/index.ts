@@ -68,6 +68,16 @@ export {
 } from './utils/processTemplate';
 
 // ============================================================================
+// DOCUMENT CREATION
+// ============================================================================
+
+export {
+  createEmptyDocument,
+  createDocumentWithText,
+  type CreateEmptyDocumentOptions,
+} from './utils/createDocument';
+
+// ============================================================================
 // FONT LOADER
 // ============================================================================
 

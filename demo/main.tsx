@@ -15,6 +15,7 @@ import {
   DocxEditor,
   type DocxEditorRef,
   createMockAIHandler,
+  createEmptyDocument,
   type AIActionRequest,
   type AgentResponse,
   type Document,
@@ -26,8 +27,11 @@ import {
 
 function DemoApp() {
   const editorRef = useRef<DocxEditorRef>(null);
+  const [currentDocument, setCurrentDocument] = useState<Document | null>(() =>
+    createEmptyDocument()
+  );
   const [documentBuffer, setDocumentBuffer] = useState<ArrayBuffer | null>(null);
-  const [fileName, setFileName] = useState<string>('');
+  const [fileName, setFileName] = useState<string>('Untitled.docx');
   const [status, setStatus] = useState<string>('');
   const [lastAction, setLastAction] = useState<string>('');
 
@@ -40,6 +44,14 @@ function DemoApp() {
     return response;
   }, []);
 
+  // Handle new document
+  const handleNewDocument = useCallback(() => {
+    setCurrentDocument(createEmptyDocument());
+    setDocumentBuffer(null);
+    setFileName('Untitled.docx');
+    setStatus('');
+  }, []);
+
   // Handle file selection
   const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -48,6 +60,7 @@ function DemoApp() {
     try {
       setStatus('Loading...');
       const buffer = await file.arrayBuffer();
+      setCurrentDocument(null); // Clear document state so buffer takes precedence
       setDocumentBuffer(buffer);
       setFileName(file.name);
       setStatus('');
@@ -120,7 +133,10 @@ function DemoApp() {
             />
             Open DOCX
           </label>
-          <button style={styles.button} onClick={handleSave} disabled={!documentBuffer}>
+          <button style={styles.newButton} onClick={handleNewDocument}>
+            New
+          </button>
+          <button style={styles.button} onClick={handleSave}>
             Save
           </button>
           {status && <span style={styles.status}>{status}</span>}
@@ -130,49 +146,20 @@ function DemoApp() {
 
       {/* Editor */}
       <main style={styles.main}>
-        {documentBuffer ? (
-          <DocxEditor
-            ref={editorRef}
-            documentBuffer={documentBuffer}
-            onAgentRequest={mockAIHandler}
-            onChange={handleDocumentChange}
-            onError={handleError}
-            onFontsLoaded={handleFontsLoaded}
-            showToolbar={true}
-            showVariablePanel={true}
-            showZoomControl={true}
-            initialZoom={1.0}
-            variablePanelPosition="right"
-          />
-        ) : (
-          <div style={styles.emptyState}>
-            <svg
-              width="80"
-              height="80"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#ccc"
-              strokeWidth="1.5"
-            >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <line x1="10" y1="9" x2="8" y2="9" />
-            </svg>
-            <h2 style={styles.emptyTitle}>No Document Loaded</h2>
-            <p style={styles.emptyText}>Click "Open DOCX" to load a document</p>
-            <p style={styles.emptyHint}>Features:</p>
-            <ul style={styles.featureList}>
-              <li>Full text formatting (bold, italic, underline, etc.)</li>
-              <li>Paragraph styles and alignment</li>
-              <li>Tables, images, and shapes</li>
-              <li>Template variables (&#123;&#123;variable&#125;&#125;)</li>
-              <li>Right-click for AI actions</li>
-              <li>Zoom control</li>
-            </ul>
-          </div>
-        )}
+        <DocxEditor
+          ref={editorRef}
+          document={documentBuffer ? undefined : currentDocument}
+          documentBuffer={documentBuffer}
+          onAgentRequest={mockAIHandler}
+          onChange={handleDocumentChange}
+          onError={handleError}
+          onFontsLoaded={handleFontsLoaded}
+          showToolbar={true}
+          showVariablePanel={true}
+          showZoomControl={true}
+          initialZoom={1.0}
+          variablePanelPosition="right"
+        />
       </main>
     </div>
   );
@@ -237,6 +224,16 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '8px 16px',
     background: '#fff',
     border: '1px solid #dadce0',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 500,
+  },
+  newButton: {
+    padding: '8px 16px',
+    background: '#34a853',
+    color: '#fff',
+    border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
     fontSize: '14px',
