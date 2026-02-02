@@ -5,6 +5,7 @@
 A **complete WYSIWYG DOCX editor** with full Microsoft Word fidelity:
 
 ### Document Features
+
 - **Full text formatting** - bold, italic, underline, strikethrough, superscript, subscript, small caps, highlight, colors, fonts
 - **Full paragraph formatting** - alignment, spacing, indentation, borders, shading, tabs
 - **Tables** - borders, shading, merged cells, nested tables
@@ -18,6 +19,7 @@ A **complete WYSIWYG DOCX editor** with full Microsoft Word fidelity:
 - **Page layout** - size, margins, orientation, columns
 
 ### Editor Features
+
 - **Full toolbar** - all formatting controls
 - **Font/size/color pickers**
 - **Style picker** - apply named styles
@@ -30,6 +32,7 @@ A **complete WYSIWYG DOCX editor** with full Microsoft Word fidelity:
 - **Keyboard shortcuts**
 
 ### AI/Agent Features
+
 - **DocumentAgent API** - programmatic editing
 - **Context menu** - right-click AI actions
 - **Template variables** - docxtemplater integration
@@ -68,6 +71,7 @@ A **complete WYSIWYG DOCX editor** with full Microsoft Word fidelity:
 ```
 
 **Quick searches:**
+
 ```bash
 # Find how they parse something
 grep -r "w:hyperlink" ~/superdoc/packages/
@@ -103,6 +107,7 @@ Subagents return concise summaries you can act on.
 ## OOXML Quick Reference
 
 ### Namespaces
+
 - `w:` - WordprocessingML (main content)
 - `a:` - DrawingML (graphics)
 - `r:` - Relationships
@@ -111,40 +116,41 @@ Subagents return concise summaries you can act on.
 - `m:` - Math
 
 ### Key Elements
-| Element | Purpose |
-|---------|---------|
-| `w:document` | Root document |
-| `w:body` | Main content |
-| `w:p` | Paragraph |
-| `w:pPr` | Paragraph properties |
-| `w:r` | Run (text with formatting) |
-| `w:rPr` | Run properties |
-| `w:t` | Text content |
-| `w:tbl` | Table |
-| `w:hyperlink` | Hyperlink |
-| `w:drawing` | Image/shape container |
-| `w:fldSimple` | Simple field |
-| `w:sectPr` | Section properties |
 
-*(Add discoveries as you explore)*
+| Element       | Purpose                    |
+| ------------- | -------------------------- |
+| `w:document`  | Root document              |
+| `w:body`      | Main content               |
+| `w:p`         | Paragraph                  |
+| `w:pPr`       | Paragraph properties       |
+| `w:r`         | Run (text with formatting) |
+| `w:rPr`       | Run properties             |
+| `w:t`         | Text content               |
+| `w:tbl`       | Table                      |
+| `w:hyperlink` | Hyperlink                  |
+| `w:drawing`   | Image/shape container      |
+| `w:fldSimple` | Simple field               |
+| `w:sectPr`    | Section properties         |
+
+_(Add discoveries as you explore)_
 
 ---
 
 ## Discoveries
 
-*(Document unexpected DOCX structures here as found)*
+_(Document unexpected DOCX structures here as found)_
 
 ---
 
 ## Font Mappings
 
-| DOCX Font | Google Font | CSS Fallback |
-|-----------|-------------|--------------|
-| Calibri | Carlito | Carlito, Calibri, sans-serif |
-| Cambria | Caladea | Caladea, Cambria, serif |
-| Arial | Arimo | Arimo, Arial, sans-serif |
-| Times New Roman | Tinos | Tinos, Times New Roman, serif |
-| Courier New | Cousine | Cousine, Courier New, monospace |
+| DOCX Font       | Google Font | CSS Fallback                    |
+| --------------- | ----------- | ------------------------------- |
+| Calibri         | Carlito     | Carlito, Calibri, sans-serif    |
+| Cambria         | Caladea     | Caladea, Cambria, serif         |
+| Arial           | Arimo       | Arimo, Arial, sans-serif        |
+| Times New Roman | Tinos       | Tinos, Times New Roman, serif   |
+| Courier New     | Cousine     | Cousine, Courier New, monospace |
 
 ---
 
@@ -165,15 +171,15 @@ await loadFonts(['Roboto', 'Open Sans']);
     const result = await myAI.process(action, context);
     return { newText: result };
   }}
-/>
+/>;
 
 // Programmatic API
 const agent = new DocumentAgent(buffer);
 agent.getText();
 agent.getWordCount();
-agent.insertText(pos, "Hello", { bold: true });
+agent.insertText(pos, 'Hello', { bold: true });
 agent.insertTable(pos, 3, 4);
-agent.applyStyle(range, "Heading 1");
+agent.applyStyle(range, 'Heading 1');
 const newBuffer = await agent.toBuffer();
 ```
 
@@ -186,16 +192,19 @@ const newBuffer = await agent.toBuffer();
 ## Progress Log
 
 ### Session Start
+
 **Date:** 2026-02-01
 **Status:** Comprehensive 91-task plan across 14 phases
 
 ---
 
 ### US-01: Project scaffold
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Verified existing project scaffold meets all acceptance criteria:
+
 - package.json with correct deps (no superdoc): ✓
 - tsconfig.json with jsx: react-jsx: ✓
 - src/index.ts entry point: ✓
@@ -204,16 +213,19 @@ Verified existing project scaffold meets all acceptance criteria:
 ---
 
 ### US-02: DOCX exploration utility
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/explorer.ts` with:
+
 - `exploreDocx(buffer): Promise<DocxExploration>` - Main exploration function
 - `extractXml(exploration, path, format?)` - Extract and format XML files
 - `printExplorationSummary(exploration)` - Console output for debugging
 - `getKeyFiles(exploration)` - Quick check for key DOCX components
 
 **DocxExploration interface includes:**
+
 - `fileCount` - Total files in ZIP
 - `totalSize` - Uncompressed size
 - `files` - Array of DocxFileInfo with path, size, type flags
@@ -221,6 +233,7 @@ Created `src/docx/explorer.ts` with:
 - `xmlCache` - Pre-loaded XML content for quick access
 
 **Key DOCX structure detected:**
+
 - `[Content_Types].xml` - Content type declarations
 - `word/document.xml` - Main document content
 - `word/styles.xml` - Style definitions
@@ -235,54 +248,67 @@ Created `src/docx/explorer.ts` with:
 ---
 
 ### US-03: Comprehensive document types
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/types/document.ts` with comprehensive TypeScript types for full DOCX representation:
 
 **Core Types:**
+
 - `Document`, `DocxPackage`, `DocumentBody`, `Section`
 - `SectionProperties` (page size, margins, borders, columns, headers/footers)
 
 **Paragraph & Text:**
+
 - `Paragraph`, `ParagraphFormatting` (alignment, spacing, indent, borders, shading, tabs, keepNext, keepLines, widowControl, bidi, numPr)
 - `Run`, `TextFormatting` (bold, italic, underline, strike, dstrike, superscript/subscript, smallCaps, allCaps, highlight, shading, color, fontSize, fontFamily, spacing, effects)
 - `RunContent`, `TextContent`, `TabContent`, `BreakContent`, `SymbolContent`
 
 **Links & Bookmarks:**
+
 - `Hyperlink`, `BookmarkStart`, `BookmarkEnd`
 
 **Fields:**
+
 - `Field`, `SimpleField`, `ComplexField`, `FieldType` (PAGE, NUMPAGES, DATE, DOCPROPERTY, REF, TOC, etc.)
 
 **Tables:**
+
 - `Table`, `TableRow`, `TableCell`
 - `TableFormatting`, `TableRowFormatting`, `TableCellFormatting`
 - `TableBorders`, `CellMargins`, `TableLook`, `FloatingTableProperties`
 - `ConditionalFormatStyle` for table style conditional formatting
 
 **Images:**
+
 - `Image`, `ImageSize`, `ImageWrap`, `ImagePosition`, `ImageTransform`, `ImagePadding`
 
 **Shapes:**
+
 - `Shape`, `ShapeType` (rect, ellipse, line, arrows, flowcharts, etc.)
 - `ShapeFill`, `ShapeOutline`, `ShapeTextBody`
 
 **Text Boxes:**
+
 - `TextBox` with size, position, fill, outline, and content
 
 **Lists:**
+
 - `NumberingDefinitions`, `AbstractNumbering`, `NumberingInstance`
 - `ListLevel`, `NumberFormat`, `ListRendering`
 
 **Headers/Footers:**
+
 - `HeaderFooter`, `HeaderReference`, `FooterReference`, `HeaderFooterType`
 
 **Footnotes/Endnotes:**
+
 - `Footnote`, `Endnote`, `FootnoteReference`
 - `FootnoteProperties`, `EndnoteProperties`
 
 **Supporting Types:**
+
 - `Theme`, `ThemeColor`, `ThemeColorScheme`, `ThemeFontScheme`
 - `Style`, `StyleDefinitions`, `DocDefaults`, `StyleType`
 - `FontTable`, `FontInfo`
@@ -294,6 +320,7 @@ Created `src/types/index.ts` to export all types.
 ---
 
 ### Fresh Start
+
 **Date:** 2026-02-01
 **Status:** Source files were deleted - restarting from US-01
 
@@ -302,15 +329,18 @@ Previous implementations were lost. Starting fresh with clean implementation.
 ---
 
 ### US-01: Project scaffold (Fresh)
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Recreated project scaffold:
+
 - `src/index.ts` - Main entry point with version export
 - `src/types/index.ts` - Types barrel export (placeholder)
 - `src/main.tsx` - React app entry point for demo
 
 **Verified:**
+
 - package.json has correct deps (no superdoc): ✓
 - tsconfig.json with jsx: react-jsx: ✓
 - src/index.ts entry point: ✓
@@ -319,10 +349,12 @@ Recreated project scaffold:
 ---
 
 ### US-02: DOCX exploration utility (Fresh)
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 `src/docx/explorer.ts` exists with:
+
 - `exploreDocx(buffer): Promise<DocxExploration>` - Main exploration function
 - `extractXml(exploration, path, format?)` - Extract and format XML files
 - `printExplorationSummary(exploration)` - Console output for debugging
@@ -332,29 +364,36 @@ Recreated project scaffold:
 - `getMediaPaths(exploration)` - List all media paths
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-03: Comprehensive document types (Fresh)
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/types/document.ts` with comprehensive TypeScript types (~1500 lines):
 
 **Color & Styling Primitives:**
+
 - `ThemeColorSlot`, `ColorValue`, `BorderSpec`, `ShadingProperties`
 
 **Text Formatting (rPr):**
+
 - `TextFormatting` with: bold, italic, underline (with styles), strike, doubleStrike, vertAlign (superscript/subscript), smallCaps, allCaps, hidden, color, highlight, shading, fontSize, fontFamily (with theme support), spacing, position, scale, kerning, effects, rtl, cs, styleId
 
 **Paragraph Formatting (pPr):**
+
 - `ParagraphFormatting` with: alignment, bidi, spacing (before/after/line), indentation (left/right/firstLine/hanging), borders (top/bottom/left/right/between/bar), shading, tabs, keepNext, keepLines, widowControl, pageBreakBefore, numPr, outlineLevel, styleId, frame properties
 
 **Run Content Types:**
+
 - `TextContent`, `TabContent`, `BreakContent`, `SymbolContent`, `NoteReferenceContent`, `FieldCharContent`, `InstrTextContent`, `SoftHyphenContent`, `NoBreakHyphenContent`, `DrawingContent`, `ShapeContent`
 
 **Document Elements:**
+
 - `Run`, `Hyperlink`, `BookmarkStart`, `BookmarkEnd`
 - `SimpleField`, `ComplexField` with all `FieldType` values
 - `Image` with size, wrap, position, transform, padding
@@ -362,25 +401,30 @@ Created `src/types/document.ts` with comprehensive TypeScript types (~1500 lines
 - `TextBox`
 
 **Tables:**
+
 - `Table`, `TableRow`, `TableCell`
 - `TableFormatting`, `TableRowFormatting`, `TableCellFormatting`
 - `TableBorders`, `CellMargins`, `TableLook`, `FloatingTableProperties`
 
 **Lists & Numbering:**
+
 - `ListLevel`, `AbstractNumbering`, `NumberingInstance`
 - `NumberingDefinitions`, `ListRendering`
 - All `NumberFormat` types
 
 **Headers, Footers, Notes:**
+
 - `HeaderFooter`, `HeaderReference`, `FooterReference`
 - `Footnote`, `Endnote`, `FootnoteProperties`, `EndnoteProperties`
 
 **Document Structure:**
+
 - `Paragraph`, `ParagraphContent`
 - `Section`, `SectionProperties` (page size, margins, columns, headers/footers, line numbers, page borders, background)
 - `DocumentBody`, `BlockContent`
 
 **Supporting Types:**
+
 - `Style`, `DocDefaults`, `StyleDefinitions`
 - `Theme`, `ThemeColorScheme`, `ThemeFontScheme`
 - `FontInfo`, `FontTable`
@@ -391,17 +435,20 @@ Created `src/types/document.ts` with comprehensive TypeScript types (~1500 lines
 Updated `src/types/index.ts` to export all types.
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-04: Google Fonts loader
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/utils/fontLoader.ts` with:
 
 **Main Functions:**
+
 - `loadFont(fontFamily, options?)` - Load a single font from Google Fonts
 - `loadFonts(families, options?)` - Load multiple fonts in parallel
 - `isFontLoaded(fontFamily)` - Check if a font is loaded
@@ -410,11 +457,13 @@ Created `src/utils/fontLoader.ts` with:
 - `getLoadedFonts()` - Get list of all loaded fonts
 
 **Additional Utilities:**
+
 - `canRenderFont(fontFamily)` - Canvas-based font availability detection
 - `loadFontFromBuffer(fontFamily, buffer, options?)` - Load font from raw buffer (for embedded DOCX fonts)
 - `preloadCommonFonts()` - Preload common document fonts (Carlito, Caladea, Arimo, Tinos, Cousine)
 
 **Features:**
+
 - Uses Google Fonts CSS2 API with `display=swap`
 - Tracks loaded fonts to avoid duplicate requests
 - Tracks loading state with promises for concurrent requests
@@ -423,20 +472,24 @@ Created `src/utils/fontLoader.ts` with:
 - Timeout handling for slow loads
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-05: Font family resolver
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/utils/fontResolver.ts` with:
 
 **Main Function:**
+
 - `resolveFontFamily(docxFontName)` - Returns `{ googleFont, cssFallback, originalFont, hasGoogleEquivalent }`
 
 **Font Mappings (Microsoft → Google):**
+
 - Calibri → Carlito
 - Cambria → Caladea
 - Arial → Arimo
@@ -450,6 +503,7 @@ Created `src/utils/fontResolver.ts` with:
 - CJK fonts → Noto font family
 
 **Helper Functions:**
+
 - `resolveThemeFont(themeRef, fontScheme)` - Resolve theme font references (majorAscii, minorHAnsi, etc.)
 - `getGoogleFontsToLoad(docxFonts)` - Get unique Google Font names to load
 - `buildFontFamilyString(fonts, category)` - Build CSS font-family with proper quoting
@@ -457,27 +511,32 @@ Created `src/utils/fontResolver.ts` with:
 - `hasGoogleFontEquivalent(docxFontName)` - Check if mapping exists
 
 **Features:**
+
 - Detects font category (serif/sans-serif/monospace) from font name
 - Proper CSS font-family quoting
 - Default fallback stacks by category
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-06: Font extraction from DOCX
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/utils/fontExtractor.ts` with:
 
 **Main Functions:**
+
 - `extractFonts(doc)` - Extract all fonts from a parsed Document
 - `extractFontsFromPackage(pkg)` - Extract fonts from DocxPackage (before full parsing)
 - `getFontSummary(doc)` - Get categorized font usage (theme, styles, body)
 
 **Scans For Fonts In:**
+
 - Theme (majorFont, minorFont) from theme1.xml
 - Style definitions (docDefaults, each style's rPr)
 - Document body (paragraphs, tables)
@@ -486,26 +545,31 @@ Created `src/utils/fontExtractor.ts` with:
 - Hyperlinks and fields
 
 **Font Sources:**
+
 - w:rFonts (ascii, hAnsi, eastAsia, cs)
 - Theme font scheme (latin, ea, cs fonts)
 - Font table (fontTable.xml)
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-07: XML parser utilities
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/xmlParser.ts` with:
 
 **Core Functions:**
+
 - `parseXml(xml)` - Parse XML string to element tree using xml-js
 - `parseXmlDocument(xml)` - Parse and return root element
 
 **Element Search Functions:**
+
 - `findChild(parent, namespace, localName)` - Find first matching child
 - `findChildren(parent, namespace, localName)` - Find all matching children
 - `findChildByLocalName(parent, localName)` - Find by local name only
@@ -515,6 +579,7 @@ Created `src/docx/xmlParser.ts` with:
 - `findAllDeep(root, namespace, localName)` - Find all recursively
 
 **Attribute Functions:**
+
 - `getAttribute(element, namespace, name)` - Get attribute value
 - `getAttributeAny(element, names)` - Try multiple attribute names
 - `getAttributes(element)` - Get all attributes
@@ -522,32 +587,38 @@ Created `src/docx/xmlParser.ts` with:
 - `hasFlag(element, namespace, name)` - Check boolean attribute
 
 **Content Functions:**
+
 - `getTextContent(element)` - Get concatenated text content
 - `parseBooleanElement(element)` - Parse OOXML boolean element
 - `parseColorElement(element)` - Parse color with theme support
 
 **Namespace Support:**
+
 - All OOXML namespaces defined: w:, a:, r:, wp:, wps:, wpc:, wpg:, pic:, m:, mc:, v:, o:
 - `getLocalName(name)` - Extract local name from prefixed name
 - `getNamespacePrefix(name)` - Extract namespace prefix
 - `matchesName(element, namespace, localName)` - Check element name
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-11: Style parser with full inheritance
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/styleParser.ts` with comprehensive style parsing:
 
 **Main Functions:**
+
 - `parseStyles(stylesXml, theme)` - Returns StyleMap with resolved inheritance
 - `parseStyleDefinitions(stylesXml, theme)` - Returns full StyleDefinitions including docDefaults
 
 **Style Parsing:**
+
 - Parses all style types: paragraph, character, table, numbering
 - Parses complete run properties (w:rPr): bold, italic, underline, strike, vertAlign, caps, color, highlight, shading, fontSize, fontFamily with theme refs, spacing, effects, etc.
 - Parses complete paragraph properties (w:pPr): alignment, spacing, indentation, borders, shading, tabs, keepNext/Lines, numPr, outlineLevel, etc.
@@ -557,41 +628,49 @@ Created `src/docx/styleParser.ts` with comprehensive style parsing:
 - Parses conditional table formatting (w:tblStylePr)
 
 **Inheritance Resolution:**
+
 - `resolveStyleInheritance()` - Fully resolves basedOn chains
 - `mergeTextFormatting()` - Deep merge for run properties
 - `mergeParagraphFormatting()` - Deep merge for paragraph properties
 - Circular inheritance protection with visited set
 
 **DocDefaults:**
+
 - `parseDocDefaults()` - Extracts default run and paragraph properties
 
 **Helper Functions:**
+
 - `getResolvedStyle(styleId, styleMap)` - Look up resolved style
 - `getDefaultParagraphStyle(styleMap)` - Get default/Normal style
 - `getDefaultCharacterStyle(styleMap)` - Get default character style
 - `getStylesByType(styleMap, type)` - Get all styles of a type
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-12: Numbering/List parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/numberingParser.ts` with comprehensive list/numbering parsing:
 
 **Main Functions:**
+
 - `parseNumbering(numberingXml: string | null): NumberingMap` - Main parsing function
 
 **NumberingMap Interface:**
+
 - `definitions` - Raw NumberingDefinitions with abstractNums and nums arrays
 - `getLevel(numId, ilvl)` - Get level info for a numId and ilvl (with override resolution)
 - `getAbstract(abstractNumId)` - Get abstract numbering by ID
 - `hasNumbering(numId)` - Check if numId exists
 
 **Parses All OOXML Structures:**
+
 - `w:abstractNum` - Abstract numbering definitions with all levels (0-8)
 - `w:num` - Numbering instances referencing abstractNum
 - `w:lvl` - Level definitions with:
@@ -609,38 +688,45 @@ Created `src/docx/numberingParser.ts` with comprehensive list/numbering parsing:
 - `w:lvlOverride` - Level overrides in num instances with startOverride or full lvl redefinition
 
 **Number Formats Supported:**
+
 - All standard formats: decimal, upperRoman, lowerRoman, upperLetter, lowerLetter
 - Special formats: ordinal, cardinalText, ordinalText, bullet, none
 - CJK formats: ideographDigital, japaneseCounting, aiueo, iroha, and many more
 - International formats: hebrew, arabic, hindi, thai, russian, vietnamese, korean
 
 **Helper Functions:**
+
 - `formatNumber(num, format)` - Format a number according to NumberFormat
 - `renderListMarker(lvlText, counters, formats)` - Render marker text with placeholders
 - `getBulletCharacter(level)` - Get bullet character for bullet levels
 - `isBulletLevel(level)` - Check if level is bullet (not numbered)
 
 **Internal Utilities:**
+
 - `toRoman(num)` - Convert to Roman numerals
 - `toLetter(num)` - Convert to letter (a, b, ... z, aa, ab, ...)
 - `toOrdinal(num)` - Convert to ordinal (1st, 2nd, 3rd, ...)
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-13: Run parser with full formatting
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/runParser.ts` with comprehensive run parsing:
 
 **Main Functions:**
+
 - `parseRun(node, styles, theme): Run` - Main parsing function
 - `parseRunProperties(rPr, theme, styles): TextFormatting` - Parse w:rPr element
 
 **Parses ALL Run Properties (w:rPr):**
+
 - w:b (bold), w:bCs (bold complex script)
 - w:i (italic), w:iCs (italic complex script)
 - w:u (underline with style and color)
@@ -664,6 +750,7 @@ Created `src/docx/runParser.ts` with comprehensive run parsing:
 - w:rStyle (character style reference)
 
 **Parses All Run Content Types:**
+
 - w:t (text content with space preservation)
 - w:tab (tab characters)
 - w:br (line/page/column breaks)
@@ -676,6 +763,7 @@ Created `src/docx/runParser.ts` with comprehensive run parsing:
 - w:cr (carriage return)
 
 **Helper Functions:**
+
 - `getRunText(run)` - Get plain text from a run
 - `hasContent(run)` - Check if run has visible content
 - `hasImage(run)` - Check if run contains an image
@@ -684,21 +772,25 @@ Created `src/docx/runParser.ts` with comprehensive run parsing:
 - `getFieldCharType(run)` - Get field character type
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-14: Paragraph parser with full formatting
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/paragraphParser.ts` with comprehensive paragraph parsing:
 
 **Main Functions:**
+
 - `parseParagraph(node, styles, theme, numbering): Paragraph` - Main parsing function
 - `parseParagraphProperties(pPr, theme, styles): ParagraphFormatting` - Parse w:pPr element
 
 **Parses ALL Paragraph Properties (w:pPr):**
+
 - w:jc (alignment: left, center, right, both/justify, distribute)
 - w:bidi (right-to-left text direction)
 - w:spacing (before, after, line, lineRule, beforeAutospacing, afterAutospacing)
@@ -715,6 +807,7 @@ Created `src/docx/paragraphParser.ts` with comprehensive paragraph parsing:
 - w:rPr (default run properties for paragraph)
 
 **Parses All Paragraph Content Types:**
+
 - w:r (runs via parseRun)
 - w:hyperlink (with rId, anchor, tooltip, target, history, docLocation)
 - w:bookmarkStart, w:bookmarkEnd (bookmark markers with id, name, column info)
@@ -722,15 +815,18 @@ Created `src/docx/paragraphParser.ts` with comprehensive paragraph parsing:
 - Complex fields (w:fldChar begin/separate/end with w:instrText) - properly tracked and assembled
 
 **Field Type Detection:**
+
 - Recognizes all OOXML field types: PAGE, NUMPAGES, DATE, TIME, REF, HYPERLINK, TOC, MERGEFIELD, etc.
 - Parses field instructions to determine type
 - Tracks field lock and dirty states
 
 **List Rendering Computation:**
+
 - If paragraph has numPr, looks up numbering level from NumberingMap
 - Populates listRendering with: isListItem, level, marker, isBullet, indent, hanging
 
 **Utility Functions:**
+
 - `getParagraphText(paragraph)` - Get plain text from paragraph (including hyperlinks and fields)
 - `isEmptyParagraph(paragraph)` - Check if paragraph has no visible content
 - `isListItem(paragraph)` - Check if paragraph is a list item
@@ -739,45 +835,54 @@ Created `src/docx/paragraphParser.ts` with comprehensive paragraph parsing:
 - `getTemplateVariable(paragraph)` - Extract {{variable}} from text
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-15: Tab stop parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/tabParser.ts` with comprehensive tab stop handling:
 
 **Main Functions:**
+
 - `parseTabStop(tab)` - Parse a single tab stop element (w:tab within w:tabs)
 - `parseTabStops(tabs)` - Parse tab stops container (w:tabs), returns sorted array
 - `parseTabStopsFromParagraphProperties(pPr)` - Parse tabs from w:pPr element
 
 **Tab Stop Resolution:**
+
 - `mergeTabStops(styleTabs, directTabs)` - Merge tabs from style and direct formatting
 - `getNextTabStop(currentPosition, tabStops, pageWidth)` - Get next tab stop for position
 - `findTabStopAtPosition(position, tabStops)` - Find tab at specific position
 
 **Width Calculation:**
+
 - `calculateTabWidth(currentPosition, tabStops, pageWidth)` - Simple width calculation
 - `calculateTabWidthWithAlignment(...)` - Width considering alignment (center, right, decimal)
 
 **Leader Character Utilities:**
+
 - `getLeaderCharacter(leader)` - Get the fill character (dot, hyphen, underscore, middleDot)
 - `hasVisibleLeader(leader)` - Check if leader needs visible characters
 - `generateLeaderString(leader, widthInChars)` - Generate leader fill string
 
 **Default Tab Stops:**
+
 - `generateDefaultTabStops(pageWidth, interval)` - Generate implicit tab stops
 - `getEffectiveTabStops(explicitTabs, pageWidth)` - Combine explicit and default tabs
 - `DEFAULT_TAB_INTERVAL_TWIPS` = 720 (0.5 inches)
 
 **Validation:**
+
 - `isValidTabAlignment(value)` - Type guard for TabStopAlignment
 - `isValidTabLeader(value)` - Type guard for TabLeader
 
 **OOXML Reference:**
+
 - Tab stops are defined in `w:tabs` element within `w:pPr`
 - Each `w:tab` has: `w:val` (alignment), `w:pos` (position in twips), `w:leader` (optional)
 - Alignment types: left, center, right, decimal, bar, clear, num
@@ -785,31 +890,36 @@ Created `src/docx/tabParser.ts` with comprehensive tab stop handling:
 - Tab characters in runs are `w:tab` (different from tab stop definitions)
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-16: Hyperlink parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/hyperlinkParser.ts` with comprehensive hyperlink parsing:
 
 **Main Function:**
+
 - `parseHyperlink(node, rels, styles?, theme?): Hyperlink` - Parse w:hyperlink element with URL resolution
 
 **Features:**
+
 - Resolves r:id to actual URL via RelationshipMap
 - External links: Uses r:id → looks up in rels → gets target URL (for External targetMode)
 - Internal links: Uses w:anchor → creates #anchor href for bookmark links
 - Extracts tooltip (w:tooltip attribute)
-- Extracts target frame (w:tgtFrame - _blank, _self, etc.)
+- Extracts target frame (w:tgtFrame - \_blank, \_self, etc.)
 - Extracts history tracking (w:history)
 - Extracts document location (w:docLocation)
 - Parses child runs for display text
 - Handles nested bookmarks within hyperlinks
 
 **Utility Functions:**
+
 - `getHyperlinkText(hyperlink)` - Get plain text from hyperlink
 - `isExternalLink(hyperlink)` - Check if URL is external (http/mailto/tel)
 - `isInternalLink(hyperlink)` - Check if link points to internal bookmark
@@ -821,36 +931,43 @@ Created `src/docx/hyperlinkParser.ts` with comprehensive hyperlink parsing:
 - `createExternalHyperlink(url, children, options?)` - Create external link
 
 **Integration:**
+
 - Updated `paragraphParser.ts` to use new `hyperlinkParser.ts` module
 - Added `rels` parameter to `parseParagraph()` function signature
 - Updated `parseParagraphContents()` to pass relationships for URL resolution
 
 **OOXML Reference:**
+
 - w:hyperlink element contains r:id (external) or w:anchor (internal)
-- External links stored in word/_rels/document.xml.rels with TargetMode="External"
+- External links stored in word/\_rels/document.xml.rels with TargetMode="External"
 - Internal links reference bookmarks by name
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-17: Bookmark parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/bookmarkParser.ts` with comprehensive bookmark parsing:
 
 **Main Functions:**
+
 - `parseBookmarkStart(node): BookmarkStart` - Parse w:bookmarkStart element
 - `parseBookmarkEnd(node): BookmarkEnd` - Parse w:bookmarkEnd element
 
 **BookmarkMap Interface:**
+
 - `byId: Map<number, BookmarkStart>` - Lookup by ID
 - `byName: Map<string, BookmarkStart>` - Lookup by name (for hyperlink resolution)
 - `bookmarks: BookmarkStart[]` - All bookmarks in document order
 
 **Bookmark Collection Functions:**
+
 - `createBookmarkMap()` - Create empty bookmark map
 - `addBookmark(map, bookmark)` - Add bookmark to map
 - `getBookmarkByName(map, name)` - Get bookmark by name
@@ -859,47 +976,56 @@ Created `src/docx/bookmarkParser.ts` with comprehensive bookmark parsing:
 - `getAllBookmarkNames(map)` - Get all bookmark names
 
 **Utility Functions:**
+
 - `isPointBookmark(start, end, contents)` - Check if bookmark is point bookmark
 - `isTableBookmark(bookmark)` - Check if bookmark has column range
 - `bookmarkToHref(name)` - Convert name to #anchor href
 - `hrefToBookmarkName(href)` - Extract name from href
 
 **Built-in Bookmark Detection:**
-- `isBuiltInBookmark(name)` - Check for Word internal bookmarks (_*)
-- `isTocBookmark(name)` - Check for _Toc* bookmarks
-- `isRefBookmark(name)` - Check for _Ref* bookmarks
+
+- `isBuiltInBookmark(name)` - Check for Word internal bookmarks (\_\*)
+- `isTocBookmark(name)` - Check for \_Toc\* bookmarks
+- `isRefBookmark(name)` - Check for \_Ref\* bookmarks
 - `getBookmarkType(name)` - Returns 'user' | 'toc' | 'ref' | 'goBack' | 'internal'
 
 **Validation:**
+
 - `validateBookmarkPairs(starts, ends)` - Check start/end matching
 - `validateBookmarkName(name)` - Validate name format (40 char limit, alphanumeric)
 
 **Integration:**
+
 - Updated `paragraphParser.ts` to import and use `bookmarkParser.ts` module
 - Delegates parseBookmarkStart/End to the new module
 
 **OOXML Reference:**
+
 - w:bookmarkStart: id (numeric), name (string), colFirst/colLast (optional)
 - w:bookmarkEnd: id (numeric, matches start)
 - Internal hyperlinks reference bookmarks via w:anchor attribute
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-18: Field parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/fieldParser.ts` with comprehensive field parsing:
 
 **Main Functions:**
+
 - `parseFieldType(instruction)` - Extract field type from instruction string
 - `parseFieldInstruction(instruction)` - Full instruction parsing with arguments and switches
 - `parseSimpleField(node, styles, theme)` - Parse w:fldSimple elements
 
 **Field Type Detection:**
+
 - All known field types defined in `KNOWN_FIELD_TYPES` constant
 - Recognizes: PAGE, NUMPAGES, DATE, TIME, CREATEDATE, SAVEDATE, PRINTDATE, EDITTIME
 - Document properties: AUTHOR, TITLE, SUBJECT, KEYWORDS, FILENAME, DOCPROPERTY
@@ -909,18 +1035,21 @@ Created `src/docx/fieldParser.ts` with comprehensive field parsing:
 - Numbering: SEQ, STYLEREF, AUTONUM
 
 **Field Instruction Parsing:**
+
 - `ParsedFieldInstruction` interface with type, raw, argument, switches
 - `FieldSwitch` interface for parsed switches
 - `getFormatSwitch(instruction)` - Get format switch (\* or \@)
 - `hasMergeFormat(instruction)` - Check for MERGEFORMAT preservation
 
 **Complex Field State Tracking:**
+
 - `ComplexFieldContext` interface for tracking parsing state
 - `createComplexFieldContext()` - Initialize new context
 - `resetComplexFieldContext(ctx)` - Reset for new field
 - `finalizeComplexField(ctx)` - Create ComplexField from context
 
 **Field Value Extraction:**
+
 - `getFieldDisplayValue(field)` - Get current display text
 - `isPageNumberField(field)` - Check if PAGE field
 - `isTotalPagesField(field)` - Check if NUMPAGES field
@@ -932,12 +1061,14 @@ Created `src/docx/fieldParser.ts` with comprehensive field parsing:
 - `isTocField(field)` - Check for TOC/index fields
 
 **Field Value Computation:**
+
 - `computePageNumber(pageNumber, instruction)` - Format page numbers
 - `formatDate(date, format)` - Format dates using OOXML format codes
 - `toRoman(num)` - Convert to Roman numerals
 - `toLetter(num)` - Convert to letter (A-Z, AA-AZ, etc.)
 
 **Field Collection Utilities:**
+
 - `collectFields(content)` - Collect all fields from content array
 - `getFieldsByType(fields, type)` - Filter fields by type
 - `getPageNumberFields(fields)` - Get all PAGE fields
@@ -945,22 +1076,26 @@ Created `src/docx/fieldParser.ts` with comprehensive field parsing:
 - `getMergeFieldNames(fields)` - Extract merge field names
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-19: Table parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/tableParser.ts` with comprehensive table parsing:
 
 **Main Functions:**
+
 - `parseTable(node, styles, theme, numbering, rels, media)` - Parse w:tbl element
 - `parseTableRow(node, styles, theme, numbering, rels, media)` - Parse w:tr element
 - `parseTableCell(node, styles, theme, numbering, rels, media)` - Parse w:tc element
 
 **Table Properties (w:tblPr):**
+
 - `parseTableProperties(element)` - Full table property parsing
 - Width, justification, cell spacing, indent
 - Table borders, default cell margins
@@ -970,12 +1105,14 @@ Created `src/docx/tableParser.ts` with comprehensive table parsing:
 - Bidirectional support
 
 **Row Properties (w:trPr):**
+
 - `parseTableRowProperties(element)` - Row property parsing
 - Row height with height rule
 - Header row, can't split
 - Row justification, hidden
 
 **Cell Properties (w:tcPr):**
+
 - `parseTableCellProperties(element)` - Cell property parsing
 - Cell width, borders, margins
 - Shading, vertical alignment
@@ -986,6 +1123,7 @@ Created `src/docx/tableParser.ts` with comprehensive table parsing:
 - Conditional format style
 
 **Supporting Parsers:**
+
 - `parseTableMeasurement(element)` - Width/height values
 - `parseBorderSpec(element)` - Individual border
 - `parseTableBorders(element)` - All borders
@@ -997,6 +1135,7 @@ Created `src/docx/tableParser.ts` with comprehensive table parsing:
 - `parseTableGrid(element)` - Column widths
 
 **Table Utilities:**
+
 - `getTableColumnCount(table)` - Count columns
 - `getTableRowCount(table)` - Count rows
 - `isCellMergeContinuation(cell)` - Check vertical merge
@@ -1008,6 +1147,7 @@ Created `src/docx/tableParser.ts` with comprehensive table parsing:
 - `isFloatingTable(table)` - Check floating
 
 **Features:**
+
 - Full cell content parsing (paragraphs, nested tables)
 - Recursive nested table support
 - Horizontal merge via gridSpan
@@ -1016,55 +1156,66 @@ Created `src/docx/tableParser.ts` with comprehensive table parsing:
 - Conditional formatting for table styles
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-20: Image parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/imageParser.ts` with comprehensive image parsing:
 
 **Main Functions:**
+
 - `parseImage(node, rels, media): Image | null` - Main entry point for image parsing
 - `parseDrawing(drawingEl, rels, media)` - Parse w:drawing element
 - `parseInline(inlineEl, rels, media)` - Parse wp:inline (inline images)
 - `parseAnchor(anchorEl, rels, media)` - Parse wp:anchor (floating images)
 
 **EMU Conversions:**
+
 - `emuToPixels(emu)` - Convert EMU to CSS pixels (914400 EMU = 1 inch, 96 DPI)
 - `pixelsToEmu(px)` - Convert pixels back to EMU
 
 **Size & Position Parsing:**
+
 - `parseExtent(extent)` - Parse wp:extent for image dimensions
 - `parseEffectExtent(effectExtent)` - Parse effect margins
 - `parsePositionH(posH)` - Parse horizontal position for anchored images
 - `parsePositionV(posV)` - Parse vertical position for anchored images
 
 **Wrap Mode Parsing:**
+
 - `parseWrapElement(wrapEl, behindDoc)` - Parse wrap mode
 - Supports: wrapNone, wrapSquare, wrapTight, wrapThrough, wrapTopAndBottom
 - Extracts wrap distances (distT, distB, distL, distR)
 - Maps to ImageWrap types: inline, square, tight, through, topAndBottom, behind, inFront
 
 **Transform Parsing:**
+
 - `parseTransform(xfrm)` - Parse a:xfrm for rotation and flip
 - Rotation in 60000ths of a degree → degrees
 
 **Blip Extraction:**
+
 - `findBlipElement(container)` - Navigate to a:blip (a:graphic → a:graphicData → pic:pic → pic:blipFill → a:blip)
 - `extractBlipRId(blip)` - Extract r:embed or r:link attribute
 
 **Media Resolution:**
+
 - `resolveImageData(rId, rels, media)` - Resolve rId to actual image data
 - `normalizeMediaPath(targetPath)` - Normalize paths to word/media/...
 - `getMimeType(path)` - Get MIME type from extension
 
 **Document Properties:**
+
 - `parseDocProps(docPr)` - Extract id, name, alt text, title, decorative flag
 
 **Utility Functions:**
+
 - `isInlineImage(image)`, `isFloatingImage(image)` - Check image type
 - `isBehindText(image)`, `isInFrontOfText(image)` - Check z-order
 - `getImageWidthPx(image)`, `getImageHeightPx(image)` - Get dimensions in pixels
@@ -1074,6 +1225,7 @@ Created `src/docx/imageParser.ts` with comprehensive image parsing:
 - `needsTextWrapping(image)` - Check if text wrapping needed
 
 **OOXML Structure Reference:**
+
 ```
 w:drawing
   └── wp:inline or wp:anchor
@@ -1093,28 +1245,33 @@ w:drawing
 ```
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-21: Shape parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/shapeParser.ts` with comprehensive shape parsing:
 
 **Main Functions:**
+
 - `parseShape(node): Shape` - Parse wps:wsp element
 - `parseShapeFromDrawing(drawingEl): Shape | null` - Parse shape from w:drawing container
 - `isShapeDrawing(drawingEl)` - Check if drawing contains a shape (not an image)
 
 **Shape Properties Parsing (wps:spPr):**
+
 - `parseShapeType(spPr)` - Extract preset geometry from a:prstGeom[@prst]
 - `parseFill(spPr, style)` - Parse fill (solid, gradient, pattern, none)
 - `parseOutline(spPr, style)` - Parse outline/stroke (color, width, style, arrows)
 - `parseTransform(xfrm)` - Parse a:xfrm for size, rotation, flip
 
 **Fill Types Supported:**
+
 - Solid fill (a:solidFill) with theme and RGB colors
 - Gradient fill (a:gradFill) with linear/radial/path types and stops
 - Pattern fill (a:pattFill)
@@ -1123,6 +1280,7 @@ Created `src/docx/shapeParser.ts` with comprehensive shape parsing:
 - Style reference fallback (wps:style/a:fillRef)
 
 **Color Parsing:**
+
 - `parseColorElement(element)` - Parse DrawingML colors
 - Theme colors (a:schemeClr) with accent1-6, dk1, lt1, dk2, lt2, etc.
 - RGB colors (a:srgbClr)
@@ -1131,6 +1289,7 @@ Created `src/docx/shapeParser.ts` with comprehensive shape parsing:
 - Color modifiers (a:shade, a:tint, a:lumMod)
 
 **Outline Parsing:**
+
 - Line width in EMUs
 - Line color (solid fill)
 - Line dash style (solid, dot, dash, etc.)
@@ -1138,6 +1297,7 @@ Created `src/docx/shapeParser.ts` with comprehensive shape parsing:
 - Arrow heads (a:headEnd, a:tailEnd) with type, width, length
 
 **Text Box Parsing:**
+
 - `parseBodyProperties(bodyPr)` - Parse wps:bodyPr
 - Vertical text direction
 - Anchor/vertical alignment (top, middle, bottom)
@@ -1146,10 +1306,12 @@ Created `src/docx/shapeParser.ts` with comprehensive shape parsing:
 - `parseTextBoxContent(txbxContent)` - Parse w:txbxContent (placeholder for paragraph parsing)
 
 **Position and Wrap (for anchored shapes):**
+
 - `parseAnchorPosition(anchor)` - Parse wp:positionH/V
 - `parseWrap(anchor)` - Parse wrap mode (none, square, tight, through, topAndBottom)
 
 **Utility Functions:**
+
 - `isLineShape(shape)` - Check if shape is a line/connector
 - `isTextBoxShape(shape)` - Check if shape is a text box
 - `hasTextContent(shape)` - Check if shape has text
@@ -1162,6 +1324,7 @@ Created `src/docx/shapeParser.ts` with comprehensive shape parsing:
 - `resolveOutlineColor(shape)` - Resolve outline to CSS color
 
 **OOXML Structure Reference:**
+
 ```
 w:drawing
   └── wp:inline or wp:anchor
@@ -1181,17 +1344,20 @@ w:drawing
 ```
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-22: Text box parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/textBoxParser.ts` with comprehensive text box parsing:
 
 **Main Functions:**
+
 - `parseTextBox(drawingEl)` - Parse text box from w:drawing element
 - `parseTextBoxFromShape(wsp, size, position?, wrap?)` - Parse from shape element directly
 - `parseTextBoxContent(txbxContent, parseParagraph, parseTable, ...)` - Parse content with external parsers
@@ -1199,10 +1365,12 @@ Created `src/docx/textBoxParser.ts` with comprehensive text box parsing:
 - `getTextBoxContentElement(wsp)` - Get w:txbxContent element from shape
 
 **Detection Functions:**
+
 - `isTextBoxDrawing(drawingEl)` - Check if drawing contains a text box
 - `isShapeTextBox(wsp)` - Check if a shape element is a text box
 
 **Parsing Components:**
+
 - Position parsing (horizontal/vertical with posOffset and alignment)
 - Wrap settings (square, tight, through, topAndBottom, behind, inFront)
 - Fill parsing (solid, gradient, none)
@@ -1210,6 +1378,7 @@ Created `src/docx/textBoxParser.ts` with comprehensive text box parsing:
 - Body properties (margins/insets)
 
 **Utility Functions:**
+
 - `getTextBoxWidthPx(textBox)`, `getTextBoxHeightPx(textBox)` - Get dimensions in pixels
 - `getTextBoxDimensionsPx(textBox)` - Get both dimensions
 - `getTextBoxMarginsPx(textBox)` - Get margins in pixels
@@ -1222,11 +1391,13 @@ Created `src/docx/textBoxParser.ts` with comprehensive text box parsing:
 - `getTextBoxOutlineWidthPx(textBox)` - Get outline width in pixels
 
 **Design Notes:**
+
 - Avoids circular dependencies by accepting parser functions as parameters
 - Content parsing delegated to document parser via `parseTextBoxContent()`
 - Uses placeholder content array that document parser fills in
 
 **OOXML Structure Reference:**
+
 ```
 w:drawing
   └── wp:inline or wp:anchor
@@ -1246,23 +1417,27 @@ w:drawing
 ```
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-23: Footnote/Endnote parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/footnoteParser.ts` with comprehensive footnote and endnote parsing:
 
 **Main Functions:**
+
 - `parseFootnotes(xml, styles?, theme?, numbering?, rels?, media?)` - Parse word/footnotes.xml
 - `parseEndnotes(xml, styles?, theme?, numbering?, rels?, media?)` - Parse word/endnotes.xml
 - `parseFootnoteProperties(element)` - Parse w:footnotePr from section properties
 - `parseEndnoteProperties(element)` - Parse w:endnotePr from section properties
 
 **FootnoteMap Interface:**
+
 - `byId: Map<number, Footnote>` - Lookup by ID
 - `footnotes: Footnote[]` - All footnotes in document order
 - `getFootnote(id)` - Get footnote by ID
@@ -1272,21 +1447,25 @@ Created `src/docx/footnoteParser.ts` with comprehensive footnote and endnote par
 - `getContinuationSeparator()` - Get continuation separator
 
 **EndnoteMap Interface:**
+
 - Same structure as FootnoteMap but for endnotes
 
 **Note Types Supported:**
+
 - `normal` - Regular footnote/endnote content
 - `separator` - Line separating notes from body text
 - `continuationSeparator` - Separator for continued notes
 - `continuationNotice` - Notice for continued notes
 
 **Properties Parsing:**
+
 - Position (pageBottom, beneathText, sectEnd, docEnd)
 - Number format (decimal, upperRoman, lowerRoman, etc.)
 - Start number (numStart)
 - Number restart (continuous, eachSect, eachPage)
 
 **Utility Functions:**
+
 - `getFootnoteText(footnote)` - Get plain text content
 - `getEndnoteText(endnote)` - Get plain text content
 - `isSeparatorFootnote(footnote)` - Check if separator type
@@ -1299,6 +1478,7 @@ Created `src/docx/footnoteParser.ts` with comprehensive footnote and endnote par
 - `mergeEndnoteMaps(...maps)` - Merge multiple endnote maps
 
 **OOXML Structure Reference:**
+
 ```
 word/footnotes.xml:
   w:footnotes
@@ -1318,33 +1498,39 @@ Note types:
 ```
 
 **Integration Notes:**
+
 - Footnote/endnote references in document body are already parsed by runParser as NoteReferenceContent
 - This parser handles the actual footnote/endnote content definitions
 - Content is parsed using paragraphParser for full formatting support
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-24: Header/Footer parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/headerFooterParser.ts` with comprehensive header and footer parsing:
 
 **Main Functions:**
-- `parseHeader(xml, hdrFtrType, styles, theme, numbering, rels, media)` - Parse word/header*.xml
-- `parseFooter(xml, hdrFtrType, styles, theme, numbering, rels, media)` - Parse word/footer*.xml
+
+- `parseHeader(xml, hdrFtrType, styles, theme, numbering, rels, media)` - Parse word/header\*.xml
+- `parseFooter(xml, hdrFtrType, styles, theme, numbering, rels, media)` - Parse word/footer\*.xml
 - `parseHeaderFooter(xml, isHeader, hdrFtrType, ...)` - Generic parser for either
 
 **Reference Parsing:**
+
 - `parseHeaderReference(element)` - Parse w:headerReference from sectPr
 - `parseFooterReference(element)` - Parse w:footerReference from sectPr
 - `parseHeaderReferences(sectPr)` - Get all header refs from section
 - `parseFooterReferences(sectPr)` - Get all footer refs from section
 
 **HeaderFooterMap Interface:**
+
 - `byId: Map<string, HeaderFooter>` - Lookup by rId
 - `get(rId)` - Get header/footer by rId
 - `has(rId)` - Check if exists
@@ -1352,12 +1538,14 @@ Created `src/docx/headerFooterParser.ts` with comprehensive header and footer pa
 - `getByType(type)` - Get by type (default, first, even)
 
 **Content Parsing:**
+
 - Parses paragraphs via `parseParagraph()`
 - Parses tables via `parseTable()`
 - Handles SDT (structured document tags) wrapper elements
 - Supports images, shapes, page number fields
 
 **Utility Functions:**
+
 - `getHeaderFooterText(hf)` - Get plain text content
 - `isEmptyHeaderFooter(hf)` - Check if empty
 - `hasPageNumberField(hf)` - Check for PAGE/NUMPAGES fields
@@ -1370,6 +1558,7 @@ Created `src/docx/headerFooterParser.ts` with comprehensive header and footer pa
 - `buildHeaderFooterMap(refs, xmlContents, ...)` - Build map from refs and content
 
 **OOXML Structure Reference:**
+
 ```
 word/header1.xml:
   w:hdr
@@ -1388,31 +1577,37 @@ sectPr references:
 ```
 
 **Header/Footer Types:**
+
 - `default` - Used for all pages unless first/even specified
 - `first` - Used only for first page of section (if enabled)
 - `even` - Used for even-numbered pages (if odd/even enabled)
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-25: Section properties parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/sectionParser.ts` with comprehensive section properties parsing:
 
 **Main Function:**
+
 - `parseSectionProperties(sectPr, rels): SectionProperties` - Parse w:sectPr element
 
 **Page Layout Parsing:**
+
 - w:pgSz (page width, height, orientation - portrait/landscape)
 - w:pgMar (all margins: top, bottom, left, right, header, footer, gutter)
 - w:cols (column count, spacing, widths, equal width, separator)
 - Individual column definitions (w:col elements)
 
 **Section Properties:**
+
 - w:type (section start: continuous, nextPage, oddPage, evenPage, nextColumn)
 - w:vAlign (vertical alignment: top, center, both, bottom)
 - w:bidi (bidirectional support)
@@ -1420,10 +1615,12 @@ Created `src/docx/sectionParser.ts` with comprehensive section properties parsin
 - w:evenAndOddHeaders (different odd/even headers)
 
 **References:**
+
 - w:headerReference parsing (default, first, even types)
 - w:footerReference parsing (default, first, even types)
 
 **Additional Properties:**
+
 - w:lnNumType (line numbers: start, countBy, distance, restart)
 - w:pgBorders (page borders: top, bottom, left, right, display, offsetFrom, zOrder)
 - w:background (page background with color and theme color support)
@@ -1432,6 +1629,7 @@ Created `src/docx/sectionParser.ts` with comprehensive section properties parsin
 - w:paperSrc (paper source for first and other pages)
 
 **Utility Functions:**
+
 - `getPageWidthPixels(props)` - Convert page width to pixels
 - `getPageHeightPixels(props)` - Convert page height to pixels
 - `getContentWidthPixels(props)` - Get content area width
@@ -1447,20 +1645,24 @@ Created `src/docx/sectionParser.ts` with comprehensive section properties parsin
 - `mergeSectionProperties(base, override)` - Merge section properties
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-26: Document body parser
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/documentParser.ts` with comprehensive document body parsing:
 
 **Main Function:**
+
 - `parseDocumentBody(xml, styles, theme, numbering, rels, media): DocumentBody`
 
 **Content Parsing:**
+
 - Parses w:document root element
 - Parses w:body content
 - Handles w:p (paragraphs via paragraphParser)
@@ -1469,16 +1671,19 @@ Created `src/docx/documentParser.ts` with comprehensive document body parsing:
 - Parses final w:sectPr (section properties at body level)
 
 **Section Building:**
+
 - `buildSections(content, finalSectPr)` - Build sections from content
 - Detects section breaks via w:pPr/w:sectPr in paragraphs
 - Creates Section objects with properties and content
 
 **Template Variable Detection:**
+
 - `extractTemplateVariables(text)` - Extract {{...}} patterns
 - `extractAllTemplateVariables(content)` - Scan all content for variables
 - Recursively scans tables for variables
 
 **Utility Functions:**
+
 - `getAllParagraphs(body)` - Flatten paragraphs (including from tables)
 - `getAllTables(body)` - Get all tables (including nested)
 - `getDocumentText(body)` - Get plain text of entire document
@@ -1490,20 +1695,24 @@ Created `src/docx/documentParser.ts` with comprehensive document body parsing:
 - `getDocumentOutline(body, maxChars, maxParagraphs)` - Get document preview
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-27: Main parser orchestrator
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/parser.ts` with complete parsing orchestration:
 
 **Main Function:**
+
 - `parseDocx(buffer, options): Promise<Document>` - Parse DOCX to Document model
 
 **Parsing Options:**
+
 - `onProgress` - Progress callback for tracking stages
 - `preloadFonts` - Whether to load fonts (default: true)
 - `parseHeadersFooters` - Whether to parse headers/footers (default: true)
@@ -1511,6 +1720,7 @@ Created `src/docx/parser.ts` with complete parsing orchestration:
 - `detectVariables` - Whether to detect template variables (default: true)
 
 **Parsing Stages (with progress):**
+
 1. Unzip DOCX package (0-10%)
 2. Parse relationships (10-15%)
 3. Parse theme (15-20%)
@@ -1525,18 +1735,21 @@ Created `src/docx/parser.ts` with complete parsing orchestration:
 12. Assemble final Document (95-100%)
 
 **Helper Functions:**
+
 - `buildMediaMap(raw, rels)` - Build media file map with data URLs
 - `parseHeadersAndFooters(raw, ...)` - Parse all headers/footers
 - `parseNotesContent(raw, ...)` - Parse footnotes/endnotes
 - `loadDocumentFonts(theme, styles, body)` - Extract and load fonts
 
 **Convenience Functions:**
+
 - `quickParseDocx(buffer)` - Parse without fonts/headers/notes
 - `fullParseDocx(buffer, onProgress)` - Parse everything
 - `getDocxVariables(buffer)` - Get only template variables
 - `getDocxSummary(buffer)` - Get quick document summary
 
 **Document Model:**
+
 - Returns `Document` with:
   - `package` - DocxPackage with all parsed content
   - `originalBuffer` - Original DOCX for round-trip
@@ -1544,27 +1757,32 @@ Created `src/docx/parser.ts` with complete parsing orchestration:
   - `warnings` - Any parsing warnings
 
 **Error Handling:**
+
 - Wraps all parsing in try/catch
 - Returns descriptive error messages
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-28: Unit conversion utilities
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/utils/units.ts` with comprehensive OOXML unit conversions:
 
 **Twips Conversions:**
+
 - `twipsToPixels(twips)` - Twips to pixels (96 DPI)
 - `pixelsToTwips(px)` - Pixels to twips
 - `twipsToPoints(twips)` - Twips to points
 - `twipsToInches(twips)`, `twipsToCm(twips)` - Twips to inches/cm
 
 **EMU Conversions:**
+
 - `emuToPixels(emu)` - EMU to pixels (96 DPI)
 - `pixelsToEmu(px)` - Pixels to EMU
 - `emuToPoints(emu)` - EMU to points
@@ -1572,37 +1790,45 @@ Created `src/utils/units.ts` with comprehensive OOXML unit conversions:
 - `emuToTwips(emu)`, `twipsToEmu(twips)` - EMU/twips conversion
 
 **Half-Point Conversions:**
+
 - `halfPointsToPixels(hp)` - Half-points to pixels
 - `halfPointsToPoints(hp)` - Half-points to points
 - `pixelsToHalfPoints(px)` - Pixels to half-points
 
 **Point Conversions:**
+
 - `pointsToPixels(pt)` - Points to pixels
 - `pixelsToPoints(px)` - Pixels to points
 
 **Eighths Conversions (for border widths):**
+
 - `eighthsToPixels(eighths)` - 1/8 points to pixels
 - `eighthsToPoints(eighths)` - 1/8 points to points
 
 **Angle Conversions:**
+
 - `ooxmlAngleToDegrees(ooxml60000ths)` - 60000ths of degree to degrees
 - `degreesToRadians(deg)` - Degrees to radians
 
 **Percentage Conversions:**
+
 - `ooxmlPercentToDecimal(ooxml1000ths)` - 1000ths percent to decimal
 - `ooxmlPercent50000ToDecimal(ooxml50000ths)` - 50000ths to decimal
 
 **CSS Formatters:**
+
 - `formatPx(px)`, `formatPt(pt)` - Format as CSS strings
 - `twipsToCss(twips)`, `emuToCss(emu)` - Direct to CSS
 - `halfPointsToCss(hp)`, `halfPointsToPtCss(hp)` - Font size helpers
 
 **Page Size Utilities:**
+
 - `PAGE_SIZES` - Standard sizes (LETTER, LEGAL, A4, A5, EXECUTIVE)
 - `getPageSizePixels(width, height)` - Convert to pixels
 - `getStandardPageSize(name)` - Get standard page size
 
 **Constants:**
+
 - `STANDARD_DPI = 96`
 - `TWIPS_PER_INCH = 1440`
 - `EMUS_PER_INCH = 914400`
@@ -1611,32 +1837,38 @@ Created `src/utils/units.ts` with comprehensive OOXML unit conversions:
 - `EIGHTHS_PER_INCH = 576`
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-29: Color resolver
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/utils/colorResolver.ts` with comprehensive color resolution:
 
 **Main Functions:**
+
 - `resolveColor(color, theme, defaultColor)` - Resolve ColorValue to CSS color string
 - `resolveHighlightColor(highlight)` - Resolve highlight color name to CSS
 - `resolveShadingColor(color, theme)` - Resolve shading fill/pattern color
 
 **Theme Color Support:**
+
 - Handles all theme color slots (dk1, lt1, dk2, lt2, accent1-6, hlink, folHlink)
 - Maps aliases (dark1→dk1, background1→lt1, text1→dk1, etc.)
 - Default Office 2016 theme colors for fallback
 
 **Tint/Shade Modifications:**
+
 - `applyTint(hex, tint)` - Make color lighter (blend with white) using HSL
 - `applyShade(hex, shade)` - Make color darker (blend with black) using HSL
 - Parses OOXML hex modifier values (00-FF → 0-1)
 
 **Color Utilities:**
+
 - `hexToRgb(hex)`, `rgbToHex(r, g, b)` - RGB/hex conversion
 - `rgbToHsl(r, g, b)`, `hslToRgb(h, s, l)` - HSL conversion for tint/shade
 - `isBlack(color, theme)`, `isWhite(color, theme)` - Color detection
@@ -1646,25 +1878,30 @@ Created `src/utils/colorResolver.ts` with comprehensive color resolution:
 - `colorsEqual(color1, color2, theme)` - Compare colors
 
 **Color Creation:**
+
 - `parseColorString(colorString)` - Parse various color formats to ColorValue
 - `createThemeColor(slot, tint?, shade?)` - Create theme color reference
 - `createRgbColor(hex)` - Create RGB ColorValue
 
 **Highlight Colors:**
+
 - Full mapping of OOXML highlight names to hex (black, blue, cyan, darkBlue, etc.)
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-30: Text measurement
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/utils/textMeasure.ts` with canvas-based text measurement:
 
 **Main Functions:**
+
 - `measureText(text, formatting, options): Promise<TextMeasurement>` - Async measurement with font wait
 - `measureTextSync(text, formatting, theme): TextMeasurement` - Synchronous measurement
 - `measureChar(char, formatting, theme)` - Measure single character
@@ -1673,12 +1910,14 @@ Created `src/utils/textMeasure.ts` with canvas-based text measurement:
 - `getBaseline(formatting, theme)` - Get baseline position
 
 **TextMeasurement Interface:**
+
 - `width` - Width of text in pixels
 - `height` - Height based on font metrics
 - `baseline` - Distance from top to baseline
 - `actualBoundingBox` - Optional detailed bounds (if browser supports)
 
 **Features:**
+
 - Uses Canvas 2D context for accurate measurements
 - LRU cache (10,000 entries) for performance
 - Font loading awareness via `isFontLoaded()` and CSS Font Loading API
@@ -1688,27 +1927,32 @@ Created `src/utils/textMeasure.ts` with canvas-based text measurement:
 - Fallback estimation for non-browser environments
 
 **Bulk/Utility Functions:**
+
 - `measureTexts(texts, formatting, theme)` - Measure multiple strings
 - `measureTextWidth(text, formatting, theme)` - Width-only (faster)
 - `calculateTextToWidth(text, targetWidth, ...)` - Find chars fitting width
 - `estimateLineWidth(charCount, fontSize)` - Estimation without canvas
 
 **Cache Management:**
+
 - `clearMeasurementCache()` - Clear after font changes
 - `getMeasurementCacheSize()` - Get current cache size
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-31: Formatting to CSS converter
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/utils/formatToStyle.ts` with comprehensive formatting to CSS conversion:
 
 **Main Functions:**
+
 - `textToStyle(formatting, theme): CSSProperties` - Convert TextFormatting to CSS
 - `paragraphToStyle(formatting, theme): CSSProperties` - Convert ParagraphFormatting to CSS
 - `borderToStyle(border, side, theme): CSSProperties` - Convert BorderSpec to CSS
@@ -1718,6 +1962,7 @@ Created `src/utils/formatToStyle.ts` with comprehensive formatting to CSS conver
 - `mergeStyles(...styles): CSSProperties` - Merge multiple style objects
 
 **Text Formatting (textToStyle) Handles:**
+
 - Font: family (with theme font resolution), size (half-points to pt)
 - Weight: bold → fontWeight: 'bold'
 - Style: italic → fontStyle: 'italic'
@@ -1734,6 +1979,7 @@ Created `src/utils/formatToStyle.ts` with comprehensive formatting to CSS conver
 - Direction: rtl → direction: 'rtl'
 
 **Paragraph Formatting (paragraphToStyle) Handles:**
+
 - Alignment: left, center, right, both → textAlign
 - Spacing: spaceBefore → marginTop, spaceAfter → marginBottom
 - Line spacing: exact/atLeast/auto → lineHeight
@@ -1744,25 +1990,30 @@ Created `src/utils/formatToStyle.ts` with comprehensive formatting to CSS conver
 - Page breaks: pageBreakBefore, keepNext, keepLines
 
 **Border Style Mapping:**
+
 - Maps OOXML border styles (single, double, dotted, dashed, etc.) to CSS
 - Converts eighths of a point to pixels
 - Resolves border colors via theme
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-32: Run component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/Run.tsx` with comprehensive run rendering:
 
 **Main Component:**
+
 - `Run` - React component rendering a text run with all formatting
 
 **Props:**
+
 - `run: RunType` - The run data to render
 - `theme?: Theme` - Theme for resolving colors and fonts
 - `className?: string` - Additional CSS class
@@ -1770,6 +2021,7 @@ Created `src/components/render/Run.tsx` with comprehensive run rendering:
 - `inline?: boolean` - Whether to render as inline-block
 
 **Content Types Rendered:**
+
 - `text` - Plain text with template variable detection
 - `tab` - Tab characters with whitespace preservation
 - `break` - Line, page, and column breaks
@@ -1779,11 +2031,13 @@ Created `src/components/render/Run.tsx` with comprehensive run rendering:
 - `drawing` / `shape` - Placeholders for images and shapes
 
 **Template Variable Support:**
+
 - Detects `{{...}}` patterns in text
 - Applies distinctive styling (yellow background, monospace, brown text)
 - Uses regex-based splitting to preserve surrounding text
 
 **CSS Classes Applied:**
+
 - `docx-run` - Base class
 - `docx-run-bold`, `docx-run-italic`, `docx-run-underline` - Formatting indicators
 - `docx-run-strike`, `docx-run-superscript`, `docx-run-subscript`
@@ -1792,25 +2046,30 @@ Created `src/components/render/Run.tsx` with comprehensive run rendering:
 - `docx-run-has-variable` - When contains template variables
 
 **Utility Functions:**
+
 - `getRunPlainText(run)` - Extract plain text from run
 - `hasVisibleContent(run)` - Check if run has visible content
 - `isWhitespaceOnly(run)` - Check if run is whitespace only
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-33: Tab component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/Tab.tsx` with comprehensive tab rendering:
 
 **Main Component:**
+
 - `Tab` - React component rendering tab characters with proper spacing
 
 **Props:**
+
 - `currentPosition?: number` - Current horizontal position in twips from left margin
 - `tabStops?: TabStop[]` - Defined tab stops for this paragraph
 - `pageWidth?: number` - Page content width in twips
@@ -1819,6 +2078,7 @@ Created `src/components/render/Tab.tsx` with comprehensive tab rendering:
 - `index?: number` - Index for key generation
 
 **Tab Render Info Interface:**
+
 - `width` - Width of the tab in pixels
 - `alignment` - Tab stop alignment (left, center, right, decimal)
 - `leader` - Leader character type (dot, hyphen, underscore, etc.)
@@ -1827,6 +2087,7 @@ Created `src/components/render/Tab.tsx` with comprehensive tab rendering:
 - `leaderString` - Leader string to display
 
 **Main Functions:**
+
 - `calculateTabRenderInfo(currentPosition, tabStops, pageWidth)` - Calculate tab rendering info
 - `getTabStyle(info, additionalStyle)` - Get CSS styles for tab
 - `getPositionAfterTab(currentPosition, tabStops, pageWidth)` - Get position after tab
@@ -1838,6 +2099,7 @@ Created `src/components/render/Tab.tsx` with comprehensive tab rendering:
 - `createBarTab(position, height, color)` - Create vertical bar tab
 
 **Features:**
+
 - Calculates width based on tab stop definitions
 - Uses `getNextTabStop()` and `calculateTabWidth()` from tabParser
 - Handles leader characters (dots, dashes, underscores, heavy, middleDot)
@@ -1847,20 +2109,24 @@ Created `src/components/render/Tab.tsx` with comprehensive tab rendering:
 - CSS classes for styling: `docx-tab`, `docx-tab-leader-*`, `docx-tab-align-*`
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-34: Hyperlink component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/Hyperlink.tsx` with comprehensive hyperlink rendering:
 
 **Main Component:**
+
 - `Hyperlink` - React component rendering clickable hyperlinks
 
 **Props:**
+
 - `hyperlink: HyperlinkType` - The hyperlink data to render
 - `theme?: Theme | null` - Theme for resolving colors and fonts
 - `className?: string` - Additional CSS class
@@ -1869,6 +2135,7 @@ Created `src/components/render/Hyperlink.tsx` with comprehensive hyperlink rende
 - `disabled?: boolean` - Whether links are non-interactive
 
 **Features:**
+
 - External links: Opens in new tab with `target="_blank"` and `rel="noopener noreferrer"`
 - Internal bookmark links: Triggers `onBookmarkClick` callback or scrolls to target element
 - Tooltip support: Shows `title` attribute on hover from `w:tooltip`
@@ -1877,35 +2144,42 @@ Created `src/components/render/Hyperlink.tsx` with comprehensive hyperlink rende
 - Accessibility: ARIA labels for external links
 
 **CSS Classes:**
+
 - `docx-hyperlink` - Base class
 - `docx-hyperlink-external` - External links
 - `docx-hyperlink-internal` - Internal bookmark links
 - `docx-hyperlink-disabled` - Disabled links
 
 **Utility Functions:**
+
 - `hasVisibleContent(hyperlink)` - Check if hyperlink has visible runs
 - `getTargetBookmark(hyperlink)` - Get internal bookmark name
 - `isEmptyHyperlink(hyperlink)` - Check if link has no destination
 - `getHyperlinkAccessibleText(hyperlink)` - Get text for accessibility
 
 **Re-exports from parser:**
+
 - `getHyperlinkText`, `getHyperlinkUrl`, `isExternalLink`, `isInternalLink`
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-35: Field component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/Field.tsx` with comprehensive field rendering:
 
 **Main Component:**
+
 - `Field` - React component rendering dynamic field content
 
 **Props:**
+
 - `field: FieldType` - The field data to render
 - `theme?: Theme | null` - Theme for resolving colors in child runs
 - `className?: string` - Additional CSS class
@@ -1917,6 +2191,7 @@ Created `src/components/render/Field.tsx` with comprehensive field rendering:
 - `onClick?: () => void` - Callback for field clicks
 
 **Features:**
+
 - Displays current field value from document
 - Styled with subtle background to indicate dynamic content
 - Placeholder display for page numbers (#) until pagination
@@ -1925,6 +2200,7 @@ Created `src/components/render/Field.tsx` with comprehensive field rendering:
 - Category-based CSS classes for styling
 
 **Field Categories Supported:**
+
 - Pagination: PAGE, NUMPAGES
 - DateTime: DATE, TIME, CREATEDATE, SAVEDATE, PRINTDATE
 - Document properties: AUTHOR, TITLE, FILENAME, DOCPROPERTY
@@ -1933,6 +2209,7 @@ Created `src/components/render/Field.tsx` with comprehensive field rendering:
 - Navigation: TOC, INDEX
 
 **Utility Functions:**
+
 - `isFieldDirty(field)` - Check if field needs updating
 - `isFieldLocked(field)` - Check if field is locked
 - `isSimpleField(field)` - Type guard for SimpleField
@@ -1942,20 +2219,24 @@ Created `src/components/render/Field.tsx` with comprehensive field rendering:
 - `needsPlaceholder(field)` - Check if field shows placeholder
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-36: DocImage component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/DocImage.tsx` with comprehensive image rendering:
 
 **Main Component:**
+
 - `DocImage` - React component rendering embedded images
 
 **Props:**
+
 - `image: ImageType` - The image data to render
 - `className?: string` - Additional CSS class
 - `style?: CSSProperties` - Additional inline styles
@@ -1965,6 +2246,7 @@ Created `src/components/render/DocImage.tsx` with comprehensive image rendering:
 - `onLoad?: () => void` - Callback for successful load
 
 **Features:**
+
 - Renders images with correct EMU-to-pixel dimensions
 - Supports image transformations: rotation, flipH, flipV
 - Text wrapping modes: inline, square, tight, through, topAndBottom, behind, inFront
@@ -1974,6 +2256,7 @@ Created `src/components/render/DocImage.tsx` with comprehensive image rendering:
 - Selection state with outline
 
 **CSS Classes:**
+
 - `docx-image` - Base class
 - `docx-image-inline` / `docx-image-floating` - Position mode
 - `docx-image-behind` / `docx-image-infront` - Z-order
@@ -1981,6 +2264,7 @@ Created `src/components/render/DocImage.tsx` with comprehensive image rendering:
 - `docx-image-selected` - Selection state
 
 **Utility Functions:**
+
 - `hasImageSource(image)` - Check if image has source data
 - `getImageAspectRatio(image)` - Get aspect ratio
 - `calculateAspectRatioDimensions(image, w?, h?)` - Maintain aspect ratio
@@ -1991,24 +2275,29 @@ Created `src/components/render/DocImage.tsx` with comprehensive image rendering:
 - `getImageDescription(image)` - Get accessible description
 
 **Re-exports from parser:**
+
 - `isInlineImage`, `isFloatingImage`, `isBehindText`, `isInFrontOfText`
 - `getImageWidthPx`, `getImageHeightPx`, `isDecorativeImage`
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-37: Shape component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/Shape.tsx` with SVG-based shape rendering:
 
 **Main Component:**
+
 - `Shape` - React component rendering drawing objects using SVG
 
 **Props:**
+
 - `shape: ShapeType` - The shape data to render
 - `className?: string` - Additional CSS class
 - `style?: CSSProperties` - Additional inline styles
@@ -2017,6 +2306,7 @@ Created `src/components/render/Shape.tsx` with SVG-based shape rendering:
 - `renderParagraph?: (paragraph, index) => ReactNode` - Render function for text content
 
 **Shapes Rendered:**
+
 - Rectangle (rect) - Basic rectangle
 - Rounded Rectangle (roundRect) - Rectangle with rounded corners
 - Ellipse - Circle/oval
@@ -2026,6 +2316,7 @@ Created `src/components/render/Shape.tsx` with SVG-based shape rendering:
 - Arrows (rightArrow, leftArrow) - Arrow shapes
 
 **Features:**
+
 - SVG rendering for all shapes
 - Fill support (solid colors)
 - Stroke/outline with color, width, and dash styles
@@ -2034,6 +2325,7 @@ Created `src/components/render/Shape.tsx` with SVG-based shape rendering:
 - Transform support (rotation, flipH, flipV)
 
 **CSS Classes:**
+
 - `docx-shape` - Base class
 - `docx-shape-{shapeType}` - Type-specific class
 - `docx-shape-line` - Line shapes
@@ -2042,6 +2334,7 @@ Created `src/components/render/Shape.tsx` with SVG-based shape rendering:
 - `docx-shape-selected` - Selection state
 
 **Utility Functions:**
+
 - `hasVisualContent(shape)` - Check for fill/outline/text
 - `getShapeDescription(shape)` - Get accessible description
 - `isRectangleShape(shape)` - Check for rect/roundRect
@@ -2049,20 +2342,24 @@ Created `src/components/render/Shape.tsx` with SVG-based shape rendering:
 - `isPolygonShape(shape)` - Check for polygon shapes
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-38: TextBox component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/TextBox.tsx` with floating text container rendering:
 
 **Main Component:**
+
 - `TextBox` - React component rendering floating text containers
 
 **Props:**
+
 - `textBox: TextBoxType` - The text box data to render
 - `className?: string` - Additional CSS class
 - `style?: CSSProperties` - Additional inline styles
@@ -2072,6 +2369,7 @@ Created `src/components/render/TextBox.tsx` with floating text container renderi
 - `renderTable?: (table, index) => ReactNode` - Render function for tables
 
 **Features:**
+
 - Positioned absolutely for floating text boxes
 - Configurable dimensions from EMUs
 - Fill/background color support
@@ -2083,11 +2381,13 @@ Created `src/components/render/TextBox.tsx` with floating text container renderi
 - Z-index for behind/inFront layering
 
 **CSS Classes:**
+
 - `docx-textbox` - Base class
 - `docx-textbox-floating` - Floating text boxes
 - `docx-textbox-selected` - Selection state
 
 **Utility Functions:**
+
 - `hasVisibleStyling(textBox)` - Check for fill/outline
 - `isEmptyTextBox(textBox)` - Check for empty content
 - `getTextBoxAspectRatio(textBox)` - Get aspect ratio
@@ -2096,20 +2396,24 @@ Created `src/components/render/TextBox.tsx` with floating text container renderi
 - `isBehindText(textBox)` / `isInFrontOfText(textBox)` - Z-order checks
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-39: Paragraph component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/Paragraph.tsx` with comprehensive paragraph rendering:
 
 **Main Component:**
+
 - `Paragraph` - React component rendering paragraphs with all formatting and content
 
 **Props:**
+
 - `paragraph: ParagraphType` - The paragraph data to render
 - `theme?: Theme` - Theme for resolving colors and fonts
 - `className?: string` - Additional CSS class
@@ -2124,6 +2428,7 @@ Created `src/components/render/Paragraph.tsx` with comprehensive paragraph rende
 - `renderTextBox?: (textBox, index) => ReactNode` - Custom text box renderer
 
 **Features:**
+
 - Applies all paragraph styling (alignment, spacing, indent, borders, shading)
 - Contains runs, tabs, hyperlinks, fields, images, shapes
 - Handles empty paragraphs (renders as line break)
@@ -2135,6 +2440,7 @@ Created `src/components/render/Paragraph.tsx` with comprehensive paragraph rende
 - Default run properties from paragraph formatting
 
 **CSS Classes:**
+
 - `docx-paragraph` - Base class
 - `docx-align-*` - Alignment classes (left, center, right, both)
 - `docx-rtl` - Right-to-left text
@@ -2145,6 +2451,7 @@ Created `src/components/render/Paragraph.tsx` with comprehensive paragraph rende
 - `docx-paragraph-empty` - Empty paragraphs
 
 **Utility Functions:**
+
 - `getParagraphText(paragraph)` - Get plain text content
 - `isEmptyParagraph(paragraph)` - Check if empty
 - `isListItem(paragraph)` - Check if list item
@@ -2158,20 +2465,24 @@ Created `src/components/render/Paragraph.tsx` with comprehensive paragraph rende
 - `getCharacterCount(paragraph, includeSpaces)` - Character count
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-40: List item component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/ListItem.tsx` with comprehensive list item rendering:
 
 **Main Component:**
+
 - `ListItem` - React component rendering paragraphs as list items with markers
 
 **Props:**
+
 - `paragraph: ParagraphType` - The paragraph data to render as list item
 - `theme?: Theme` - Theme for resolving colors and fonts
 - `levelDefinition?: ListLevel` - Level definition for detailed styling
@@ -2181,28 +2492,33 @@ Created `src/components/render/ListItem.tsx` with comprehensive list item render
 - Standard paragraph props (pageNumber, totalPages, pageWidth, onBookmarkClick, etc.)
 
 **Bullet Support:**
+
 - Default bullets by level: • (solid), ○ (circle), ▪ (square)
 - Unicode character mapping for Wingdings/Symbol fonts
 - Handles special characters: ●, ◆, ✓, ■, →, etc.
 - Falls back to getBulletCharacter from numberingParser
 
 **Number Format Support:**
+
 - All standard formats: decimal, upperRoman, lowerRoman, upperLetter, lowerLetter
 - Special formats: ordinal (1st, 2nd, 3rd), numberInDash (-1-), decimalEnclosedParen ((1))
 - Multi-level patterns: Renders %1.%2.%3 style markers correctly
 
 **Indentation:**
+
 - Base indentation: 36px per level (~0.5 inch)
 - Uses level definition pPr.indentLeft if available (converted from twips)
 - Handles hanging indents for marker positioning
 
 **Marker Styling:**
+
 - Applies run properties (rPr) from level definition
 - Supports justification (left, center, right)
 - Minimum width with proper text alignment
 - Flexbox layout for proper spacing
 
 **CSS Classes:**
+
 - `docx-list-item` - Base class
 - `docx-list-level-*` - Level-specific (0-8)
 - `docx-list-bullet` - Bullet lists
@@ -2211,6 +2527,7 @@ Created `src/components/render/ListItem.tsx` with comprehensive list item render
 - `docx-list-content` - Content wrapper
 
 **Utility Functions:**
+
 - `unicodeToChar(codePoint)` - Convert Unicode hex to character
 - `isListItemParagraph(paragraph)` - Check if should render as list item
 - `getDefaultBullet(level)` - Get default bullet for level
@@ -2224,31 +2541,37 @@ Created `src/components/render/ListItem.tsx` with comprehensive list item render
 - `getCommonNumberFormats()` - Get number formats for UI
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-41: Table component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 `src/components/render/DocTable.tsx` exists with comprehensive table rendering.
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-42: Footnote reference component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/FootnoteRef.tsx` with footnote/endnote reference rendering:
 
 **Main Component:**
+
 - `FootnoteRef` - React component rendering footnote/endnote reference markers
 
 **Props:**
+
 - `id: number` - The footnote/endnote ID being referenced
 - `type: 'footnote' | 'endnote'` - Type of note
 - `noteContent?: Footnote | Endnote` - The content (for tooltip preview)
@@ -2260,6 +2583,7 @@ Created `src/components/render/FootnoteRef.tsx` with footnote/endnote reference 
 - `tooltipContent?: ReactNode` - Custom tooltip content
 
 **Features:**
+
 - Renders superscript numbered references
 - Clickable to jump to footnote/endnote content
 - Tooltip preview of footnote content on hover
@@ -2268,11 +2592,13 @@ Created `src/components/render/FootnoteRef.tsx` with footnote/endnote reference 
 - Number formatting (decimal, roman, letter, chicago)
 
 **CSS Classes:**
+
 - `docx-note-ref` - Base class
 - `docx-footnote-ref` / `docx-endnote-ref` - Type-specific
 - `docx-note-ref-clickable` - When clickable
 
 **Utility Functions:**
+
 - `getFootnoteDisplayNumber(id, allFootnotes, properties)` - Calculate display number
 - `getEndnoteDisplayNumber(id, allEndnotes, properties)` - Calculate display number
 - `formatNoteNumber(number, format)` - Format according to settings
@@ -2283,24 +2609,29 @@ Created `src/components/render/FootnoteRef.tsx` with footnote/endnote reference 
 - `getFootnoteRefElementId(id, index)` - Generate ref element ID for back-linking
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-43: Header/Footer component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/HeaderFooter.tsx` with header and footer rendering:
 
 **Main Component:**
+
 - `HeaderFooter` - React component rendering header or footer content
 
 **Container Components:**
+
 - `HeaderArea` - Container for header positioned at top of page
 - `FooterArea` - Container for footer positioned at bottom of page
 
 **Props:**
+
 - `headerFooter: HeaderFooterType` - The header/footer data to render
 - `position: 'header' | 'footer'` - Type of area
 - `sectionProps?: SectionProperties` - Section properties for positioning
@@ -2312,6 +2643,7 @@ Created `src/components/render/HeaderFooter.tsx` with header and footer renderin
 - `renderTable?: (table, index) => ReactNode` - Render function for tables
 
 **Features:**
+
 - Renders paragraphs with all formatting
 - Tables within headers/footers
 - Page number fields
@@ -2319,12 +2651,14 @@ Created `src/components/render/HeaderFooter.tsx` with header and footer renderin
 - Different header/footer types (default, first, even)
 
 **CSS Classes:**
+
 - `docx-header-footer` - Base class
 - `docx-header` / `docx-footer` - Position-specific
 - `docx-header-default` / `docx-header-first` / `docx-header-even` - Type-specific
 - `docx-header-area` / `docx-footer-area` - Container classes
 
 **Utility Functions:**
+
 - `getHeaderForPage(pageNumber, isFirstPage, headers, sectionProps)` - Get header for page
 - `getFooterForPage(pageNumber, isFirstPage, footers, sectionProps)` - Get footer for page
 - `hasContent(hf)` - Check if header/footer has content
@@ -2336,20 +2670,24 @@ Created `src/components/render/HeaderFooter.tsx` with header and footer renderin
 - `getHeaderTypes(headers)` / `getFooterTypes(footers)` - Get available types
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-44: Line breaker
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/layout/lineBreaker.ts` with comprehensive line breaking:
 
 **Main Function:**
+
 - `breakIntoLines(paragraph, options): LineBreakResult` - Break paragraph into lines
 
 **LineBreakOptions:**
+
 - `maxWidth: number` - Maximum width for content
 - `firstLineIndent?: number` - First line indent
 - `tabStops?: TabStop[]` - Tab stops for the paragraph
@@ -2359,6 +2697,7 @@ Created `src/layout/lineBreaker.ts` with comprehensive line breaking:
 - `minLineHeight?: number` - Minimum line height
 
 **LineFragment Interface:**
+
 - `type` - text, tab, break, image, field, symbol, space
 - `content: string` - The content
 - `width, height, baseline` - Measurements in pixels
@@ -2368,6 +2707,7 @@ Created `src/layout/lineBreaker.ts` with comprehensive line breaking:
 - `nonBreaking?: boolean` - Whether element is non-breaking
 
 **Line Interface:**
+
 - `fragments: LineFragment[]` - Fragments on this line
 - `width, height, baseline` - Line metrics
 - `y: number` - Y position from paragraph top
@@ -2375,6 +2715,7 @@ Created `src/layout/lineBreaker.ts` with comprehensive line breaking:
 - `lineNumber: number` - 0-indexed line number
 
 **Features:**
+
 - Word boundary line breaking for natural text flow
 - Multiple runs with different font sizes
 - Tab stops and their alignment
@@ -2382,6 +2723,7 @@ Created `src/layout/lineBreaker.ts` with comprehensive line breaking:
 - Soft hyphens for optional breaks
 
 **Utility Functions:**
+
 - `getLineText(line)` - Get text content of a line
 - `getLineCharCount(line)` - Get character count
 - `isLineEmpty(line)` - Check if line is whitespace only
@@ -2391,20 +2733,24 @@ Created `src/layout/lineBreaker.ts` with comprehensive line breaking:
 - `isMultiLine(result)` - Check if multiple lines
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-45: Page layout engine
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/layout/pageLayout.ts` with comprehensive page layout:
 
 **Main Function:**
+
 - `calculatePages(doc, options): PageLayoutResult` - Calculate page layout
 
 **Page Interface:**
+
 - `pageNumber: number` - 1-indexed page number
 - `sectionIndex: number` - Section this page belongs to
 - `sectionProps: SectionProperties` - Section properties
@@ -2416,6 +2762,7 @@ Created `src/layout/pageLayout.ts` with comprehensive page layout:
 - `contentTopPx, contentLeftPx` - Content area offsets
 
 **PageContent Interface:**
+
 - `type: 'paragraph' | 'table'` - Content type
 - `block: Paragraph | Table` - Original block
 - `blockIndex: number` - Index in document
@@ -2426,6 +2773,7 @@ Created `src/layout/pageLayout.ts` with comprehensive page layout:
 - `startLineIndex?: number` - First line if continuation
 
 **Features:**
+
 - Respects page size and margins from section properties
 - Handles explicit page breaks (pageBreakBefore)
 - Natural page breaks when content overflows
@@ -2437,6 +2785,7 @@ Created `src/layout/pageLayout.ts` with comprehensive page layout:
 - Table layout (keeps together when possible)
 
 **Utility Functions:**
+
 - `getPageCount(result)` - Get total page count
 - `getPage(result, pageNumber)` - Get specific page
 - `getPagesForSection(result, sectionIndex)` - Get section pages
@@ -2447,26 +2796,31 @@ Created `src/layout/pageLayout.ts` with comprehensive page layout:
 - `getYForPage(result, pageNumber, gap)` - Get Y position for page
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-46: Column layout
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/layout/columnLayout.ts` with multi-column layout support:
 
 **Main Function:**
+
 - `layoutColumns(content, options): ColumnLayoutResult` - Layout content in columns
 
 **Column Interface:**
+
 - `index: number` - 0-indexed column
 - `widthPx, xPx, heightPx` - Column dimensions
 - `content: ColumnContent[]` - Content in this column
 - `currentY: number` - Current filled height
 
 **ColumnContent Interface:**
+
 - `type: 'paragraph' | 'table'`
 - `block: Paragraph | Table` - Original block
 - `y, height` - Position and size
@@ -2474,6 +2828,7 @@ Created `src/layout/columnLayout.ts` with multi-column layout support:
 - `isContinuation, continuesOnNextColumn` - Split flags
 
 **Features:**
+
 - Distributes content across columns
 - Handles explicit column breaks
 - Equal and custom column widths
@@ -2483,6 +2838,7 @@ Created `src/layout/columnLayout.ts` with multi-column layout support:
 - Table layout in columns
 
 **Utility Functions:**
+
 - `getColumnCount(sectionProps)` - Get column count
 - `isMultiColumn(sectionProps)` - Check if multi-column
 - `getColumnWidths(sectionProps, contentWidthPx)` - Get widths
@@ -2492,23 +2848,28 @@ Created `src/layout/columnLayout.ts` with multi-column layout support:
 - `getContentAtPosition(result, x, y)` - Get content at position
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-47: Page component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/Page.tsx` with single page rendering:
 
 **Main Component:**
+
 - `Page` - React component rendering a single page from layout data
 
 **Alternative Component:**
+
 - `SimplePage` - Standalone page rendering with children
 
 **Props:**
+
 - `page: PageData` - Page data from layout engine
 - `theme?: Theme` - Theme for resolving colors
 - `zoom?: number` - Zoom level (1.0 = 100%)
@@ -2518,6 +2879,7 @@ Created `src/components/render/Page.tsx` with single page rendering:
 - `onClick?: (e, page) => void` - Click handler
 
 **Features:**
+
 - Renders at correct page dimensions with zoom support
 - Content area respects margins from section properties
 - Header at top, footer at bottom with proper positioning
@@ -2526,6 +2888,7 @@ Created `src/components/render/Page.tsx` with single page rendering:
 - White background with shadow for document appearance
 
 **CSS Classes:**
+
 - `docx-page` - Base class
 - `docx-page-first` / `docx-page-last` - Position flags
 - `docx-page-header-area` / `docx-page-footer-area` - Header/footer areas
@@ -2533,27 +2896,32 @@ Created `src/components/render/Page.tsx` with single page rendering:
 - `docx-page-borders` - Page borders overlay
 
 **Utility Functions:**
+
 - `getPageDimensionsPx(sectionProps, zoom)` - Get page dimensions
 - `getContentAreaPx(sectionProps, zoom)` - Get content area dimensions
 - `isLandscape(sectionProps)` - Check if landscape
 - `getPageSizeName(sectionProps)` - Get standard page size name
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-48: Footnote area component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/render/FootnoteArea.tsx` with footnote/endnote rendering:
 
 **Main Components:**
+
 - `FootnoteArea` - Renders footnotes at page bottom
 - `EndnoteArea` - Renders endnotes at section/document end
 
 **Props (FootnoteArea):**
+
 - `footnotes: Footnote[]` - Footnotes to render
 - `pageNumber: number` - Current page number
 - `theme?: Theme` - Theme for resolving colors
@@ -2565,6 +2933,7 @@ Created `src/components/render/FootnoteArea.tsx` with footnote/endnote rendering
 - `onFootnoteClick?: (id) => void` - Callback for back-link clicks
 
 **Features:**
+
 - Renders all footnotes for current page
 - Separator line above footnotes
 - Smaller text for footnote content (10px)
@@ -2573,6 +2942,7 @@ Created `src/components/render/FootnoteArea.tsx` with footnote/endnote rendering
 - Filters out separator footnotes
 
 **CSS Classes:**
+
 - `docx-footnote-area` / `docx-endnote-area` - Container
 - `docx-footnote-separator` - Separator line
 - `docx-footnote-list` / `docx-endnote-list` - List container
@@ -2581,6 +2951,7 @@ Created `src/components/render/FootnoteArea.tsx` with footnote/endnote rendering
 - `docx-footnote-content` / `docx-endnote-content` - Note content
 
 **Utility Functions:**
+
 - `calculateFootnoteAreaHeight(footnotes, options)` - Estimate area height
 - `getFootnotesForPage(allFootnotes, pageIds)` - Filter by page
 - `getFootnoteStartNumber(pageNumber, idsByPage, restart)` - Calculate start number
@@ -2588,20 +2959,24 @@ Created `src/components/render/FootnoteArea.tsx` with footnote/endnote rendering
 - `getFootnoteCount(footnotes)` / `getEndnoteCount(endnotes)` - Count (excluding separators)
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-49: Document viewer
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/DocumentViewer.tsx` with full paginated document view:
 
 **Main Component:**
+
 - `DocumentViewer` - React component rendering paginated document
 
 **Props:**
+
 - `document?: Document` - The document to render
 - `theme?: Theme` - Theme for resolving colors and fonts
 - `zoom?: number` - Zoom level (1.0 = 100%)
@@ -2617,6 +2992,7 @@ Created `src/components/DocumentViewer.tsx` with full paginated document view:
 - `onDocumentClick?: (e, page) => void` - Callback for clicks
 
 **Features:**
+
 - Renders all pages vertically with configurable gap
 - Scrollable container with gray background
 - Shows loading state while parsing (with spinner)
@@ -2626,6 +3002,7 @@ Created `src/components/DocumentViewer.tsx` with full paginated document view:
 - Scroll tracking with current page detection
 
 **CSS Classes:**
+
 - `docx-viewer` - Container
 - `docx-viewer-loading` / `docx-viewer-empty` - State classes
 - `docx-viewer-content` - Pages container
@@ -2633,28 +3010,33 @@ Created `src/components/DocumentViewer.tsx` with full paginated document view:
 - `docx-page-number-indicator` - Page number display
 
 **Utility Functions:**
+
 - `scrollToPage(containerRef, pageNumber, layoutResult, zoom, gap)` - Scroll to page
 - `getVisiblePages(containerRef, layoutResult, zoom, gap)` - Get visible page numbers
 - `calculateFitWidthZoom(containerWidth, pageWidth, padding)` - Calculate zoom for width
 - `calculateFitPageZoom(containerWidth, containerHeight, pageWidth, pageHeight)` - Zoom for page
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-50: Run serializer
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/serializer/runSerializer.ts` with comprehensive run serialization:
 
 **Main Functions:**
+
 - `serializeRun(run): string` - Serialize a single run to OOXML XML
 - `serializeRuns(runs): string` - Serialize multiple runs
 - `serializeTextFormatting(formatting): string` - Serialize w:rPr element
 
 **Text Formatting Serialization (w:rPr):**
+
 - w:rStyle (character style reference)
 - w:rFonts (font family with theme references)
 - w:b, w:bCs (bold)
@@ -2674,6 +3056,7 @@ Created `src/docx/serializer/runSerializer.ts` with comprehensive run serializat
 - w:rtl, w:cs (right-to-left and complex script)
 
 **Run Content Serialization:**
+
 - w:t (text with xml:space="preserve" when needed)
 - w:tab (tab characters)
 - w:br (line/page/column breaks)
@@ -2686,6 +3069,7 @@ Created `src/docx/serializer/runSerializer.ts` with comprehensive run serializat
 - Shape content (placeholder)
 
 **Utility Functions:**
+
 - `hasRunContent(run)` - Check if run has content
 - `hasRunFormatting(run)` - Check if run has formatting
 - `getRunPlainText(run)` - Get plain text for debugging
@@ -2695,22 +3079,26 @@ Created `src/docx/serializer/runSerializer.ts` with comprehensive run serializat
 - `createTabRun(formatting)` - Create tab run
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-51: Paragraph serializer
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/serializer/paragraphSerializer.ts` with comprehensive paragraph serialization:
 
 **Main Functions:**
+
 - `serializeParagraph(para): string` - Serialize a single paragraph to OOXML XML
 - `serializeParagraphs(paras): string` - Serialize multiple paragraphs
 - `serializeParagraphFormatting(formatting): string` - Serialize w:pPr element
 
 **Paragraph Properties Serialization (w:pPr):**
+
 - w:pStyle (paragraph style reference)
 - w:keepNext, w:keepLines, w:pageBreakBefore (page break control)
 - w:framePr (text frame properties)
@@ -2728,6 +3116,7 @@ Created `src/docx/serializer/paragraphSerializer.ts` with comprehensive paragrap
 - w:rPr (default run properties for paragraph)
 
 **Content Serialization:**
+
 - w:r (runs via serializeRun from runSerializer.ts)
 - w:hyperlink (with rId, anchor, tooltip, target, history, docLocation)
 - w:bookmarkStart (with id, name, colFirst, colLast)
@@ -2736,6 +3125,7 @@ Created `src/docx/serializer/paragraphSerializer.ts` with comprehensive paragrap
 - Complex fields (reconstructed from fieldCode and fieldResult runs)
 
 **Utility Functions:**
+
 - `hasParagraphContent(paragraph)` - Check if paragraph has content
 - `hasParagraphFormatting(paragraph)` - Check if paragraph has formatting
 - `getParagraphPlainText(paragraph)` - Get plain text for debugging
@@ -2745,17 +3135,20 @@ Created `src/docx/serializer/paragraphSerializer.ts` with comprehensive paragrap
 - `getListLevel(paragraph)` - Get list level (0-8)
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-52: Table serializer
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/serializer/tableSerializer.ts` with comprehensive table serialization:
 
 **Main Functions:**
+
 - `serializeTable(table): string` - Serialize a single table to OOXML XML (w:tbl)
 - `serializeTables(tables): string` - Serialize multiple tables
 - `serializeTableFormatting(formatting): string` - Serialize w:tblPr element
@@ -2763,6 +3156,7 @@ Created `src/docx/serializer/tableSerializer.ts` with comprehensive table serial
 - `serializeTableCellFormatting(formatting): string` - Serialize w:tcPr element
 
 **Table Properties Serialization (w:tblPr):**
+
 - w:tblStyle (table style reference)
 - w:tblpPr (floating table properties)
 - w:bidiVisual (bidirectional)
@@ -2778,6 +3172,7 @@ Created `src/docx/serializer/tableSerializer.ts` with comprehensive table serial
 - w:tblOverlap (overlap)
 
 **Row Properties Serialization (w:trPr):**
+
 - w:cantSplit (prevent row split)
 - w:tblHeader (header row)
 - w:trHeight (row height with height rule)
@@ -2785,6 +3180,7 @@ Created `src/docx/serializer/tableSerializer.ts` with comprehensive table serial
 - w:hidden (hidden row)
 
 **Cell Properties Serialization (w:tcPr):**
+
 - w:cnfStyle (conditional format style)
 - w:tcW (cell width)
 - w:gridSpan (horizontal merge)
@@ -2799,10 +3195,12 @@ Created `src/docx/serializer/tableSerializer.ts` with comprehensive table serial
 - w:hideMark (hide mark)
 
 **Cell Content Handling:**
+
 - Recursively serializes paragraphs and nested tables
 - Ensures at least one empty paragraph per cell (Word requirement)
 
 **Utility Functions:**
+
 - `hasTableRows(table)` - Check if table has rows
 - `hasTableFormatting(table)` - Check if table has formatting
 - `hasRowCells(row)` - Check if row has cells
@@ -2815,28 +3213,33 @@ Created `src/docx/serializer/tableSerializer.ts` with comprehensive table serial
 - `createTextCell(text, formatting)` - Create cell with text
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-53: Document serializer
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/serializer/documentSerializer.ts` with complete document.xml serialization:
 
 **Main Functions:**
+
 - `serializeDocument(doc): string` - Serialize complete document.xml with all namespaces
 - `serializeDocumentBody(body): string` - Serialize w:body content
 - `serializeDocumentBodyElement(body): string` - Serialize w:body element with tags
 - `serializeSectionProperties(props): string` - Serialize w:sectPr element
 
 **XML Namespaces:**
+
 - All standard OOXML namespaces included (w:, r:, wp:, wps:, wpg:, m:, etc.)
 - Minimal set for smaller output: wpc, mc, o, r, m, v, wp14, wp, w10, w, w14, w15, wpg, wps
 - mc:Ignorable declaration for extensibility
 
 **Section Properties Serialization (w:sectPr):**
+
 - w:headerReference, w:footerReference (by type: default, first, even)
 - w:footnotePr, w:endnotePr (position, numFmt, numStart, numRestart)
 - w:type (section start: continuous, nextPage, oddPage, evenPage, nextColumn)
@@ -2853,12 +3256,14 @@ Created `src/docx/serializer/documentSerializer.ts` with complete document.xml s
 - w:evenAndOddHeaders (odd/even page headers)
 
 **Content Serialization:**
+
 - Serializes all BlockContent (paragraphs and tables) in document order
 - Delegates to `serializeParagraph()` from paragraphSerializer.ts
 - Delegates to `serializeTable()` from tableSerializer.ts
 - Final section properties at end of body
 
 **Utility Functions:**
+
 - `hasDocumentContent(doc)` - Check if document has any content
 - `hasDocumentSections(doc)` - Check if document has sections
 - `hasSectionProperties(doc)` - Check if document has section properties
@@ -2870,17 +3275,20 @@ Created `src/docx/serializer/documentSerializer.ts` with complete document.xml s
 - `createSimpleDocument(paragraphs)` - Create document with text paragraphs
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-54: DOCX repacker
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/docx/rezip.ts` with comprehensive DOCX repacking:
 
 **Main Functions:**
+
 - `repackDocx(doc, options): Promise<ArrayBuffer>` - Main repacker function
 - `repackDocxFromRaw(doc, rawContent, options): Promise<ArrayBuffer>` - Repack using raw content
 - `updateDocumentXml(buffer, newXml, options): Promise<ArrayBuffer>` - Update only document.xml
@@ -2888,18 +3296,22 @@ Created `src/docx/rezip.ts` with comprehensive DOCX repacking:
 - `updateMultipleFiles(buffer, updates, options): Promise<ArrayBuffer>` - Update multiple files
 
 **Relationship Management:**
+
 - `addRelationship(buffer, relationship): Promise<{ buffer, rId }>` - Add new relationship
 - `addMedia(buffer, filename, data, mimeType): Promise<{ buffer, rId, path }>` - Add media file
 
 **Validation:**
+
 - `validateDocx(buffer): Promise<{ valid, errors, warnings }>` - Validate DOCX structure
 - `isDocxBuffer(buffer): boolean` - Quick check for ZIP signature
 
 **Create New DOCX:**
+
 - `createEmptyDocx(): Promise<ArrayBuffer>` - Create minimal valid DOCX
 - `createDocx(doc): Promise<ArrayBuffer>` - Create DOCX from Document
 
 **Features:**
+
 - Preserves all original files (styles.xml, theme1.xml, fontTable.xml, etc.)
 - Only updates document.xml with serialized content
 - Maintains round-trip fidelity for WYSIWYG editing
@@ -2908,31 +3320,37 @@ Created `src/docx/rezip.ts` with comprehensive DOCX repacking:
 - Handles content types and relationships properly
 
 **Options:**
+
 - `compressionLevel` - Compression level 0-9 (default: 6)
 - `updateModifiedDate` - Update modification timestamp (default: true)
 - `modifiedBy` - Custom modifier name for lastModifiedBy
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-55: Selection manager
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/hooks/useSelection.ts` with comprehensive selection tracking:
 
 **Main Hook:**
+
 - `useSelection(options)` - React hook for tracking DOM selection
 
 **Types Defined:**
+
 - `DocumentPosition` - Position within document (paragraphIndex, contentIndex, offset)
 - `DocumentRange` - Range with start/end positions and collapsed flag
 - `SelectionState` - Full selection state (selectedText, selectedRange, hasSelection, isWithinEditor, nativeSelection)
 - `UseSelectionOptions` - Hook configuration options
 
 **Hook Returns:**
+
 - `selectedText` - Currently selected text (empty if collapsed)
 - `selectedRange` - Document range of selection
 - `hasSelection` - Whether there's an active selection
@@ -2944,6 +3362,7 @@ Created `src/hooks/useSelection.ts` with comprehensive selection tracking:
 - `processSelection()` - Force reprocess current selection
 
 **Data Attributes for DOM Mapping:**
+
 - `PARAGRAPH_INDEX` - `data-paragraph-index`
 - `CONTENT_INDEX` - `data-content-index`
 - `RUN_INDEX` - `data-run-index` (deprecated)
@@ -2951,6 +3370,7 @@ Created `src/hooks/useSelection.ts` with comprehensive selection tracking:
 - `PAGE_NUMBER` - `data-page-number`
 
 **Helper Functions:**
+
 - `findParagraphElement(node)` - Find containing paragraph element
 - `findContentElement(node)` - Find containing content element
 - `calculateOffset(container, targetNode, targetOffset)` - Calculate char offset
@@ -2961,6 +3381,7 @@ Created `src/hooks/useSelection.ts` with comprehensive selection tracking:
 - `findTextNodeAtOffset(element, offset)` - Find text node at offset
 
 **Utility Exports:**
+
 - `positionsEqual(a, b)` - Check position equality
 - `rangesEqual(a, b)` - Check range equality
 - `createCollapsedRange(position)` - Create cursor-only range
@@ -2968,6 +3389,7 @@ Created `src/hooks/useSelection.ts` with comprehensive selection tracking:
 - `getRangeLength(range)` - Get character length of range
 
 **Features:**
+
 - Works with contentEditable elements
 - Listens for `selectionchange` events
 - Converts DOM Selection to document positions
@@ -2976,21 +3398,24 @@ Created `src/hooks/useSelection.ts` with comprehensive selection tracking:
 - Supports selection callbacks via `onSelectionChange`
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
-
 ### US-56: Editable run component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/edit/EditableRun.tsx` with editable text run support:
 
 **Main Component:**
+
 - `EditableRun` - React component with contentEditable span for text editing
 
 **Props:**
+
 - `run: RunType` - The run data to render
 - `runIndex: number` - Index in parent content array
 - `paragraphIndex: number` - Index of parent paragraph
@@ -3003,6 +3428,7 @@ Created `src/components/edit/EditableRun.tsx` with editable text run support:
 - `onSelectionChange?: (offset, runIndex) => void` - Callback when cursor moves
 
 **Features:**
+
 - contentEditable span for text editing
 - Syncs text changes to document model via onChange
 - Preserves formatting during edits
@@ -3013,6 +3439,7 @@ Created `src/components/edit/EditableRun.tsx` with editable text run support:
 - Uses data attributes for DOM-to-document position mapping
 
 **Utility Functions:**
+
 - `isEditableRun(run)` - Check if run can be edited
 - `getEditableRunText(run)` - Get plain text content
 - `updateRunText(run, newText)` - Create run with new text preserving formatting
@@ -3022,6 +3449,7 @@ Created `src/components/edit/EditableRun.tsx` with editable text run support:
 - `splitRunAtOffset(run, offset)` - Split run at character offset
 
 **Design Notes:**
+
 - Only runs with text-only content are editable
 - Runs with images, shapes, fields render as non-editable placeholders
 - Uses contentEditable warning suppression for React
@@ -3029,25 +3457,30 @@ Created `src/components/edit/EditableRun.tsx` with editable text run support:
 - Composition events handled for proper IME support
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-61: Formatting toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/Toolbar.tsx` with comprehensive formatting controls:
 
 **Main Component:**
+
 - `Toolbar` - React component with all formatting controls
 
 **Subcomponents:**
+
 - `ToolbarButton` - Individual button with active/disabled state and hover effects
 - `ToolbarGroup` - Button group with separator for organization
 - `ToolbarSeparator` - Visual separator between groups
 
 **Props (Toolbar):**
+
 - `currentFormatting: SelectionFormatting` - Current formatting of selection
 - `onFormat: (action: FormattingAction) => void` - Format action callback
 - `onUndo, onRedo` - History callbacks
@@ -3058,6 +3491,7 @@ Created `src/components/Toolbar.tsx` with comprehensive formatting controls:
 - `children` - Custom toolbar items
 
 **Formatting Buttons:**
+
 - Bold (Ctrl+B) with active state
 - Italic (Ctrl+I) with active state
 - Underline (Ctrl+U) with active state
@@ -3067,10 +3501,12 @@ Created `src/components/Toolbar.tsx` with comprehensive formatting controls:
 - Clear Formatting button
 
 **History Buttons:**
+
 - Undo (Ctrl+Z)
 - Redo (Ctrl+Y)
 
 **Features:**
+
 - Keyboard shortcuts for formatting (Ctrl+B/I/U, etc.)
 - Shows active state for current selection formatting
 - Applies formatting to selection via callback
@@ -3080,30 +3516,36 @@ Created `src/components/Toolbar.tsx` with comprehensive formatting controls:
 - Hover effects on buttons
 
 **Utility Functions:**
+
 - `getSelectionFormatting(TextFormatting)` - Extract formatting state from document model
 - `applyFormattingAction(formatting, action)` - Apply action to formatting, returns new formatting
 - `hasActiveFormatting(formatting)` - Check if any formatting is active
 
 **Types:**
+
 - `SelectionFormatting` - Interface for selection formatting state
 - `FormattingAction` - Union type for all formatting actions
 - `ToolbarProps`, `ToolbarButtonProps`, `ToolbarGroupProps`
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-62: Font picker
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/ui/FontPicker.tsx` with comprehensive font family selection:
 
 **Main Component:**
+
 - `FontPicker` - React component with dropdown for selecting font families
 
 **Props:**
+
 - `value?: string` - Currently selected font family
 - `onChange?: (fontFamily: string) => void` - Callback when font is selected
 - `fonts?: FontOption[]` - Custom font options (defaults provided)
@@ -3113,6 +3555,7 @@ Created `src/components/ui/FontPicker.tsx` with comprehensive font family select
 - `showPreview?: boolean` - Show fonts in their own typeface
 
 **Features:**
+
 - Dropdown with available fonts grouped by category (sans-serif, serif, monospace)
 - Shows fonts in their own typeface for preview
 - Keyboard navigation (Arrow keys, Enter, Escape)
@@ -3122,31 +3565,37 @@ Created `src/components/ui/FontPicker.tsx` with comprehensive font family select
 - Accessible with ARIA attributes
 
 **Default Fonts Included:**
+
 - Sans-serif: Arial, Calibri, Helvetica, Verdana, Tahoma, Trebuchet MS, Open Sans, Roboto, Lato
 - Serif: Times New Roman, Cambria, Georgia, Palatino, Garamond, Book Antiqua
 - Monospace: Courier New, Consolas, Monaco, Source Code Pro
 
 **Utility Functions:**
+
 - `getDefaultFonts()` - Get default font options
 - `createFontOption(fontName)` - Create option from font name
 - `mergeFontOptions(customFonts, includeDefaults)` - Merge custom with defaults
 - `isFontAvailable(fontName)` - Check if font is loaded
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-63: Font size picker
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/ui/FontSizePicker.tsx` with comprehensive font size selection:
 
 **Main Component:**
+
 - `FontSizePicker` - React component with dropdown/input for selecting font sizes
 
 **Props:**
+
 - `value?: number` - Currently selected font size (in points)
 - `onChange?: (size: number) => void` - Callback when size is selected
 - `sizes?: number[]` - Custom size options (defaults provided)
@@ -3157,6 +3606,7 @@ Created `src/components/ui/FontSizePicker.tsx` with comprehensive font size sele
 - `maxSize?: number` - Maximum allowed size (default: 999)
 
 **Features:**
+
 - Dropdown with common sizes (8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36, 48, 72)
 - Text input for custom sizes
 - Keyboard navigation (Arrow keys, Enter, Escape)
@@ -3166,6 +3616,7 @@ Created `src/components/ui/FontSizePicker.tsx` with comprehensive font size sele
 - Accessible with ARIA attributes
 
 **Utility Functions:**
+
 - `getDefaultSizes()` - Get default size options
 - `isValidFontSize(size, min, max)` - Validate font size
 - `clampFontSize(size, min, max)` - Clamp to valid range
@@ -3179,22 +3630,27 @@ Created `src/components/ui/FontSizePicker.tsx` with comprehensive font size sele
 - `nextSmallerSize(currentSize)` - Get next smaller standard size
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
+
 ### US-64: Color picker
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/ui/ColorPicker.tsx` with comprehensive color selection:
 
 **Main Components:**
+
 - `ColorPicker` - Main color picker with dropdown grid
 - `ColorGrid` - Reusable color grid component
 - `TextColorPicker` - Specialized text color picker (foreground)
 - `HighlightColorPicker` - Specialized highlight color picker (background)
 
 **Props:**
+
 - `value?: string` - Currently selected color (hex)
 - `onChange?: (color: string) => void` - Callback when color is selected
 - `type?: 'text' | 'highlight'` - Type of color picker
@@ -3205,6 +3661,7 @@ Created `src/components/ui/ColorPicker.tsx` with comprehensive color selection:
 - `showMoreColors?: boolean` - Show custom hex input
 
 **Features:**
+
 - Grid of common colors (30 for text, 16 for highlight)
 - Text color button with font color indicator bar
 - Highlight color button with marker indicator
@@ -3214,10 +3671,12 @@ Created `src/components/ui/ColorPicker.tsx` with comprehensive color selection:
 - Accessible with ARIA attributes
 
 **Default Colors:**
+
 - Text colors: 30 colors in 3 rows (dark, standard, tints)
 - Highlight colors: 16 standard Word highlight colors
 
 **Utility Functions:**
+
 - `getTextColors()` - Get default text colors
 - `getHighlightColors()` - Get default highlight colors
 - `createColorOption(hex, name)` - Create color option
@@ -3229,21 +3688,25 @@ Created `src/components/ui/ColorPicker.tsx` with comprehensive color selection:
 - `getThemeColorsForPicker(theme)` - Get theme colors for picker
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-65: Alignment buttons
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/ui/AlignmentButtons.tsx` with paragraph alignment controls:
 
 **Main Components:**
+
 - `AlignmentButtons` - Main component with left, center, right, justify buttons
 - `AlignmentButton` - Individual button component with active/hover states
 
 **Props:**
+
 - `value?: ParagraphAlignment` - Current alignment value
 - `onChange?: (alignment: ParagraphAlignment) => void` - Callback when changed
 - `disabled?: boolean` - Whether buttons are disabled
@@ -3251,6 +3714,7 @@ Created `src/components/ui/AlignmentButtons.tsx` with paragraph alignment contro
 - `compact?: boolean` - Smaller button size
 
 **Features:**
+
 - Left, Center, Right, Justify buttons with SVG icons
 - Shows active state for current paragraph alignment
 - Applies alignment to current paragraph(s) via onChange callback
@@ -3259,12 +3723,14 @@ Created `src/components/ui/AlignmentButtons.tsx` with paragraph alignment contro
 - Compact mode for dense toolbars
 
 **CSS Classes:**
+
 - `docx-alignment-buttons` - Container
 - `docx-alignment-button` - Individual button
 - `docx-alignment-button-active` - Active state
 - `docx-alignment-button-disabled` - Disabled state
 
 **Utility Functions:**
+
 - `getAlignmentOptions()` - Get all alignment options
 - `isValidAlignment(value)` - Type guard for alignment values
 - `getAlignmentLabel(value)` - Get display label
@@ -3276,28 +3742,34 @@ Created `src/components/ui/AlignmentButtons.tsx` with paragraph alignment contro
 - `handleAlignmentShortcut(event)` - Parse keyboard shortcut
 
 **Exported Icons:**
+
 - `AlignLeftIcon`, `AlignCenterIcon`, `AlignRightIcon`, `AlignJustifyIcon`
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-66: List buttons
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/ui/ListButtons.tsx` with list formatting controls:
 
 **Main Components:**
+
 - `ListButtons` - Main component with bullet/numbered list buttons and indent controls
 - `ListButton` - Individual button component with active/hover states
 
 **Types:**
+
 - `ListType` - 'bullet' | 'numbered' | 'none'
 - `ListState` - State object with type, level, isInList, numId
 
 **Props:**
+
 - `listState?: ListState` - Current list state of selection
 - `onBulletList?: () => void` - Callback for bullet list toggle
 - `onNumberedList?: () => void` - Callback for numbered list toggle
@@ -3308,6 +3780,7 @@ Created `src/components/ui/ListButtons.tsx` with list formatting controls:
 - `compact?: boolean` - Smaller button size
 
 **Features:**
+
 - Bullet list button with toggle behavior
 - Numbered list button with toggle behavior
 - Indent button (increase list level)
@@ -3316,12 +3789,14 @@ Created `src/components/ui/ListButtons.tsx` with list formatting controls:
 - ARIA attributes for accessibility
 
 **CSS Classes:**
+
 - `docx-list-buttons` - Container
 - `docx-list-button` - Individual button
 - `docx-list-button-active` - Active state
 - `docx-list-button-disabled` - Disabled state
 
 **Utility Functions:**
+
 - `createDefaultListState()` - Create non-list state
 - `createBulletListState(level, numId)` - Create bullet list state
 - `createNumberedListState(level, numId)` - Create numbered list state
@@ -3335,23 +3810,28 @@ Created `src/components/ui/ListButtons.tsx` with list formatting controls:
 - `handleListShortcut(event)` - Parse keyboard shortcuts (Tab/Shift+Tab)
 
 **Exported Icons:**
+
 - `BulletListIcon`, `NumberedListIcon`, `IndentIcon`, `OutdentIcon`
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-67: Style picker
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/ui/StylePicker.tsx` with comprehensive style selection:
 
 **Main Component:**
+
 - `StylePicker` - React component with dropdown for selecting paragraph/character styles
 
 **Props:**
+
 - `value?: string` - Currently selected style ID
 - `onChange?: (styleId: string) => void` - Callback when style is selected
 - `styles?: Style[]` - Available styles from document
@@ -3362,6 +3842,7 @@ Created `src/components/ui/StylePicker.tsx` with comprehensive style selection:
 - `quickFormatOnly?: boolean` - Only show qFormat styles
 
 **Features:**
+
 - Dropdown with available styles from document
 - Shows style name in its formatting (preview)
 - Shows current style of selection
@@ -3372,9 +3853,11 @@ Created `src/components/ui/StylePicker.tsx` with comprehensive style selection:
 - Default styles when no document styles provided
 
 **Default Styles Included:**
+
 - Normal, Heading 1-3, Title, Subtitle, Quote, Intense Quote
 
 **Utility Functions:**
+
 - `getDefaultStyles()` - Get default style options
 - `createStyleOptions(styles, options)` - Convert Style[] to StyleOption[]
 - `findStyleById(styles, styleId)` - Find style by ID
@@ -3388,20 +3871,24 @@ Created `src/components/ui/StylePicker.tsx` with comprehensive style selection:
 - `getHeadingLevel(style)` - Get heading level (1-9)
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-68: Insert hyperlink dialog
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/dialogs/HyperlinkDialog.tsx` with comprehensive hyperlink dialog:
 
 **Main Component:**
+
 - `HyperlinkDialog` - React modal component for inserting/editing hyperlinks
 
 **Props:**
+
 - `isOpen: boolean` - Whether the dialog is open
 - `onClose: () => void` - Callback when dialog is closed
 - `onSubmit: (data: HyperlinkData) => void` - Callback when hyperlink is submitted
@@ -3412,6 +3899,7 @@ Created `src/components/dialogs/HyperlinkDialog.tsx` with comprehensive hyperlin
 - `bookmarks?: BookmarkOption[]` - Available bookmarks for internal links
 
 **Features:**
+
 - Input for URL with validation (http, https, mailto, tel, ftp)
 - Input for display text
 - Edit existing hyperlinks
@@ -3424,11 +3912,13 @@ Created `src/components/dialogs/HyperlinkDialog.tsx` with comprehensive hyperlin
 - Accessible with ARIA attributes
 
 **Types:**
+
 - `HyperlinkData` - Interface for hyperlink data (url, displayText, bookmark, tooltip)
 - `BookmarkOption` - Interface for bookmark selection options
 - `HyperlinkDialogProps` - Component props interface
 
 **Utility Functions:**
+
 - `isValidUrl(url)` - Validate URL string (supports http, https, mailto, tel, ftp)
 - `normalizeUrl(url)` - Add protocol if missing
 - `getUrlType(url)` - Detect URL type (web, email, phone, ftp)
@@ -3442,6 +3932,7 @@ Created `src/components/dialogs/HyperlinkDialog.tsx` with comprehensive hyperlin
 - `extractBookmarksForDialog(bookmarks)` - Convert bookmarks for dialog
 
 **CSS Classes:**
+
 - `docx-hyperlink-dialog-overlay` - Overlay backdrop
 - `docx-hyperlink-dialog` - Dialog container
 - `docx-hyperlink-dialog-header` - Header with title and close button
@@ -3455,20 +3946,24 @@ Created `src/components/dialogs/HyperlinkDialog.tsx` with comprehensive hyperlin
 Also created `src/components/dialogs/index.ts` for exports.
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-69: Find and Replace dialog
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/dialogs/FindReplaceDialog.tsx` with comprehensive find and replace functionality:
 
 **Main Component:**
+
 - `FindReplaceDialog` - React modal component for find and replace
 
 **Props:**
+
 - `isOpen: boolean` - Whether the dialog is open
 - `onClose: () => void` - Callback when dialog is closed
 - `onFind: (searchText, options) => FindResult | null` - Callback for searching
@@ -3482,6 +3977,7 @@ Created `src/components/dialogs/FindReplaceDialog.tsx` with comprehensive find a
 - `replaceMode?: boolean` - Start in replace mode (Ctrl+H)
 
 **Features:**
+
 - Find input with next/previous navigation buttons (Enter/Shift+Enter)
 - Replace input with replace/replace all buttons
 - Match case option checkbox
@@ -3495,12 +3991,14 @@ Created `src/components/dialogs/FindReplaceDialog.tsx` with comprehensive find a
 - ARIA accessibility attributes
 
 **Types:**
+
 - `FindMatch` - Interface for a single match (paragraphIndex, contentIndex, offsets, text)
 - `FindOptions` - Interface for search options (matchCase, matchWholeWord, useRegex)
 - `FindResult` - Interface for search result (matches, totalCount, currentIndex)
 - `HighlightOptions` - Interface for highlight colors
 
 **Utility Functions:**
+
 - `createDefaultFindOptions()` - Create default find options
 - `findAllMatches(content, searchText, options)` - Find all matches in text
 - `escapeRegexString(str)` - Escape string for regex use
@@ -3512,6 +4010,7 @@ Created `src/components/dialogs/FindReplaceDialog.tsx` with comprehensive find a
 - `getDefaultHighlightOptions()` - Get default highlight colors
 
 **CSS Classes:**
+
 - `docx-find-replace-dialog-overlay` - Non-blocking overlay
 - `docx-find-replace-dialog` - Dialog container
 - `docx-find-replace-dialog-header` - Header with title and close
@@ -3523,25 +4022,30 @@ Created `src/components/dialogs/FindReplaceDialog.tsx` with comprehensive find a
 - `docx-find-replace-dialog-status` - Match count display
 
 **Keyboard Shortcuts:**
+
 - Enter - Find next (or initial search)
 - Shift+Enter - Find previous
 - Escape - Close dialog
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-70: Zoom control
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control functionality:
 
 **Main Component:**
+
 - `ZoomControl` - React component with dropdown and zoom in/out buttons
 
 **Props:**
+
 - `value?: number` - Current zoom level (1.0 = 100%)
 - `onChange?: (zoom: number) => void` - Callback when zoom changes
 - `levels?: ZoomLevel[]` - Custom zoom levels
@@ -3554,6 +4058,7 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
 - `compact?: boolean` - Compact mode (smaller size)
 
 **Features:**
+
 - Dropdown with zoom levels (50%, 75%, 100%, 125%, 150%, 200%)
 - Zoom in/out buttons with proper limits
 - Scales page rendering (via onChange callback)
@@ -3563,12 +4068,15 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
 - Compact mode for dense toolbars
 
 **Default Zoom Levels:**
+
 - 50%, 75%, 100%, 125%, 150%, 200%
 
 **Extended Zoom Levels (available via getExtendedZoomLevels):**
+
 - 25%, 50%, 75%, 90%, 100%, 110%, 125%, 150%, 175%, 200%, 300%, 400%
 
 **Utility Functions:**
+
 - `getDefaultZoomLevels()` - Get default zoom levels
 - `getExtendedZoomLevels()` - Get extended zoom levels
 - `createZoomLevel(value)` - Create zoom level from decimal
@@ -3590,10 +4098,12 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
 - `getZoomedDimensions(width, height, zoom)` - Calculate zoomed dimensions
 
 **Exported Icons:**
+
 - `ZoomInIcon` - SVG icon for zoom in
 - `ZoomOutIcon` - SVG icon for zoom out
 
 **CSS Classes:**
+
 - `docx-zoom-control` - Container
 - `docx-zoom-out-button` - Zoom out button
 - `docx-zoom-in-button` - Zoom in button
@@ -3601,21 +4111,25 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
 - `docx-zoom-dropdown-menu` - Dropdown menu
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-71: Table editing toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 `src/components/ui/TableToolbar.tsx` exists with comprehensive table manipulation controls:
 
 **Main Components:**
+
 - `TableToolbar` - Main component with all table editing controls
 - `TableToolbarButton` - Individual button component with hover/disabled states
 
 **Table Actions Supported:**
+
 - Add row above/below
 - Add column left/right
 - Delete row/column
@@ -3624,6 +4138,7 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
 - Delete table
 
 **Context Detection:**
+
 - Uses `TableContext` interface to track:
   - Current table and selection
   - Whether multiple cells are selected
@@ -3631,6 +4146,7 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
   - Row and column counts
 
 **SVG Icons:**
+
 - `AddRowAboveIcon`, `AddRowBelowIcon` - Row insertion icons
 - `AddColumnLeftIcon`, `AddColumnRightIcon` - Column insertion icons
 - `DeleteRowIcon`, `DeleteColumnIcon` - Deletion icons with red accent
@@ -3638,6 +4154,7 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
 - `DeleteTableIcon` - Full table deletion icon
 
 **Utility Functions:**
+
 - `createTableContext(table, selection)` - Create context from table and selection
 - `getColumnCount(table)` - Get column count accounting for merged cells
 - `getCellAt(table, row, col)` - Get cell at specific position
@@ -3656,12 +4173,14 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
 - `isDeleteAction(action)` - Check if action is destructive
 
 **CSS Classes:**
+
 - `docx-table-toolbar` - Main container
 - `docx-table-toolbar-compact` - Compact mode
 - `docx-table-toolbar-floating` - Floating position
 - `docx-table-toolbar-button` - Individual button
 
 **Features:**
+
 - Shows when cursor is in a table (via context prop)
 - Disables row/column deletion when only one row/column remains
 - Disables merge when single cell selected
@@ -3671,20 +4190,24 @@ Created `src/components/ui/ZoomControl.tsx` with comprehensive zoom control func
 - ARIA labels for accessibility
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-72: Image editing
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/edit/EditableImage.tsx` with comprehensive image editing capabilities:
 
 **Main Component:**
+
 - `EditableImage` - React component with resize handles and editing support
 
 **Props:**
+
 - `image: ImageType` - The image data to render
 - `imageIndex?: number` - Index for identification
 - `editable?: boolean` - Whether editing is enabled
@@ -3697,12 +4220,14 @@ Created `src/components/edit/EditableImage.tsx` with comprehensive image editing
 - `minWidth/minHeight/maxWidth/maxHeight` - Size constraints
 
 **Resize Handles:**
+
 - 8 handles: nw, n, ne, e, se, s, sw, w
 - Corner handles (larger) and edge handles (smaller)
 - Blue colored handles with white border and shadow
 - Proper cursors for each handle direction
 
 **Resize Behavior:**
+
 - Maintains aspect ratio by default
 - Hold Shift to unlock aspect ratio (free resize)
 - Minimum size constraints (default 20px)
@@ -3711,6 +4236,7 @@ Created `src/components/edit/EditableImage.tsx` with comprehensive image editing
 - Converts to EMUs on completion
 
 **Selection & Keyboard:**
+
 - Click to select image
 - Blue outline when selected
 - Delete/Backspace key removes image
@@ -3718,6 +4244,7 @@ Created `src/components/edit/EditableImage.tsx` with comprehensive image editing
 - Tab focus support for accessibility
 
 **CSS Classes:**
+
 - `docx-editable-image` - Base class
 - `docx-editable-image-inline` / `docx-editable-image-floating` - Position mode
 - `docx-editable-image-selected` - Selection state
@@ -3725,6 +4252,7 @@ Created `src/components/edit/EditableImage.tsx` with comprehensive image editing
 - `docx-resize-handle` - Resize handle elements
 
 **Utility Functions:**
+
 - `isResizableImage(image)` - Check if image can be resized
 - `getOriginalAspectRatio(image)` - Get original aspect ratio
 - `calculateProportionalSize(w, h, newW, newH)` - Maintain aspect ratio
@@ -3735,6 +4263,7 @@ Created `src/components/edit/EditableImage.tsx` with comprehensive image editing
 - `isPointInImage(image, x, y, imgX, imgY)` - Hit testing
 
 **Features:**
+
 - Floating/inline image support
 - Transform support (rotation, flip)
 - Placeholder for missing images
@@ -3742,22 +4271,26 @@ Created `src/components/edit/EditableImage.tsx` with comprehensive image editing
 - Dimension indicator shows current size during resize
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-73: Variable insertion
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/ui/VariableInserter.tsx` with comprehensive variable insertion UI:
 
 **Main Components:**
+
 - `VariableInserter` - Input with insert button for toolbar
 - `VariableButton` - Dropdown button for toolbar integration
 - `VariableContextMenuItem` - Variable insertion for context menu
 
 **VariableInserter Features:**
+
 - Text input with curly brace prefix indicator
 - Insert button with icon
 - Suggestions dropdown with existing variables
@@ -3767,6 +4300,7 @@ Created `src/components/ui/VariableInserter.tsx` with comprehensive variable ins
 - Auto-clear after insert
 
 **VariableButton Features:**
+
 - Toolbar button with dropdown
 - Shows VariableInserter in dropdown
 - Variable icon (curly braces)
@@ -3774,12 +4308,14 @@ Created `src/components/ui/VariableInserter.tsx` with comprehensive variable ins
 - Click outside to close
 
 **VariableContextMenuItem Features:**
+
 - Compact input for context menu
 - Shows existing variables as quick-insert buttons
 - Focus input on mount
 - Closes menu after insert
 
 **Styling:**
+
 - Yellow/gold color scheme for variables (#e4b416)
 - Variable tags: yellow background, gold border, monospace font
 - Matches document styling for {{variables}}
@@ -3787,11 +4323,13 @@ Created `src/components/ui/VariableInserter.tsx` with comprehensive variable ins
 - Disabled states
 
 **Icons:**
+
 - `VariableIcon` - Curly braces with 'x' symbol
 - `InsertVariableIcon` - Curly braces with plus
 - `DropdownArrowIcon` - Down chevron
 
 **Utility Functions:**
+
 - `sanitizeVariableName(name)` - Remove invalid characters, convert spaces to underscores
 - `isValidVariableName(name)` - Validate variable name format
 - `formatVariable(name)` - Add {{}} wrapper
@@ -3801,6 +4339,7 @@ Created `src/components/ui/VariableInserter.tsx` with comprehensive variable ins
 - `getCommonVariables()` - Get common variable suggestions
 
 **CSS Classes:**
+
 - `docx-variable-inserter` - Main container
 - `docx-variable-input` - Text input
 - `docx-variable-insert-button` - Insert button
@@ -3809,21 +4348,25 @@ Created `src/components/ui/VariableInserter.tsx` with comprehensive variable ins
 - `docx-variable-context-menu` - Context menu item
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-74: Variable detector
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/utils/variableDetector.ts` with comprehensive variable detection:
 
 **Main Functions:**
+
 - `detectVariables(doc): string[]` - Returns unique variable names sorted
 - `detectVariablesDetailed(doc): VariableDetectionResult` - Detailed result with locations
 
 **Detection Scope:**
+
 - Document body (paragraphs and tables)
 - Text runs
 - Hyperlinks
@@ -3836,17 +4379,20 @@ Created `src/utils/variableDetector.ts` with comprehensive variable detection:
 - Text boxes
 
 **Pattern Matching:**
+
 - Standard pattern: `{{variable_name}}`
 - Variable names: letters, numbers, underscores, hyphens, dots
 - Must start with letter or underscore
 - Relaxed pattern available for any content between braces
 
 **Result Types:**
+
 - `VariableDetectionResult` - Full result with locations
 - `VariableOccurrence` - Single occurrence with location info
 - Location types: body, header, footer, footnote, endnote, textBox
 
 **Utility Functions:**
+
 - `extractVariablesFromText(text)` - Extract from plain text
 - `extractVariablesFromTextRelaxed(text)` - Relaxed matching
 - `hasTemplateVariables(text)` - Check if text has variables
@@ -3854,37 +4400,44 @@ Created `src/utils/variableDetector.ts` with comprehensive variable detection:
 - `getUniqueVariables(text)` - Unique sorted list
 
 **Validation Functions:**
+
 - `isValidVariableName(name)` - Validate format
 - `sanitizeVariableName(name)` - Clean up invalid characters
 - `formatVariable(name)` - Add {{}} wrapper
 - `parseVariable(variable)` - Extract name from {{}}
 
 **Replacement Functions:**
+
 - `replaceVariables(text, values)` - Replace with values
 - `removeVariables(text, placeholder)` - Remove variables
 - `highlightVariables(text, wrapper)` - Highlight for display
 
 **Document Helpers:**
+
 - `getVariableCount(doc)` - Total count including duplicates
 - `getUniqueVariableCount(doc)` - Unique variable count
 - `documentHasVariables(doc)` - Quick check
 - `groupVariablesByLetter(variables)` - Group for large lists
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-75: Variable panel
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/VariablePanel.tsx` with comprehensive variable management:
 
 **Main Component:**
+
 - `VariablePanel` - Panel with variable inputs, apply button, empty state
 
 **Props:**
+
 - `variables: string[]` - Detected variable names
 - `values?: Record<string, string>` - Current variable values
 - `onValuesChange?: (values) => void` - Value change callback
@@ -3900,6 +4453,7 @@ Created `src/components/VariablePanel.tsx` with comprehensive variable managemen
 - `descriptions?: Record<string, string>` - Variable descriptions
 
 **Features:**
+
 - Lists detected variables from document
 - Input field for each value
 - Apply button to process template
@@ -3914,6 +4468,7 @@ Created `src/components/VariablePanel.tsx` with comprehensive variable managemen
 - Filled state indicator (green border)
 
 **Styling:**
+
 - Yellow/gold theme for variables
 - Monospace font for variable names
 - Clean modern panel design
@@ -3921,14 +4476,17 @@ Created `src/components/VariablePanel.tsx` with comprehensive variable managemen
 - Accessible inputs
 
 **Sub-components:**
+
 - `VariableInputField` - Individual variable input
 
 **Icons:**
+
 - `VariableIcon` - Curly braces
 - `EmptyVariablesIcon` - Empty document illustration
 - `CollapseIcon` - Chevron with rotation
 
 **Utility Functions:**
+
 - `createInitialValues(variables, defaultValue)` - Create values map
 - `allVariablesFilled(variables, values)` - Check all filled
 - `getEmptyVariables(variables, values)` - Get unfilled list
@@ -3938,47 +4496,56 @@ Created `src/components/VariablePanel.tsx` with comprehensive variable managemen
 - `parseValuesFromExport(text)` - Parse from export format
 
 **CSS Classes:**
+
 - `docx-variable-panel` - Main container
 - `docx-variable-item` - Individual variable
 - `docx-variable-input` - Input field
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-76: docxtemplater integration
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/utils/processTemplate.ts` with comprehensive template processing:
 
 **Main Functions:**
+
 - `processTemplate(buffer, variables, options): ArrayBuffer` - Main processing function
 - `processTemplateDetailed(buffer, variables, options): ProcessTemplateResult` - Detailed result
 - `processTemplateAsBlob(buffer, variables, options): Blob` - Return as Blob
 - `processTemplateAndDownload(buffer, variables, filename, options)` - Process and download
 
 **Options:**
+
 - `nullGetter: 'keep' | 'empty' | 'error'` - How to handle undefined variables
 - `linebreaks: boolean` - Convert \n to w:br
 - `delimiters: { start, end }` - Custom delimiters
 
 **Result Types:**
+
 - `ProcessTemplateResult` - Detailed result with buffer, replaced/unreplaced variables, warnings
 - `TemplateError` - Error with message, variable, type, originalError
 
 **Validation Functions:**
+
 - `getTemplateTags(buffer): string[]` - Get all tags without processing
 - `validateTemplate(buffer): { valid, errors, tags }` - Validate template structure
 - `getMissingVariables(tags, variables): string[]` - Find missing values
 - `previewTemplate(buffer, variables): string` - Preview text output
 
 **Advanced Features:**
+
 - `processTemplateAdvanced(buffer, data, options)` - Supports conditionals, loops
 - `createTemplateProcessor(defaultOptions)` - Create preset processor
 
 **Error Handling:**
+
 - Parse errors (unclosed tags, syntax)
 - Render errors (docxtemplater errors)
 - Undefined variable errors
@@ -3986,6 +4553,7 @@ Created `src/utils/processTemplate.ts` with comprehensive template processing:
 - Original error preservation
 
 **Features:**
+
 - Uses PizZip + Docxtemplater
 - Preserves all formatting (fonts, styles, colors, tables)
 - DEFLATE compression on output
@@ -3995,17 +4563,20 @@ Created `src/utils/processTemplate.ts` with comprehensive template processing:
 - Download helper function
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-77: Agent types
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/types/agentApi.ts` with comprehensive agent API types:
 
 **Position & Range:**
+
 - `Position` - { paragraphIndex, offset, contentIndex?, sectionIndex? }
 - `Range` - { start, end, collapsed? }
 - `createCollapsedRange(position)` - Create cursor range
@@ -4014,6 +4585,7 @@ Created `src/types/agentApi.ts` with comprehensive agent API types:
 - `comparePositions(a, b)` - Compare positions (-1, 0, 1)
 
 **Command Types:**
+
 - `InsertTextCommand` - Insert text at position
 - `ReplaceTextCommand` - Replace text in range
 - `DeleteTextCommand` - Delete text in range
@@ -4032,21 +4604,25 @@ Created `src/types/agentApi.ts` with comprehensive agent API types:
 - `AgentCommand` - Union of all command types
 
 **Context Types:**
+
 - `AgentContext` - Document context for AI agents
 - `StyleInfo` - Style information
 - `ParagraphOutline` - Paragraph preview for outline
 - `SectionInfo` - Section information
 
 **Selection Context:**
+
 - `SelectionContext` - Current selection details
 - `ParagraphContext` - Paragraph containing selection
 - `SuggestedAction` - Suggested action for context menu
 
 **Response Types:**
+
 - `AgentResponse` - Response from agent action
 - `AgentContent` - Content block in response
 
 **AI Actions:**
+
 - `AIAction` - askAI, rewrite, expand, summarize, translate, explain, fixGrammar, makeFormal, makeCasual, custom
 - `AIActionRequest` - Request with context
 - `getActionLabel(action)` - Get display label
@@ -4054,26 +4630,31 @@ Created `src/types/agentApi.ts` with comprehensive agent API types:
 - `DEFAULT_AI_ACTIONS` - Default actions for context menu
 
 **Utility Types:**
+
 - `CommandHandler<T>` - Command handler function type
 - `AIRequestHandler` - AI request handler function type
 - `createCommand<T>(command)` - Create command with ID
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-78: Command executor
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/agent/executor.ts` for executing agent commands immutably:
 
 **Main Functions:**
+
 - `executeCommand(doc, command): Document` - Execute a single command
 - `executeCommands(doc, commands): Document` - Execute multiple commands in sequence
 
 **Supported Commands:**
+
 - `insertText` - Insert text at position with optional formatting
 - `replaceText` - Replace text in range (single or multi-paragraph)
 - `deleteText` - Delete text in range (handles paragraph merging)
@@ -4091,6 +4672,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `applyVariables` - Substitute {{variable}} patterns
 
 **Key Design Decisions:**
+
 - All operations are immutable (returns new Document)
 - Deep clones document before modifications
 - Preserves surrounding formatting during edits
@@ -4098,17 +4680,20 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - Text offsets calculated across runs
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-79: DocumentAgent class
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 `src/agent/DocumentAgent.ts` already existed with a comprehensive implementation.
 
 **Reading Methods:**
+
 - `getText()` - Get plain text content of the document
 - `getFormattedText()` - Get text segments with formatting info
 - `getVariables()` - Get detected template variables
@@ -4121,6 +4706,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `getAgentContext()` - Get full document context for AI agents
 
 **Writing Methods:**
+
 - `insertText(position, text, options)` - Insert text at position
 - `replaceRange(range, text, options)` - Replace text in range
 - `deleteRange(range)` - Delete text in range
@@ -4129,6 +4715,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `applyParagraphFormatting(paragraphIndex, formatting)` - Apply paragraph formatting
 
 **Complex Operations:**
+
 - `insertTable(position, rows, cols, options)` - Insert table at position
 - `insertImage(position, src, options)` - Insert image at position
 - `insertHyperlink(range, url, options)` - Insert hyperlink
@@ -4137,6 +4724,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `mergeParagraphs(startIndex, count)` - Merge consecutive paragraphs
 
 **Variable Methods:**
+
 - `setVariable(name, value)` - Set template variable value
 - `setVariables(variables)` - Set multiple variables
 - `getPendingVariables()` - Get pending variable values
@@ -4144,39 +4732,46 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `applyVariables(variables?)` - Apply all template variables
 
 **Export Methods:**
+
 - `toBuffer()` - Export document to DOCX ArrayBuffer
 - `toBlob(mimeType?)` - Export document to Blob
 - `executeCommands(commands)` - Execute multiple commands
 
 **Factory Functions:**
+
 - `DocumentAgent.fromBuffer(buffer)` - Create from ArrayBuffer (async)
 - `DocumentAgent.fromDocument(document)` - Create from Document
 - `createAgent(buffer)` - Convenience function for buffer
 - `createAgentFromDocument(document)` - Convenience function for Document
 
 **Design Notes:**
+
 - Fluent API - most methods return new DocumentAgent for chaining
 - Immutable operations - commands create new Document instances
 - Async variable application via docxtemplater for proper template processing
 - Uses executor.ts for command execution
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-80: Agent context builder
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 `src/agent/context.ts` already existed with comprehensive implementation.
 
 **Main Functions:**
+
 - `getAgentContext(doc, options?)` - Build full agent context from document
 - `buildSelectionContext(doc, range, options?)` - Build context for selection
 - `getDocumentSummary(doc)` - Get simple summary string
 
 **AgentContext Includes:**
+
 - `paragraphCount` - Total paragraph count
 - `wordCount` - Total word count
 - `characterCount` - Character count
@@ -4188,6 +4783,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `hasTables`, `hasImages`, `hasHyperlinks` - Feature flags
 
 **ParagraphOutline Fields:**
+
 - `index` - Paragraph index
 - `preview` - First N characters
 - `style` - Style ID
@@ -4196,6 +4792,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `isEmpty` - Empty paragraph detection
 
 **SelectionContext Includes:**
+
 - `selectedText` - Selected text content
 - `range` - Selection range
 - `formatting` - Text formatting at selection
@@ -4206,6 +4803,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `suggestedActions` - AI action suggestions
 
 **Helper Functions:**
+
 - `calculateWordCount(body)` - Count words in body
 - `calculateCharacterCount(body)` - Count characters
 - `countWords(text)` - Count words in text
@@ -4214,26 +4812,31 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `getDocumentSummary(doc)` - Human-readable summary
 
 **Design Notes:**
+
 - All outputs are JSON serializable
 - Options for customizing outline length
 - Heading detection from style IDs
 - Suggested actions based on selection content
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-81: Context menu component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 `src/components/ContextMenu.tsx` already existed with comprehensive implementation.
 
 **Main Component:**
+
 - `ContextMenu` - Right-click context menu for AI actions
 
 **Features:**
+
 - Shows on right-click when text selected (via useContextMenu hook)
 - Positioned near cursor with viewport boundary checks
 - Options: Ask AI, Rewrite, Expand, Summarize, Translate, Explain
@@ -4245,6 +4848,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - Mouse hover highlighting
 
 **Props:**
+
 - `isOpen` - Visibility state
 - `position` - Menu position {x, y}
 - `selectedText` - Currently selected text
@@ -4255,35 +4859,42 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `showCustomPrompt` - Show custom prompt option
 
 **Icons:**
+
 - SVG icons for each action: AskAI, Rewrite, Expand, Summarize, Translate, Explain, Grammar, Formal, Casual, Custom
 
 **Hook:**
+
 - `useContextMenu()` - Hook to manage context menu state
   - Returns: isOpen, position, selectedText, selectionContext, openMenu, closeMenu
 
 **Utility Functions:**
+
 - `getActionShortcut(action)` - Get keyboard shortcut for action
 - `isActionAvailable(action, selectedText, context)` - Check if action available
 - `getDefaultActions()` - Get default action list
 - `getAllActions()` - Get all available actions
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-82: Selection context builder
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 `src/agent/selectionContext.ts` already existed with comprehensive implementation.
 
 **Main Functions:**
+
 - `buildSelectionContext(doc, range, options)` - Build selection context for AI operations
 - `buildExtendedSelectionContext(doc, range, options)` - Extended context with additional details
 - `getSelectionFormattingSummary(doc, range)` - Get formatting summary for selection
 
 **SelectionContext Interface:**
+
 - `selectedText` - The selected text
 - `range` - Selection range (start/end positions)
 - `formatting` - Text formatting at selection start
@@ -4296,6 +4907,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `suggestedActions` - AI actions suggested based on content
 
 **ExtendedSelectionContext:**
+
 - Extends SelectionContext with:
   - `documentSummary` - Overall document summary
   - `wordCount` / `characterCount` - Selection stats
@@ -4305,6 +4917,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
   - `contentType` - prose / list / heading / table / mixed
 
 **Helper Functions:**
+
 - `extractSelectedText()` - Extract text from range
 - `getTextBefore() / getTextAfter()` - Get surrounding context
 - `getFormattingAtPosition()` - Get formatting at position
@@ -4313,20 +4926,24 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `detectLanguage()` - Simple language detection heuristic
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-83: Response preview component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 `src/components/ResponsePreview.tsx` already existed with comprehensive implementation.
 
 **Main Component:**
+
 - `ResponsePreview` - Shows AI response preview with diff view
 
 **Props:**
+
 - `originalText` - Original selected text
 - `response` - AI response (or null if loading/error)
 - `action` - Action that was performed
@@ -4340,22 +4957,26 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `position` - Position for the preview
 
 **States:**
+
 - Loading: Shows spinner with action label
 - Error: Shows error message with retry/close buttons
 - Success: Shows diff view with accept/reject/edit options
 
 **Diff View:**
+
 - Word-level diff calculation
 - Removed text: strikethrough, red background
 - Added text: green background
 - Merged consecutive segments of same type
 
 **Features:**
+
 - Edit mode: textarea to modify response before accepting
 - Keyboard shortcuts: Escape to close/cancel, Ctrl+Enter to accept
 - Warnings display for AI responses
 
 **Hook:**
+
 - `useResponsePreview()` - State management for response preview
   - `showPreview(text, action, position)` - Show loading preview
   - `setResponse(response)` - Set AI response
@@ -4363,24 +4984,29 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
   - `hidePreview()` - Hide preview
 
 **Utility Functions:**
+
 - `createMockResponse(newText, warnings)` - Create mock response
 - `createErrorResponse(error)` - Create error response
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-84: Context menu integration
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 `src/components/AIEditor.tsx` already existed with comprehensive implementation.
 
 **Main Component:**
+
 - `AIEditor` - Editor with integrated AI context menu
 
 **Props (extends EditorProps):**
+
 - `onAgentRequest` - Handler for AI requests
 - `availableActions` - Available AI actions
 - `showCustomPrompt` - Show custom prompt option
@@ -4389,10 +5015,12 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 - `onAIActionError` - Callback when AI action fails
 
 **Ref Methods:**
+
 - `triggerAIAction(action, customPrompt)` - Trigger AI action programmatically
 - `getSelectionContext()` - Get current selection context
 
 **Full Flow Implementation:**
+
 1. User selects text in editor
 2. Right-click triggers context menu
 3. Selection context is built from document and range
@@ -4404,6 +5032,7 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
 9. On accept, document is updated via executeCommand
 
 **Helper Functions:**
+
 - `getSelectedText()` - Get selected text from DOM
 - `getSelectionRange()` - Convert DOM selection to document range
   - Finds paragraph indices from data attributes
@@ -4411,59 +5040,70 @@ Created `src/agent/executor.ts` for executing agent commands immutably:
   - Handles forward and backward selections
 
 **Mock Handler:**
+
 - `createMockAIHandler(delay)` - Create mock AI handler for testing
   - Simulates network delay
   - Returns mock responses for each action type
 
 **Integration:**
+
 - Uses ContextMenu component
 - Uses ResponsePreview component
 - Uses buildSelectionContext from selectionContext.ts
 - Uses executeCommand from executor.ts
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-85: Loading states
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Loading states are implemented across multiple components.
 
 **DocumentViewer.tsx:**
+
 - `isLoading` prop for loading state
 - `loadingIndicator` prop for custom loading indicator
 - `DefaultLoadingIndicator` component with animated spinner
 - Shows "Loading document..." message
 
 **ResponsePreview.tsx:**
+
 - `isLoading` prop for loading state
 - `LoadingSpinner` component with animated SVG
 - Shows action label while loading (e.g., "Rewriting...")
 
 **fontLoader.ts:**
+
 - `isLoading()` - Check if any fonts are loading
 - `loadingFonts` Map tracks fonts being loaded
 - `onFontsLoaded(callback)` - Register callback for when fonts load
 - Progress tracking via Promise-based loading
 
 **VariablePanel.tsx:**
+
 - `isApplying` prop for apply operation in progress
 - Disables controls while applying
 
 **Loading Indicators:**
+
 - Animated CSS spinner (DocumentViewer)
 - Animated SVG spinner (ResponsePreview)
 - State tracking via `isLoading` props
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-86: Error handling
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -4506,6 +5146,7 @@ Created `src/components/ErrorBoundary.tsx` with comprehensive error handling.
    - Yellow/warning styling
 
 **Hook:**
+
 - `useErrorNotifications()` - Access error context
   - `showError(message, details)` - Show error toast
   - `showWarning(message, details)` - Show warning toast
@@ -4514,42 +5155,50 @@ Created `src/components/ErrorBoundary.tsx` with comprehensive error handling.
   - `clearNotifications()` - Clear all notifications
 
 **Utility Functions:**
+
 - `isParseError(error)` - Check if error is parse-related
 - `getUserFriendlyMessage(error)` - Get user-friendly message
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-87: Accessibility
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Accessibility features are implemented across the codebase.
 
 **ARIA Labels on Controls:**
+
 - Toolbar.tsx: `aria-label="Formatting toolbar"`, `aria-pressed`, `aria-label` on buttons
 - ContextMenu.tsx: `role="menu"`, `aria-label="AI actions menu"`, `role="menuitem"`
 - All dialogs: proper ARIA labels
 - UI components: ColorPicker, FontPicker, StylePicker all have ARIA attributes
 
 **Keyboard Navigation:**
+
 - ContextMenu: Arrow up/down navigation, Enter to select, Escape to close
 - Dialogs: Tab navigation, Escape to close
 - Toolbar buttons: Standard button keyboard interaction
 
 **Focus Visible Indicators:**
+
 - Button states with hover/active styling
 - Focus ring on form inputs
 
 **Screen Reader Friendly Structure:**
+
 - Semantic HTML elements
 - Role attributes: toolbar, menu, menuitem, group, separator
 - Proper heading hierarchy
 - Descriptive button labels
 
 **Components with Accessibility:**
+
 - Toolbar.tsx
 - ContextMenu.tsx
 - VariablePanel.tsx
@@ -4563,17 +5212,20 @@ Accessibility features are implemented across the codebase.
 - HyperlinkDialog.tsx
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-88: Main DocxEditor component
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/DocxEditor.tsx` - the main component integrating all editor features.
 
 **Props:**
+
 - `documentBuffer` - ArrayBuffer from file read
 - `document` - Pre-parsed Document (alternative)
 - `onSave` - Callback when saving
@@ -4592,6 +5244,7 @@ Created `src/components/DocxEditor.tsx` - the main component integrating all edi
 - `variableDescriptions` - Variable descriptions
 
 **Ref Methods:**
+
 - `getAgent()` - Get DocumentAgent
 - `getDocument()` - Get current document
 - `getEditorRef()` - Get editor ref
@@ -4602,6 +5255,7 @@ Created `src/components/DocxEditor.tsx` - the main component integrating all edi
 - `triggerAIAction()` - Trigger AI action
 
 **Integration:**
+
 - Toolbar - Formatting controls
 - AIEditor - Editor with AI context menu
 - VariablePanel - Template variable editing
@@ -4610,26 +5264,31 @@ Created `src/components/DocxEditor.tsx` - the main component integrating all edi
 - ErrorProvider - Notification context
 
 **States:**
+
 - Loading: Shown while parsing document
 - Error: Shown on parse failure
 - Empty: Placeholder when no document
 
 **Helper Functions:**
+
 - `extractVariableNames(doc)` - Extract {{variable}} names
 - `extractVariables(doc)` - Get variable values
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-89: Events and callbacks
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 All event callbacks are implemented in DocxEditor.tsx.
 
 **Implemented Callbacks:**
+
 - `onSelectionChange(context: SelectionContext | null)` - Selection change callback
 - `onChange(document: Document)` - Content change callback (onContentChange)
 - `onSave(buffer: ArrayBuffer)` - Save callback
@@ -4637,83 +5296,100 @@ All event callbacks are implemented in DocxEditor.tsx.
 - `onFontsLoaded()` - Font loading complete callback
 
 **Additional Callbacks:**
+
 - `onAIActionStart(action, context)` - AI action start (in AIEditor)
 - `onAIActionComplete(action, response)` - AI action complete (in AIEditor)
 - `onAIActionError(action, error)` - AI action error (in AIEditor)
 - `onFocus()` / `onBlur()` - Focus callbacks (in Editor)
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-90: Public API exports
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Updated `src/index.ts` with comprehensive public API exports.
 
 **Main Component:**
+
 - `DocxEditor` (default and named export)
 - `DocxEditorProps`, `DocxEditorRef` types
 
 **Agent API:**
+
 - `DocumentAgent` - Main agent class
 - `executeCommand`, `CommandResult`
 - `getAgentContext`, `getDocumentSummary`
 - `buildSelectionContext`, `buildExtendedSelectionContext`
 
 **Parser/Serializer:**
+
 - `parseDocx` - Parse DOCX buffer
 - `serializeDocx` - Serialize to DOCX
 - `processTemplate` - Template processing
 
 **Font Loader:**
+
 - `loadFont`, `loadFonts`, `loadFontFromBuffer`
 - `isFontLoaded`, `isFontsLoading`, `getLoadedFonts`
 - `onFontsLoaded`, `canRenderFont`, `preloadCommonFonts`
 
 **UI Components:**
+
 - `Toolbar`, `VariablePanel`, `Editor`, `AIEditor`
 - `DocumentViewer`, `ContextMenu`, `ResponsePreview`
 
 **Error Handling:**
+
 - `ErrorBoundary`, `ErrorProvider`
 - `useErrorNotifications`, `ParseErrorDisplay`
 - `UnsupportedFeatureWarning`
 
 **UI Controls:**
+
 - `ZoomControl`, `FontPicker`, `FontSizePicker`
 - `ColorPicker`, `StylePicker`, `AlignmentButtons`, `ListButtons`
 
 **Dialogs:**
+
 - `FindReplaceDialog`, `HyperlinkDialog`
 
 **Types:**
+
 - All document types (Document, Paragraph, Table, etc.)
 - All agent API types (AIAction, SelectionContext, etc.)
 
 **Utilities:**
+
 - Unit conversions (twips, pixels, emu)
 - Color utilities (theme color, hex conversion)
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-100: Fix Toolbar props mismatch in DocxEditor
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Fixed props mismatch between DocxEditor and Toolbar component.
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-101: Add visible cursor/caret styling
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -4743,24 +5419,28 @@ Added visible cursor/caret styling for contentEditable elements in the editor.
    - Documentation for importing styles
 
 **CSS Classes Added:**
+
 - `docx-run-editable` - Base class with caret styling
 - `docx-paragraph-editable` - Paragraph cursor styling
 - `docx-run-highlighted` - Dark caret for yellow background
 - `docx-run-dark-bg` - White caret for dark backgrounds
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-91: Demo page
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Updated `demo/main.tsx` with complete demo using DocxEditor.
 
 **Features:**
+
 - File picker to load any DOCX file
 - Full DocxEditor integration with all features
 - Mock AI handler with createMockAIHandler
@@ -4769,6 +5449,7 @@ Updated `demo/main.tsx` with complete demo using DocxEditor.
 - Status display for actions
 
 **Integration Example:**
+
 ```tsx
 <DocxEditor
   ref={editorRef}
@@ -4785,20 +5466,24 @@ Updated `demo/main.tsx` with complete demo using DocxEditor.
 ```
 
 **Empty State:**
+
 - Shows feature list when no document loaded
 - Instructions for loading a DOCX
 
 **Header:**
+
 - Open DOCX button
 - Save button
 - Status indicators
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-102: Fix text run fragmentation
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -4806,12 +5491,14 @@ Fixed text run fragmentation by implementing run consolidation during parsing.
 
 **Problem:**
 Word creates many tiny runs with identical formatting due to:
+
 - Spell checking markers
 - Revision tracking history
 - Cursor positioning
 - Grammar checking
 
 This caused 252+ tiny `<span>` elements instead of a few larger ones, leading to:
+
 - Poor editing UX (cursor jumps between spans)
 - Performance issues
 - Excessive DOM nodes
@@ -4820,12 +5507,14 @@ This caused 252+ tiny `<span>` elements instead of a few larger ones, leading to
 Created `src/docx/runConsolidator.ts` with:
 
 **Core Functions:**
+
 - `formattingEquals(a, b)` - Deep comparison of TextFormatting objects
 - `consolidateRuns(runs)` - Merge consecutive runs with identical formatting
 - `consolidateParagraphContent(content)` - Consolidate at paragraph level
 - `consolidateParagraph(paragraph)` - Consolidate entire paragraph
 
 **Features:**
+
 - Compares all formatting properties (bold, italic, color, font, etc.)
 - Handles nested structures (underline color, shading, font family themes)
 - Preserves merge boundaries (tabs, breaks, images, fields)
@@ -4833,23 +5522,27 @@ Created `src/docx/runConsolidator.ts` with:
 - Handles hyperlinks (consolidates their internal runs)
 
 **Integration:**
+
 - Added to `paragraphParser.ts` after content parsing
 - Runs automatically on every parsed paragraph
 - No changes to rendering code needed
 
 **Utility Functions:**
+
 - `isTextOnlyRun(run)` - Check if run can be merged
 - `canMergeRun(run)` - Check if run content allows merging
 - `countRuns(paragraph)` - Count runs for metrics
 - `getConsolidationStats(original, consolidated)` - Get reduction stats
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-103: Connect TableToolbar to table selection
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -4883,6 +5576,7 @@ Connected the TableToolbar to table cell selection, showing the toolbar when cli
    - Passes table selection handlers to AIEditor/Editor
 
 **Table Actions Supported:**
+
 - Add row above/below
 - Add column left/right
 - Delete row/column (disabled when only one row/column remains)
@@ -4891,6 +5585,7 @@ Connected the TableToolbar to table cell selection, showing the toolbar when cli
 - Delete table
 
 **Features:**
+
 - Clicking a table cell selects it and shows TableToolbar
 - Selected cell has blue outline
 - All actions update the document immutably
@@ -4898,17 +5593,20 @@ Connected the TableToolbar to table cell selection, showing the toolbar when cli
 - Clicking outside tables clears selection
 
 **Exported from Public API:**
+
 - `TableToolbar` and related types
 - `useTableSelection` hook and types
 - Table manipulation utilities (addRow, deleteColumn, etc.)
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-104: Fix undo/redo history connection
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -4931,6 +5629,7 @@ Connected the useDocumentHistory hook to the Editor state, enabling full undo/re
    - Added type exports: `HistoryEntry`, `UseHistoryOptions`, `UseHistoryReturn`
 
 **Features:**
+
 - Undo (Ctrl+Z / Cmd+Z) - reverts to previous document state
 - Redo (Ctrl+Y / Cmd+Shift+Z) - restores undone state
 - Grouping interval (500ms) - rapid changes grouped as single undo step
@@ -4939,6 +5638,7 @@ Connected the useDocumentHistory hook to the Editor state, enabling full undo/re
 - Toolbar buttons properly enabled/disabled based on history state
 
 **History Hook Capabilities:**
+
 - `push(state)` - Add new state to history
 - `undo()` - Return to previous state
 - `redo()` - Restore next state
@@ -4948,6 +5648,7 @@ Connected the useDocumentHistory hook to the Editor state, enabling full undo/re
 - `undoCount` / `redoCount` - Stack sizes
 
 **State Flow:**
+
 1. User makes edit → `handleDocumentChange(newDoc)` called
 2. `history.push(newDoc)` adds to undo stack, clears redo stack
 3. User presses Ctrl+Z → `handleUndo()` called
@@ -4956,12 +5657,14 @@ Connected the useDocumentHistory hook to the Editor state, enabling full undo/re
 6. `onChange?.(previousState)` notifies parent
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-110: Add Font Family picker to toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -4995,15 +5698,18 @@ Added the FontPicker component to the Toolbar for font family selection.
    - Changed `FontPicker` export to use correct types (`FontOption` instead of non-existent `useFontSearch` and `FontInfo`)
 
 **Props Added to Toolbar:**
+
 - `showFontPicker?: boolean` - Whether to show font family picker (default: true)
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-111: Add Font Size picker to toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5039,15 +5745,18 @@ Added the FontSizePicker component to the Toolbar for font size selection.
    - Document updated via `executeCommand` with `formatText` command
 
 **Props Added to Toolbar:**
+
 - `showFontSizePicker?: boolean` - Whether to show font size picker (default: true)
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-112: Add Text Color picker to toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5077,15 +5786,18 @@ Added the TextColorPicker component to the Toolbar for text color selection.
    - Document updated via `executeCommand` with `formatText` command
 
 **Props Added to Toolbar:**
+
 - `showTextColorPicker?: boolean` - Whether to show text color picker (default: true)
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-113: Add Highlight Color picker to toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5120,20 +5832,24 @@ Added the HighlightColorPicker component to the Toolbar for text highlight/backg
    - Document updated via `executeCommand` with `formatText` command
 
 **Props Added to Toolbar:**
+
 - `showHighlightColorPicker?: boolean` - Whether to show highlight color picker (default: true)
 
 **Highlight Color Names Supported:**
+
 - yellow, green, cyan, magenta, blue, red
 - darkBlue, darkCyan, darkGreen, darkMagenta, darkRed, darkYellow
 - darkGray, lightGray, black, white
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-114: Add Text Alignment buttons to toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5161,6 +5877,7 @@ Added the AlignmentButtons component to the Toolbar for paragraph alignment cont
    - Selection change handler now passes `paragraphFormatting` to `getSelectionFormatting`
 
 **Features:**
+
 - Left, Center, Right, Justify buttons with SVG icons
 - Active state shows current paragraph alignment
 - Keyboard shortcuts: Ctrl+L (left), Ctrl+E (center), Ctrl+R (right), Ctrl+J (justify)
@@ -5168,9 +5885,11 @@ Added the AlignmentButtons component to the Toolbar for paragraph alignment cont
 - ARIA attributes for accessibility
 
 **Props Added to Toolbar:**
+
 - `showAlignmentButtons?: boolean` - Whether to show alignment buttons (default: true)
 
 **Formatting Flow:**
+
 - User clicks alignment button or uses shortcut
 - `handleAlignmentChange(alignment)` called
 - `onFormat({ type: 'alignment', value: alignment })` triggers
@@ -5180,12 +5899,14 @@ Added the AlignmentButtons component to the Toolbar for paragraph alignment cont
 - Toolbar active state reflects new alignment
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-115: Add Bullet List button to toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5212,6 +5933,7 @@ Added the Bullet List button to the Toolbar using the existing ListButtons compo
    - Added exports for `ListState` type and `createDefaultListState` function
 
 **Features:**
+
 - Bullet list button with toggle behavior
 - Active state shows when paragraph is a bullet list
 - Uses `numPr.numId = 1` for bullet lists (Word convention)
@@ -5219,14 +5941,17 @@ Added the Bullet List button to the Toolbar using the existing ListButtons compo
 - Compact mode for toolbar integration
 
 **Props Added to Toolbar:**
+
 - `showListButtons?: boolean` - Whether to show list buttons (default: true)
 
 **List State Detection:**
+
 - Extracts `numPr` from paragraph formatting
 - Uses `numId = 1` as heuristic for bullet lists
 - Future enhancement: check numbering definitions for accurate detection
 
 **Formatting Flow:**
+
 - User clicks bullet list button
 - `handleBulletList()` called → `onFormat('bulletList')` triggered
 - DocxEditor's `handleFormat` detects bullet list action
@@ -5235,12 +5960,14 @@ Added the Bullet List button to the Toolbar using the existing ListButtons compo
 - Toolbar active state reflects list state
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-116: Add Numbered List button to toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5267,6 +5994,7 @@ The Numbered List button was already fully implemented as part of the ListButton
    - Updates `listState` to `{ type: 'numbered', level: 0, isInList: true, numId: 2 }`
 
 **Features:**
+
 - Numbered list button with toggle behavior
 - Active state shows when paragraph is a numbered list
 - Uses `numPr.numId = 2` for numbered lists (Word convention: numId 1 = bullets, numId 2 = numbered)
@@ -5274,16 +6002,19 @@ The Numbered List button was already fully implemented as part of the ListButton
 - Compact mode for toolbar integration
 
 **List State Detection:**
+
 - Extracts `numPr` from paragraph formatting in `getSelectionFormatting()`
 - Uses `numId !== 1` as heuristic for numbered lists (lines 792-804 in Toolbar.tsx)
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-117: Add Indent/Outdent buttons to toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5307,6 +6038,7 @@ Added Indent and Outdent buttons to the Toolbar for increasing/decreasing paragr
    - Updates selection formatting state after indent/outdent operations
 
 **Features:**
+
 - Indent button (right arrow icon) increases paragraph/list indent
 - Outdent button (left arrow icon) decreases paragraph/list indent
 - For list items: modifies the `ilvl` property (0-8 range, Word multi-level list levels)
@@ -5315,17 +6047,20 @@ Added Indent and Outdent buttons to the Toolbar for increasing/decreasing paragr
 - Uses existing icons from ListButtons component (IndentIcon, OutdentIcon)
 
 **Indent Behavior:**
+
 - List items: `numPr.ilvl` is incremented/decremented (0-8)
 - Regular paragraphs: `indentLeft` is modified in 720 twip steps (0.5 inch = standard Word indent)
 - Tab key could be wired for indent in future (already handled in ListButtons.handleListShortcut)
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-118: Add Line Spacing dropdown to toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5358,6 +6093,7 @@ Added Line Spacing dropdown picker to the Toolbar for adjusting paragraph line s
    - Exported `LineSpacingPicker`, `LineSpacingPickerProps`, `LineSpacingOption`
 
 **OOXML Line Spacing:**
+
 - OOXML uses twips for line spacing when `lineRule="auto"`
 - 240 twips = 1.0 (single) line spacing
 - 276 twips = 1.15 line spacing (Word default)
@@ -5367,6 +6103,7 @@ Added Line Spacing dropdown picker to the Toolbar for adjusting paragraph line s
 - 720 twips = 3.0 (triple) line spacing
 
 **Utility Functions:**
+
 - `lineSpacingMultiplierToTwips(multiplier)` - Convert multiplier to OOXML twips
 - `twipsToLineSpacingMultiplier(twips)` - Convert OOXML twips to multiplier
 - `getLineSpacingLabel(twips)` - Get display label for twips value
@@ -5375,12 +6112,14 @@ Added Line Spacing dropdown picker to the Toolbar for adjusting paragraph line s
 - `createLineSpacingOption(multiplier)` - Create custom option
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-119: Connect Style picker to toolbar
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5408,6 +6147,7 @@ Wired the StylePicker component to the Toolbar and DocxEditor, allowing users to
    - Updates selection formatting state with new styleId after applying
 
 **StylePicker Integration:**
+
 - Displays current paragraph style from selection
 - Dropdown with available styles from document, grouped by category (Headings, Paragraph, Quotes, Lists & TOC)
 - Shows styles in their own formatting (preview mode)
@@ -5416,11 +6156,13 @@ Wired the StylePicker component to the Toolbar and DocxEditor, allowing users to
 - Width: 140px, placeholder: "Styles"
 
 **Props Added to Toolbar:**
+
 - `showStylePicker?: boolean` - Whether to show style picker (default: true)
 - `documentStyles?: Style[]` - Document styles for the picker
 - `theme?: Theme | null` - Theme for style preview
 
 **Style Application Flow:**
+
 1. User selects style from dropdown
 2. `handleStyleChange(styleId)` called → `onFormat({ type: 'applyStyle', value: styleId })`
 3. DocxEditor's `handleFormat` detects applyStyle action
@@ -5428,12 +6170,14 @@ Wired the StylePicker component to the Toolbar and DocxEditor, allowing users to
 5. Toolbar shows selected style as current
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-120: Implement page break rendering
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5475,15 +6219,18 @@ Implemented page break rendering in the Editor component, allowing documents to 
    - Compatible with custom `renderPage` prop
 
 **Props Added to EditorProps:**
+
 - `enablePagination?: boolean` - Whether to enable pagination (default: true)
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-121: Add page margins visualization
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5512,6 +6259,7 @@ Added page margin guides/boundaries visualization to show where the content marg
    - Props flow through via `...editorProps` spread
 
 **Features:**
+
 - Dashed lines showing top, bottom, left, and right margin boundaries
 - Small corner markers where margins intersect for better visibility
 - Customizable guide color via `marginGuideColor` prop
@@ -5520,22 +6268,26 @@ Added page margin guides/boundaries visualization to show where the content marg
 - Respects zoom level
 
 **CSS Classes:**
+
 - `docx-page-margin-guides` - Container for all guides
 - `docx-margin-guide` - Individual guide line
 - `docx-margin-guide-top/bottom/left/right` - Specific guide lines
 - `docx-margin-corner` - Corner markers
 
 **Props Added:**
+
 - `showMarginGuides?: boolean` - Whether to show margin guides (default: false)
 - `marginGuideColor?: string` - Color for margin guides (default: '#c0c0c0')
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-122: Implement headers rendering
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5573,11 +6325,13 @@ Implemented header rendering on each page, displaying document headers from the 
      - Section index
 
 **Code Changes:**
+
 - `Editor.tsx`: Added type imports, header extraction logic, and header rendering in pages
 - New `headersForLayout` memo for converting document headers to layout engine format
 - `renderSinglePage` now renders header area when `page.header` is present
 
 **Features:**
+
 - Headers render at the correct position (header distance from top)
 - Headers respect left/right margins
 - Page number and total pages are passed to header content for field rendering
@@ -5585,12 +6339,14 @@ Implemented header rendering on each page, displaying document headers from the 
 - ARIA labels for accessibility
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-123: Implement footers rendering
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5626,9 +6382,11 @@ Implemented footer rendering on each page, displaying document footers from the 
      - Section index
 
 **Code Changes:**
+
 - `Editor.tsx`: Added footer extraction logic (`footersForLayout` memo), updated `calculatePages` call, added footer rendering area
 
 **Features:**
+
 - Footers render at the correct position (footer distance from bottom)
 - Footers respect left/right margins
 - Page number and total pages are passed to footer content for field rendering (page numbers!)
@@ -5636,12 +6394,14 @@ Implemented footer rendering on each page, displaying document footers from the 
 - ARIA labels for accessibility
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-124: Add page number display
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5677,6 +6437,7 @@ Added a floating page number indicator that shows "Page X of Y" and tracks the c
    - Exported utility functions: `formatPageOrdinal`, `createPageFormat`, `getPageProgress`, etc.
 
 **PageNumberIndicator Features:**
+
 - Shows "Page X of Y" as floating overlay
 - Tracks current page based on scroll position
 - Updates in real-time as user scrolls
@@ -5684,6 +6445,7 @@ Added a floating page number indicator that shows "Page X of Y" and tracks the c
 - Keyboard and click accessible
 
 **Utility Functions:**
+
 - `formatPageOrdinal(page)` - Format as "1st", "2nd", "3rd", etc.
 - `createPageFormat(template)` - Create custom format function
 - `getPageProgress(current, total)` - Calculate % progress
@@ -5691,22 +6453,26 @@ Added a floating page number indicator that shows "Page X of Y" and tracks the c
 - `calculateScrollToPage(pageNumber, pageHeights, containerHeight, gap)` - Calculate scroll position
 
 **Props Added to DocxEditorProps:**
+
 - `showPageNumbers?: boolean` - Show page number indicator (default: true)
 - `pageNumberPosition?: PageIndicatorPosition` - Position of indicator
 - `pageNumberVariant?: PageIndicatorVariant` - Style variant
 
 **Ref Methods Added:**
+
 - `getCurrentPage(): number` - Get current page (1-indexed)
 - `getTotalPages(): number` - Get total page count
 - `scrollToPage(pageNumber: number): void` - Scroll to specific page
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-125: Implement scroll-to-page navigation
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5736,6 +6502,7 @@ Implemented interactive page navigation with jump-to-page functionality, previou
    - Exported utility functions: `parsePageInput`, `isValidPageNumber`, `clampPageNumber`, etc.
 
 **PageNavigator Features:**
+
 - Previous/Next page buttons with hover states
 - "Page X of Y" display, clickable to show input popover
 - Page input popover with:
@@ -5754,6 +6521,7 @@ Implemented interactive page navigation with jump-to-page functionality, previou
 - Position options matching PageNumberIndicator
 
 **Utility Functions:**
+
 - `parsePageInput(input)` - Parse page number from string
 - `isValidPageNumber(page, totalPages)` - Validate page number
 - `clampPageNumber(page, totalPages)` - Clamp to valid range
@@ -5762,16 +6530,18 @@ Implemented interactive page navigation with jump-to-page functionality, previou
 - `calculateProgress(current, total)` - Calculate progress %
 
 **Props Added to DocxEditorProps:**
+
 - `enablePageNavigation?: boolean` - Use interactive navigator (default: true)
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
-
 ### US-126: Add horizontal ruler
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5800,6 +6570,7 @@ Added a horizontal ruler component that displays above the document with margin 
    - Exported utility functions: `getRulerDimensions`, `getMarginInUnits`, `parseMarginFromUnits`, `positionToMargin`
 
 **HorizontalRuler Features:**
+
 - Page width with tick marks every 1/8 inch (or mm for cm mode)
 - Major tick labels at full inches/centimeters
 - Gray shaded margin areas, white content area
@@ -5809,12 +6580,14 @@ Added a horizontal ruler component that displays above the document with margin 
 - ARIA accessibility attributes
 
 **Margin Marker Styles:**
+
 - Down-pointing triangle at top
 - Vertical line extending down
 - Hover: blue (#1a73e8)
 - Active/dragging: darker blue (#1557b0)
 
 **Utility Functions:**
+
 - `generateTicks(pageWidthTwips, zoom, unit)` - Generate tick mark data
 - `getRulerDimensions(sectionProps, zoom)` - Get ruler dimensions in pixels
 - `getMarginInUnits(marginTwips, unit)` - Convert margin to display string
@@ -5822,17 +6595,19 @@ Added a horizontal ruler component that displays above the document with margin 
 - `positionToMargin(positionPx, side, pageWidthPx, zoom)` - Convert ruler position to margin
 
 **Props Added to DocxEditorProps:**
+
 - `showRuler?: boolean` - Show horizontal ruler (default: false)
 - `rulerUnit?: 'inch' | 'cm'` - Unit for ruler display (default: 'inch')
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
-
 ### US-127: Add print preview/export
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5863,6 +6638,7 @@ Added print preview functionality with a modal view and print button in the tool
    - Exported utility functions: `triggerPrint`, `openPrintWindow`, `getDefaultPrintOptions`, `parsePageRange`, `formatPrintPageRange`, `isPrintSupported`
 
 **PrintPreview Features:**
+
 - Full-screen modal with document pages
 - Print button in header that triggers browser print dialog
 - Page count display
@@ -5873,12 +6649,14 @@ Added print preview functionality with a modal view and print button in the tool
 - Optional headers and footers rendering
 
 **PrintButton Features:**
+
 - Compact and full-size modes
 - Printer icon
 - Disabled state support
 - ARIA accessibility
 
 **Print Options:**
+
 - `includeHeaders` - Include document headers
 - `includeFooters` - Include document footers
 - `includePageNumbers` - Include page numbers
@@ -5888,6 +6666,7 @@ Added print preview functionality with a modal view and print button in the tool
 - `margins` - Margins mode (default, none, minimum)
 
 **Utility Functions:**
+
 - `triggerPrint()` - Trigger browser print dialog
 - `openPrintWindow(title, content)` - Open print in new window
 - `getDefaultPrintOptions()` - Get default options
@@ -5896,21 +6675,25 @@ Added print preview functionality with a modal view and print button in the tool
 - `isPrintSupported()` - Check browser support
 
 **Props Added to DocxEditorProps:**
+
 - `showPrintButton?: boolean` - Show print button (default: true)
 - `printOptions?: PrintOptions` - Print options
 - `onPrint?: () => void` - Print callback
 
 **Ref Methods Added:**
+
 - `openPrintPreview()` - Open print preview modal
 - `print()` - Trigger direct print
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-130: Wire table row insertion
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5939,6 +6722,7 @@ Verified that table row insertion functionality is fully wired and working.
    - Data attributes for row/column tracking (lines 369-371)
 
 **Full Flow:**
+
 1. User clicks a table cell → `onCellClick` triggers in DocTable
 2. `useTableSelection.handleCellClick` updates selection state and creates TableContext
 3. TableToolbar appears with row/column editing buttons
@@ -5949,12 +6733,14 @@ Verified that table row insertion functionality is fully wired and working.
 8. Selection is updated to maintain cursor position
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-131: Wire table column insertion
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -5974,6 +6760,7 @@ Verified that table column insertion functionality is fully wired and working.
    - Updates document via `onChange` callback
 
 **Full Flow:**
+
 1. User clicks a table cell → TableToolbar appears
 2. User clicks "Insert Column Left" or "Insert Column Right"
 3. `handleTableAction` calls `tableSelection.handleAction(action)`
@@ -5984,12 +6771,14 @@ Verified that table column insertion functionality is fully wired and working.
 8. Selection is updated to maintain cursor position
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-132: Wire table row deletion
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -6009,17 +6798,20 @@ Verified that table row deletion functionality is fully wired and working.
    - Updates document via `onChange` callback
 
 **Safety Features:**
+
 - Button is disabled when only one row exists
 - Selection adjusts to stay within valid range after deletion
 - Deleting last row adjusts to new last row index
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-133: Wire table column deletion
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -6041,17 +6833,20 @@ Verified that table column deletion functionality is fully wired and working.
    - Updates document via `onChange` callback
 
 **Special Handling:**
+
 - Cells with gridSpan > 1: reduces gridSpan by 1 instead of removing
 - Cells with gridSpan = 1: removes the cell
 - Updates columnWidths array if present
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-134: Wire cell merge functionality
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -6074,6 +6869,7 @@ Verified that cell merge functionality is fully wired and working.
    - Updates document via `onChange` callback
 
 **Merge Logic:**
+
 - Top-left cell gets `gridSpan` equal to column span and `vMerge: 'restart'` if multiple rows
 - Cells below get `vMerge: 'continue'` (rendered with rowspan)
 - Other cells in selection are removed from their rows
@@ -6081,21 +6877,25 @@ Verified that cell merge functionality is fully wired and working.
 **Note:** Multi-cell selection currently requires shift-click implementation (planned future enhancement).
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-135: Add table border styling UI
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/ui/TableBorderPicker.tsx` with comprehensive border styling UI.
 
 **Main Component:**
+
 - `TableBorderPicker` - UI for styling table/cell borders
 
 **Features:**
+
 - Border style dropdown (none, single, double, dotted, dashed, thick, triple)
 - Color picker for border color
 - Width selector (½ pt to 6 pt)
@@ -6104,17 +6904,20 @@ Created `src/components/ui/TableBorderPicker.tsx` with comprehensive border styl
 - Apply button to apply selected borders
 
 **Types:**
+
 - `BorderStyleType` - OOXML border styles
 - `BorderPosition` - Which borders to apply
 - `BorderConfig` - Style, color, width configuration
 
 **Icons:**
+
 - `BorderAllIcon` - All borders
 - `BorderOutsideIcon` - Outside borders only
 - `BorderInsideIcon` - Inside borders only
 - `BorderNoneIcon` - No borders
 
 **Utility Functions:**
+
 - `mapStyleToCss(style)` - Convert OOXML style to CSS
 - `createBorderSpec(config)` - Create OOXML BorderSpec from config
 - `createBorderConfig(spec)` - Create config from OOXML BorderSpec
@@ -6123,30 +6926,36 @@ Created `src/components/ui/TableBorderPicker.tsx` with comprehensive border styl
 - `getAvailableBorderWidths()` - Get width options
 
 **Constants:**
+
 - `BORDER_STYLES` - Available style options
 - `BORDER_WIDTHS` - Available width options in eighths of a point
 - `BORDER_POSITIONS` - Position options with icons
 - `DEFAULT_BORDER_CONFIG` - Default configuration
 
 **Exports Added to `src/index.ts`:**
+
 - Component, props, types, and all utility functions
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-136: Add cell background color UI
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/ui/CellBackgroundPicker.tsx` with cell shading color picker.
 
 **Main Component:**
+
 - `CellBackgroundPicker` - UI for changing table cell background/shading color
 
 **Features:**
+
 - 36-color grid organized by color family (grays, blues, greens, yellows, reds, purples)
 - "No Fill" option to remove background
 - Custom color input via native color picker
@@ -6154,14 +6963,17 @@ Created `src/components/ui/CellBackgroundPicker.tsx` with cell shading color pic
 - Current color indicator in button
 
 **Types:**
+
 - `CellColorOption` - Color option with hex and name
 - `CellBackgroundPickerProps` - Component props
 
 **Icons:**
+
 - `CellFillIcon` - Paint bucket icon for button
 - `NoFillIcon` - Diagonal line through cell for "No Fill"
 
 **Utility Functions:**
+
 - `getDefaultCellColors()` - Get default color palette
 - `createCellColorOption(hex, name?)` - Create color option
 - `isDefaultCellColor(hex)` - Check if in default palette
@@ -6172,9 +6984,11 @@ Created `src/components/ui/CellBackgroundPicker.tsx` with cell shading color pic
 - `getContrastingTextColor(bgHex)` - Get black/white text for contrast
 
 **Constants:**
+
 - `DEFAULT_CELL_COLORS` - 36 colors in 6 rows
 
 **Props:**
+
 - `value` - Current background color (hex)
 - `onChange` - Callback when color selected
 - `colors` - Custom color options
@@ -6184,23 +6998,28 @@ Created `src/components/ui/CellBackgroundPicker.tsx` with cell shading color pic
 - `compact` - Compact mode for toolbar
 
 **Exports Added to `src/index.ts`:**
+
 - Component, props, types, and all utility functions
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-140: Add Insert Table dialog
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/dialogs/InsertTableDialog.tsx` with visual grid selector for inserting tables.
 
 **Main Component:**
+
 - `InsertTableDialog` - Modal dialog for inserting new tables
 
 **Features:**
+
 - Visual grid selector (8x10 default) - hover to select dimensions
 - Grid cells highlight as you hover to show selected size
 - Real-time label shows selected dimensions (e.g., "3 x 4 Table")
@@ -6209,16 +7028,20 @@ Created `src/components/dialogs/InsertTableDialog.tsx` with visual grid selector
 - Keyboard support (Enter to insert, Escape to close)
 
 **Types:**
+
 - `TableConfig` - Row and column count configuration
 - `InsertTableDialogProps` - Component props
 
 **Icons:**
+
 - `TableIcon` - Table icon for dialog header
 
 **Hook:**
+
 - `useInsertTableDialog()` - State management hook with `isOpen`, `open`, `close`, `toggle`
 
 **Utility Functions:**
+
 - `createDefaultTableConfig(rows?, cols?)` - Create default config
 - `isValidTableConfig(config, maxRows?, maxCols?)` - Validate config
 - `clampTableConfig(config, maxRows?, maxCols?)` - Clamp to valid range
@@ -6226,6 +7049,7 @@ Created `src/components/dialogs/InsertTableDialog.tsx` with visual grid selector
 - `getTablePresets()` - Get common table size presets
 
 **Props:**
+
 - `isOpen` - Dialog visibility
 - `onClose` - Close callback
 - `onInsert` - Insert callback with TableConfig
@@ -6235,23 +7059,28 @@ Created `src/components/dialogs/InsertTableDialog.tsx` with visual grid selector
 - `maxColumns` - Max allowed columns (default: 20)
 
 **Exports Added to `src/index.ts`:**
+
 - Component, props, types, hook, and all utility functions
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-141: Add Insert Image functionality
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/dialogs/InsertImageDialog.tsx` for inserting images into documents.
 
 **Main Component:**
+
 - `InsertImageDialog` - Modal dialog for uploading and inserting images
 
 **Features:**
+
 - File input for image selection
 - Drag and drop support with visual feedback
 - Image preview after selection
@@ -6261,17 +7090,21 @@ Created `src/components/dialogs/InsertImageDialog.tsx` for inserting images into
 - Auto-scaling to fit within max dimensions
 
 **Types:**
+
 - `ImageData` - Image data with src, width, height, alt, fileName, mimeType
 - `InsertImageDialogProps` - Component props
 
 **Icons:**
+
 - `ImageIcon` - Placeholder icon for drop zone
 - `LockIcon` - Lock/unlock icon for aspect ratio toggle
 
 **Hook:**
+
 - `useInsertImageDialog()` - State management hook with `isOpen`, `open`, `close`, `toggle`
 
 **Utility Functions:**
+
 - `isValidImageFile(file)` - Check if file is valid image
 - `getSupportedImageExtensions()` - Get list of supported extensions
 - `getImageAcceptString()` - Get accept string for file input
@@ -6281,31 +7114,37 @@ Created `src/components/dialogs/InsertImageDialog.tsx` for inserting images into
 - `formatFileSize(bytes)` - Format bytes for display
 
 **Props:**
+
 - `isOpen` - Dialog visibility
 - `onClose` - Close callback
 - `onInsert` - Insert callback with ImageData
 - `maxWidth` - Max width in pixels (default: 800)
 - `maxHeight` - Max height in pixels (default: 600)
-- `accept` - Accepted file types (default: image/*)
+- `accept` - Accepted file types (default: image/\*)
 
 **Exports Added to `src/index.ts`:**
+
 - Component, props, types, hook, and all utility functions
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-142: Add Insert Hyperlink dialog
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Added `useHyperlinkDialog` hook to complete the existing HyperlinkDialog component.
 
 **Existing Component:**
+
 - `HyperlinkDialog` - Modal dialog for inserting/editing hyperlinks
 
 **Existing Features:**
+
 - URL input with validation (http, https, mailto, tel, ftp)
 - Display text input
 - Tooltip input
@@ -6314,9 +7153,11 @@ Added `useHyperlinkDialog` hook to complete the existing HyperlinkDialog compone
 - Remove link option when editing
 
 **Added Hook:**
+
 - `useHyperlinkDialog()` - State management hook
 
 **Hook Interface:**
+
 - `state.isOpen` - Dialog visibility
 - `state.initialData` - Data for editing
 - `state.selectedText` - Currently selected text
@@ -6327,6 +7168,7 @@ Added `useHyperlinkDialog` hook to complete the existing HyperlinkDialog compone
 - `toggle()` - Toggle dialog
 
 **Existing Utility Functions:**
+
 - `isValidUrl(url)` - Validate URL
 - `normalizeUrl(url)` - Add protocol if needed
 - `getUrlType(url)` - Detect URL type
@@ -6340,23 +7182,28 @@ Added `useHyperlinkDialog` hook to complete the existing HyperlinkDialog compone
 - `extractBookmarksForDialog(bookmarks)` - Extract bookmarks
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-143: Add Insert Page Break
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/utils/insertOperations.ts` with comprehensive insert operations utilities.
 
 **New File:**
+
 - `src/utils/insertOperations.ts` - Utility functions for inserting content
 
 **Types:**
+
 - `InsertPosition` - Position in document (paragraphIndex, runIndex?, offset?)
 
 **Page Break Functions:**
+
 - `createPageBreak()` - Create a BreakContent with type 'page'
 - `createColumnBreak()` - Create a column break
 - `createLineBreak(clear?)` - Create a text wrapping break
@@ -6365,10 +7212,12 @@ Created `src/utils/insertOperations.ts` with comprehensive insert operations uti
 - `insertPageBreak(doc, position)` - Insert page break at position
 
 **Horizontal Rule Functions:**
+
 - `createHorizontalRule()` - Create HR paragraph with bottom border
 - `insertHorizontalRule(doc, position)` - Insert HR at position
 
 **Query Functions:**
+
 - `isPageBreak(content)` - Check if content is a page break
 - `isColumnBreak(content)` - Check if content is a column break
 - `isLineBreak(content)` - Check if content is a line break
@@ -6378,50 +7227,61 @@ Created `src/utils/insertOperations.ts` with comprehensive insert operations uti
 - `findPageBreaks(doc)` - Find all page break positions
 
 **Modification Functions:**
+
 - `removePageBreak(doc, position)` - Remove a page break
 
 **Exports Added to `src/index.ts`:**
+
 - All functions and InsertPosition type
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-144: Add Insert Horizontal Rule
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Already implemented as part of US-143 in `src/utils/insertOperations.ts`.
 
 **Functions:**
+
 - `createHorizontalRule()` - Creates a paragraph with bottom border simulating HR
 - `insertHorizontalRule(doc, position)` - Insert HR at position
 
 **Horizontal Rule Implementation:**
+
 - Paragraph with no text content
 - Bottom border: single style, black (#000000), 1.5pt width
 - Spacing: 6pt before and after
 
 **Already Exported in `src/index.ts`:**
+
 - `createHorizontalRule`
 - `insertHorizontalRule`
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-145: Add Insert Special Characters
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
 Created `src/components/dialogs/InsertSymbolDialog.tsx` for inserting special characters and symbols.
 
 **Main Component:**
+
 - `InsertSymbolDialog` - Modal dialog for symbol selection and insertion
 
 **Features:**
+
 - 9 categorized symbol groups: Common, Arrows, Math, Greek, Shapes, Punctuation, Currency, Music, Emoji
 - Search by character or Unicode code point (e.g., "U+00A9")
 - Recent symbols tracking
@@ -6430,17 +7290,21 @@ Created `src/components/dialogs/InsertSymbolDialog.tsx` for inserting special ch
 - Single-click to select, then Insert button
 
 **Types:**
+
 - `SymbolCategory` - Category with name, label, and symbols array
 - `InsertSymbolDialogProps` - Component props
 
 **Constants:**
+
 - `SYMBOL_CATEGORIES` - All 9 symbol categories with symbols
 
 **Hook:**
+
 - `useInsertSymbolDialog(maxRecent?)` - State management with recent symbols tracking
   - `isOpen`, `recentSymbols`, `open`, `close`, `toggle`, `addRecent`
 
 **Utility Functions:**
+
 - `getSymbolCategories()` - Get all categories
 - `getSymbolsByCategory(name)` - Get symbols for category
 - `getSymbolInfo(symbol)` - Get Unicode info (codePoint, decimal, hex)
@@ -6448,6 +7312,7 @@ Created `src/components/dialogs/InsertSymbolDialog.tsx` for inserting special ch
 - `symbolFromCodePoint(str)` - Convert code point string to symbol
 
 **Symbol Categories:**
+
 - Common: ©, ®, ™, •, …, €, £, etc.
 - Arrows: ←, →, ↑, ↓, ⇒, etc.
 - Math: +, −, ×, ÷, ∑, ∏, ∫, etc.
@@ -6459,14 +7324,17 @@ Created `src/components/dialogs/InsertSymbolDialog.tsx` for inserting special ch
 - Emoji: 😀, ❤, 👍, etc.
 
 **Exports Added to `src/index.ts`:**
+
 - Component, props, types, hook, constants, and all utility functions
 
 **Verified:**
+
 - bun build exits 0: ✓
 
 ---
 
 ### US-150: Improve text selection highlighting
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -6518,6 +7386,7 @@ Implemented comprehensive text selection highlighting across multiple runs with 
    - Exported types: `HighlightRect`, `SelectionHighlightConfig`, `SelectionRange`
 
 **Key Features:**
+
 - Consistent blue selection highlight (rgba(26, 115, 232, 0.3)) across all runs
 - Uses `!important` to override inline styles from formatting
 - Maintains text color (`color: inherit`) for readability
@@ -6529,12 +7398,14 @@ Implemented comprehensive text selection highlighting across multiple runs with 
 - Overlay rectangle support for programmatic highlighting
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-151: Add word-level double-click selection
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -6548,6 +7419,7 @@ Implemented word-level double-click selection for the editor.
    - DOM-based selection manipulation using native browser APIs
 
 **Word Boundary Detection:**
+
 - `isWordCharacter(char)` - Check if character is a word character (uses Unicode regex)
 - `isWhitespace(char)` - Check if character is whitespace
 - `findWordBoundaries(text, position)` - Find [start, end] of word at position
@@ -6555,15 +7427,18 @@ Implemented word-level double-click selection for the editor.
 - `findWordAt(text, position)` - Get word with detailed info (word, startIndex, endIndex)
 
 **DOM Selection Functions:**
+
 - `selectWordAtCursor()` - Select word at current cursor position (main function)
 - `selectWordInTextNode(textNode, offset)` - Select word in specific text node
 - `expandSelectionToWordBoundaries()` - Expand existing selection to word boundaries
 
 **Paragraph Selection Functions:**
+
 - `selectParagraphAtCursor()` - Select entire paragraph at cursor
 - Finds elements with `data-paragraph-index` attribute
 
 **Multi-click Support:**
+
 - `handleClickForMultiClick(event)` - Track click count for double/triple click
 - `createDoubleClickWordSelector()` - Create double-click handler for word selection
 - `createTripleClickParagraphSelector()` - Create triple-click handler for paragraph selection
@@ -6586,6 +7461,7 @@ Implemented word-level double-click selection for the editor.
    - Exported `WordSelectionResult` type
 
 **Features:**
+
 - Double-clicking a word selects the entire word
 - Works across contentEditable spans
 - Handles different character types (letters, numbers, punctuation)
@@ -6594,12 +7470,14 @@ Implemented word-level double-click selection for the editor.
 - Only activates when editor is in editable mode
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-152: Add paragraph-level triple-click selection
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -6628,6 +7506,7 @@ Implemented paragraph-level triple-click selection for the editor.
    - Uses browser's native `selection.addRange()` API
 
 **How Triple-Click Works:**
+
 1. First click: `clickCountRef.current = 1`
 2. Second click (within 500ms, same target): `clickCountRef.current = 2`
 3. Third click (within 500ms, same target): `clickCountRef.current = 3`, triggers paragraph selection
@@ -6635,6 +7514,7 @@ Implemented paragraph-level triple-click selection for the editor.
 5. Clicking a different element or waiting > 500ms resets the counter
 
 **Features:**
+
 - Triple-clicking in a paragraph selects the entire paragraph
 - Works with the existing paragraph element structure using `data-paragraph-index`
 - Respects modifier keys (Ctrl/Meta/Alt/Shift do not trigger selection)
@@ -6642,12 +7522,14 @@ Implemented paragraph-level triple-click selection for the editor.
 - Compatible with double-click word selection (counts build up)
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-153: Wire Find & Replace dialog
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -6687,6 +7569,7 @@ Wired the Find & Replace dialog to the editor with keyboard shortcuts (Ctrl+F fo
    - Expanded FindReplaceDialog exports to include all new types and functions
 
 **Features:**
+
 - Ctrl+F opens Find dialog (with selected text if any)
 - Ctrl+H opens Find & Replace dialog (with selected text if any)
 - Find with options: Match case, Whole words
@@ -6697,6 +7580,7 @@ Wired the Find & Replace dialog to the editor with keyboard shortcuts (Ctrl+F fo
 - Escape to close dialog
 
 **Keyboard Shortcuts:**
+
 - `Ctrl/Cmd+F` - Open Find dialog
 - `Ctrl/Cmd+H` - Open Find & Replace dialog
 - `Enter` - Find next
@@ -6704,12 +7588,14 @@ Wired the Find & Replace dialog to the editor with keyboard shortcuts (Ctrl+F fo
 - `Escape` - Close dialog
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
 
 ---
 
 ### US-154: Improve keyboard navigation
+
 **Date:** 2026-02-01
 **Status:** Complete ✅
 
@@ -6719,7 +7605,7 @@ Implemented comprehensive keyboard navigation for the editor including Ctrl+Arro
 
 1. **`src/utils/keyboardNavigation.ts`:**
    - Comprehensive keyboard navigation utilities
-   
+
    **Word Boundary Detection:**
    - `isWordCharacter(char)` - Check if character is a word character (letters, digits, underscore)
    - `isWhitespace(char)` - Check if character is whitespace
@@ -6770,6 +7656,7 @@ Implemented comprehensive keyboard navigation for the editor including Ctrl+Arro
    - Exported all keyboard navigation utilities and types
 
 **Keyboard Shortcuts Implemented:**
+
 - `Ctrl+Left/Right` - Move cursor by word
 - `Ctrl+Shift+Left/Right` - Select by word
 - `Home/End` - Move to line start/end
@@ -6778,12 +7665,40 @@ Implemented comprehensive keyboard navigation for the editor including Ctrl+Arro
 - `Ctrl+Shift+Home/End` - Select to document start/end
 
 **Navigation Action Types:**
+
 - `NavigationDirection`: 'left' | 'right' | 'up' | 'down'
 - `NavigationUnit`: 'character' | 'word' | 'line' | 'paragraph' | 'document'
 - `NavigationAction`: { direction, unit, extend }
 
 **Verified:**
+
 - bun build exits 0: ✓
 - Playwright visual tests: 5/5 passed
+
+---
+
+### Test Infrastructure: Fix list button selectors
+
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Fixed the aria-label selectors in `e2e/helpers/editor-page.ts` for the bullet and numbered list buttons.
+
+**Issue:**
+
+- Tests used `[aria-label="Bullet list"]` and `[aria-label="Numbered list"]` (lowercase "l")
+- Actual component uses `title="Bullet List"` and `title="Numbered List"` (uppercase "L")
+- Since the ListButton component sets `aria-label={title}`, the case mismatch caused selector failures
+
+**Fix:**
+
+- Updated `toggleBulletList()` selector to `[aria-label="Bullet List"]`
+- Updated `toggleNumberedList()` selector to `[aria-label="Numbered List"]`
+
+**Verified:**
+
+- bun build exits 0: ✓
+- `npx playwright test --grep "create bullet list"` - lists.spec.ts passes ✓
+- `npx playwright test --grep "create numbered list"` - lists.spec.ts passes ✓
 
 ---

@@ -7,7 +7,7 @@ fi
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR/.."
 
 RALPH_DIR=".ralph"
 
