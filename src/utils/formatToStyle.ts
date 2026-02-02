@@ -361,10 +361,12 @@ export function paragraphToStyle(
   // First line indent / hanging indent
   if (formatting.indentFirstLine !== undefined) {
     if (formatting.hangingIndent) {
-      // Hanging indent: first line outdented
-      // Use negative text-indent with matching padding-left
-      style.textIndent = formatPx(-twipsToPixels(formatting.indentFirstLine));
-      style.paddingLeft = formatPx(twipsToPixels(formatting.indentFirstLine));
+      // Hanging indent: first line outdented, subsequent lines indented
+      // indentFirstLine is already negative when hangingIndent is true
+      // margin-left handles the indent for subsequent lines
+      // text-indent (negative) pulls first line back to margin
+      // No padding-left needed - margin-left + text-indent achieve the effect
+      style.textIndent = formatPx(twipsToPixels(formatting.indentFirstLine));
     } else {
       // Regular first line indent
       style.textIndent = formatPx(twipsToPixels(formatting.indentFirstLine));

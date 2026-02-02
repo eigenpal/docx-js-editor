@@ -129,6 +129,7 @@ function paragraphFormattingToAttrs(
     attrs.hangingIndent = formatting?.hangingIndent ?? stylePpr?.hangingIndent;
     attrs.borders = formatting?.borders ?? stylePpr?.borders;
     attrs.shading = formatting?.shading ?? stylePpr?.shading;
+    attrs.tabs = formatting?.tabs ?? stylePpr?.tabs;
 
     // If style defines numPr but inline doesn't, use style's numPr
     if (!formatting?.numPr && stylePpr?.numPr) {
@@ -147,6 +148,7 @@ function paragraphFormattingToAttrs(
     attrs.hangingIndent = formatting?.hangingIndent;
     attrs.borders = formatting?.borders;
     attrs.shading = formatting?.shading;
+    attrs.tabs = formatting?.tabs;
   }
 
   return attrs;
@@ -272,8 +274,8 @@ function convertRunContent(content: RunContent, marks: ReturnType<typeof schema.
       return [];
 
     case 'tab':
-      // Convert tabs to spaces for now
-      return [schema.text('\t', marks)];
+      // Convert to tab node for proper rendering
+      return [schema.node('tab')];
 
     case 'drawing':
       if (content.image) {
