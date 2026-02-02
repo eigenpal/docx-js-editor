@@ -110,6 +110,7 @@ export {
 export { ZoomControl, type ZoomControlProps } from './components/ui/ZoomControl';
 export { FontPicker, type FontPickerProps, type FontOption } from './components/ui/FontPicker';
 export { FontSizePicker, type FontSizePickerProps } from './components/ui/FontSizePicker';
+export { LineSpacingPicker, type LineSpacingPickerProps, type LineSpacingOption } from './components/ui/LineSpacingPicker';
 export { ColorPicker, type ColorPickerProps, type ColorPreset } from './components/ui/ColorPicker';
 export { StylePicker, type StylePickerProps, type StyleOption } from './components/ui/StylePicker';
 export { AlignmentButtons, type AlignmentButtonsProps } from './components/ui/AlignmentButtons';

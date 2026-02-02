@@ -17,6 +17,7 @@ import { FontSizePicker, halfPointsToPoints, pointsToHalfPoints } from './ui/Fon
 import { TextColorPicker, HighlightColorPicker } from './ui/ColorPicker';
 import { AlignmentButtons } from './ui/AlignmentButtons';
 import { ListButtons, type ListState, createDefaultListState } from './ui/ListButtons';
+import { LineSpacingPicker } from './ui/LineSpacingPicker';
 
 // ============================================================================
 // TYPES
@@ -50,6 +51,8 @@ export interface SelectionFormatting {
   alignment?: ParagraphAlignment;
   /** List state of the current paragraph */
   listState?: ListState;
+  /** Line spacing in twips (OOXML value, 240 = single spacing) */
+  lineSpacing?: number;
 }
 
 /**
@@ -71,7 +74,8 @@ export type FormattingAction =
   | { type: 'fontSize'; value: number }
   | { type: 'textColor'; value: string }
   | { type: 'highlightColor'; value: string }
-  | { type: 'alignment'; value: ParagraphAlignment };
+  | { type: 'alignment'; value: ParagraphAlignment }
+  | { type: 'lineSpacing'; value: number };
 
 /**
  * Props for the Toolbar component
@@ -113,6 +117,8 @@ export interface ToolbarProps {
   showAlignmentButtons?: boolean;
   /** Whether to show list buttons (default: true) */
   showListButtons?: boolean;
+  /** Whether to show line spacing picker (default: true) */
+  showLineSpacingPicker?: boolean;
 }
 
 /**
@@ -372,6 +378,7 @@ export function Toolbar({
   showHighlightColorPicker = true,
   showAlignmentButtons = true,
   showListButtons = true,
+  showLineSpacingPicker = true,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -500,6 +507,18 @@ export function Toolbar({
       onFormat('outdent');
     }
   }, [disabled, onFormat]);
+
+  /**
+   * Handle line spacing change
+   */
+  const handleLineSpacingChange = useCallback(
+    (twipsValue: number) => {
+      if (!disabled && onFormat) {
+        onFormat({ type: 'lineSpacing', value: twipsValue });
+      }
+    },
+    [disabled, onFormat]
+  );
 
   /**
    * Keyboard shortcuts handler
@@ -734,6 +753,18 @@ export function Toolbar({
         </ToolbarGroup>
       )}
 
+      {/* Line Spacing */}
+      {showLineSpacingPicker && (
+        <ToolbarGroup label="Line spacing">
+          <LineSpacingPicker
+            value={currentFormatting.lineSpacing}
+            onChange={handleLineSpacingChange}
+            disabled={disabled}
+            width={100}
+          />
+        </ToolbarGroup>
+      )}
+
       {/* Clear Formatting */}
       <ToolbarButton
         onClick={() => handleFormat('clearFormatting')}
@@ -807,6 +838,11 @@ export function getSelectionFormatting(
 
   if (paragraphFormatting) {
     result.alignment = paragraphFormatting.alignment;
+
+    // Extract line spacing
+    if (paragraphFormatting.lineSpacing !== undefined) {
+      result.lineSpacing = paragraphFormatting.lineSpacing;
+    }
 
     // Extract list state from numPr
     if (paragraphFormatting.numPr) {

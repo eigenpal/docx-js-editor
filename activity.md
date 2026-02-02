@@ -5324,3 +5324,58 @@ Added Indent and Outdent buttons to the Toolbar for increasing/decreasing paragr
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-118: Add Line Spacing dropdown to toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added Line Spacing dropdown picker to the Toolbar for adjusting paragraph line spacing (1.0, 1.15, 1.5, 2.0, 2.5, 3.0).
+
+**Implementation:**
+
+1. **Created `src/components/ui/LineSpacingPicker.tsx`:**
+   - `LineSpacingPicker` component with dropdown for line spacing selection
+   - Line spacing icon (horizontal lines with vertical spacing indicator)
+   - Standard options: 1.0, 1.15, 1.5, 2.0, 2.5, 3.0
+   - Keyboard navigation support (Arrow keys, Enter, Escape)
+   - ARIA attributes for accessibility
+
+2. **Updated `src/components/Toolbar.tsx`:**
+   - Imported `LineSpacingPicker` component
+   - Added `lineSpacing` to `SelectionFormatting` interface
+   - Extended `FormattingAction` type to support `{ type: 'lineSpacing'; value: number }`
+   - Added `showLineSpacingPicker` prop (default: true)
+   - Added `handleLineSpacingChange` callback
+   - Added LineSpacingPicker to toolbar after List formatting group
+   - Updated `getSelectionFormatting` to extract `lineSpacing` from paragraph formatting
+
+3. **Updated `src/components/DocxEditor.tsx`:**
+   - Added handler for `'lineSpacing'` action in `handleFormat`
+   - Uses `formatParagraph` command with `lineSpacing` and `lineSpacingRule: 'auto'`
+   - Updates selection formatting state after line spacing change
+
+4. **Updated `src/index.ts`:**
+   - Exported `LineSpacingPicker`, `LineSpacingPickerProps`, `LineSpacingOption`
+
+**OOXML Line Spacing:**
+- OOXML uses twips for line spacing when `lineRule="auto"`
+- 240 twips = 1.0 (single) line spacing
+- 276 twips = 1.15 line spacing (Word default)
+- 360 twips = 1.5 line spacing
+- 480 twips = 2.0 (double) line spacing
+- 600 twips = 2.5 line spacing
+- 720 twips = 3.0 (triple) line spacing
+
+**Utility Functions:**
+- `lineSpacingMultiplierToTwips(multiplier)` - Convert multiplier to OOXML twips
+- `twipsToLineSpacingMultiplier(twips)` - Convert OOXML twips to multiplier
+- `getLineSpacingLabel(twips)` - Get display label for twips value
+- `isStandardLineSpacing(twips)` - Check if value is standard
+- `nearestStandardLineSpacing(twips)` - Find nearest standard option
+- `createLineSpacingOption(multiplier)` - Create custom option
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

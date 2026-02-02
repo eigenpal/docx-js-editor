@@ -325,6 +325,32 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         return;
       }
 
+      // Handle line spacing action (paragraph-level formatting)
+      if (typeof action === 'object' && action.type === 'lineSpacing') {
+        // Apply paragraph formatting using formatParagraph command
+        // lineSpacing in OOXML uses 'auto' lineRule by default, value is in twips (240 = single)
+        const newDoc = executeCommand(history.state, {
+          type: 'formatParagraph',
+          paragraphIndex: range.start.paragraphIndex,
+          formatting: {
+            lineSpacing: action.value,
+            lineSpacingRule: 'auto',
+          },
+        });
+
+        handleDocumentChange(newDoc);
+
+        // Update selection formatting state
+        setState((prev) => ({
+          ...prev,
+          selectionFormatting: {
+            ...prev.selectionFormatting,
+            lineSpacing: action.value,
+          },
+        }));
+        return;
+      }
+
       // Handle bullet list action (paragraph-level)
       if (action === 'bulletList') {
         const currentListState = state.selectionFormatting.listState;

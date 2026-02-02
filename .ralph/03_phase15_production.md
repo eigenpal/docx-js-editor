@@ -30,7 +30,7 @@
 - [x] US-115: Add Bullet List button to toolbar - P1 - Toggle bullet lists
 - [x] US-116: Add Numbered List button to toolbar - P1 - Toggle numbered lists
 - [x] US-117: Add Indent/Outdent buttons to toolbar - P2 - Increase/decrease indent
-- [ ] US-118: Add Line Spacing dropdown to toolbar - P2 - 1.0, 1.15, 1.5, 2.0
+- [x] US-118: Add Line Spacing dropdown to toolbar - P2 - 1.0, 1.15, 1.5, 2.0
 - [ ] US-119: Connect Style picker to toolbar - P2 - Wire StylePicker to document styles
 
 ## Category 3: Page Layout & Pagination
