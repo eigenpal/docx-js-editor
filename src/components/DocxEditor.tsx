@@ -25,6 +25,7 @@ import { TableToolbar, type TableContext, type TableAction } from './ui/TableToo
 import { PageNumberIndicator, type PageIndicatorPosition, type PageIndicatorVariant } from './ui/PageNumberIndicator';
 import { PageNavigator, type PageNavigatorPosition, type PageNavigatorVariant } from './ui/PageNavigator';
 import { HorizontalRuler } from './ui/HorizontalRuler';
+import { PrintPreview, PrintButton, type PrintOptions } from './ui/PrintPreview';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import { parseDocx } from '../docx/parser';
 import { onFontsLoaded, isLoading as isFontsLoading } from '../utils/fontLoader';
@@ -98,6 +99,12 @@ export interface DocxEditorProps {
   placeholder?: ReactNode;
   /** Loading indicator */
   loadingIndicator?: ReactNode;
+  /** Whether to show print button in toolbar (default: true) */
+  showPrintButton?: boolean;
+  /** Print options for print preview */
+  printOptions?: PrintOptions;
+  /** Callback when print is triggered */
+  onPrint?: () => void;
 }
 
 /**
@@ -128,6 +135,10 @@ export interface DocxEditorRef {
   getTotalPages: () => number;
   /** Scroll to a specific page */
   scrollToPage: (pageNumber: number) => void;
+  /** Open print preview */
+  openPrintPreview: () => void;
+  /** Print the document directly */
+  print: () => void;
 }
 
 /**
@@ -145,6 +156,8 @@ interface EditorState {
   currentPage: number;
   /** Total page count */
   totalPages: number;
+  /** Whether print preview is open */
+  isPrintPreviewOpen: boolean;
 }
 
 // ============================================================================
@@ -185,6 +198,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     style,
     placeholder,
     loadingIndicator,
+    showPrintButton = true,
+    printOptions,
+    onPrint,
   },
   ref
 ) {
@@ -198,6 +214,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     selectionFormatting: {},
     currentPage: 1,
     totalPages: 1,
+    isPrintPreviewOpen: false,
   });
 
   // History hook for undo/redo - start with null document
@@ -663,6 +680,27 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     [onError]
   );
 
+  // Handle opening print preview
+  const handleOpenPrintPreview = useCallback(() => {
+    setState((prev) => ({ ...prev, isPrintPreviewOpen: true }));
+  }, []);
+
+  // Handle closing print preview
+  const handleClosePrintPreview = useCallback(() => {
+    setState((prev) => ({ ...prev, isPrintPreviewOpen: false }));
+  }, []);
+
+  // Handle print action
+  const handlePrint = useCallback(() => {
+    onPrint?.();
+  }, [onPrint]);
+
+  // Handle direct print (opens system print dialog for current view)
+  const handleDirectPrint = useCallback(() => {
+    window.print();
+    onPrint?.();
+  }, [onPrint]);
+
   // Expose ref methods
   useImperativeHandle(
     ref,
@@ -683,8 +721,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       scrollToPage: (pageNumber: number) => {
         editorRef.current?.scrollToPage(pageNumber);
       },
+      openPrintPreview: handleOpenPrintPreview,
+      print: handleDirectPrint,
     }),
-    [history.state, state.zoom, state.currentPage, state.totalPages, handleSave]
+    [history.state, state.zoom, state.currentPage, state.totalPages, handleSave, handleOpenPrintPreview, handleDirectPrint]
   );
 
   // Get detected variables from document
@@ -768,19 +808,28 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           {/* Toolbar */}
           {showToolbar && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <Toolbar
-                currentFormatting={state.selectionFormatting}
-                onFormat={handleFormat}
-                onUndo={handleUndo}
-                onRedo={handleRedo}
-                canUndo={history.canUndo}
-                canRedo={history.canRedo}
-                disabled={readOnly}
-                documentStyles={history.state?.package.styles?.styles}
-                theme={history.state?.package.theme || theme}
-              >
-                {toolbarExtra}
-              </Toolbar>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Toolbar
+                  currentFormatting={state.selectionFormatting}
+                  onFormat={handleFormat}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                  canUndo={history.canUndo}
+                  canRedo={history.canRedo}
+                  disabled={readOnly}
+                  documentStyles={history.state?.package.styles?.styles}
+                  theme={history.state?.package.theme || theme}
+                >
+                  {toolbarExtra}
+                </Toolbar>
+                {showPrintButton && (
+                  <PrintButton
+                    onPrint={handleOpenPrintPreview}
+                    disabled={!history.state}
+                    compact
+                  />
+                )}
+              </div>
 
               {/* Table Toolbar - shows when a table cell is selected */}
               {tableSelection.tableContext && (
@@ -886,6 +935,18 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               </div>
             )}
           </div>
+
+          {/* Print Preview Modal */}
+          {state.isPrintPreviewOpen && (
+            <PrintPreview
+              document={history.state}
+              theme={history.state?.package.theme || theme}
+              options={printOptions}
+              isOpen={state.isPrintPreviewOpen}
+              onClose={handleClosePrintPreview}
+              onPrint={handlePrint}
+            />
+          )}
         </div>
       </ErrorBoundary>
     </ErrorProvider>

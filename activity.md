@@ -5830,3 +5830,82 @@ Added a horizontal ruler component that displays above the document with margin 
 - Playwright visual tests: 5/5 passed
 
 ---
+
+
+### US-127: Add print preview/export
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added print preview functionality with a modal view and print button in the toolbar.
+
+**Implementation:**
+
+1. **Created `src/components/ui/PrintPreview.tsx`:**
+   - `PrintPreview` component - Modal showing print-optimized document view
+   - `PrintButton` component - Standalone button for toolbar
+   - `PrintStyles` component - Injects print-specific CSS
+   - Full page layout with headers, footers, and content
+   - Support for page ranges
+   - Print options (include headers/footers, page numbers, etc.)
+
+2. **Updated `src/components/DocxEditor.tsx`:**
+   - Added `showPrintButton` prop (default: true)
+   - Added `printOptions` prop for customizing print behavior
+   - Added `onPrint` callback
+   - Added `isPrintPreviewOpen` to EditorState
+   - Added `openPrintPreview` and `print` methods to ref
+   - Integrated PrintButton in toolbar
+   - Integrated PrintPreview modal
+
+3. **Updated `src/index.ts`:**
+   - Exported `PrintPreview`, `PrintButton`, `PrintStyles` components
+   - Exported `PrintOptions` type
+   - Exported utility functions: `triggerPrint`, `openPrintWindow`, `getDefaultPrintOptions`, `parsePageRange`, `formatPrintPageRange`, `isPrintSupported`
+
+**PrintPreview Features:**
+- Full-screen modal with document pages
+- Print button in header that triggers browser print dialog
+- Page count display
+- Close button with Escape key support
+- Print-specific CSS rules for @media print
+- Page break handling (page-break-after: always)
+- Content area respects page margins
+- Optional headers and footers rendering
+
+**PrintButton Features:**
+- Compact and full-size modes
+- Printer icon
+- Disabled state support
+- ARIA accessibility
+
+**Print Options:**
+- `includeHeaders` - Include document headers
+- `includeFooters` - Include document footers
+- `includePageNumbers` - Include page numbers
+- `pageRange` - Specific pages to print
+- `scale` - Print scale factor
+- `printBackground` - Include background colors
+- `margins` - Margins mode (default, none, minimum)
+
+**Utility Functions:**
+- `triggerPrint()` - Trigger browser print dialog
+- `openPrintWindow(title, content)` - Open print in new window
+- `getDefaultPrintOptions()` - Get default options
+- `parsePageRange(input, maxPages)` - Parse page range string
+- `formatPageRange(range, totalPages)` - Format range for display
+- `isPrintSupported()` - Check browser support
+
+**Props Added to DocxEditorProps:**
+- `showPrintButton?: boolean` - Show print button (default: true)
+- `printOptions?: PrintOptions` - Print options
+- `onPrint?: () => void` - Print callback
+
+**Ref Methods Added:**
+- `openPrintPreview()` - Open print preview modal
+- `print()` - Trigger direct print
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

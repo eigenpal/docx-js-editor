@@ -164,6 +164,20 @@ export {
   parseMarginFromUnits,
   positionToMargin,
 } from './components/ui/HorizontalRuler';
+export {
+  PrintPreview,
+  type PrintPreviewProps,
+  PrintButton,
+  type PrintButtonProps,
+  PrintStyles,
+  type PrintOptions,
+  triggerPrint,
+  openPrintWindow,
+  getDefaultPrintOptions,
+  parsePageRange,
+  formatPageRange as formatPrintPageRange,
+  isPrintSupported,
+} from './components/ui/PrintPreview';
 
 // ============================================================================
 // DIALOGS
