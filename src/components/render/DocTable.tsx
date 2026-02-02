@@ -55,6 +55,10 @@ export interface DocTableProps {
   renderTable?: (table: Table, index: number) => ReactNode;
   /** Index for key generation */
   index?: number;
+  /** Callback when a cell is clicked */
+  onCellClick?: (tableIndex: number, rowIndex: number, columnIndex: number) => void;
+  /** Check if a cell is selected */
+  isCellSelected?: (tableIndex: number, rowIndex: number, columnIndex: number) => boolean;
 }
 
 /**
@@ -77,6 +81,8 @@ export function DocTable({
   renderParagraph,
   renderTable: renderNestedTable,
   index: tableIndex,
+  onCellClick,
+  isCellSelected,
 }: DocTableProps): React.ReactElement {
   // Calculate rowspans for vertical merges
   const rowspanMap = calculateRowspans(table);
@@ -145,7 +151,10 @@ export function DocTable({
               table,
               theme,
               renderParagraph,
-              renderNestedTable
+              renderNestedTable,
+              tableIndex,
+              onCellClick,
+              isCellSelected
             )
           )}
         </thead>
@@ -159,7 +168,10 @@ export function DocTable({
             table,
             theme,
             renderParagraph,
-            renderNestedTable
+            renderNestedTable,
+            tableIndex,
+            onCellClick,
+            isCellSelected
           )
         )}
       </tbody>
@@ -177,7 +189,10 @@ function renderRow(
   table: Table,
   theme: Theme | null | undefined,
   renderParagraph?: (paragraph: Paragraph, index: number) => ReactNode,
-  renderNestedTable?: (table: Table, index: number) => ReactNode
+  renderNestedTable?: (table: Table, index: number) => ReactNode,
+  tableIndex?: number,
+  onCellClick?: (tableIndex: number, rowIndex: number, columnIndex: number) => void,
+  isCellSelected?: (tableIndex: number, rowIndex: number, columnIndex: number) => boolean
 ): React.ReactElement {
   const rowStyle = buildRowStyle(row.formatting, theme);
 
@@ -224,7 +239,10 @@ function renderRow(
           table,
           theme,
           renderParagraph,
-          renderNestedTable
+          renderNestedTable,
+          tableIndex,
+          onCellClick,
+          isCellSelected
         );
 
         // Advance column position
@@ -249,10 +267,16 @@ function renderCell(
   table: Table,
   theme: Theme | null | undefined,
   renderParagraph?: (paragraph: Paragraph, index: number) => ReactNode,
-  renderNestedTable?: (table: Table, index: number) => ReactNode
+  renderNestedTable?: (table: Table, index: number) => ReactNode,
+  tableIndex?: number,
+  onCellClick?: (tableIndex: number, rowIndex: number, columnIndex: number) => void,
+  isCellSelected?: (tableIndex: number, rowIndex: number, columnIndex: number) => boolean
 ): React.ReactElement {
   // Build cell style
   const cellStyle = buildCellStyle(cell.formatting, table.formatting, theme);
+
+  // Check if this cell is selected
+  const isSelected = tableIndex !== undefined && isCellSelected?.(tableIndex, rowIndex, colIndex);
 
   // Build cell class names
   const cellClassNames: string[] = ['docx-table-cell'];
@@ -267,6 +291,9 @@ function renderCell(
   }
   if (rowspan > 1) {
     cellClassNames.push('docx-cell-rowspan');
+  }
+  if (isSelected) {
+    cellClassNames.push('docx-cell-selected');
   }
 
   // Render cell content
@@ -314,15 +341,35 @@ function renderCell(
   const isHeaderRow = rowIndex < (table.rows.filter(r => r.formatting?.header).length);
   const CellTag = isHeaderRow ? 'th' : 'td';
 
+  // Handle cell click
+  const handleClick = (e: React.MouseEvent) => {
+    // Prevent click from bubbling to parent tables (for nested tables)
+    e.stopPropagation();
+    if (tableIndex !== undefined && onCellClick) {
+      onCellClick(tableIndex, rowIndex, colIndex);
+    }
+  };
+
+  // Add selected styling
+  const finalStyle: CSSProperties = {
+    ...cellStyle,
+    ...(isSelected ? {
+      outline: '2px solid #1a73e8',
+      outlineOffset: '-2px',
+    } : {}),
+  };
+
   return (
     <CellTag
       key={`cell-${rowIndex}-${cellIndex}`}
       className={cellClassNames.join(' ')}
-      style={cellStyle}
+      style={finalStyle}
       colSpan={colspan > 1 ? colspan : undefined}
       rowSpan={rowspan > 1 ? rowspan : undefined}
       data-row={rowIndex}
       data-col={colIndex}
+      data-table-cell="true"
+      onClick={handleClick}
     >
       {content}
     </CellTag>

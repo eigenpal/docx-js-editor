@@ -21,10 +21,12 @@ import { AIEditor, type AIEditorRef, type AIEditorProps, type AIRequestHandler }
 import { VariablePanel, type VariablePanelProps } from './VariablePanel';
 import { ErrorBoundary, ErrorProvider, useErrorNotifications } from './ErrorBoundary';
 import { ZoomControl } from './ui/ZoomControl';
+import { TableToolbar, type TableContext, type TableAction } from './ui/TableToolbar';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import { parseDocx } from '../docx/parser';
 import { onFontsLoaded, isLoading as isFontsLoading } from '../utils/fontLoader';
 import { executeCommand } from '../agent/executor';
+import { useTableSelection } from '../hooks/useTableSelection';
 
 // ============================================================================
 // TYPES
@@ -271,6 +273,23 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     [onChange]
   );
 
+  // Table selection hook
+  const tableSelection = useTableSelection({
+    document: state.document,
+    onChange: handleDocumentChange,
+    onSelectionChange: (context) => {
+      // Could notify parent of table selection changes
+    },
+  });
+
+  // Handle table action from TableToolbar
+  const handleTableAction = useCallback(
+    (action: TableAction, context: TableContext) => {
+      tableSelection.handleAction(action);
+    },
+    [tableSelection]
+  );
+
   // Handle formatting action from toolbar
   const handleFormat = useCallback(
     (action: FormattingAction) => {
@@ -464,17 +483,29 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         <div className={`docx-editor ${className}`} style={containerStyle}>
           {/* Toolbar */}
           {showToolbar && (
-            <Toolbar
-              currentFormatting={state.selectionFormatting}
-              onFormat={handleFormat}
-              onUndo={handleUndo}
-              onRedo={handleRedo}
-              canUndo={state.canUndo}
-              canRedo={state.canRedo}
-              disabled={readOnly}
-            >
-              {toolbarExtra}
-            </Toolbar>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <Toolbar
+                currentFormatting={state.selectionFormatting}
+                onFormat={handleFormat}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+                canUndo={state.canUndo}
+                canRedo={state.canRedo}
+                disabled={readOnly}
+              >
+                {toolbarExtra}
+              </Toolbar>
+
+              {/* Table Toolbar - shows when a table cell is selected */}
+              {tableSelection.tableContext && (
+                <TableToolbar
+                  context={tableSelection.tableContext}
+                  onAction={handleTableAction}
+                  disabled={readOnly}
+                  compact
+                />
+              )}
+            </div>
           )}
 
           {/* Main content area */}
@@ -488,6 +519,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 onAgentRequest={onAgentRequest}
                 editable={!readOnly}
                 zoom={state.zoom}
+                onTableCellClick={tableSelection.handleCellClick}
+                isTableCellSelected={tableSelection.isCellSelected}
               />
 
               {/* Zoom control */}

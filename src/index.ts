@@ -114,6 +114,22 @@ export { ColorPicker, type ColorPickerProps, type ColorPreset } from './componen
 export { StylePicker, type StylePickerProps, type StyleOption } from './components/ui/StylePicker';
 export { AlignmentButtons, type AlignmentButtonsProps } from './components/ui/AlignmentButtons';
 export { ListButtons, type ListButtonsProps } from './components/ui/ListButtons';
+export {
+  TableToolbar,
+  type TableToolbarProps,
+  type TableContext,
+  type TableSelection,
+  type TableAction,
+  createTableContext,
+  addRow,
+  deleteRow,
+  addColumn,
+  deleteColumn,
+  mergeCells,
+  splitCell,
+  getColumnCount,
+  getCellAt,
+} from './components/ui/TableToolbar';
 
 // ============================================================================
 // DIALOGS
@@ -187,6 +203,18 @@ export type {
   SetVariableCommand,
   ApplyStyleCommand,
 } from './types/agentApi';
+
+// ============================================================================
+// HOOKS
+// ============================================================================
+
+export {
+  useTableSelection,
+  TABLE_DATA_ATTRIBUTES,
+  type TableSelectionState,
+  type UseTableSelectionReturn,
+  type UseTableSelectionOptions,
+} from './hooks/useTableSelection';
 
 // ============================================================================
 // UTILITIES

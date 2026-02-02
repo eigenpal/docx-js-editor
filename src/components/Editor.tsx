@@ -89,6 +89,10 @@ export interface EditorProps {
   renderShape?: (shape: ShapeType, index: number) => ReactNode;
   /** Custom text box renderer */
   renderTextBox?: (textBox: TextBoxType, index: number) => ReactNode;
+  /** Callback when a table cell is clicked */
+  onTableCellClick?: (tableIndex: number, rowIndex: number, columnIndex: number) => void;
+  /** Check if a table cell is selected */
+  isTableCellSelected?: (tableIndex: number, rowIndex: number, columnIndex: number) => boolean;
 }
 
 /**
@@ -304,6 +308,8 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     renderImage,
     renderShape,
     renderTextBox,
+    onTableCellClick,
+    isTableCellSelected,
   },
   ref
 ) {
@@ -633,11 +639,22 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         );
         paragraphIndex++;
       } else if (block.type === 'table') {
+        // Get the table index for this table
+        let currentTableIndex = 0;
+        for (let i = 0; i < blockIndex; i++) {
+          if (doc.package.body.content[i].type === 'table') {
+            currentTableIndex++;
+          }
+        }
+
         content.push(
           <DocTable
             key={`table-${blockIndex}`}
             table={block}
             theme={theme}
+            index={currentTableIndex}
+            onCellClick={onTableCellClick}
+            isCellSelected={isTableCellSelected}
           />
         );
       }

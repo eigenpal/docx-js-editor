@@ -4848,3 +4848,62 @@ Created `src/docx/runConsolidator.ts` with:
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-103: Connect TableToolbar to table selection
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Connected the TableToolbar to table cell selection, showing the toolbar when clicking on table cells and wiring all table editing actions.
+
+**Implementation:**
+
+1. **Created `src/hooks/useTableSelection.ts`:**
+   - `useTableSelection(options)` - Hook for tracking and managing table selection
+   - Tracks current table, row, and column indices
+   - Creates TableContext for the TableToolbar
+   - Handles all table actions (add/delete row/column, merge/split cells)
+   - Exports helper functions for finding tables from click events
+
+2. **Updated `src/components/render/DocTable.tsx`:**
+   - Added `onCellClick` prop for handling cell clicks
+   - Added `isCellSelected` prop for checking cell selection state
+   - Added `data-table-cell="true"` attribute to cells
+   - Added click handler with stopPropagation for nested tables
+   - Added selected cell styling (blue outline)
+
+3. **Updated `src/components/Editor.tsx`:**
+   - Added `onTableCellClick` and `isTableCellSelected` props
+   - Passes props to DocTable during rendering
+   - Calculates correct table index for each table in document
+
+4. **Updated `src/components/DocxEditor.tsx`:**
+   - Integrated `useTableSelection` hook
+   - Added `handleTableAction` callback for TableToolbar
+   - Shows TableToolbar when `tableSelection.tableContext` is set
+   - Passes table selection handlers to AIEditor/Editor
+
+**Table Actions Supported:**
+- Add row above/below
+- Add column left/right
+- Delete row/column (disabled when only one row/column remains)
+- Merge cells (when multi-cell selection)
+- Split cell (when cell has gridSpan > 1 or vMerge)
+- Delete table
+
+**Features:**
+- Clicking a table cell selects it and shows TableToolbar
+- Selected cell has blue outline
+- All actions update the document immutably
+- Selection position adjusts after row/column operations
+- Clicking outside tables clears selection
+
+**Exported from Public API:**
+- `TableToolbar` and related types
+- `useTableSelection` hook and types
+- Table manipulation utilities (addRow, deleteColumn, etc.)
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
