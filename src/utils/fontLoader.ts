@@ -397,14 +397,78 @@ export function getGoogleFontEquivalent(fontName: string): string {
 }
 
 /**
- * Load a font, automatically mapping to Google Fonts equivalent if needed
+ * Load a font, automatically mapping to Google Fonts equivalent if needed.
+ * If the font needs mapping, also creates a CSS alias so the original font
+ * name works in stylesheets.
  *
  * @param fontFamily - The font family name (may be an Office font)
  * @returns Promise resolving to true if font loaded
  */
 export async function loadFontWithMapping(fontFamily: string): Promise<boolean> {
-  const googleFont = getGoogleFontEquivalent(fontFamily);
-  return loadFont(googleFont);
+  const trimmed = fontFamily.trim();
+  const googleFont = getGoogleFontEquivalent(trimmed);
+
+  // Load the Google Font
+  const loaded = await loadFont(googleFont);
+
+  // If loaded and there's a mapping, create CSS alias so original name works
+  if (loaded && googleFont !== trimmed) {
+    createFontAlias(trimmed, googleFont);
+    loadedFonts.add(trimmed); // Also mark original name as loaded
+  }
+
+  return loaded;
+}
+
+/**
+ * Create a CSS font-family alias so the original font name uses the loaded font
+ *
+ * @param originalName - The original font name (e.g., "Garamond")
+ * @param googleFontName - The Google Font name (e.g., "EB Garamond")
+ */
+function createFontAlias(originalName: string, googleFontName: string): void {
+  // Create a style element with @font-face that aliases the original name
+  const styleId = `font-alias-${originalName.toLowerCase().replace(/\s+/g, '-')}`;
+
+  // Don't create duplicate aliases
+  if (document.getElementById(styleId)) {
+    return;
+  }
+
+  const style = document.createElement('style');
+  style.id = styleId;
+
+  // Use local() to reference the already-loaded Google Font
+  // This makes "Garamond" resolve to the loaded "EB Garamond" font
+  style.textContent = `
+    @font-face {
+      font-family: "${originalName}";
+      src: local("${googleFontName}"), local("${googleFontName} Regular");
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "${originalName}";
+      src: local("${googleFontName}"), local("${googleFontName} Bold");
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "${originalName}";
+      src: local("${googleFontName} Italic"), local("${googleFontName}");
+      font-weight: 400;
+      font-style: italic;
+    }
+    @font-face {
+      font-family: "${originalName}";
+      src: local("${googleFontName} Bold Italic"), local("${googleFontName}");
+      font-weight: 700;
+      font-style: italic;
+    }
+  `;
+
+  document.head.appendChild(style);
+  console.log(`Created font alias: "${originalName}" → "${googleFontName}"`);
 }
 
 /**
