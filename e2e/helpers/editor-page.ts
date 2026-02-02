@@ -566,13 +566,27 @@ export class EditorPage {
 
   /**
    * Set line spacing
+   * @param spacing - The spacing value: '1.0', '1.15', '1.5', '2.0' or label like 'Single', 'Double'
    */
   async setLineSpacing(spacing: string): Promise<void> {
-    // Click on line spacing dropdown
+    // Click on line spacing dropdown (uses Radix Select with aria-label)
     const lineSpacingButton = this.toolbar.locator('[aria-label="Line spacing"]');
     await lineSpacingButton.click();
-    // Select spacing value from dropdown
-    await this.page.locator(`[data-line-spacing="${spacing}"]`).click();
+
+    // Map spacing values to their display labels
+    const spacingLabels: Record<string, string> = {
+      '1.0': 'Single',
+      '1.15': '1.15',
+      '1.5': '1.5',
+      '2.0': 'Double',
+      Single: 'Single',
+      Double: 'Double',
+    };
+
+    const label = spacingLabels[spacing] || spacing;
+
+    // Select spacing value from dropdown using role="option" with exact match
+    await this.page.getByRole('option', { name: label, exact: true }).click();
   }
 
   /**

@@ -7911,3 +7911,42 @@ Verified that the highlight color picker selector is correctly configured and te
 - `npx playwright test --grep "set highlight color to yellow" e2e/tests/colors.spec.ts` - test passes ✓
 
 ---
+
+### Test Infrastructure: Fix line spacing picker selector
+
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Fixed the line spacing picker selector in `e2e/helpers/editor-page.ts` for the LineSpacingPicker component.
+
+**Issue:**
+
+- Tests used `[data-line-spacing="${spacing}"]` selector to select spacing options
+- Actual component uses Radix Select which doesn't have `data-line-spacing` attributes
+- LineSpacingPicker uses `SelectItem` with `value={option.twipsValue.toString()}` (e.g., "240", "276", "360", "480")
+- Display labels are "Single", "1.15", "1.5", "Double"
+- The trigger selector `[aria-label="Line spacing"]` was already correct
+
+**Fix:**
+
+- Updated `setLineSpacing()` method to use `getByRole('option', { name: label, exact: true })`
+- Added mapping from spacing values ('1.0', '1.5', '2.0') to display labels ('Single', '1.5', 'Double')
+- The mapping handles both numeric values ('1.0', '1.5', '2.0') and label names ('Single', 'Double')
+
+**Test Results:**
+
+- Multiple line spacing tests pass when selector works:
+  - ✓ spacing with single word
+  - ✓ line spacing with bold text
+  - ✓ cycle through all spacings
+  - ✓ rapid spacing changes
+  - ✓ undo/redo line spacing change
+- Failures are **functional issues** (Enter key not creating new paragraphs, text not rendering) - not selector issues
+
+**Verified:**
+
+- bun run typecheck: ✓
+- bun build exits 0: ✓
+- `npx playwright test --grep "spacing with single word"` - test passes ✓
+
+---
