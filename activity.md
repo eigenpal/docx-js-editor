@@ -5953,3 +5953,38 @@ Verified that table row insertion functionality is fully wired and working.
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-131: Wire table column insertion
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Verified that table column insertion functionality is fully wired and working.
+
+**Already Implemented Components:**
+
+1. **`src/components/ui/TableToolbar.tsx`:**
+   - `AddColumnLeftIcon` and `AddColumnRightIcon` SVG icons
+   - Buttons for "Insert Column Left" and "Insert Column Right"
+   - `addColumn(table, atIndex, position)` utility function - adds column to each row
+
+2. **`src/hooks/useTableSelection.ts`:**
+   - `handleAction()` handles 'addColumnLeft' and 'addColumnRight' actions (lines 323-330)
+   - Adjusts selection after adding column left (moves selection right)
+   - Updates column widths if present in table
+   - Updates document via `onChange` callback
+
+**Full Flow:**
+1. User clicks a table cell → TableToolbar appears
+2. User clicks "Insert Column Left" or "Insert Column Right"
+3. `handleTableAction` calls `tableSelection.handleAction(action)`
+4. `useTableSelection.handleAction` calls `addColumn()` utility function
+5. For each row, a new empty cell is inserted at the correct position
+6. Column widths array updated if present
+7. Updated document is passed to `onChange` callback
+8. Selection is updated to maintain cursor position
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
