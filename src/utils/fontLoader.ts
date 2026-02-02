@@ -443,7 +443,7 @@ async function createFontAlias(originalName: string, googleFontName: string): Pr
     const response = await fetch(url);
 
     if (!response.ok) {
-      console.warn(`Failed to fetch Google Fonts CSS for "${googleFontName}"`);
+      console.warn(`Failed to fetch Google Fonts CSS for "${googleFontName}": ${response.status}`);
       return;
     }
 
@@ -452,17 +452,15 @@ async function createFontAlias(originalName: string, googleFontName: string): Pr
     // Replace the Google Font name with the original name in all @font-face rules
     // The CSS contains: font-family: 'EB Garamond';
     // We want: font-family: 'Garamond';
-    const aliasedCss = css.replace(
-      new RegExp(`font-family:\\s*['"]?${escapeRegExp(googleFontName)}['"]?`, 'gi'),
-      `font-family: "${originalName}"`
-    );
+    const regex = new RegExp(`font-family:\\s*['"]${escapeRegExp(googleFontName)}['"]`, 'gi');
+    const aliasedCss = css.replace(regex, `font-family: '${originalName}'`);
 
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = aliasedCss;
 
     document.head.appendChild(style);
-    console.log(`Created font alias: "${originalName}" → "${googleFontName}"`);
+    console.log(`Loaded font: "${originalName}" (via ${googleFontName})`);
   } catch (error) {
     console.warn(`Failed to create font alias for "${originalName}":`, error);
   }
@@ -482,10 +480,10 @@ function escapeRegExp(string: string): string {
  * @returns Promise resolving when all fonts are loaded
  */
 export async function loadFontsWithMapping(families: string[]): Promise<void> {
-  const googleFonts = families.map(getGoogleFontEquivalent);
   // Remove duplicates
-  const uniqueFonts = [...new Set(googleFonts)];
-  await loadFonts(uniqueFonts);
+  const uniqueFonts = [...new Set(families.map((f) => f.trim()))];
+  // Load each font with mapping (creates aliases for Office → Google font mappings)
+  await Promise.all(uniqueFonts.map((family) => loadFontWithMapping(family)));
 }
 
 /**
