@@ -103,7 +103,7 @@ function getListClass(numPr?: ParagraphAttrs['numPr']): string {
  * Document node - top level container
  */
 export const doc: NodeSpec = {
-  content: '(paragraph | horizontalRule)+',
+  content: '(paragraph | horizontalRule | table)+',
 };
 
 /**
@@ -286,6 +286,250 @@ export const tab: NodeSpec = {
   },
 };
 
+// ============================================================================
+// TABLE NODES
+// ============================================================================
+
+/**
+ * Table node attributes
+ */
+export interface TableAttrs {
+  /** Table style ID */
+  styleId?: string;
+  /** Table width (in twips) */
+  width?: number;
+  /** Table width type ('auto', 'pct', 'dxa') */
+  widthType?: string;
+  /** Table justification/alignment */
+  justification?: 'left' | 'center' | 'right';
+}
+
+/**
+ * Table row attributes
+ */
+export interface TableRowAttrs {
+  /** Row height (in twips) */
+  height?: number;
+  /** Height rule ('auto', 'exact', 'atLeast') */
+  heightRule?: string;
+  /** Is header row */
+  isHeader?: boolean;
+}
+
+/**
+ * Table cell attributes
+ */
+export interface TableCellAttrs {
+  /** Column span */
+  colspan: number;
+  /** Row span */
+  rowspan: number;
+  /** Cell width (in twips) */
+  width?: number;
+  /** Cell width type */
+  widthType?: string;
+  /** Vertical alignment */
+  verticalAlign?: 'top' | 'center' | 'bottom';
+  /** Background color (RGB hex) */
+  backgroundColor?: string;
+}
+
+/**
+ * Table node - block-level table container
+ */
+export const table: NodeSpec = {
+  content: 'tableRow+',
+  group: 'block',
+  tableRole: 'table',
+  isolating: true,
+  attrs: {
+    styleId: { default: null },
+    width: { default: null },
+    widthType: { default: null },
+    justification: { default: null },
+  },
+  parseDOM: [
+    {
+      tag: 'table',
+      getAttrs(dom): TableAttrs {
+        const element = dom as HTMLTableElement;
+        return {
+          styleId: element.dataset.styleId || undefined,
+          justification: element.dataset.justification as TableAttrs['justification'] | undefined,
+        };
+      },
+    },
+  ],
+  toDOM(node) {
+    const attrs = node.attrs as TableAttrs;
+    const domAttrs: Record<string, string> = {
+      class: 'docx-table',
+    };
+
+    if (attrs.styleId) {
+      domAttrs['data-style-id'] = attrs.styleId;
+    }
+
+    // Apply table width style
+    const styles: string[] = ['border-collapse: collapse', 'width: 100%'];
+    if (attrs.justification === 'center') {
+      styles.push('margin-left: auto', 'margin-right: auto');
+    } else if (attrs.justification === 'right') {
+      styles.push('margin-left: auto');
+    }
+    domAttrs.style = styles.join('; ');
+
+    return ['table', domAttrs, ['tbody', 0]];
+  },
+};
+
+/**
+ * Table row node
+ */
+export const tableRow: NodeSpec = {
+  content: '(tableCell | tableHeader)+',
+  tableRole: 'row',
+  attrs: {
+    height: { default: null },
+    heightRule: { default: null },
+    isHeader: { default: false },
+  },
+  parseDOM: [{ tag: 'tr' }],
+  toDOM(node) {
+    const attrs = node.attrs as TableRowAttrs;
+    const domAttrs: Record<string, string> = {};
+
+    if (attrs.height) {
+      // Convert twips to pixels (1 twip = 1/20 point, 1 point = 1.333 px at 96 dpi)
+      const heightPx = Math.round((attrs.height / 20) * 1.333);
+      domAttrs.style = `height: ${heightPx}px`;
+    }
+
+    return ['tr', domAttrs, 0];
+  },
+};
+
+/**
+ * Table cell node - regular cell
+ */
+export const tableCell: NodeSpec = {
+  content: 'paragraph+',
+  tableRole: 'cell',
+  isolating: true,
+  attrs: {
+    colspan: { default: 1 },
+    rowspan: { default: 1 },
+    width: { default: null },
+    widthType: { default: null },
+    verticalAlign: { default: null },
+    backgroundColor: { default: null },
+  },
+  parseDOM: [
+    {
+      tag: 'td',
+      getAttrs(dom): TableCellAttrs {
+        const element = dom as HTMLTableCellElement;
+        return {
+          colspan: element.colSpan || 1,
+          rowspan: element.rowSpan || 1,
+          verticalAlign: element.dataset.valign as TableCellAttrs['verticalAlign'] | undefined,
+          backgroundColor: element.dataset.bgcolor || undefined,
+        };
+      },
+    },
+  ],
+  toDOM(node) {
+    const attrs = node.attrs as TableCellAttrs;
+    const domAttrs: Record<string, string> = {
+      class: 'docx-table-cell',
+    };
+
+    if (attrs.colspan > 1) {
+      domAttrs.colspan = String(attrs.colspan);
+    }
+    if (attrs.rowspan > 1) {
+      domAttrs.rowspan = String(attrs.rowspan);
+    }
+
+    // Build style
+    const styles: string[] = ['border: 1px solid #d0d0d0', 'padding: 4px 8px'];
+    if (attrs.verticalAlign) {
+      domAttrs['data-valign'] = attrs.verticalAlign;
+      styles.push(`vertical-align: ${attrs.verticalAlign}`);
+    }
+    if (attrs.backgroundColor) {
+      domAttrs['data-bgcolor'] = attrs.backgroundColor;
+      styles.push(`background-color: #${attrs.backgroundColor}`);
+    }
+    domAttrs.style = styles.join('; ');
+
+    return ['td', domAttrs, 0];
+  },
+};
+
+/**
+ * Table header cell node
+ */
+export const tableHeader: NodeSpec = {
+  content: 'paragraph+',
+  tableRole: 'header_cell',
+  isolating: true,
+  attrs: {
+    colspan: { default: 1 },
+    rowspan: { default: 1 },
+    width: { default: null },
+    widthType: { default: null },
+    verticalAlign: { default: null },
+    backgroundColor: { default: null },
+  },
+  parseDOM: [
+    {
+      tag: 'th',
+      getAttrs(dom): TableCellAttrs {
+        const element = dom as HTMLTableCellElement;
+        return {
+          colspan: element.colSpan || 1,
+          rowspan: element.rowSpan || 1,
+          verticalAlign: element.dataset.valign as TableCellAttrs['verticalAlign'] | undefined,
+          backgroundColor: element.dataset.bgcolor || undefined,
+        };
+      },
+    },
+  ],
+  toDOM(node) {
+    const attrs = node.attrs as TableCellAttrs;
+    const domAttrs: Record<string, string> = {
+      class: 'docx-table-header',
+    };
+
+    if (attrs.colspan > 1) {
+      domAttrs.colspan = String(attrs.colspan);
+    }
+    if (attrs.rowspan > 1) {
+      domAttrs.rowspan = String(attrs.rowspan);
+    }
+
+    // Build style - headers get bold and centered by default
+    const styles: string[] = [
+      'border: 1px solid #d0d0d0',
+      'padding: 4px 8px',
+      'font-weight: bold',
+      'background-color: #f5f5f5',
+    ];
+    if (attrs.verticalAlign) {
+      domAttrs['data-valign'] = attrs.verticalAlign;
+      styles.push(`vertical-align: ${attrs.verticalAlign}`);
+    }
+    if (attrs.backgroundColor) {
+      domAttrs['data-bgcolor'] = attrs.backgroundColor;
+      styles.push(`background-color: #${attrs.backgroundColor}`);
+    }
+    domAttrs.style = styles.join('; ');
+
+    return ['th', domAttrs, 0];
+  },
+};
+
 /**
  * All node specifications
  */
@@ -297,4 +541,8 @@ export const nodes = {
   image,
   horizontalRule,
   tab,
+  table,
+  tableRow,
+  tableCell,
+  tableHeader,
 };

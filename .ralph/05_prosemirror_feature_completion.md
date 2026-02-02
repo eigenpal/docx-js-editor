@@ -55,7 +55,7 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
 
 ### Phase 5.2: Table Support
 
-- [ ] **Task 5: Add table nodes to schema**
+- [x] **Task 5: Add table nodes to schema**
   - Create `table`, `tableRow`, `tableCell` nodes in `nodes.ts`
   - Define proper content models and attributes
   - Reference: SuperDoc table nodes

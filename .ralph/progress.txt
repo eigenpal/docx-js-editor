@@ -265,3 +265,16 @@
 [2026-02-02 14:15] NOTES: Updated DocxEditor to pass styleId to toolbar SelectionFormatting
 [2026-02-02 14:15] STATUS: done
 [2026-02-02 14:15] NOTES: Task 4 complete - Style picker now syncs with current paragraph
+
+[2026-02-02 14:15] === Phase 5.1 COMPLETE ===
+[2026-02-02 14:15] NOTES: All 4 style resolution tasks completed
+
+[2026-02-02 14:15] TASK: Add table nodes to schema
+[2026-02-02 14:15] STATUS: starting
+[2026-02-02 14:15] STATUS: researching-superdoc
+[2026-02-02 14:15] NOTES: Searching SuperDoc for table node definitions
+[2026-02-02 14:16] NOTES: Added table, tableRow, tableCell, tableHeader nodes to schema
+[2026-02-02 14:16] NOTES: Updated doc content model to allow tables
+[2026-02-02 14:16] NOTES: Exported table-related types from schema/index.ts
+[2026-02-02 14:16] STATUS: done
+[2026-02-02 14:16] NOTES: Task 5 complete - Typecheck passes

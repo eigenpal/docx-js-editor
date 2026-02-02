@@ -16,7 +16,13 @@ import { marks } from './marks';
 export { nodes } from './nodes';
 export { marks } from './marks';
 
-export type { ParagraphAttrs, ImageAttrs } from './nodes';
+export type {
+  ParagraphAttrs,
+  ImageAttrs,
+  TableAttrs,
+  TableRowAttrs,
+  TableCellAttrs,
+} from './nodes';
 export type {
   TextColorAttrs,
   UnderlineAttrs,
