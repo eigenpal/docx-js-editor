@@ -113,7 +113,7 @@ export { FontSizePicker, type FontSizePickerProps } from './components/ui/FontSi
 export { ColorPicker, type ColorPickerProps, type ColorPreset } from './components/ui/ColorPicker';
 export { StylePicker, type StylePickerProps, type StyleOption } from './components/ui/StylePicker';
 export { AlignmentButtons, type AlignmentButtonsProps } from './components/ui/AlignmentButtons';
-export { ListButtons, type ListButtonsProps } from './components/ui/ListButtons';
+export { ListButtons, type ListButtonsProps, type ListState, createDefaultListState } from './components/ui/ListButtons';
 export {
   TableToolbar,
   type TableToolbarProps,

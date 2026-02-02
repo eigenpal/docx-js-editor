@@ -16,6 +16,7 @@ import { FontPicker } from './ui/FontPicker';
 import { FontSizePicker, halfPointsToPoints, pointsToHalfPoints } from './ui/FontSizePicker';
 import { TextColorPicker, HighlightColorPicker } from './ui/ColorPicker';
 import { AlignmentButtons } from './ui/AlignmentButtons';
+import { ListButtons, type ListState, createDefaultListState } from './ui/ListButtons';
 
 // ============================================================================
 // TYPES
@@ -47,6 +48,8 @@ export interface SelectionFormatting {
   highlight?: string;
   /** Paragraph alignment */
   alignment?: ParagraphAlignment;
+  /** List state of the current paragraph */
+  listState?: ListState;
 }
 
 /**
@@ -60,6 +63,8 @@ export type FormattingAction =
   | 'superscript'
   | 'subscript'
   | 'clearFormatting'
+  | 'bulletList'
+  | 'numberedList'
   | { type: 'fontFamily'; value: string }
   | { type: 'fontSize'; value: number }
   | { type: 'textColor'; value: string }
@@ -104,6 +109,8 @@ export interface ToolbarProps {
   showHighlightColorPicker?: boolean;
   /** Whether to show alignment buttons (default: true) */
   showAlignmentButtons?: boolean;
+  /** Whether to show list buttons (default: true) */
+  showListButtons?: boolean;
 }
 
 /**
@@ -362,6 +369,7 @@ export function Toolbar({
   showTextColorPicker = true,
   showHighlightColorPicker = true,
   showAlignmentButtons = true,
+  showListButtons = true,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -454,6 +462,24 @@ export function Toolbar({
     },
     [disabled, onFormat]
   );
+
+  /**
+   * Handle bullet list toggle
+   */
+  const handleBulletList = useCallback(() => {
+    if (!disabled && onFormat) {
+      onFormat('bulletList');
+    }
+  }, [disabled, onFormat]);
+
+  /**
+   * Handle numbered list toggle
+   */
+  const handleNumberedList = useCallback(() => {
+    if (!disabled && onFormat) {
+      onFormat('numberedList');
+    }
+  }, [disabled, onFormat]);
 
   /**
    * Keyboard shortcuts handler
@@ -672,6 +698,20 @@ export function Toolbar({
         </ToolbarGroup>
       )}
 
+      {/* List Buttons */}
+      {showListButtons && (
+        <ToolbarGroup label="List formatting">
+          <ListButtons
+            listState={currentFormatting.listState || createDefaultListState()}
+            onBulletList={handleBulletList}
+            onNumberedList={handleNumberedList}
+            disabled={disabled}
+            showIndentButtons={false}
+            compact
+          />
+        </ToolbarGroup>
+      )}
+
       {/* Clear Formatting */}
       <ToolbarButton
         onClick={() => handleFormat('clearFormatting')}
@@ -745,6 +785,23 @@ export function getSelectionFormatting(
 
   if (paragraphFormatting) {
     result.alignment = paragraphFormatting.alignment;
+
+    // Extract list state from numPr
+    if (paragraphFormatting.numPr) {
+      const { numId, ilvl } = paragraphFormatting.numPr;
+      // We need to determine if it's bullet or numbered - for now we'll use a heuristic
+      // numId 1 is typically bullet, numId 2 is typically numbered in Word defaults
+      // This is a simplification - proper implementation would check the numbering definitions
+      const isBullet = numId === 1;
+      result.listState = {
+        type: isBullet ? 'bullet' : 'numbered',
+        level: ilvl ?? 0,
+        isInList: true,
+        numId,
+      };
+    } else {
+      result.listState = createDefaultListState();
+    }
   }
 
   return result;

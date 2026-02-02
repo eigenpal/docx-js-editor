@@ -5184,3 +5184,58 @@ Added the AlignmentButtons component to the Toolbar for paragraph alignment cont
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-115: Add Bullet List button to toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added the Bullet List button to the Toolbar using the existing ListButtons component.
+
+**Implementation:**
+
+1. **Updated `src/components/Toolbar.tsx`:**
+   - Imported `ListButtons`, `ListState`, and `createDefaultListState` from `./ui/ListButtons`
+   - Added `showListButtons` prop (default: true)
+   - Extended `FormattingAction` type to support `'bulletList'` and `'numberedList'` string actions
+   - Extended `SelectionFormatting` to include `listState?: ListState`
+   - Added `handleBulletList` and `handleNumberedList` callbacks
+   - Added ListButtons component in a new group after Alignment group
+   - Updated `getSelectionFormatting` to extract list state from `numPr`
+
+2. **Updated `src/components/DocxEditor.tsx`:**
+   - Added handler for `bulletList` action in `handleFormat`
+   - Toggles bullet list: if already bullet list, removes it; otherwise sets `numPr` with `numId: 1`
+   - Uses `formatParagraph` command to update `numPr` property
+   - Updates selection formatting state after toggle
+
+3. **Updated `src/index.ts`:**
+   - Added exports for `ListState` type and `createDefaultListState` function
+
+**Features:**
+- Bullet list button with toggle behavior
+- Active state shows when paragraph is a bullet list
+- Uses `numPr.numId = 1` for bullet lists (Word convention)
+- Click toggles list on/off for current paragraph
+- Compact mode for toolbar integration
+
+**Props Added to Toolbar:**
+- `showListButtons?: boolean` - Whether to show list buttons (default: true)
+
+**List State Detection:**
+- Extracts `numPr` from paragraph formatting
+- Uses `numId = 1` as heuristic for bullet lists
+- Future enhancement: check numbering definitions for accurate detection
+
+**Formatting Flow:**
+- User clicks bullet list button
+- `handleBulletList()` called → `onFormat('bulletList')` triggered
+- DocxEditor's `handleFormat` detects bullet list action
+- Toggles `numPr` property (set `{numId: 1, ilvl: 0}` or remove)
+- Uses `executeCommand` with `formatParagraph` command
+- Toolbar active state reflects list state
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

@@ -325,6 +325,68 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         return;
       }
 
+      // Handle bullet list action (paragraph-level)
+      if (action === 'bulletList') {
+        const currentListState = state.selectionFormatting.listState;
+        const isCurrentlyBulletList = currentListState?.type === 'bullet';
+
+        // Toggle bullet list: if already bullet list, remove it; otherwise set it
+        const newNumPr = isCurrentlyBulletList
+          ? undefined // Remove list
+          : { numId: 1, ilvl: 0 }; // Set to bullet list (numId 1 is typically bullets)
+
+        const newDoc = executeCommand(history.state, {
+          type: 'formatParagraph',
+          paragraphIndex: range.start.paragraphIndex,
+          formatting: { numPr: newNumPr },
+        });
+
+        handleDocumentChange(newDoc);
+
+        // Update selection formatting state
+        setState((prev) => ({
+          ...prev,
+          selectionFormatting: {
+            ...prev.selectionFormatting,
+            listState: newNumPr
+              ? { type: 'bullet', level: 0, isInList: true, numId: 1 }
+              : { type: 'none', level: 0, isInList: false },
+          },
+        }));
+        return;
+      }
+
+      // Handle numbered list action (paragraph-level)
+      if (action === 'numberedList') {
+        const currentListState = state.selectionFormatting.listState;
+        const isCurrentlyNumberedList = currentListState?.type === 'numbered';
+
+        // Toggle numbered list: if already numbered list, remove it; otherwise set it
+        const newNumPr = isCurrentlyNumberedList
+          ? undefined // Remove list
+          : { numId: 2, ilvl: 0 }; // Set to numbered list (numId 2 is typically numbered)
+
+        const newDoc = executeCommand(history.state, {
+          type: 'formatParagraph',
+          paragraphIndex: range.start.paragraphIndex,
+          formatting: { numPr: newNumPr },
+        });
+
+        handleDocumentChange(newDoc);
+
+        // Update selection formatting state
+        setState((prev) => ({
+          ...prev,
+          selectionFormatting: {
+            ...prev.selectionFormatting,
+            listState: newNumPr
+              ? { type: 'numbered', level: 0, isInList: true, numId: 2 }
+              : { type: 'none', level: 0, isInList: false },
+          },
+        }));
+        return;
+      }
+
       // Get the current formatting and apply the action
       const currentFormatting = selectionContext.formatting || {};
       const newFormatting = applyFormattingAction(currentFormatting, action);
@@ -344,7 +406,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         selectionFormatting: getSelectionFormatting(newFormatting, selectionContext.paragraphFormatting),
       }));
     },
-    [history.state, handleDocumentChange]
+    [history.state, handleDocumentChange, state.selectionFormatting.listState]
   );
 
   // Handle undo action
