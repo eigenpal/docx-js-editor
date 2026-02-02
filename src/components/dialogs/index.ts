@@ -43,3 +43,19 @@ export {
   isEmptySearch,
   getDefaultHighlightOptions,
 } from './FindReplaceDialog';
+
+// Paste Special dialog for paste options
+export {
+  PasteSpecialDialog,
+  type PasteSpecialDialogProps,
+  type PasteOption,
+  type UsePasteSpecialReturn,
+  type UsePasteSpecialOptions,
+  // Hook
+  usePasteSpecial,
+  // Utility functions
+  getPasteOption,
+  getAllPasteOptions,
+  getDefaultPasteOption,
+  isPasteSpecialShortcut,
+} from './PasteSpecialDialog';

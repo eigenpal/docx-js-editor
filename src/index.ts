@@ -274,6 +274,18 @@ export {
   symbolFromCodePoint,
   SYMBOL_CATEGORIES,
 } from './components/dialogs/InsertSymbolDialog';
+export {
+  PasteSpecialDialog,
+  type PasteSpecialDialogProps,
+  type PasteOption,
+  type UsePasteSpecialReturn,
+  type UsePasteSpecialOptions,
+  usePasteSpecial,
+  getPasteOption,
+  getAllPasteOptions,
+  getDefaultPasteOption,
+  isPasteSpecialShortcut,
+} from './components/dialogs/PasteSpecialDialog';
 
 // ============================================================================
 // TYPES

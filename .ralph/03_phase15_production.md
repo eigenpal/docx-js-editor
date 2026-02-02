@@ -74,7 +74,7 @@
 ## Category 7: Clipboard & History
 
 - [x] US-160: Implement proper copy/paste - P1 - Preserve/apply formatting
-- [ ] US-161: Add paste special options - P3 - Paste plain text option
+- [x] US-161: Add paste special options - P3 - Paste plain text option
 - [ ] US-162: Add unsaved changes indicator - P3 - Show unsaved status
 - [ ] US-163: Add auto-save functionality - P3 - Auto-save to localStorage
 
