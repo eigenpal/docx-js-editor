@@ -311,27 +311,80 @@ This is a WYSIWYG editor. Output must look identical to Microsoft Word.
 
 ---
 
-## Known Critical Bugs
+## ProseMirror Editor Architecture
 
-### 1. Cursor-Only Paragraph Operations (ROOT CAUSE)
+The editor uses **ProseMirror** as the editing core, replacing the previous contentEditable-based implementation.
 
-**Problem:** In Word/Google Docs, paragraph operations (lists, alignment, indent) work when cursor is in a paragraph WITHOUT selecting text. Our editor requires text selection.
+### Key Files
 
-**Root cause:** `getSelectionRange()` in `AIEditor.tsx:105` returns `null` when `selection.isCollapsed` is true:
-
-```tsx
-if (!selection || selection.isCollapsed) return null; // ← THE BUG
+```
+src/prosemirror/
+├── schema/
+│   ├── nodes.ts          # paragraph, table, image, hardBreak, tab nodes
+│   ├── marks.ts          # bold, italic, underline, color, font, hyperlink
+│   └── index.ts          # Schema export
+├── conversion/
+│   ├── toProseDoc.ts     # Document → ProseMirror (with style resolution)
+│   └── fromProseDoc.ts   # ProseMirror → Document (round-trip)
+├── plugins/
+│   ├── keymap.ts         # Keyboard shortcuts (Enter, Backspace, Tab, etc.)
+│   └── selectionTracker.ts # Emits selection context for toolbar
+├── commands/
+│   ├── formatting.ts     # toggleBold, setFontSize, setTextColor, etc.
+│   ├── paragraph.ts      # setAlignment, setLineSpacing, applyStyle
+│   └── lists.ts          # toggleBulletList, indent/outdent
+├── styles/
+│   ├── styleResolver.ts  # OOXML style chain resolution
+│   └── index.ts          # Exports createStyleResolver
+├── utils/
+│   └── tabCalculator.ts  # Tab width calculation utilities
+├── ProseMirrorEditor.tsx # React wrapper component
+└── editor.css            # Editor styling
 ```
 
-**To verify expected behavior:** Go to https://www.wysiwyg-editor.dev/, click in a paragraph, click Center button — it should center without selection.
+### Supported Features
 
-### 2. Multi-Paragraph Formatting
+| Feature                 | Status | Notes                         |
+| ----------------------- | ------ | ----------------------------- |
+| Bold/Italic/Underline   | ✅     | Marks with proper toDOM       |
+| Strikethrough           | ✅     | Single and double strike      |
+| Superscript/Subscript   | ✅     | Mutually exclusive            |
+| Text color              | ✅     | RGB and theme colors          |
+| Highlight               | ✅     | Word highlight colors         |
+| Font size               | ✅     | Half-points to pt conversion  |
+| Font family             | ✅     | ASCII and hAnsi fonts         |
+| Paragraph alignment     | ✅     | Left, center, right, justify  |
+| Line spacing            | ✅     | Single, 1.5, double, exact    |
+| Indentation             | ✅     | Left, right, first-line       |
+| Lists (bullet/numbered) | ✅     | With indent levels            |
+| Paragraph styles        | ✅     | Style resolution from OOXML   |
+| Tables                  | ✅     | Basic editing, Tab navigation |
+| Images                  | ✅     | Inline images                 |
+| Hyperlinks              | ✅     | With href and tooltip         |
+| Undo/Redo               | ✅     | ProseMirror history           |
 
-Only first paragraph gets formatted when multiple are selected. Need to loop from `start.paragraphIndex` to `end.paragraphIndex`.
+### Known Limitations
 
-### 3. Multi-Selection Across Formatting
+- **Tab stops**: Uses fixed 0.5 inch width (full dynamic positioning deferred)
+- **Table editing**: Basic navigation only (no row/column insert/delete yet)
+- **Headers/Footers**: Rendered but not editable
+- **Cut/Paste**: Some edge cases with cross-browser clipboard
 
-When selecting text spanning multiple runs with different formatting (bold → normal → italic), selection breaks.
+---
+
+## Known Issues (Current)
+
+### 1. End Key Navigation
+
+The End key doesn't always move to the end of the line in all scenarios.
+
+### 2. Cut/Paste Edge Cases
+
+Some clipboard operations may not work correctly in all browsers.
+
+### 3. Complex Table Operations
+
+Row/column insertion, cell merging, and table deletion require prosemirror-tables integration.
 
 ---
 
