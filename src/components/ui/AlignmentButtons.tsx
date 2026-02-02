@@ -7,7 +7,7 @@
  * - Applies alignment to current paragraph(s)
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { ParagraphAlignment } from '../../types/document';
 
@@ -202,10 +202,10 @@ export function AlignmentButton({
     ...(disabled
       ? BUTTON_DISABLED_STYLE
       : active
-      ? BUTTON_ACTIVE_STYLE
-      : isHovered
-      ? BUTTON_HOVER_STYLE
-      : BUTTON_STYLE),
+        ? BUTTON_ACTIVE_STYLE
+        : isHovered
+          ? BUTTON_HOVER_STYLE
+          : BUTTON_STYLE),
     ...style,
   };
 

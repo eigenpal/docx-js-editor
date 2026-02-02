@@ -88,10 +88,7 @@ export function formattingEquals(
 /**
  * Compare underline settings
  */
-function underlineEquals(
-  a: TextFormatting['underline'],
-  b: TextFormatting['underline']
-): boolean {
+function underlineEquals(a: TextFormatting['underline'], b: TextFormatting['underline']): boolean {
   if (!a && !b) return true;
   if (!a || !b) return false;
 
@@ -102,10 +99,7 @@ function underlineEquals(
 /**
  * Compare color values
  */
-function colorEquals(
-  a: TextFormatting['color'],
-  b: TextFormatting['color']
-): boolean {
+function colorEquals(a: TextFormatting['color'], b: TextFormatting['color']): boolean {
   if (!a && !b) return true;
   if (!a || !b) return false;
 
@@ -121,10 +115,7 @@ function colorEquals(
 /**
  * Compare shading properties
  */
-function shadingEquals(
-  a: TextFormatting['shading'],
-  b: TextFormatting['shading']
-): boolean {
+function shadingEquals(a: TextFormatting['shading'], b: TextFormatting['shading']): boolean {
   if (!a && !b) return true;
   if (!a || !b) return false;
 
@@ -163,10 +154,7 @@ function fontFamilyEquals(
  */
 export function isTextOnlyRun(run: Run): boolean {
   return run.content.every(
-    (c) =>
-      c.type === 'text' ||
-      c.type === 'softHyphen' ||
-      c.type === 'noBreakHyphen'
+    (c) => c.type === 'text' || c.type === 'softHyphen' || c.type === 'noBreakHyphen'
   );
 }
 
@@ -175,9 +163,7 @@ export function isTextOnlyRun(run: Run): boolean {
  */
 function isMergeableContent(content: RunContent): boolean {
   return (
-    content.type === 'text' ||
-    content.type === 'softHyphen' ||
-    content.type === 'noBreakHyphen'
+    content.type === 'text' || content.type === 'softHyphen' || content.type === 'noBreakHyphen'
   );
 }
 
@@ -291,9 +277,7 @@ export function consolidateRuns(runs: Run[]): Run[] {
  * This handles the full paragraph structure, consolidating runs while
  * preserving hyperlinks, bookmarks, and fields as merge boundaries.
  */
-export function consolidateParagraphContent(
-  content: ParagraphContent[]
-): ParagraphContent[] {
+export function consolidateParagraphContent(content: ParagraphContent[]): ParagraphContent[] {
   if (content.length <= 1) return content;
 
   const result: ParagraphContent[] = [];
@@ -388,9 +372,8 @@ export function getConsolidationStats(
   const originalCount = originalParagraphs.reduce((sum, p) => sum + countRuns(p), 0);
   const consolidatedCount = consolidatedParagraphs.reduce((sum, p) => sum + countRuns(p), 0);
 
-  const reduction = originalCount > 0
-    ? ((originalCount - consolidatedCount) / originalCount) * 100
-    : 0;
+  const reduction =
+    originalCount > 0 ? ((originalCount - consolidatedCount) / originalCount) * 100 : 0;
 
   return {
     originalRunCount: originalCount,

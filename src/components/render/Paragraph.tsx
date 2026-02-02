@@ -19,24 +19,18 @@ import type {
   Theme,
   TabStop,
   Run as RunType,
-  Hyperlink as HyperlinkType,
-  SimpleField,
-  ComplexField,
-  BookmarkStart,
-  BookmarkEnd,
   Image as ImageType,
   Shape as ShapeType,
   TextBox as TextBoxType,
 } from '../../types/document';
 import { paragraphToStyle, textToStyle, mergeStyles } from '../../utils/formatToStyle';
-import { twipsToPixels, formatPx } from '../../utils/units';
+import { formatPx } from '../../utils/units';
 import { Run } from './Run';
 import { Tab } from './Tab';
 import { Hyperlink } from './Hyperlink';
 import { Field } from './Field';
 import { DocImage } from './DocImage';
 import { Shape } from './Shape';
-import { TextBox } from './TextBox';
 
 /**
  * Props for the Paragraph component
@@ -103,7 +97,7 @@ export function Paragraph({
   renderImage,
   renderShape,
   renderTextBox,
-  index: paraIndex,
+  index: _paraIndex,
 }: ParagraphProps): React.ReactElement {
   // Get CSS styles from paragraph formatting
   const formattingStyle = paragraphToStyle(paragraph.formatting, theme);
@@ -159,24 +153,20 @@ export function Paragraph({
   // Render each content item
   paragraph.content.forEach((content, contentIndex) => {
     const key = `content-${contentIndex}`;
-    const rendered = renderParagraphContent(
-      content,
-      key,
-      {
-        theme,
-        tabStops,
-        pageWidth,
-        currentPosition,
-        pageNumber,
-        totalPages,
-        onBookmarkClick,
-        disableLinks,
-        renderImage,
-        renderShape,
-        renderTextBox,
-        contentIndex,
-      }
-    );
+    const rendered = renderParagraphContent(content, key, {
+      theme,
+      tabStops,
+      pageWidth,
+      currentPosition,
+      pageNumber,
+      totalPages,
+      onBookmarkClick,
+      disableLinks,
+      renderImage,
+      renderShape,
+      renderTextBox,
+      contentIndex,
+    });
 
     if (rendered !== null) {
       children.push(rendered);
@@ -257,13 +247,7 @@ function renderParagraphContent(
       );
 
     case 'bookmarkEnd':
-      return (
-        <span
-          key={key}
-          className="docx-bookmark-end"
-          data-bookmark-id={content.id}
-        />
-      );
+      return <span key={key} className="docx-bookmark-end" data-bookmark-id={content.id} />;
 
     case 'simpleField':
     case 'complexField':
@@ -286,14 +270,10 @@ function renderParagraphContent(
 /**
  * Render a run with its content
  */
-function renderRun(
-  run: RunType,
-  key: string,
-  options: RenderContentOptions
-): ReactNode {
+function renderRun(run: RunType, key: string, options: RenderContentOptions): ReactNode {
   // Check if run contains images or shapes that need special handling
-  const hasImages = run.content.some(c => c.type === 'drawing');
-  const hasShapes = run.content.some(c => c.type === 'shape');
+  const hasImages = run.content.some((c) => c.type === 'drawing');
+  const hasShapes = run.content.some((c) => c.type === 'shape');
 
   // If run contains only an image or shape and custom renderer provided, use it
   if (hasImages || hasShapes) {
@@ -313,10 +293,7 @@ function renderRun(
           );
         } else {
           specialContent.push(
-            <DocImage
-              key={`${key}-img-${specialContent.length}`}
-              image={item.image}
-            />
+            <DocImage key={`${key}-img-${specialContent.length}`} image={item.image} />
           );
         }
       } else if (item.type === 'shape' && item.shape) {
@@ -328,10 +305,7 @@ function renderRun(
           );
         } else {
           specialContent.push(
-            <Shape
-              key={`${key}-shape-${specialContent.length}`}
-              shape={item.shape}
-            />
+            <Shape key={`${key}-shape-${specialContent.length}`} shape={item.shape} />
           );
         }
       } else {
@@ -344,13 +318,7 @@ function renderRun(
     const result: ReactNode[] = [];
 
     if (regularContent.content.length > 0) {
-      result.push(
-        <Run
-          key={`${key}-run`}
-          run={regularContent}
-          theme={options.theme}
-        />
-      );
+      result.push(<Run key={`${key}-run`} run={regularContent} theme={options.theme} />);
     }
 
     result.push(...specialContent);
@@ -359,7 +327,7 @@ function renderRun(
   }
 
   // Check for tab content that needs special rendering
-  const hasTab = run.content.some(c => c.type === 'tab');
+  const hasTab = run.content.some((c) => c.type === 'tab');
 
   if (hasTab) {
     // Render run content with Tab components for tab characters
@@ -385,13 +353,7 @@ function renderRun(
           formatting: run.formatting,
           content: [item],
         };
-        pieces.push(
-          <Run
-            key={`${key}-piece-${pieceIndex}`}
-            run={miniRun}
-            theme={options.theme}
-          />
-        );
+        pieces.push(<Run key={`${key}-piece-${pieceIndex}`} run={miniRun} theme={options.theme} />);
         pieceIndex++;
       }
     }
@@ -400,13 +362,7 @@ function renderRun(
   }
 
   // Standard run rendering
-  return (
-    <Run
-      key={key}
-      run={run}
-      theme={options.theme}
-    />
-  );
+  return <Run key={key} run={run} theme={options.theme} />;
 }
 
 /**
@@ -616,9 +572,10 @@ export function isEmptyParagraph(paragraph: ParagraphType): boolean {
  * @returns true if list item
  */
 export function isListItem(paragraph: ParagraphType): boolean {
-  return paragraph.listRendering !== undefined ||
-    (paragraph.formatting?.numPr?.numId !== undefined &&
-      paragraph.formatting?.numPr?.numId !== 0);
+  return (
+    paragraph.listRendering !== undefined ||
+    (paragraph.formatting?.numPr?.numId !== undefined && paragraph.formatting?.numPr?.numId !== 0)
+  );
 }
 
 /**
@@ -715,7 +672,10 @@ export function hasShapes(paragraph: ParagraphType): boolean {
  */
 export function getWordCount(paragraph: ParagraphType): number {
   const text = getParagraphText(paragraph);
-  const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+  const words = text
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
   return words.length;
 }
 

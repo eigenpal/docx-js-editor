@@ -108,7 +108,12 @@ const DEFAULT_MENU_ITEMS: TextContextMenuItem[] = [
   { action: 'cut', label: 'Cut', shortcut: 'Ctrl+X' },
   { action: 'copy', label: 'Copy', shortcut: 'Ctrl+C' },
   { action: 'paste', label: 'Paste', shortcut: 'Ctrl+V' },
-  { action: 'pasteAsPlainText', label: 'Paste as Plain Text', shortcut: 'Ctrl+Shift+V', dividerAfter: true },
+  {
+    action: 'pasteAsPlainText',
+    label: 'Paste as Plain Text',
+    shortcut: 'Ctrl+Shift+V',
+    dividerAfter: true,
+  },
   { action: 'delete', label: 'Delete', shortcut: 'Del', dividerAfter: true },
   { action: 'selectAll', label: 'Select All', shortcut: 'Ctrl+A' },
 ];
@@ -121,14 +126,23 @@ const CutIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="4" cy="12" r="2" stroke="currentColor" strokeWidth="1.5" />
     <circle cx="12" cy="12" r="2" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M5.5 10.5L10.5 3M10.5 10.5L5.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path
+      d="M5.5 10.5L10.5 3M10.5 10.5L5.5 3"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
   </svg>
 );
 
 const CopyIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="5" y="5" width="8" height="9" rx="1" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M11 5V3a1 1 0 00-1-1H4a1 1 0 00-1 1v8a1 1 0 001 1h2" stroke="currentColor" strokeWidth="1.5" />
+    <path
+      d="M11 5V3a1 1 0 00-1-1H4a1 1 0 00-1 1v8a1 1 0 001 1h2"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
   </svg>
 );
 
@@ -148,7 +162,16 @@ const DeleteIcon = () => (
 
 const SelectAllIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" />
+    <rect
+      x="2"
+      y="2"
+      width="12"
+      height="12"
+      rx="1"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeDasharray="2 2"
+    />
     <rect x="4" y="4" width="8" height="8" fill="currentColor" opacity="0.3" />
   </svg>
 );
@@ -457,7 +480,12 @@ export const TextContextMenu: React.FC<TextContextMenuProps> = ({
 export function useTextContextMenu(
   options: UseTextContextMenuOptions = {}
 ): UseTextContextMenuReturn {
-  const { enabled = true, isEditable = true, containerRef, onAction } = options;
+  const {
+    enabled = true,
+    isEditable: _isEditable = true,
+    containerRef: _containerRef,
+    onAction,
+  } = options;
 
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -520,12 +548,15 @@ export function useTextContextMenu(
         case 'pasteAsPlainText':
           // Trigger paste event with shift key simulation
           // Note: This may not work in all browsers due to security restrictions
-          navigator.clipboard.readText?.().then((text) => {
-            document.execCommand('insertText', false, text);
-          }).catch(() => {
-            // Fallback - just try regular paste
-            document.execCommand('paste');
-          });
+          navigator.clipboard
+            .readText?.()
+            .then((text) => {
+              document.execCommand('insertText', false, text);
+            })
+            .catch(() => {
+              // Fallback - just try regular paste
+              document.execCommand('paste');
+            });
           break;
         case 'delete':
           document.execCommand('delete');

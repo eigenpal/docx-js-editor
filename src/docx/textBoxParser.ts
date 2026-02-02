@@ -42,8 +42,6 @@ import type {
 import type { StyleMap } from './styleParser';
 import type { NumberingMap } from './numberingParser';
 import {
-  findChild,
-  findChildren,
   getChildElements,
   getAttribute,
   parseNumericAttribute,
@@ -76,35 +74,9 @@ export function emuToPixels(emu: number | undefined | null): number {
   return Math.round((emu * PIXELS_PER_INCH) / EMU_PER_INCH);
 }
 
-/**
- * Convert rotation value (1/60000 of a degree) to degrees
- */
-function rotToDegrees(rot: string | null | undefined): number | undefined {
-  if (!rot) return undefined;
-  const val = parseInt(rot, 10);
-  if (isNaN(val)) return undefined;
-  return val / 60000;
-}
-
 // ============================================================================
 // ELEMENT FINDERS
 // ============================================================================
-
-/**
- * Find element by local name (ignoring namespace prefix)
- */
-function findByLocalName(parent: XmlElement, localName: string): XmlElement | null {
-  const children = getChildElements(parent);
-  for (const child of children) {
-    const name = child.name || '';
-    const colonIdx = name.indexOf(':');
-    const childLocalName = colonIdx >= 0 ? name.substring(colonIdx + 1) : name;
-    if (childLocalName === localName) {
-      return child;
-    }
-  }
-  return null;
-}
 
 /**
  * Find element by full name with namespace prefix
@@ -531,7 +503,7 @@ export function parseTextBoxContent(
   theme: Theme | null,
   numbering: NumberingMap | null,
   rels?: RelationshipMap | null,
-  media?: Map<string, MediaFile>
+  _media?: Map<string, MediaFile>
 ): Paragraph[] {
   if (!txbxContent) {
     return [];
@@ -569,9 +541,7 @@ export function parseTextBoxContent(
  */
 export function isTextBoxDrawing(drawingEl: XmlElement): boolean {
   const children = getChildElements(drawingEl);
-  const container = children.find(
-    (el) => el.name === 'wp:inline' || el.name === 'wp:anchor'
-  );
+  const container = children.find((el) => el.name === 'wp:inline' || el.name === 'wp:anchor');
 
   if (!container) return false;
 
@@ -617,9 +587,7 @@ export function parseTextBox(drawingEl: XmlElement): TextBox | null {
   const children = getChildElements(drawingEl);
 
   // Find wp:inline or wp:anchor
-  const container = children.find(
-    (el) => el.name === 'wp:inline' || el.name === 'wp:anchor'
-  );
+  const container = children.find((el) => el.name === 'wp:inline' || el.name === 'wp:anchor');
 
   if (!container) return null;
 
@@ -656,7 +624,7 @@ export function parseTextBox(drawingEl: XmlElement): TextBox | null {
 
   // Get document properties
   const docPr = findByFullName(container, 'wp:docPr');
-  const id = docPr ? getAttribute(docPr, null, 'id') ?? undefined : undefined;
+  const id = docPr ? (getAttribute(docPr, null, 'id') ?? undefined) : undefined;
 
   // Parse fill
   const fill = parseFill(spPr ?? null);
@@ -731,7 +699,7 @@ export function parseTextBoxFromShape(
 
   // Get non-visual properties for ID
   const cNvPr = wspChildren.find((el) => el.name === 'wps:cNvPr');
-  const id = cNvPr ? getAttribute(cNvPr, null, 'id') ?? undefined : undefined;
+  const id = cNvPr ? (getAttribute(cNvPr, null, 'id') ?? undefined) : undefined;
 
   // Parse fill
   const fill = parseFill(spPr ?? null);

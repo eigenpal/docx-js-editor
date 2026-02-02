@@ -17,11 +17,7 @@
  */
 
 import type { BookmarkStart, BookmarkEnd } from '../types/document';
-import {
-  getAttribute,
-  parseNumericAttribute,
-  type XmlElement,
-} from './xmlParser';
+import { getAttribute, parseNumericAttribute, type XmlElement } from './xmlParser';
 
 // ============================================================================
 // BOOKMARK PARSING
@@ -128,10 +124,7 @@ export function addBookmark(map: BookmarkMap, bookmark: BookmarkStart): void {
  * @param name - Bookmark name to find
  * @returns The BookmarkStart or undefined if not found
  */
-export function getBookmarkByName(
-  map: BookmarkMap,
-  name: string
-): BookmarkStart | undefined {
+export function getBookmarkByName(map: BookmarkMap, name: string): BookmarkStart | undefined {
   return map.byName.get(name);
 }
 
@@ -142,10 +135,7 @@ export function getBookmarkByName(
  * @param id - Bookmark ID to find
  * @returns The BookmarkStart or undefined if not found
  */
-export function getBookmarkById(
-  map: BookmarkMap,
-  id: number
-): BookmarkStart | undefined {
+export function getBookmarkById(map: BookmarkMap, id: number): BookmarkStart | undefined {
   return map.byId.get(id);
 }
 
@@ -280,9 +270,7 @@ export function isRefBookmark(name: string): boolean {
  * @param name - Bookmark name
  * @returns Bookmark type
  */
-export function getBookmarkType(
-  name: string
-): 'user' | 'toc' | 'ref' | 'goBack' | 'internal' {
+export function getBookmarkType(name: string): 'user' | 'toc' | 'ref' | 'goBack' | 'internal' {
   if (name === '_GoBack') {
     return 'goBack';
   }
@@ -317,11 +305,11 @@ export function validateBookmarkPairs(
   unmatchedStarts: BookmarkStart[];
   unmatchedEnds: BookmarkEnd[];
 } {
-  const startIds = new Set(starts.map(s => s.id));
-  const endIds = new Set(ends.map(e => e.id));
+  const startIds = new Set(starts.map((s) => s.id));
+  const endIds = new Set(ends.map((e) => e.id));
 
-  const unmatchedStarts = starts.filter(s => !endIds.has(s.id));
-  const unmatchedEnds = ends.filter(e => !startIds.has(e.id));
+  const unmatchedStarts = starts.filter((s) => !endIds.has(s.id));
+  const unmatchedEnds = ends.filter((e) => !startIds.has(e.id));
 
   return {
     valid: unmatchedStarts.length === 0 && unmatchedEnds.length === 0,
@@ -342,9 +330,7 @@ export function validateBookmarkPairs(
  * @param name - Name to validate
  * @returns Object with validation result and error message if invalid
  */
-export function validateBookmarkName(
-  name: string
-): { valid: boolean; error?: string } {
+export function validateBookmarkName(name: string): { valid: boolean; error?: string } {
   if (!name) {
     return { valid: false, error: 'Bookmark name cannot be empty' };
   }

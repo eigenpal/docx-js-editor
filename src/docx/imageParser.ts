@@ -37,8 +37,6 @@ import type {
   MediaFile,
 } from '../types/document';
 import {
-  findChild,
-  findChildren,
   getChildElements,
   getAttribute,
   parseNumericAttribute,
@@ -92,22 +90,6 @@ function rotToDegrees(rot: string | null | undefined): number | undefined {
 // ============================================================================
 // ELEMENT FINDERS
 // ============================================================================
-
-/**
- * Find element by local name (ignoring namespace prefix)
- */
-function findByLocalName(parent: XmlElement, localName: string): XmlElement | null {
-  const children = getChildElements(parent);
-  for (const child of children) {
-    const name = child.name || '';
-    const colonIdx = name.indexOf(':');
-    const childLocalName = colonIdx >= 0 ? name.substring(colonIdx + 1) : name;
-    if (childLocalName === localName) {
-      return child;
-    }
-  }
-  return null;
-}
 
 /**
  * Find element by full name with namespace prefix
@@ -244,7 +226,7 @@ function parsePositionH(posH: XmlElement | null): ImagePosition['horizontal'] | 
   // Check for posOffset child
   const posOffsetEl = findByFullName(posH, 'wp:posOffset');
   if (posOffsetEl) {
-    const offsetText = posOffsetEl.elements?.[0]?.text ?? '0';
+    const offsetText = String(posOffsetEl.elements?.[0]?.text ?? '0');
     const posOffset = parseInt(offsetText, 10);
     return {
       relativeTo: relativeTo as ImagePosition['horizontal']['relativeTo'],
@@ -278,7 +260,7 @@ function parsePositionV(posV: XmlElement | null): ImagePosition['vertical'] | un
   // Check for posOffset child
   const posOffsetEl = findByFullName(posV, 'wp:posOffset');
   if (posOffsetEl) {
-    const offsetText = posOffsetEl.elements?.[0]?.text ?? '0';
+    const offsetText = String(posOffsetEl.elements?.[0]?.text ?? '0');
     const posOffset = parseInt(offsetText, 10);
     return {
       relativeTo: relativeTo as ImagePosition['vertical']['relativeTo'],
@@ -549,7 +531,7 @@ function resolveImageData(
     const mediaFile = media.get(normalizedPath);
     if (mediaFile) {
       return {
-        src: mediaFile.data, // This should be a data URL or base64
+        src: mediaFile.dataUrl || mediaFile.base64, // Use data URL or base64
         mimeType: mediaFile.mimeType,
         filename,
       };
@@ -560,7 +542,7 @@ function resolveImageData(
     const altMediaFile = media.get(altPath);
     if (altMediaFile) {
       return {
-        src: altMediaFile.data,
+        src: altMediaFile.dataUrl || altMediaFile.base64,
         mimeType: altMediaFile.mimeType,
         filename,
       };

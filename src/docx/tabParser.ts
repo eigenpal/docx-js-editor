@@ -16,12 +16,7 @@
  * - w:leader - leader character (none, dot, hyphen, underscore, heavy, middleDot)
  */
 
-import type {
-  TabStop,
-  TabStopAlignment,
-  TabLeader,
-  ParagraphFormatting,
-} from '../types/document';
+import type { TabStop, TabStopAlignment, TabLeader } from '../types/document';
 import {
   findChild,
   findChildren,
@@ -196,8 +191,7 @@ export function getNextTabStop(
 
   // No defined tab stop found, use default interval
   const defaultPosition =
-    Math.ceil((currentPosition + 1) / DEFAULT_TAB_INTERVAL_TWIPS) *
-    DEFAULT_TAB_INTERVAL_TWIPS;
+    Math.ceil((currentPosition + 1) / DEFAULT_TAB_INTERVAL_TWIPS) * DEFAULT_TAB_INTERVAL_TWIPS;
 
   // Don't exceed page width
   if (defaultPosition > pageWidth) {
@@ -227,9 +221,7 @@ export function findTabStopAtPosition(
   tolerance: number = 10
 ): TabStop | undefined {
   return tabStops.find(
-    (tab) =>
-      Math.abs(tab.position - position) <= tolerance &&
-      tab.alignment !== 'clear'
+    (tab) => Math.abs(tab.position - position) <= tolerance && tab.alignment !== 'clear'
   );
 }
 
@@ -354,10 +346,7 @@ export function hasVisibleLeader(leader: TabLeader | undefined): boolean {
  * @param widthInChars - Approximate number of characters to fill
  * @returns String of leader characters
  */
-export function generateLeaderString(
-  leader: TabLeader | undefined,
-  widthInChars: number
-): string {
+export function generateLeaderString(leader: TabLeader | undefined, widthInChars: number): string {
   if (!hasVisibleLeader(leader)) {
     return '';
   }
@@ -377,7 +366,13 @@ export function generateLeaderString(
  */
 export function isValidTabAlignment(value: string): value is TabStopAlignment {
   const validAlignments: TabStopAlignment[] = [
-    'left', 'center', 'right', 'decimal', 'bar', 'clear', 'num',
+    'left',
+    'center',
+    'right',
+    'decimal',
+    'bar',
+    'clear',
+    'num',
   ];
   return validAlignments.includes(value as TabStopAlignment);
 }
@@ -386,9 +381,7 @@ export function isValidTabAlignment(value: string): value is TabStopAlignment {
  * Check if a value is a valid tab leader
  */
 export function isValidTabLeader(value: string): value is TabLeader {
-  const validLeaders: TabLeader[] = [
-    'none', 'dot', 'hyphen', 'underscore', 'heavy', 'middleDot',
-  ];
+  const validLeaders: TabLeader[] = ['none', 'dot', 'hyphen', 'underscore', 'heavy', 'middleDot'];
   return validLeaders.includes(value as TabLeader);
 }
 
@@ -447,8 +440,7 @@ export function getEffectiveTabStops(
 
   // Add default tabs after the last explicit tab
   let position =
-    Math.ceil((maxExplicitPosition + 1) / DEFAULT_TAB_INTERVAL_TWIPS) *
-    DEFAULT_TAB_INTERVAL_TWIPS;
+    Math.ceil((maxExplicitPosition + 1) / DEFAULT_TAB_INTERVAL_TWIPS) * DEFAULT_TAB_INTERVAL_TWIPS;
 
   while (position < pageWidth) {
     // Only add if there's no explicit tab near this position

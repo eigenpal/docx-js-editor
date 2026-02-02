@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties } from 'react';
 import type { SectionProperties } from '../../types/document';
 import { twipsToPixels, pixelsToTwips, formatPx } from '../../utils/units';
 
@@ -100,9 +100,9 @@ export function HorizontalRuler({
   const rulerRef = useRef<HTMLDivElement>(null);
 
   // Get page dimensions from section properties
-  const pageWidthTwips = sectionProps?.pageSize?.width ?? DEFAULT_PAGE_WIDTH_TWIPS;
-  const leftMarginTwips = sectionProps?.pageMargins?.left ?? DEFAULT_MARGIN_TWIPS;
-  const rightMarginTwips = sectionProps?.pageMargins?.right ?? DEFAULT_MARGIN_TWIPS;
+  const pageWidthTwips = sectionProps?.pageWidth ?? DEFAULT_PAGE_WIDTH_TWIPS;
+  const leftMarginTwips = sectionProps?.marginLeft ?? DEFAULT_MARGIN_TWIPS;
+  const rightMarginTwips = sectionProps?.marginRight ?? DEFAULT_MARGIN_TWIPS;
 
   // Convert to pixels with zoom
   const pageWidthPx = twipsToPixels(pageWidthTwips) * zoom;
@@ -151,11 +151,23 @@ export function HorizontalRuler({
         const indentFromLeftMargin = positionTwips - leftMarginTwips;
         // Constrain: minimum -leftMargin (hanging indent), maximum content width
         const contentTwips = pageWidthTwips - leftMarginTwips - rightMarginTwips;
-        const newIndent = Math.max(-leftMarginTwips, Math.min(indentFromLeftMargin, contentTwips - 720));
+        const newIndent = Math.max(
+          -leftMarginTwips,
+          Math.min(indentFromLeftMargin, contentTwips - 720)
+        );
         onFirstLineIndentChange?.(Math.round(newIndent));
       }
     },
-    [dragging, zoom, pageWidthTwips, leftMarginTwips, rightMarginTwips, onLeftMarginChange, onRightMarginChange, onFirstLineIndentChange]
+    [
+      dragging,
+      zoom,
+      pageWidthTwips,
+      leftMarginTwips,
+      rightMarginTwips,
+      onLeftMarginChange,
+      onRightMarginChange,
+      onFirstLineIndentChange,
+    ]
   );
 
   // Handle drag end
@@ -365,11 +377,7 @@ function MarginMarker({
   onMouseLeave,
   onMouseDown,
 }: MarginMarkerProps): React.ReactElement {
-  const color = isDragging
-    ? MARKER_ACTIVE_COLOR
-    : isHovered
-    ? MARKER_HOVER_COLOR
-    : MARKER_COLOR;
+  const color = isDragging ? MARKER_ACTIVE_COLOR : isHovered ? MARKER_HOVER_COLOR : MARKER_COLOR;
 
   const markerStyle: CSSProperties = {
     position: 'absolute',
@@ -445,11 +453,7 @@ function FirstLineIndentMarker({
   onMouseLeave,
   onMouseDown,
 }: FirstLineIndentMarkerProps): React.ReactElement {
-  const color = isDragging
-    ? MARKER_ACTIVE_COLOR
-    : isHovered
-    ? MARKER_HOVER_COLOR
-    : MARKER_COLOR;
+  const color = isDragging ? MARKER_ACTIVE_COLOR : isHovered ? MARKER_HOVER_COLOR : MARKER_COLOR;
 
   const markerStyle: CSSProperties = {
     position: 'absolute',
@@ -604,9 +608,9 @@ export function getRulerDimensions(
   sectionProps?: SectionProperties | null,
   zoom: number = 1
 ): { width: number; leftMargin: number; rightMargin: number; contentWidth: number } {
-  const pageWidthTwips = sectionProps?.pageSize?.width ?? DEFAULT_PAGE_WIDTH_TWIPS;
-  const leftMarginTwips = sectionProps?.pageMargins?.left ?? DEFAULT_MARGIN_TWIPS;
-  const rightMarginTwips = sectionProps?.pageMargins?.right ?? DEFAULT_MARGIN_TWIPS;
+  const pageWidthTwips = sectionProps?.pageWidth ?? DEFAULT_PAGE_WIDTH_TWIPS;
+  const leftMarginTwips = sectionProps?.marginLeft ?? DEFAULT_MARGIN_TWIPS;
+  const rightMarginTwips = sectionProps?.marginRight ?? DEFAULT_MARGIN_TWIPS;
 
   const width = twipsToPixels(pageWidthTwips) * zoom;
   const leftMargin = twipsToPixels(leftMarginTwips) * zoom;
@@ -619,10 +623,7 @@ export function getRulerDimensions(
 /**
  * Get margin value in display units
  */
-export function getMarginInUnits(
-  marginTwips: number,
-  unit: 'inch' | 'cm'
-): string {
+export function getMarginInUnits(marginTwips: number, unit: 'inch' | 'cm'): string {
   if (unit === 'inch') {
     return (marginTwips / TWIPS_PER_INCH).toFixed(2) + '"';
   } else {
@@ -633,10 +634,7 @@ export function getMarginInUnits(
 /**
  * Parse a margin value from display units to twips
  */
-export function parseMarginFromUnits(
-  value: string,
-  unit: 'inch' | 'cm'
-): number | null {
+export function parseMarginFromUnits(value: string, unit: 'inch' | 'cm'): number | null {
   const num = parseFloat(value.replace(/[^\d.]/g, ''));
   if (isNaN(num)) return null;
 

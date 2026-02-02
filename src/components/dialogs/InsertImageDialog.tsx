@@ -291,13 +291,25 @@ function ImageIcon(): React.ReactElement {
 function LockIcon({ locked }: { locked: boolean }): React.ReactElement {
   if (locked) {
     return (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="currentColor"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <path d="M12 6V4a4 4 0 0 0-8 0v2H3v8h10V6h-1zm-6-2a2 2 0 0 1 4 0v2H6V4zm6 8H4V8h8v4z" />
       </svg>
     );
   }
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <path d="M10 6V4a2 2 0 0 0-4 0v2H4v8h8V6h-2zM6 4a2 2 0 0 1 4 0v2h-2V4H6v2H4v2H6V4zm4 8H6V8h4v4z" />
     </svg>
   );
@@ -351,70 +363,76 @@ export function InsertImageDialog({
   /**
    * Process a file and load image data
    */
-  const processFile = useCallback((file: File) => {
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file');
-      return;
-    }
+  const processFile = useCallback(
+    (file: File) => {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Image file is too large (max 10MB)');
-      return;
-    }
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('Image file is too large (max 10MB)');
+        return;
+      }
 
-    setError(null);
+      setError(null);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const src = e.target?.result as string;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const src = e.target?.result as string;
 
-      // Load image to get dimensions
-      const img = new Image();
-      img.onload = () => {
-        let w = img.width;
-        let h = img.height;
+        // Load image to get dimensions
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width;
+          let h = img.height;
 
-        // Scale down if exceeds max dimensions
-        if (w > maxWidth || h > maxHeight) {
-          const scaleW = maxWidth / w;
-          const scaleH = maxHeight / h;
-          const scale = Math.min(scaleW, scaleH);
-          w = Math.round(w * scale);
-          h = Math.round(h * scale);
-        }
+          // Scale down if exceeds max dimensions
+          if (w > maxWidth || h > maxHeight) {
+            const scaleW = maxWidth / w;
+            const scaleH = maxHeight / h;
+            const scale = Math.min(scaleW, scaleH);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+          }
 
-        setWidth(w);
-        setHeight(h);
-        setOriginalAspectRatio(img.width / img.height);
-        setImageData({
-          src,
-          width: w,
-          height: h,
-          fileName: file.name,
-          mimeType: file.type,
-        });
+          setWidth(w);
+          setHeight(h);
+          setOriginalAspectRatio(img.width / img.height);
+          setImageData({
+            src,
+            width: w,
+            height: h,
+            fileName: file.name,
+            mimeType: file.type,
+          });
+        };
+        img.src = src;
       };
-      img.src = src;
-    };
 
-    reader.onerror = () => {
-      setError('Failed to read image file');
-    };
+      reader.onerror = () => {
+        setError('Failed to read image file');
+      };
 
-    reader.readAsDataURL(file);
-  }, [maxWidth, maxHeight]);
+      reader.readAsDataURL(file);
+    },
+    [maxWidth, maxHeight]
+  );
 
   /**
    * Handle file input change
    */
-  const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      processFile(file);
-    }
-  }, [processFile]);
+  const handleFileChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        processFile(file);
+      }
+    },
+    [processFile]
+  );
 
   /**
    * Handle drop zone click
@@ -442,39 +460,48 @@ export function InsertImageDialog({
   /**
    * Handle drop
    */
-  const handleDrop = useCallback((e: DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
+  const handleDrop = useCallback(
+    (e: DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
 
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      processFile(file);
-    }
-  }, [processFile]);
+      const file = e.dataTransfer.files?.[0];
+      if (file) {
+        processFile(file);
+      }
+    },
+    [processFile]
+  );
 
   /**
    * Handle width change
    */
-  const handleWidthChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const newWidth = parseInt(e.target.value, 10) || 0;
-    setWidth(newWidth);
+  const handleWidthChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const newWidth = parseInt(e.target.value, 10) || 0;
+      setWidth(newWidth);
 
-    if (aspectLocked && originalAspectRatio) {
-      setHeight(Math.round(newWidth / originalAspectRatio));
-    }
-  }, [aspectLocked, originalAspectRatio]);
+      if (aspectLocked && originalAspectRatio) {
+        setHeight(Math.round(newWidth / originalAspectRatio));
+      }
+    },
+    [aspectLocked, originalAspectRatio]
+  );
 
   /**
    * Handle height change
    */
-  const handleHeightChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const newHeight = parseInt(e.target.value, 10) || 0;
-    setHeight(newHeight);
+  const handleHeightChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const newHeight = parseInt(e.target.value, 10) || 0;
+      setHeight(newHeight);
 
-    if (aspectLocked && originalAspectRatio) {
-      setWidth(Math.round(newHeight * originalAspectRatio));
-    }
-  }, [aspectLocked, originalAspectRatio]);
+      if (aspectLocked && originalAspectRatio) {
+        setWidth(Math.round(newHeight * originalAspectRatio));
+      }
+    },
+    [aspectLocked, originalAspectRatio]
+  );
 
   /**
    * Handle insert
@@ -493,23 +520,29 @@ export function InsertImageDialog({
   /**
    * Handle keyboard events
    */
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClose();
-    } else if (e.key === 'Enter' && imageData && !e.shiftKey) {
-      e.preventDefault();
-      handleInsert();
-    }
-  }, [onClose, imageData, handleInsert]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === 'Enter' && imageData && !e.shiftKey) {
+        e.preventDefault();
+        handleInsert();
+      }
+    },
+    [onClose, imageData, handleInsert]
+  );
 
   /**
    * Handle overlay click
    */
-  const handleOverlayClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  }, [onClose]);
+  const handleOverlayClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    },
+    [onClose]
+  );
 
   /**
    * Clear current image
@@ -596,23 +629,15 @@ export function InsertImageDialog({
           >
             {imageData ? (
               <div style={PREVIEW_CONTAINER_STYLE}>
-                <img
-                  src={imageData.src}
-                  alt={altText || 'Preview'}
-                  style={PREVIEW_IMAGE_STYLE}
-                />
+                <img src={imageData.src} alt={altText || 'Preview'} style={PREVIEW_IMAGE_STYLE} />
               </div>
             ) : (
               <>
                 <div style={DROP_ZONE_ICON_STYLE}>
                   <ImageIcon />
                 </div>
-                <div style={DROP_ZONE_TEXT_STYLE}>
-                  Click to select or drag and drop an image
-                </div>
-                <div style={DROP_ZONE_SUBTEXT_STYLE}>
-                  PNG, JPG, GIF up to 10MB
-                </div>
+                <div style={DROP_ZONE_TEXT_STYLE}>Click to select or drag and drop an image</div>
+                <div style={DROP_ZONE_SUBTEXT_STYLE}>PNG, JPG, GIF up to 10MB</div>
               </>
             )}
           </div>
@@ -643,7 +668,14 @@ export function InsertImageDialog({
 
           {/* Error message */}
           {error && (
-            <div style={{ color: '#dc3545', fontSize: '14px', marginBottom: '16px', textAlign: 'center' }}>
+            <div
+              style={{
+                color: '#dc3545',
+                fontSize: '14px',
+                marginBottom: '16px',
+                textAlign: 'center',
+              }}
+            >
               {error}
             </div>
           )}
@@ -816,9 +848,7 @@ export function dataUrlToBlob(dataUrl: string): Blob {
 /**
  * Get image dimensions from a data URL
  */
-export function getImageDimensions(
-  src: string
-): Promise<{ width: number; height: number }> {
+export function getImageDimensions(src: string): Promise<{ width: number; height: number }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve({ width: img.width, height: img.height });

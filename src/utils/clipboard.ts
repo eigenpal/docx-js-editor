@@ -8,15 +8,7 @@
  * - Ctrl+C, Ctrl+V, Ctrl+X keyboard shortcuts
  */
 
-import type {
-  Run,
-  RunContent,
-  TextContent,
-  TextFormatting,
-  Paragraph,
-  ParagraphContent,
-  ParagraphFormatting,
-} from '../types/document';
+import type { Run, TextFormatting, Paragraph } from '../types/document';
 
 // ============================================================================
 // TYPES
@@ -84,10 +76,7 @@ export const CLIPBOARD_TYPES = {
 /**
  * Copy runs to clipboard with formatting
  */
-export async function copyRuns(
-  runs: Run[],
-  options: ClipboardOptions = {}
-): Promise<boolean> {
+export async function copyRuns(runs: Run[], options: ClipboardOptions = {}): Promise<boolean> {
   const { includeFormatting = true, onError } = options;
 
   try {
@@ -398,11 +387,7 @@ export function htmlToRuns(html: string, plainTextFallback: string): Run[] {
 /**
  * Process a DOM node and extract runs
  */
-function processNode(
-  node: Node,
-  runs: Run[],
-  inheritedFormatting: TextFormatting
-): void {
+function processNode(node: Node, runs: Run[], inheritedFormatting: TextFormatting): void {
   if (node.nodeType === Node.TEXT_NODE) {
     const text = node.textContent || '';
     if (text.trim() || text.includes(' ')) {
@@ -512,7 +497,7 @@ function extractFormatting(element: HTMLElement): TextFormatting {
     const sizePx = parseFloat(style.fontSize);
     if (!isNaN(sizePx)) {
       // Convert pixels to half-points (1pt = 1.333px at 96dpi)
-      formatting.fontSize = Math.round(sizePx / 1.333 * 2);
+      formatting.fontSize = Math.round((sizePx / 1.333) * 2);
     }
   }
 

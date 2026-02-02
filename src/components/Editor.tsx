@@ -15,8 +15,6 @@ import type {
   Document,
   DocumentBody,
   Paragraph as ParagraphType,
-  Table as TableType,
-  Theme,
   SectionProperties,
   BlockContent,
   Image as ImageType,
@@ -24,11 +22,9 @@ import type {
   TextBox as TextBoxType,
   HeaderFooter,
   HeaderFooterType,
-  Run,
 } from '../types/document';
 import {
   EditableParagraph,
-  splitParagraphAt,
   mergeParagraphs,
   createEmptyParagraph,
   focusParagraphStart,
@@ -41,13 +37,9 @@ import { Paragraph } from './render/Paragraph';
 import { getDefaultSectionProperties } from '../docx/sectionParser';
 import { twipsToPixels, formatPx } from '../utils/units';
 import { SELECTION_DATA_ATTRIBUTES } from '../hooks/useSelection';
-import { calculatePages, type PageLayoutResult, type Page as PageData, type PageContent } from '../layout/pageLayout';
+import { calculatePages, type PageLayoutResult, type Page as PageData } from '../layout/pageLayout';
 import { selectWordAtCursor, selectParagraphAtCursor } from '../utils/textSelection';
-import {
-  useClipboard,
-  createSelectionFromDOM,
-  type ClipboardSelection,
-} from '../hooks/useClipboard';
+import { useClipboard, type ClipboardSelection } from '../hooks/useClipboard';
 import type { ParsedClipboardContent } from '../utils/clipboard';
 
 // ============================================================================
@@ -75,7 +67,10 @@ export interface EditorProps {
   /** Callback when document changes */
   onChange?: (document: Document) => void;
   /** Callback when selection changes */
-  onSelectionChange?: (paragraphIndex: number | null, cursorPosition: CursorPosition | null) => void;
+  onSelectionChange?: (
+    paragraphIndex: number | null,
+    cursorPosition: CursorPosition | null
+  ) => void;
   /** Callback when editor receives focus */
   onFocus?: () => void;
   /** Callback when editor loses focus */
@@ -101,7 +96,11 @@ export interface EditorProps {
   /** Whether to enable pagination (default: true) - renders content across multiple pages */
   enablePagination?: boolean;
   /** Custom page renderer */
-  renderPage?: (content: ReactNode, pageIndex: number, sectionProps: SectionProperties) => ReactNode;
+  renderPage?: (
+    content: ReactNode,
+    pageIndex: number,
+    sectionProps: SectionProperties
+  ) => ReactNode;
   /** Custom image renderer */
   renderImage?: (image: ImageType, index: number) => ReactNode;
   /** Custom shape renderer */
@@ -149,35 +148,6 @@ export interface EditorRef {
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
-
-/**
- * Get all paragraphs from document body
- */
-function getAllParagraphs(body: DocumentBody): ParagraphType[] {
-  const paragraphs: ParagraphType[] = [];
-
-  for (const block of body.content) {
-    if (block.type === 'paragraph') {
-      paragraphs.push(block);
-    }
-    // Note: Tables contain paragraphs but we handle them separately
-  }
-
-  return paragraphs;
-}
-
-/**
- * Get the flattened index of a paragraph in the document
- */
-function getFlattenedParagraphIndex(body: DocumentBody, blockIndex: number): number {
-  let index = 0;
-  for (let i = 0; i < blockIndex && i < body.content.length; i++) {
-    if (body.content[i].type === 'paragraph') {
-      index++;
-    }
-  }
-  return index;
-}
 
 /**
  * Update a paragraph in the document body
@@ -230,10 +200,7 @@ function insertParagraphAfter(
 /**
  * Remove a paragraph from the document body
  */
-function removeParagraph(
-  body: DocumentBody,
-  paragraphIndex: number
-): DocumentBody {
+function removeParagraph(body: DocumentBody, paragraphIndex: number): DocumentBody {
   let currentIndex = 0;
   const newContent = body.content.filter((block) => {
     if (block.type === 'paragraph') {
@@ -299,12 +266,12 @@ function getPageStyle(
   zoom: number,
   showShadow: boolean
 ): CSSProperties {
-  const pageWidth = twipsToPixels(sectionProps.pageWidth) * zoom;
-  const pageHeight = twipsToPixels(sectionProps.pageHeight) * zoom;
-  const marginTop = twipsToPixels(sectionProps.marginTop) * zoom;
-  const marginBottom = twipsToPixels(sectionProps.marginBottom) * zoom;
-  const marginLeft = twipsToPixels(sectionProps.marginLeft) * zoom;
-  const marginRight = twipsToPixels(sectionProps.marginRight) * zoom;
+  const pageWidth = twipsToPixels(sectionProps.pageWidth ?? 12240) * zoom;
+  const pageHeight = twipsToPixels(sectionProps.pageHeight ?? 15840) * zoom;
+  const marginTop = twipsToPixels(sectionProps.marginTop ?? 1440) * zoom;
+  const marginBottom = twipsToPixels(sectionProps.marginBottom ?? 1440) * zoom;
+  const marginLeft = twipsToPixels(sectionProps.marginLeft ?? 1440) * zoom;
+  const marginRight = twipsToPixels(sectionProps.marginRight ?? 1440) * zoom;
 
   return {
     width: `${pageWidth}px`,
@@ -375,60 +342,72 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
 
   // Get theme and section properties
   const theme = doc.package?.theme || null;
-  const sectionProps = doc.package?.body?.sectionProperties || getDefaultSectionProperties();
+  const sectionProps =
+    doc.package?.document?.finalSectionProperties || getDefaultSectionProperties();
 
   // Get paragraph count
   const paragraphCount = useMemo(() => {
-    return doc.package?.body ? countParagraphs(doc.package.body) : 0;
-  }, [doc.package?.body]);
+    return doc.package?.document ? countParagraphs(doc.package.document) : 0;
+  }, [doc.package?.document]);
 
   // Clipboard handlers
-  const handleClipboardCopy = useCallback((selection: ClipboardSelection) => {
-    onCopy?.(selection);
-  }, [onCopy]);
+  const handleClipboardCopy = useCallback(
+    (selection: ClipboardSelection) => {
+      onCopy?.(selection);
+    },
+    [onCopy]
+  );
 
-  const handleClipboardCut = useCallback((selection: ClipboardSelection) => {
-    if (!doc.package?.body) return;
-    onCut?.(selection);
+  const handleClipboardCut = useCallback(
+    (selection: ClipboardSelection) => {
+      if (!doc.package?.document) return;
+      onCut?.(selection);
 
-    // Delete the selected content
-    const domSelection = window.getSelection();
-    if (domSelection && !domSelection.isCollapsed) {
-      // Let the browser handle the deletion via the native cut event
-      document.execCommand('delete');
-    }
-  }, [doc.package?.body, onCut]);
-
-  const handleClipboardPaste = useCallback((content: ParsedClipboardContent, asPlainText: boolean) => {
-    onPaste?.(content, asPlainText);
-
-    // Insert pasted content at cursor position
-    if (content.runs.length > 0) {
-      // Get current selection
+      // Delete the selected content
       const domSelection = window.getSelection();
-      if (!domSelection) return;
-
-      // Delete current selection if any
-      if (!domSelection.isCollapsed) {
+      if (domSelection && !domSelection.isCollapsed) {
+        // Let the browser handle the deletion via the native cut event
         document.execCommand('delete');
       }
+    },
+    [doc.package?.document, onCut]
+  );
 
-      // Insert the pasted content
-      // For plain text paste or when we have runs, insert text
-      const textToInsert = asPlainText
-        ? content.plainText
-        : content.runs.map(run =>
-            run.content
-              .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
-              .map(c => c.text)
-              .join('')
-          ).join('');
+  const handleClipboardPaste = useCallback(
+    (content: ParsedClipboardContent, asPlainText: boolean) => {
+      onPaste?.(content, asPlainText);
 
-      if (textToInsert) {
-        document.execCommand('insertText', false, textToInsert);
+      // Insert pasted content at cursor position
+      if (content.runs.length > 0) {
+        // Get current selection
+        const domSelection = window.getSelection();
+        if (!domSelection) return;
+
+        // Delete current selection if any
+        if (!domSelection.isCollapsed) {
+          document.execCommand('delete');
+        }
+
+        // Insert the pasted content
+        // For plain text paste or when we have runs, insert text
+        const textToInsert = asPlainText
+          ? content.plainText
+          : content.runs
+              .map((run) =>
+                run.content
+                  .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
+                  .map((c) => c.text)
+                  .join('')
+              )
+              .join('');
+
+        if (textToInsert) {
+          document.execCommand('insertText', false, textToInsert);
+        }
       }
-    }
-  }, [onPaste]);
+    },
+    [onPaste]
+  );
 
   const { handleCopy, handleCut, handlePaste } = useClipboard({
     onCopy: handleClipboardCopy,
@@ -462,7 +441,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
   const headersForLayout = useMemo(() => {
     const result = new Map<number, Map<HeaderFooterType, HeaderFooter>>();
     const docHeaders = doc.package?.headers;
-    const docBody = doc.package?.body;
+    const docBody = doc.package?.document;
 
     if (!docHeaders || docHeaders.size === 0) {
       return result;
@@ -473,7 +452,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     const sectionHeadersMap = new Map<HeaderFooterType, HeaderFooter>();
 
     // Get section properties to determine header types
-    const sectProps = docBody?.sectionProperties;
+    const sectProps = docBody?.finalSectionProperties;
     const headerRefs = sectProps?.headerReferences || [];
 
     // Match headers from docHeaders (keyed by rId) to their types from sectPr
@@ -495,13 +474,13 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     }
 
     return result;
-  }, [doc.package?.headers, doc.package?.body?.sectionProperties]);
+  }, [doc.package?.headers, doc.package?.document?.finalSectionProperties]);
 
   // Build footers map for layout engine from document package
   const footersForLayout = useMemo(() => {
     const result = new Map<number, Map<HeaderFooterType, HeaderFooter>>();
     const docFooters = doc.package?.footers;
-    const docBody = doc.package?.body;
+    const docBody = doc.package?.document;
 
     if (!docFooters || docFooters.size === 0) {
       return result;
@@ -512,7 +491,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     const sectionFootersMap = new Map<HeaderFooterType, HeaderFooter>();
 
     // Get section properties to determine footer types
-    const sectProps = docBody?.sectionProperties;
+    const sectProps = docBody?.finalSectionProperties;
     const footerRefs = sectProps?.footerReferences || [];
 
     // Match footers from docFooters (keyed by rId) to their types from sectPr
@@ -534,7 +513,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     }
 
     return result;
-  }, [doc.package?.footers, doc.package?.body?.sectionProperties]);
+  }, [doc.package?.footers, doc.package?.document?.finalSectionProperties]);
 
   // Calculate page layout when pagination is enabled
   const pageLayout = useMemo<PageLayoutResult | null>(() => {
@@ -619,14 +598,14 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
    */
   const handleParagraphChange = useCallback(
     (newParagraph: ParagraphType, paragraphIndex: number) => {
-      if (!doc.package?.body) return;
+      if (!doc.package?.document) return;
 
-      const newBody = updateParagraphInBody(doc.package.body, paragraphIndex, newParagraph);
+      const newBody = updateParagraphInBody(doc.package.document, paragraphIndex, newParagraph);
       const newDoc: Document = {
         ...doc,
         package: {
           ...doc.package,
-          body: newBody,
+          document: newBody,
         },
       };
 
@@ -640,10 +619,10 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
    */
   const handleParagraphSplit = useCallback(
     (splitResult: ParagraphSplitResult, paragraphIndex: number) => {
-      if (!doc.package?.body) return;
+      if (!doc.package?.document) return;
 
       // Update the current paragraph with the "before" content
-      let newBody = updateParagraphInBody(doc.package.body, paragraphIndex, splitResult.before);
+      let newBody = updateParagraphInBody(doc.package.document, paragraphIndex, splitResult.before);
 
       // Insert the "after" content as a new paragraph
       newBody = insertParagraphAfter(newBody, paragraphIndex, splitResult.after);
@@ -652,7 +631,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         ...doc,
         package: {
           ...doc.package,
-          body: newBody,
+          document: newBody,
         },
       };
 
@@ -674,18 +653,18 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
    */
   const handleMergeWithPrevious = useCallback(
     (paragraphIndex: number) => {
-      if (!doc.package?.body || paragraphIndex === 0) return;
+      if (!doc.package?.document || paragraphIndex === 0) return;
 
-      const currentPara = getParagraphAt(doc.package.body, paragraphIndex);
-      const prevPara = getParagraphAt(doc.package.body, paragraphIndex - 1);
+      const currentPara = getParagraphAt(doc.package.document, paragraphIndex);
+      const prevPara = getParagraphAt(doc.package.document, paragraphIndex - 1);
 
       if (!currentPara || !prevPara) return;
 
       // Merge the paragraphs
-      const { merged, cursorPosition: newCursorPos } = mergeParagraphs(prevPara, currentPara);
+      const { merged, cursorPosition: _newCursorPos } = mergeParagraphs(prevPara, currentPara);
 
       // Update the previous paragraph with merged content
-      let newBody = updateParagraphInBody(doc.package.body, paragraphIndex - 1, merged);
+      let newBody = updateParagraphInBody(doc.package.document, paragraphIndex - 1, merged);
 
       // Remove the current paragraph
       newBody = removeParagraph(newBody, paragraphIndex);
@@ -694,7 +673,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         ...doc,
         package: {
           ...doc.package,
-          body: newBody,
+          document: newBody,
         },
       };
 
@@ -716,21 +695,21 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
    */
   const handleMergeWithNext = useCallback(
     (paragraphIndex: number) => {
-      if (!doc.package?.body) return;
+      if (!doc.package?.document) return;
 
-      const paragraphCount = countParagraphs(doc.package.body);
+      const paragraphCount = countParagraphs(doc.package.document);
       if (paragraphIndex >= paragraphCount - 1) return;
 
-      const currentPara = getParagraphAt(doc.package.body, paragraphIndex);
-      const nextPara = getParagraphAt(doc.package.body, paragraphIndex + 1);
+      const currentPara = getParagraphAt(doc.package.document, paragraphIndex);
+      const nextPara = getParagraphAt(doc.package.document, paragraphIndex + 1);
 
       if (!currentPara || !nextPara) return;
 
       // Merge the paragraphs
-      const { merged, cursorPosition: newCursorPos } = mergeParagraphs(currentPara, nextPara);
+      const { merged, cursorPosition: _newCursorPos } = mergeParagraphs(currentPara, nextPara);
 
       // Update the current paragraph with merged content
-      let newBody = updateParagraphInBody(doc.package.body, paragraphIndex, merged);
+      let newBody = updateParagraphInBody(doc.package.document, paragraphIndex, merged);
 
       // Remove the next paragraph
       newBody = removeParagraph(newBody, paragraphIndex + 1);
@@ -739,7 +718,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         ...doc,
         package: {
           ...doc.package,
-          body: newBody,
+          document: newBody,
         },
       };
 
@@ -775,7 +754,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
    * Handle paragraph blur
    */
   const handleParagraphBlur = useCallback(
-    (paragraphIndex: number) => {
+    (_paragraphIndex: number) => {
       // Check if focus moved to another paragraph
       setTimeout(() => {
         if (!containerRef.current?.contains(document.activeElement)) {
@@ -792,30 +771,24 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
   /**
    * Handle navigate up from paragraph
    */
-  const handleNavigateUp = useCallback(
-    (paragraphIndex: number) => {
-      if (paragraphIndex > 0) {
-        const prevParaElement = paragraphRefs.current.get(paragraphIndex - 1);
-        if (prevParaElement) {
-          focusParagraphEnd(prevParaElement);
-        }
+  const handleNavigateUp = useCallback((paragraphIndex: number) => {
+    if (paragraphIndex > 0) {
+      const prevParaElement = paragraphRefs.current.get(paragraphIndex - 1);
+      if (prevParaElement) {
+        focusParagraphEnd(prevParaElement);
       }
-    },
-    []
-  );
+    }
+  }, []);
 
   /**
    * Handle navigate down from paragraph
    */
-  const handleNavigateDown = useCallback(
-    (paragraphIndex: number) => {
-      const nextParaElement = paragraphRefs.current.get(paragraphIndex + 1);
-      if (nextParaElement) {
-        focusParagraphStart(nextParaElement);
-      }
-    },
-    []
-  );
+  const handleNavigateDown = useCallback((paragraphIndex: number) => {
+    const nextParaElement = paragraphRefs.current.get(paragraphIndex + 1);
+    if (nextParaElement) {
+      focusParagraphStart(nextParaElement);
+    }
+  }, []);
 
   /**
    * Handle Ctrl+Home - navigate to document start
@@ -918,16 +891,13 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
   /**
    * Store paragraph ref
    */
-  const setParagraphRef = useCallback(
-    (element: HTMLParagraphElement | null, index: number) => {
-      if (element) {
-        paragraphRefs.current.set(index, element);
-      } else {
-        paragraphRefs.current.delete(index);
-      }
-    },
-    []
-  );
+  const setParagraphRef = useCallback((element: HTMLParagraphElement | null, index: number) => {
+    if (element) {
+      paragraphRefs.current.set(index, element);
+    } else {
+      paragraphRefs.current.delete(index);
+    }
+  }, []);
 
   // Expose ref methods
   React.useImperativeHandle(
@@ -987,35 +957,45 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     (block: BlockContent, blockIndex: number, globalParagraphIndex: number) => {
       if (block.type === 'paragraph') {
         return (
-          <EditableParagraph
+          <div
             key={`para-${blockIndex}`}
-            ref={(el) => setParagraphRef(el as HTMLParagraphElement, globalParagraphIndex)}
-            paragraph={block}
-            paragraphIndex={globalParagraphIndex}
-            theme={theme}
-            editable={editable}
-            onChange={handleParagraphChange}
-            onSplit={handleParagraphSplit}
-            onMergeWithPrevious={handleMergeWithPrevious}
-            onMergeWithNext={handleMergeWithNext}
-            onCursorChange={handleCursorChange}
-            onFocus={handleParagraphFocus}
-            onBlur={handleParagraphBlur}
-            onNavigateUp={handleNavigateUp}
-            onNavigateDown={handleNavigateDown}
-            onNavigateToDocumentStart={handleNavigateToDocumentStart}
-            onNavigateToDocumentEnd={handleNavigateToDocumentEnd}
-            renderImage={renderImage}
-            renderShape={renderShape}
-            renderTextBox={renderTextBox}
-          />
+            ref={(el: HTMLDivElement | null) => {
+              if (el) {
+                const paragraphEl = el.firstElementChild as HTMLParagraphElement | null;
+                if (paragraphEl) {
+                  setParagraphRef(paragraphEl, globalParagraphIndex);
+                }
+              }
+            }}
+          >
+            <EditableParagraph
+              paragraph={block}
+              paragraphIndex={globalParagraphIndex}
+              theme={theme}
+              editable={editable}
+              onChange={handleParagraphChange}
+              onSplit={handleParagraphSplit}
+              onMergeWithPrevious={handleMergeWithPrevious}
+              onMergeWithNext={handleMergeWithNext}
+              onCursorChange={handleCursorChange}
+              onFocus={handleParagraphFocus}
+              onBlur={handleParagraphBlur}
+              onNavigateUp={handleNavigateUp}
+              onNavigateDown={handleNavigateDown}
+              onNavigateToDocumentStart={handleNavigateToDocumentStart}
+              onNavigateToDocumentEnd={handleNavigateToDocumentEnd}
+              renderImage={renderImage}
+              renderShape={renderShape}
+              renderTextBox={renderTextBox}
+            />
+          </div>
         );
       } else if (block.type === 'table') {
         // Get the table index for this table
         let currentTableIndex = 0;
-        if (doc.package?.body?.content) {
+        if (doc.package?.document?.content) {
           for (let i = 0; i < blockIndex; i++) {
-            if (doc.package.body.content[i].type === 'table') {
+            if (doc.package.document.content[i].type === 'table') {
               currentTableIndex++;
             }
           }
@@ -1035,12 +1015,26 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       return null;
     },
     [
-      theme, editable, handleParagraphChange, handleParagraphSplit,
-      handleMergeWithPrevious, handleMergeWithNext, handleCursorChange,
-      handleParagraphFocus, handleParagraphBlur, handleNavigateUp,
-      handleNavigateDown, handleNavigateToDocumentStart, handleNavigateToDocumentEnd,
-      renderImage, renderShape, renderTextBox,
-      onTableCellClick, isTableCellSelected, setParagraphRef, doc.package?.body?.content
+      theme,
+      editable,
+      handleParagraphChange,
+      handleParagraphSplit,
+      handleMergeWithPrevious,
+      handleMergeWithNext,
+      handleCursorChange,
+      handleParagraphFocus,
+      handleParagraphBlur,
+      handleNavigateUp,
+      handleNavigateDown,
+      handleNavigateToDocumentStart,
+      handleNavigateToDocumentEnd,
+      renderImage,
+      renderShape,
+      renderTextBox,
+      onTableCellClick,
+      isTableCellSelected,
+      setParagraphRef,
+      doc.package?.document?.content,
     ]
   );
 
@@ -1049,16 +1043,16 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
    */
   const renderPageContent = useCallback(
     (page: PageData) => {
-      if (!doc.package?.body) return null;
+      if (!doc.package?.document) return null;
 
       return page.content.map((pageContent, contentIndex) => {
         const block = pageContent.block;
 
         // Calculate global paragraph index
         let globalParagraphIndex = 0;
-        if (doc.package?.body?.content) {
+        if (doc.package?.document?.content) {
           for (let i = 0; i < pageContent.blockIndex; i++) {
-            if (doc.package.body.content[i].type === 'paragraph') {
+            if (doc.package.document.content[i].type === 'paragraph') {
               globalParagraphIndex++;
             }
           }
@@ -1082,26 +1076,22 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         );
       });
     },
-    [doc.package?.body, renderBlock]
+    [doc.package?.document, renderBlock]
   );
 
   /**
    * Render all content without pagination (single page mode)
    */
   const renderAllContent = useCallback(() => {
-    if (!doc.package?.body) {
-      return (
-        <div className="docx-editor-empty">
-          No document loaded
-        </div>
-      );
+    if (!doc.package?.document) {
+      return <div className="docx-editor-empty">No document loaded</div>;
     }
 
     const content: ReactNode[] = [];
     let paragraphIndex = 0;
 
-    for (let blockIndex = 0; blockIndex < doc.package.body.content.length; blockIndex++) {
-      const block = doc.package.body.content[blockIndex];
+    for (let blockIndex = 0; blockIndex < doc.package.document.content.length; blockIndex++) {
+      const block = doc.package.document.content[blockIndex];
 
       if (block.type === 'paragraph') {
         content.push(renderBlock(block, blockIndex, paragraphIndex));
@@ -1112,7 +1102,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     }
 
     return content;
-  }, [doc.package?.body, renderBlock]);
+  }, [doc.package?.document, renderBlock]);
 
   /**
    * Render a single page with its content
@@ -1121,10 +1111,10 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     (page: PageData, totalPages: number) => {
       const pageWidthPx = page.widthPx * zoom;
       const pageHeightPx = page.heightPx * zoom;
-      const marginTop = twipsToPixels(page.sectionProps.pageMargins?.top ?? 1440) * zoom;
-      const marginBottom = twipsToPixels(page.sectionProps.pageMargins?.bottom ?? 1440) * zoom;
-      const marginLeft = twipsToPixels(page.sectionProps.pageMargins?.left ?? 1440) * zoom;
-      const marginRight = twipsToPixels(page.sectionProps.pageMargins?.right ?? 1440) * zoom;
+      const marginTop = twipsToPixels(page.sectionProps.marginTop ?? 1440) * zoom;
+      const marginBottom = twipsToPixels(page.sectionProps.marginBottom ?? 1440) * zoom;
+      const marginLeft = twipsToPixels(page.sectionProps.marginLeft ?? 1440) * zoom;
+      const marginRight = twipsToPixels(page.sectionProps.marginRight ?? 1440) * zoom;
 
       const pageStyle: CSSProperties = {
         width: formatPx(pageWidthPx),
@@ -1153,7 +1143,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       }
 
       // Calculate header area style
-      const headerDistance = twipsToPixels(page.sectionProps.pageMargins?.header ?? 720) * zoom;
+      const headerDistance = twipsToPixels(page.sectionProps.headerDistance ?? 720) * zoom;
       const headerAreaStyle: CSSProperties = {
         position: 'absolute',
         top: formatPx(headerDistance),
@@ -1178,20 +1168,14 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
               />
             );
           } else if (block.type === 'table') {
-            return (
-              <DocTable
-                key={`header-table-${index}`}
-                table={block}
-                theme={theme}
-              />
-            );
+            return <DocTable key={`header-table-${index}`} table={block} theme={theme} />;
           }
           return null;
         });
       };
 
       // Calculate footer area style
-      const footerDistance = twipsToPixels(page.sectionProps.pageMargins?.footer ?? 720) * zoom;
+      const footerDistance = twipsToPixels(page.sectionProps.footerDistance ?? 720) * zoom;
       const footerAreaStyle: CSSProperties = {
         position: 'absolute',
         bottom: formatPx(footerDistance),
@@ -1216,13 +1200,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
               />
             );
           } else if (block.type === 'table') {
-            return (
-              <DocTable
-                key={`footer-table-${index}`}
-                table={block}
-                theme={theme}
-              />
-            );
+            return <DocTable key={`footer-table-${index}`} table={block} theme={theme} />;
           }
           return null;
         });
@@ -1335,7 +1313,15 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         </div>
       );
     },
-    [zoom, showPageShadows, showMarginGuides, marginGuideColor, renderPageContent, renderPage, theme]
+    [
+      zoom,
+      showPageShadows,
+      showMarginGuides,
+      marginGuideColor,
+      renderPageContent,
+      renderPage,
+      theme,
+    ]
   );
 
   /**
@@ -1345,10 +1331,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     if (!pageLayout || pageLayout.pages.length === 0) {
       // Fall back to single page rendering if no layout
       return (
-        <div
-          className="docx-editor-page"
-          style={getPageStyle(sectionProps, zoom, showPageShadows)}
-        >
+        <div className="docx-editor-page" style={getPageStyle(sectionProps, zoom, showPageShadows)}>
           {renderAllContent()}
         </div>
       );
@@ -1389,102 +1372,117 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     const pageContent = renderAllContent();
 
     // Calculate margins for margin guides
-    const marginTop = twipsToPixels(sectionProps.marginTop) * zoom;
-    const marginBottom = twipsToPixels(sectionProps.marginBottom) * zoom;
-    const marginLeft = twipsToPixels(sectionProps.marginLeft) * zoom;
-    const marginRight = twipsToPixels(sectionProps.marginRight) * zoom;
+    const marginTop = twipsToPixels(sectionProps.marginTop ?? 1440) * zoom;
+    const marginBottom = twipsToPixels(sectionProps.marginBottom ?? 1440) * zoom;
+    const marginLeft = twipsToPixels(sectionProps.marginLeft ?? 1440) * zoom;
+    const marginRight = twipsToPixels(sectionProps.marginRight ?? 1440) * zoom;
 
-    const renderedPage = renderPage
-      ? renderPage(pageContent, 0, sectionProps)
-      : (
-        <div
-          className="docx-editor-page"
-          style={{ ...getPageStyle(sectionProps, zoom, showPageShadows), position: 'relative' }}
-        >
-          {pageContent}
+    const renderedPage = renderPage ? (
+      renderPage(pageContent, 0, sectionProps)
+    ) : (
+      <div
+        className="docx-editor-page"
+        style={{ ...getPageStyle(sectionProps, zoom, showPageShadows), position: 'relative' }}
+      >
+        {pageContent}
 
-          {/* Margin guides for single page mode */}
-          {showMarginGuides && (
+        {/* Margin guides for single page mode */}
+        {showMarginGuides && (
+          <div
+            className="docx-page-margin-guides"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              pointerEvents: 'none',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Top margin line */}
             <div
-              className="docx-page-margin-guides"
+              className="docx-margin-guide docx-margin-guide-top"
+              style={{
+                position: 'absolute',
+                top: formatPx(marginTop),
+                left: 0,
+                right: 0,
+                height: 0,
+                borderTop: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                pointerEvents: 'none',
+              }}
+            />
+            {/* Bottom margin line */}
+            <div
+              className="docx-margin-guide docx-margin-guide-bottom"
+              style={{
+                position: 'absolute',
+                bottom: formatPx(marginBottom),
+                left: 0,
+                right: 0,
+                height: 0,
+                borderTop: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                pointerEvents: 'none',
+              }}
+            />
+            {/* Left margin line */}
+            <div
+              className="docx-margin-guide docx-margin-guide-left"
               style={{
                 position: 'absolute',
                 top: 0,
-                left: 0,
-                right: 0,
                 bottom: 0,
+                left: formatPx(marginLeft),
+                width: 0,
+                borderLeft: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
                 pointerEvents: 'none',
-                overflow: 'hidden',
               }}
-            >
-              {/* Top margin line */}
-              <div
-                className="docx-margin-guide docx-margin-guide-top"
-                style={{
-                  position: 'absolute',
-                  top: formatPx(marginTop),
-                  left: 0,
-                  right: 0,
-                  height: 0,
-                  borderTop: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
-                  pointerEvents: 'none',
-                }}
-              />
-              {/* Bottom margin line */}
-              <div
-                className="docx-margin-guide docx-margin-guide-bottom"
-                style={{
-                  position: 'absolute',
-                  bottom: formatPx(marginBottom),
-                  left: 0,
-                  right: 0,
-                  height: 0,
-                  borderTop: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
-                  pointerEvents: 'none',
-                }}
-              />
-              {/* Left margin line */}
-              <div
-                className="docx-margin-guide docx-margin-guide-left"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  bottom: 0,
-                  left: formatPx(marginLeft),
-                  width: 0,
-                  borderLeft: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
-                  pointerEvents: 'none',
-                }}
-              />
-              {/* Right margin line */}
-              <div
-                className="docx-margin-guide docx-margin-guide-right"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  bottom: 0,
-                  right: formatPx(marginRight),
-                  width: 0,
-                  borderLeft: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
-                  pointerEvents: 'none',
-                }}
-              />
-            </div>
-          )}
-        </div>
-      );
+            />
+            {/* Right margin line */}
+            <div
+              className="docx-margin-guide docx-margin-guide-right"
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                right: formatPx(marginRight),
+                width: 0,
+                borderLeft: `1px dashed ${marginGuideColor || '#c0c0c0'}`,
+                pointerEvents: 'none',
+              }}
+            />
+          </div>
+        )}
+      </div>
+    );
 
     return (
       <>
         {renderedPage}
         {showPageNumbers && (
-          <div className="docx-editor-page-number" style={{ textAlign: 'center', marginTop: '10px', color: '#666' }}>
+          <div
+            className="docx-editor-page-number"
+            style={{ textAlign: 'center', marginTop: '10px', color: '#666' }}
+          >
             Page 1
           </div>
         )}
       </>
     );
-  }, [enablePagination, pageLayout, renderAllContent, renderPage, sectionProps, zoom, showPageShadows, showPageNumbers, showMarginGuides, marginGuideColor, pageGap]);
+  }, [
+    enablePagination,
+    pageLayout,
+    renderAllContent,
+    renderPage,
+    sectionProps,
+    zoom,
+    showPageShadows,
+    showPageNumbers,
+    showMarginGuides,
+    marginGuideColor,
+    pageGap,
+  ]);
 
   return (
     <div
@@ -1518,12 +1516,12 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
 export function createEmptyDocument(): Document {
   return {
     package: {
-      body: {
+      document: {
         content: [createEmptyParagraph()],
-        sectionProperties: getDefaultSectionProperties(),
+        finalSectionProperties: getDefaultSectionProperties(),
       },
     },
-    originalBuffer: null as any,
+    originalBuffer: undefined,
     templateVariables: [],
   };
 }
@@ -1532,11 +1530,11 @@ export function createEmptyDocument(): Document {
  * Check if a document is empty
  */
 export function isDocumentEmpty(doc: Document): boolean {
-  if (!doc.package?.body?.content) return true;
-  if (doc.package.body.content.length === 0) return true;
+  if (!doc.package?.document?.content) return true;
+  if (doc.package.document.content.length === 0) return true;
 
   // Check if all paragraphs are empty
-  return doc.package.body.content.every((block) => {
+  return doc.package.document.content.every((block) => {
     if (block.type === 'paragraph') {
       return !block.content || block.content.length === 0;
     }
@@ -1548,14 +1546,19 @@ export function isDocumentEmpty(doc: Document): boolean {
  * Get word count of document
  */
 export function getDocumentWordCount(doc: Document): number {
-  if (!doc.package?.body?.content) return 0;
+  if (!doc.package?.document?.content) return 0;
 
   let count = 0;
-  for (const block of doc.package.body.content) {
+  for (const block of doc.package.document.content) {
     if (block.type === 'paragraph') {
-      const text = block.content
-        ?.map((c) => (c.type === 'run' ? c.content.map((rc) => (rc.type === 'text' ? rc.text : '')).join('') : ''))
-        .join('') || '';
+      const text =
+        block.content
+          ?.map((c) =>
+            c.type === 'run'
+              ? c.content.map((rc) => (rc.type === 'text' ? rc.text : '')).join('')
+              : ''
+          )
+          .join('') || '';
       count += text.split(/\s+/).filter((word) => word.length > 0).length;
     }
   }
@@ -1566,14 +1569,19 @@ export function getDocumentWordCount(doc: Document): number {
  * Get character count of document
  */
 export function getDocumentCharacterCount(doc: Document, includeSpaces = true): number {
-  if (!doc.package?.body?.content) return 0;
+  if (!doc.package?.document?.content) return 0;
 
   let count = 0;
-  for (const block of doc.package.body.content) {
+  for (const block of doc.package.document.content) {
     if (block.type === 'paragraph') {
-      const text = block.content
-        ?.map((c) => (c.type === 'run' ? c.content.map((rc) => (rc.type === 'text' ? rc.text : '')).join('') : ''))
-        .join('') || '';
+      const text =
+        block.content
+          ?.map((c) =>
+            c.type === 'run'
+              ? c.content.map((rc) => (rc.type === 'text' ? rc.text : '')).join('')
+              : ''
+          )
+          .join('') || '';
       count += includeSpaces ? text.length : text.replace(/\s/g, '').length;
     }
   }

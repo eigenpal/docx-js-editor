@@ -11,17 +11,13 @@
  * - Keyboard shortcuts (Ctrl+C, Ctrl+X, Ctrl+V)
  */
 
-import { useCallback, useRef, useEffect } from 'react';
-import type { Run, Paragraph, ParagraphContent, Document } from '../types/document';
+import { useCallback, useRef } from 'react';
+import type { Run } from '../types/document';
 import {
   copyRuns,
-  copyParagraphs,
   handlePasteEvent,
   runsToClipboardContent,
-  writeToClipboard,
-  type ClipboardContent,
   type ParsedClipboardContent,
-  type ClipboardOptions,
 } from '../utils/clipboard';
 
 // ============================================================================
@@ -108,9 +104,8 @@ export function getSelectionRuns(): Run[] {
 
   // Find all run elements within the selection
   const container = range.commonAncestorContainer;
-  const containerElement = container.nodeType === Node.ELEMENT_NODE
-    ? container as HTMLElement
-    : container.parentElement;
+  const containerElement =
+    container.nodeType === Node.ELEMENT_NODE ? (container as HTMLElement) : container.parentElement;
 
   if (!containerElement) return runs;
 
@@ -154,10 +149,12 @@ function getSelectedTextFromRun(runEl: Node, range: Range): string {
   runRange.selectNodeContents(runEl);
 
   // Check if the run is fully or partially selected
-  const startInRun = range.compareBoundaryPoints(Range.START_TO_START, runRange) >= 0 &&
-                     range.compareBoundaryPoints(Range.START_TO_END, runRange) <= 0;
-  const endInRun = range.compareBoundaryPoints(Range.END_TO_START, runRange) >= 0 &&
-                   range.compareBoundaryPoints(Range.END_TO_END, runRange) <= 0;
+  const startInRun =
+    range.compareBoundaryPoints(Range.START_TO_START, runRange) >= 0 &&
+    range.compareBoundaryPoints(Range.START_TO_END, runRange) <= 0;
+  const endInRun =
+    range.compareBoundaryPoints(Range.END_TO_START, runRange) >= 0 &&
+    range.compareBoundaryPoints(Range.END_TO_END, runRange) <= 0;
 
   if (startInRun && endInRun) {
     // Selection is entirely within this run
@@ -216,7 +213,7 @@ function extractFormattingFromElement(element: HTMLElement): Run['formatting'] {
   const fontSize = parseFloat(style.fontSize);
   if (!isNaN(fontSize) && fontSize > 0) {
     // 1pt = 1.333px at 96dpi, font size in OOXML is in half-points
-    formatting.fontSize = Math.round(fontSize / 1.333 * 2);
+    formatting.fontSize = Math.round((fontSize / 1.333) * 2);
   }
 
   // Font family
@@ -292,8 +289,12 @@ export function createSelectionFromDOM(): ClipboardSelection | null {
   const startPara = findParagraphElement(range.startContainer);
   const endPara = findParagraphElement(range.endContainer);
 
-  const startParagraphIndex = startPara ? parseInt(startPara.getAttribute('data-paragraph-index') || '0', 10) : 0;
-  const endParagraphIndex = endPara ? parseInt(endPara.getAttribute('data-paragraph-index') || '0', 10) : 0;
+  const startParagraphIndex = startPara
+    ? parseInt(startPara.getAttribute('data-paragraph-index') || '0', 10)
+    : 0;
+  const endParagraphIndex = endPara
+    ? parseInt(endPara.getAttribute('data-paragraph-index') || '0', 10)
+    : 0;
 
   return {
     text,
@@ -333,14 +334,7 @@ function findParagraphElement(node: Node): HTMLElement | null {
  * React hook for clipboard operations
  */
 export function useClipboard(options: UseClipboardOptions = {}): UseClipboardReturn {
-  const {
-    onCopy,
-    onCut,
-    onPaste,
-    cleanWordFormatting = true,
-    editable = true,
-    onError,
-  } = options;
+  const { onCopy, onCut, onPaste, cleanWordFormatting = true, editable = true, onError } = options;
 
   const isProcessingRef = useRef<boolean>(false);
   const lastPastedContentRef = useRef<ParsedClipboardContent | null>(null);
@@ -348,145 +342,163 @@ export function useClipboard(options: UseClipboardOptions = {}): UseClipboardRet
   /**
    * Copy selection to clipboard
    */
-  const copy = useCallback(async (selection: ClipboardSelection): Promise<boolean> => {
-    if (isProcessingRef.current) return false;
+  const copy = useCallback(
+    async (selection: ClipboardSelection): Promise<boolean> => {
+      if (isProcessingRef.current) return false;
 
-    isProcessingRef.current = true;
-    try {
-      const success = await copyRuns(selection.runs, { onError });
-      if (success) {
-        onCopy?.(selection);
+      isProcessingRef.current = true;
+      try {
+        const success = await copyRuns(selection.runs, { onError });
+        if (success) {
+          onCopy?.(selection);
+        }
+        return success;
+      } finally {
+        isProcessingRef.current = false;
       }
-      return success;
-    } finally {
-      isProcessingRef.current = false;
-    }
-  }, [onCopy, onError]);
+    },
+    [onCopy, onError]
+  );
 
   /**
    * Cut selection to clipboard
    */
-  const cut = useCallback(async (selection: ClipboardSelection): Promise<boolean> => {
-    if (isProcessingRef.current || !editable) return false;
+  const cut = useCallback(
+    async (selection: ClipboardSelection): Promise<boolean> => {
+      if (isProcessingRef.current || !editable) return false;
 
-    isProcessingRef.current = true;
-    try {
-      const success = await copyRuns(selection.runs, { onError });
-      if (success) {
-        onCut?.(selection);
+      isProcessingRef.current = true;
+      try {
+        const success = await copyRuns(selection.runs, { onError });
+        if (success) {
+          onCut?.(selection);
+        }
+        return success;
+      } finally {
+        isProcessingRef.current = false;
       }
-      return success;
-    } finally {
-      isProcessingRef.current = false;
-    }
-  }, [onCut, editable, onError]);
+    },
+    [onCut, editable, onError]
+  );
 
   /**
    * Paste from clipboard
    */
-  const paste = useCallback(async (asPlainText = false): Promise<ParsedClipboardContent | null> => {
-    if (isProcessingRef.current || !editable) return null;
+  const paste = useCallback(
+    async (asPlainText = false): Promise<ParsedClipboardContent | null> => {
+      if (isProcessingRef.current || !editable) return null;
 
-    isProcessingRef.current = true;
-    try {
-      // Try to read from clipboard
-      if (navigator.clipboard && navigator.clipboard.read) {
-        const items = await navigator.clipboard.read();
-        let html = '';
-        let plainText = '';
+      isProcessingRef.current = true;
+      try {
+        // Try to read from clipboard
+        if (navigator.clipboard && navigator.clipboard.read) {
+          const items = await navigator.clipboard.read();
+          let html = '';
+          let plainText = '';
 
-        for (const item of items) {
-          if (item.types.includes('text/html')) {
-            const blob = await item.getType('text/html');
-            html = await blob.text();
+          for (const item of items) {
+            if (item.types.includes('text/html')) {
+              const blob = await item.getType('text/html');
+              html = await blob.text();
+            }
+            if (item.types.includes('text/plain')) {
+              const blob = await item.getType('text/plain');
+              plainText = await blob.text();
+            }
           }
-          if (item.types.includes('text/plain')) {
-            const blob = await item.getType('text/plain');
-            plainText = await blob.text();
+
+          // If paste as plain text requested, only use plain text
+          if (asPlainText) {
+            html = '';
           }
+
+          const content = parseClipboardContent(html, plainText, cleanWordFormatting);
+          lastPastedContentRef.current = content;
+          onPaste?.(content, asPlainText);
+          return content;
         }
 
-        // If paste as plain text requested, only use plain text
-        if (asPlainText) {
-          html = '';
-        }
-
-        const content = parseClipboardContent(html, plainText, cleanWordFormatting);
-        lastPastedContentRef.current = content;
-        onPaste?.(content, asPlainText);
-        return content;
+        return null;
+      } catch (error) {
+        onError?.(error as Error);
+        return null;
+      } finally {
+        isProcessingRef.current = false;
       }
-
-      return null;
-    } catch (error) {
-      onError?.(error as Error);
-      return null;
-    } finally {
-      isProcessingRef.current = false;
-    }
-  }, [editable, cleanWordFormatting, onPaste, onError]);
+    },
+    [editable, cleanWordFormatting, onPaste, onError]
+  );
 
   /**
    * Handle copy event from DOM
    */
-  const handleCopy = useCallback((event: ClipboardEvent) => {
-    const selection = createSelectionFromDOM();
-    if (!selection) return;
+  const handleCopy = useCallback(
+    (event: ClipboardEvent) => {
+      const selection = createSelectionFromDOM();
+      if (!selection) return;
 
-    event.preventDefault();
+      event.preventDefault();
 
-    const content = runsToClipboardContent(selection.runs);
+      const content = runsToClipboardContent(selection.runs);
 
-    if (event.clipboardData) {
-      event.clipboardData.setData('text/plain', content.plainText);
-      event.clipboardData.setData('text/html', content.html);
-      if (content.internal) {
-        event.clipboardData.setData('application/x-docx-editor', content.internal);
+      if (event.clipboardData) {
+        event.clipboardData.setData('text/plain', content.plainText);
+        event.clipboardData.setData('text/html', content.html);
+        if (content.internal) {
+          event.clipboardData.setData('application/x-docx-editor', content.internal);
+        }
       }
-    }
 
-    onCopy?.(selection);
-  }, [onCopy]);
+      onCopy?.(selection);
+    },
+    [onCopy]
+  );
 
   /**
    * Handle cut event from DOM
    */
-  const handleCut = useCallback((event: ClipboardEvent) => {
-    if (!editable) return;
+  const handleCut = useCallback(
+    (event: ClipboardEvent) => {
+      if (!editable) return;
 
-    const selection = createSelectionFromDOM();
-    if (!selection) return;
+      const selection = createSelectionFromDOM();
+      if (!selection) return;
 
-    event.preventDefault();
+      event.preventDefault();
 
-    const content = runsToClipboardContent(selection.runs);
+      const content = runsToClipboardContent(selection.runs);
 
-    if (event.clipboardData) {
-      event.clipboardData.setData('text/plain', content.plainText);
-      event.clipboardData.setData('text/html', content.html);
-      if (content.internal) {
-        event.clipboardData.setData('application/x-docx-editor', content.internal);
+      if (event.clipboardData) {
+        event.clipboardData.setData('text/plain', content.plainText);
+        event.clipboardData.setData('text/html', content.html);
+        if (content.internal) {
+          event.clipboardData.setData('application/x-docx-editor', content.internal);
+        }
       }
-    }
 
-    onCut?.(selection);
-  }, [editable, onCut]);
+      onCut?.(selection);
+    },
+    [editable, onCut]
+  );
 
   /**
    * Handle paste event from DOM
    */
-  const handlePaste = useCallback((event: ClipboardEvent) => {
-    if (!editable) return;
+  const handlePaste = useCallback(
+    (event: ClipboardEvent) => {
+      if (!editable) return;
 
-    event.preventDefault();
+      event.preventDefault();
 
-    const content = handlePasteEvent(event, { cleanWordFormatting });
-    if (content) {
-      lastPastedContentRef.current = content;
-      const asPlainText = event.shiftKey; // Shift+V = paste as plain text
-      onPaste?.(content, asPlainText);
-    }
-  }, [editable, cleanWordFormatting, onPaste]);
+      const content = handlePasteEvent(event, { cleanWordFormatting });
+      if (content) {
+        lastPastedContentRef.current = content;
+        const asPlainText = (event as unknown as KeyboardEvent).shiftKey ?? false; // Shift+V = paste as plain text
+        onPaste?.(content, asPlainText);
+      }
+    },
+    [editable, cleanWordFormatting, onPaste]
+  );
 
   /**
    * Handle keyboard shortcuts

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Run type checking
+echo "Running TypeScript type check..."
+bun run typecheck
+if [ $? -ne 0 ]; then
+  echo "TypeScript type check failed. Please fix the errors before committing."
+  exit 1
+fi
+
+# Run lint-staged (prettier + eslint on staged files)
+echo "Running lint-staged..."
+npx lint-staged

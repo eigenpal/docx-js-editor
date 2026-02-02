@@ -30,9 +30,9 @@
  */
 
 import JSZip from 'jszip';
-import type { Document, DocumentBody, Paragraph, Table } from '../types/document';
+import type { Document } from '../types/document';
 import { serializeDocument } from './serializer/documentSerializer';
-import { unzipDocx, type RawDocxContent } from './unzip';
+import { type RawDocxContent } from './unzip';
 
 // ============================================================================
 // MAIN REPACKER
@@ -58,15 +58,12 @@ export interface RepackOptions {
  * @returns Promise resolving to DOCX as ArrayBuffer
  * @throws Error if document has no original buffer for round-trip
  */
-export async function repackDocx(
-  doc: Document,
-  options: RepackOptions = {}
-): Promise<ArrayBuffer> {
+export async function repackDocx(doc: Document, options: RepackOptions = {}): Promise<ArrayBuffer> {
   // Validate we have an original buffer to base on
   if (!doc.originalBuffer) {
     throw new Error(
       'Cannot repack document: no original buffer for round-trip. ' +
-      'Use createDocx() for new documents.'
+        'Use createDocx() for new documents.'
     );
   }
 
@@ -339,17 +336,12 @@ export async function addRelationship(
   const newRId = `rId${maxId + 1}`;
 
   // Build new relationship element
-  const targetModeAttr = relationship.targetMode === 'External'
-    ? ' TargetMode="External"'
-    : '';
+  const targetModeAttr = relationship.targetMode === 'External' ? ' TargetMode="External"' : '';
 
   const newRelElement = `<Relationship Id="${newRId}" Type="${relationship.type}" Target="${escapeXmlAttr(relationship.target)}"${targetModeAttr}/>`;
 
   // Insert before closing tag
-  const updatedRelsXml = relsXml.replace(
-    '</Relationships>',
-    `${newRelElement}</Relationships>`
-  );
+  const updatedRelsXml = relsXml.replace('</Relationships>', `${newRelElement}</Relationships>`);
 
   // Update the ZIP
   zip.file(relsPath, updatedRelsXml);
@@ -488,10 +480,7 @@ function updateCoreProperties(
  * Escape special XML characters in text content
  */
 function escapeXmlText(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 /**
@@ -552,10 +541,7 @@ export async function validateDocx(buffer: ArrayBuffer): Promise<{
     const zip = await JSZip.loadAsync(buffer);
 
     // Check for required files
-    const requiredFiles = [
-      '[Content_Types].xml',
-      'word/document.xml',
-    ];
+    const requiredFiles = ['[Content_Types].xml', 'word/document.xml'];
 
     for (const file of requiredFiles) {
       if (!zip.file(file)) {
@@ -564,11 +550,7 @@ export async function validateDocx(buffer: ArrayBuffer): Promise<{
     }
 
     // Check for recommended files
-    const recommendedFiles = [
-      '_rels/.rels',
-      'word/_rels/document.xml.rels',
-      'word/styles.xml',
-    ];
+    const recommendedFiles = ['_rels/.rels', 'word/_rels/document.xml.rels', 'word/styles.xml'];
 
     for (const file of recommendedFiles) {
       if (!zip.file(file)) {
@@ -600,13 +582,19 @@ export async function validateDocx(buffer: ArrayBuffer): Promise<{
     if (ctFile) {
       const ctXml = await ctFile.async('text');
 
-      if (!ctXml.includes('word/document.xml') && !ctXml.includes('application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml')) {
+      if (
+        !ctXml.includes('word/document.xml') &&
+        !ctXml.includes(
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml'
+        )
+      ) {
         warnings.push('Content_Types.xml may be missing document.xml type declaration');
       }
     }
-
   } catch (error) {
-    errors.push(`Failed to read as ZIP: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    errors.push(
+      `Failed to read as ZIP: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 
   return {
@@ -628,7 +616,7 @@ export function isDocxBuffer(buffer: ArrayBuffer): boolean {
   const view = new Uint8Array(buffer);
 
   // ZIP file signature: PK (0x50, 0x4B)
-  return view[0] === 0x50 && view[1] === 0x4B;
+  return view[0] === 0x50 && view[1] === 0x4b;
 }
 
 // ============================================================================
@@ -644,7 +632,9 @@ export async function createEmptyDocx(): Promise<ArrayBuffer> {
   const zip = new JSZip();
 
   // Content Types
-  zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  zip.file(
+    '[Content_Types].xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Default Extension="xml" ContentType="application/xml"/>
@@ -652,24 +642,33 @@ export async function createEmptyDocx(): Promise<ArrayBuffer> {
   <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
   <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
   <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
-</Types>`);
+</Types>`
+  );
 
   // Package relationships
-  zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  zip.file(
+    '_rels/.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
   <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
   <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
-</Relationships>`);
+</Relationships>`
+  );
 
   // Document relationships
-  zip.file('word/_rels/document.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  zip.file(
+    'word/_rels/document.xml.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-</Relationships>`);
+</Relationships>`
+  );
 
   // Document
-  zip.file('word/document.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  zip.file(
+    'word/document.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <w:body>
     <w:p>
@@ -682,10 +681,13 @@ export async function createEmptyDocx(): Promise<ArrayBuffer> {
       <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/>
     </w:sectPr>
   </w:body>
-</w:document>`);
+</w:document>`
+  );
 
   // Minimal styles
-  zip.file('word/styles.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  zip.file(
+    'word/styles.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:docDefaults>
     <w:rPrDefault>
@@ -703,23 +705,30 @@ export async function createEmptyDocx(): Promise<ArrayBuffer> {
   <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
     <w:name w:val="Normal"/>
   </w:style>
-</w:styles>`);
+</w:styles>`
+  );
 
   // Core properties
   const now = new Date().toISOString();
-  zip.file('docProps/core.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  zip.file(
+    'docProps/core.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <dc:creator>EigenPal DOCX Editor</dc:creator>
   <dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created>
   <dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified>
-</cp:coreProperties>`);
+</cp:coreProperties>`
+  );
 
   // App properties
-  zip.file('docProps/app.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  zip.file(
+    'docProps/app.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">
   <Application>EigenPal DOCX Editor</Application>
   <AppVersion>1.0.0</AppVersion>
-</Properties>`);
+</Properties>`
+  );
 
   return zip.generateAsync({
     type: 'arraybuffer',

@@ -19,7 +19,7 @@
  * - pic: Pictures
  */
 
-import { xml2js, type Element as XmlElement, type ElementCompact } from 'xml-js';
+import { xml2js, type Element as XmlElement } from 'xml-js';
 
 // Re-export Element type for consumers
 export type { Element as XmlElement } from 'xml-js';
@@ -130,11 +130,7 @@ export function getNamespacePrefix(name: string): string | null {
  * @param namespace - Namespace prefix (e.g., "w", "a")
  * @param localName - Local element name (e.g., "p", "r")
  */
-export function matchesName(
-  element: XmlElement,
-  namespace: string,
-  localName: string
-): boolean {
+export function matchesName(element: XmlElement, namespace: string, localName: string): boolean {
   if (!element.name) return false;
 
   const fullName = `${namespace}:${localName}`;
@@ -324,9 +320,7 @@ export function getAttributeAny(
  * @param element - Element to get attributes from
  * @returns Record of attribute name -> value
  */
-export function getAttributes(
-  element: XmlElement | null | undefined
-): Record<string, string> {
+export function getAttributes(element: XmlElement | null | undefined): Record<string, string> {
   if (!element || !element.attributes) return {};
   return element.attributes as Record<string, string>;
 }

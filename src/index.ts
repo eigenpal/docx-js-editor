@@ -38,7 +38,7 @@ export { default } from './components/DocxEditor';
 // ============================================================================
 
 export { DocumentAgent } from './agent/DocumentAgent';
-export { executeCommand, type CommandResult } from './agent/executor';
+export { executeCommand, executeCommands } from './agent/executor';
 export { getAgentContext, getDocumentSummary, type AgentContextOptions } from './agent/context';
 export {
   buildSelectionContext,
@@ -52,8 +52,20 @@ export {
 // ============================================================================
 
 export { parseDocx } from './docx/parser';
-export { serializeDocx } from './docx/serializer';
-export { processTemplate, type TemplateOptions } from './docx/templateProcessor';
+export {
+  serializeDocument as serializeDocx,
+  serializeDocumentBody,
+  serializeSectionProperties,
+} from './docx/serializer/documentSerializer';
+export {
+  processTemplate,
+  processTemplateDetailed,
+  processTemplateAsBlob,
+  getTemplateTags,
+  validateTemplate,
+  type ProcessTemplateOptions,
+  type ProcessTemplateResult,
+} from './utils/processTemplate';
 
 // ============================================================================
 // FONT LOADER
@@ -75,13 +87,47 @@ export {
 // UI COMPONENTS
 // ============================================================================
 
-export { Toolbar, type ToolbarProps, ToolbarButton, ToolbarGroup, ToolbarSeparator } from './components/Toolbar';
+export {
+  Toolbar,
+  type ToolbarProps,
+  ToolbarButton,
+  ToolbarGroup,
+  ToolbarSeparator,
+} from './components/Toolbar';
 export { VariablePanel, type VariablePanelProps } from './components/VariablePanel';
 export { Editor, type EditorProps, type EditorRef, type EditorState } from './components/Editor';
-export { AIEditor, type AIEditorProps, type AIEditorRef, type AIRequestHandler, createMockAIHandler } from './components/AIEditor';
-export { DocumentViewer, type DocumentViewerProps, scrollToPage, getVisiblePages, calculateFitWidthZoom, calculateFitPageZoom } from './components/DocumentViewer';
-export { ContextMenu, type ContextMenuProps, useContextMenu, getActionShortcut, isActionAvailable, getDefaultActions, getAllActions } from './components/ContextMenu';
-export { ResponsePreview, type ResponsePreviewProps, useResponsePreview, type ResponsePreviewState, createMockResponse, createErrorResponse } from './components/ResponsePreview';
+export {
+  AIEditor,
+  type AIEditorProps,
+  type AIEditorRef,
+  type AIRequestHandler,
+  createMockAIHandler,
+} from './components/AIEditor';
+export {
+  DocumentViewer,
+  type DocumentViewerProps,
+  scrollToPage,
+  getVisiblePages,
+  calculateFitWidthZoom,
+  calculateFitPageZoom,
+} from './components/DocumentViewer';
+export {
+  ContextMenu,
+  type ContextMenuProps,
+  useContextMenu,
+  getActionShortcut,
+  isActionAvailable,
+  getDefaultActions,
+  getAllActions,
+} from './components/ContextMenu';
+export {
+  ResponsePreview,
+  type ResponsePreviewProps,
+  useResponsePreview,
+  type ResponsePreviewState,
+  createMockResponse,
+  createErrorResponse,
+} from './components/ResponsePreview';
 export {
   TextContextMenu,
   type TextContextMenuProps,
@@ -148,11 +194,20 @@ export {
 } from './components/ui/PageNavigator';
 export { FontPicker, type FontPickerProps, type FontOption } from './components/ui/FontPicker';
 export { FontSizePicker, type FontSizePickerProps } from './components/ui/FontSizePicker';
-export { LineSpacingPicker, type LineSpacingPickerProps, type LineSpacingOption } from './components/ui/LineSpacingPicker';
-export { ColorPicker, type ColorPickerProps, type ColorPreset } from './components/ui/ColorPicker';
+export {
+  LineSpacingPicker,
+  type LineSpacingPickerProps,
+  type LineSpacingOption,
+} from './components/ui/LineSpacingPicker';
+export { ColorPicker, type ColorPickerProps, type ColorOption } from './components/ui/ColorPicker';
 export { StylePicker, type StylePickerProps, type StyleOption } from './components/ui/StylePicker';
 export { AlignmentButtons, type AlignmentButtonsProps } from './components/ui/AlignmentButtons';
-export { ListButtons, type ListButtonsProps, type ListState, createDefaultListState } from './components/ui/ListButtons';
+export {
+  ListButtons,
+  type ListButtonsProps,
+  type ListState,
+  createDefaultListState,
+} from './components/ui/ListButtons';
 export {
   TableToolbar,
   type TableToolbarProps,
@@ -256,8 +311,8 @@ export {
   type ToolbarItemPriority,
   type UseResponsiveToolbarOptions,
   type UseResponsiveToolbarReturn,
-  ToolbarGroup,
-  type ToolbarGroupProps,
+  ToolbarGroup as ResponsiveToolbarGroup,
+  type ToolbarGroupProps as ResponsiveToolbarGroupProps,
   useResponsiveToolbar,
   createToolbarItem,
   createToolbarItems,
@@ -292,7 +347,12 @@ export {
   getDefaultHighlightOptions,
   type HighlightOptions,
 } from './components/dialogs/FindReplaceDialog';
-export { HyperlinkDialog, type HyperlinkDialogProps, type HyperlinkData, useHyperlinkDialog } from './components/dialogs/HyperlinkDialog';
+export {
+  HyperlinkDialog,
+  type HyperlinkDialogProps,
+  type HyperlinkData,
+  useHyperlinkDialog,
+} from './components/dialogs/HyperlinkDialog';
 export {
   InsertTableDialog,
   type InsertTableDialogProps,
@@ -344,7 +404,7 @@ export {
 export {
   KeyboardShortcutsDialog,
   type KeyboardShortcutsDialogProps,
-  type KeyboardShortcut,
+  type KeyboardShortcut as DialogKeyboardShortcut,
   type ShortcutCategory,
   type UseKeyboardShortcutsDialogOptions,
   type UseKeyboardShortcutsDialogReturn,
@@ -364,7 +424,7 @@ export {
 // Document types
 export type {
   Document,
-  DocumentPackage,
+  DocxPackage,
   DocumentBody,
   BlockContent,
   Paragraph,
@@ -378,25 +438,25 @@ export type {
   Shape,
   TextBox,
   Hyperlink,
-  Bookmark,
+  BookmarkStart,
+  BookmarkEnd,
   Field,
   Theme,
-  ThemeColors,
-  ThemeFonts,
-  Styles,
+  ThemeColorScheme,
+  ThemeFont,
+  ThemeFontScheme,
   Style,
+  StyleDefinitions,
   TextFormatting,
   ParagraphFormatting,
   SectionProperties,
-  PageMargins,
-  PageSize,
   HeaderFooter,
-  FootnoteReference,
-  EndnoteReference,
+  HeaderReference,
+  FooterReference,
   Footnote,
   Endnote,
-  ListNumbering,
-  NumberingLevel,
+  ListLevel,
+  NumberingDefinitions,
   Relationship,
 } from './types/document';
 
@@ -414,8 +474,8 @@ export type {
   AgentCommand,
   InsertTextCommand,
   ReplaceTextCommand,
-  DeleteRangeCommand,
-  ApplyFormattingCommand,
+  DeleteTextCommand,
+  FormatTextCommand,
   InsertTableCommand,
   InsertImageCommand,
   InsertHyperlinkCommand,
@@ -467,8 +527,32 @@ export {
 // UTILITIES
 // ============================================================================
 
-export { twipsToPixels, pixelsToTwips, formatPx, parseEmu, emuToPixels, pointsToPixels, halfPointsToPixels } from './utils/units';
-export { resolveThemeColor, getThemeColorName, resolveColor, hexToRgb, rgbToHex, colorWithOpacity, parseHighlightColor } from './utils/colors';
+export {
+  twipsToPixels,
+  pixelsToTwips,
+  formatPx,
+  emuToPixels,
+  pointsToPixels,
+  halfPointsToPixels,
+  pixelsToEmu,
+  emuToTwips,
+  twipsToEmu,
+} from './utils/units';
+export {
+  resolveColor,
+  resolveHighlightColor,
+  resolveShadingColor,
+  parseColorString,
+  createThemeColor,
+  createRgbColor,
+  darkenColor,
+  lightenColor,
+  blendColors,
+  getContrastingColor,
+  isBlack,
+  isWhite,
+  colorsEqual,
+} from './utils/colorResolver';
 export {
   createPageBreak,
   createColumnBreak,

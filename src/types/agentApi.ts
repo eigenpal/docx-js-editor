@@ -7,7 +7,7 @@
  * - Context types for AI agents
  */
 
-import type { TextFormatting, ParagraphFormatting, Table, Image, Hyperlink } from './document';
+import type { TextFormatting, ParagraphFormatting } from './document';
 
 // ============================================================================
 // POSITION & RANGE
@@ -57,8 +57,7 @@ export function createRange(start: Position, end: Position): Range {
   return {
     start,
     end,
-    collapsed:
-      start.paragraphIndex === end.paragraphIndex && start.offset === end.offset,
+    collapsed: start.paragraphIndex === end.paragraphIndex && start.offset === end.offset,
   };
 }
 
@@ -69,8 +68,7 @@ export function isPositionInRange(position: Position, range: Range): boolean {
   // Before range start
   if (
     position.paragraphIndex < range.start.paragraphIndex ||
-    (position.paragraphIndex === range.start.paragraphIndex &&
-      position.offset < range.start.offset)
+    (position.paragraphIndex === range.start.paragraphIndex && position.offset < range.start.offset)
   ) {
     return false;
   }
@@ -78,8 +76,7 @@ export function isPositionInRange(position: Position, range: Range): boolean {
   // After range end
   if (
     position.paragraphIndex > range.end.paragraphIndex ||
-    (position.paragraphIndex === range.end.paragraphIndex &&
-      position.offset > range.end.offset)
+    (position.paragraphIndex === range.end.paragraphIndex && position.offset > range.end.offset)
   ) {
     return false;
   }
@@ -600,16 +597,12 @@ export type CommandHandler<T extends AgentCommand = AgentCommand> = (
 /**
  * AI request handler function type
  */
-export type AIRequestHandler = (
-  request: AIActionRequest
-) => Promise<AgentResponse>;
+export type AIRequestHandler = (request: AIActionRequest) => Promise<AgentResponse>;
 
 /**
  * Create a command with generated ID
  */
-export function createCommand<T extends AgentCommand>(
-  command: Omit<T, 'id'>
-): T {
+export function createCommand<T extends AgentCommand>(command: Omit<T, 'id'>): T {
   return {
     ...command,
     id: generateCommandId(),

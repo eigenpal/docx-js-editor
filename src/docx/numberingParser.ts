@@ -29,7 +29,6 @@ import {
   getAttribute,
   parseBooleanElement,
   parseNumericAttribute,
-  getTextContent,
   type XmlElement,
 } from './xmlParser';
 
@@ -440,32 +439,51 @@ function parseLevelParagraphProps(pPr: XmlElement): ParagraphFormatting {
 /**
  * Parse tab alignment value
  */
-function parseTabAlignment(val: string): 'left' | 'center' | 'right' | 'decimal' | 'bar' | 'clear' | 'num' {
+function parseTabAlignment(
+  val: string
+): 'left' | 'center' | 'right' | 'decimal' | 'bar' | 'clear' | 'num' {
   switch (val) {
-    case 'left': return 'left';
-    case 'center': return 'center';
-    case 'right': return 'right';
-    case 'decimal': return 'decimal';
-    case 'bar': return 'bar';
-    case 'clear': return 'clear';
-    case 'num': return 'num';
-    default: return 'left';
+    case 'left':
+      return 'left';
+    case 'center':
+      return 'center';
+    case 'right':
+      return 'right';
+    case 'decimal':
+      return 'decimal';
+    case 'bar':
+      return 'bar';
+    case 'clear':
+      return 'clear';
+    case 'num':
+      return 'num';
+    default:
+      return 'left';
   }
 }
 
 /**
  * Parse tab leader value
  */
-function parseTabLeader(val: string | null): 'none' | 'dot' | 'hyphen' | 'underscore' | 'heavy' | 'middleDot' | undefined {
+function parseTabLeader(
+  val: string | null
+): 'none' | 'dot' | 'hyphen' | 'underscore' | 'heavy' | 'middleDot' | undefined {
   if (!val) return undefined;
   switch (val) {
-    case 'none': return 'none';
-    case 'dot': return 'dot';
-    case 'hyphen': return 'hyphen';
-    case 'underscore': return 'underscore';
-    case 'heavy': return 'heavy';
-    case 'middleDot': return 'middleDot';
-    default: return undefined;
+    case 'none':
+      return 'none';
+    case 'dot':
+      return 'dot';
+    case 'hyphen':
+      return 'hyphen';
+    case 'underscore':
+      return 'underscore';
+    case 'heavy':
+      return 'heavy';
+    case 'middleDot':
+      return 'middleDot';
+    default:
+      return undefined;
   }
 }
 

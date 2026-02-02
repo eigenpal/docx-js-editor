@@ -181,7 +181,15 @@ const STYLES: Record<string, CSSProperties> = {
 function BorderAllIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="14" height="14" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect
+        x="1"
+        y="1"
+        width="14"
+        height="14"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
       <line x1="8" y1="1" x2="8" y2="15" stroke="currentColor" strokeWidth="1" />
       <line x1="1" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1" />
     </svg>
@@ -218,7 +226,16 @@ function BorderInsideIcon(): React.ReactElement {
 function BorderNoneIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="14" height="14" stroke="#ccc" strokeWidth="1" strokeDasharray="2 2" fill="none" />
+      <rect
+        x="1"
+        y="1"
+        width="14"
+        height="14"
+        stroke="#ccc"
+        strokeWidth="1"
+        strokeDasharray="2 2"
+        fill="none"
+      />
     </svg>
   );
 }
@@ -318,9 +335,10 @@ export function TableBorderPicker({
   // Generate preview style
   const previewStyle: CSSProperties = {
     ...STYLES.previewInner,
-    border: borderConfig.style === 'none'
-      ? '1px dashed #ccc'
-      : `${borderConfig.width / 8}pt ${mapStyleToCss(borderConfig.style)} ${borderConfig.color}`,
+    border:
+      borderConfig.style === 'none'
+        ? '1px dashed #ccc'
+        : `${borderConfig.width / 8}pt ${mapStyleToCss(borderConfig.style)} ${borderConfig.color}`,
   };
 
   const containerStyle: CSSProperties = {
@@ -457,9 +475,9 @@ export function mapStyleToCss(style: BorderStyleType): string {
  */
 export function createBorderSpec(config: BorderConfig): BorderSpec {
   return {
-    style: config.style,
+    style: config.style as BorderSpec['style'],
     color: { rgb: config.color.replace('#', '') },
-    width: config.width,
+    size: config.width,
     space: 0,
   };
 }
@@ -474,7 +492,7 @@ export function createBorderConfig(spec: BorderSpec | undefined): BorderConfig {
   return {
     style: (spec.style as BorderStyleType) || 'single',
     color: spec.color?.rgb ? `#${spec.color.rgb}` : '#000000',
-    width: spec.width ?? 8,
+    width: spec.size ?? 8,
   };
 }
 

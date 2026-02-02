@@ -127,57 +127,301 @@ const CATEGORY_ORDER: ShortcutCategory[] = [
  */
 const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
   // File
-  { id: 'save', name: 'Save', description: 'Save document', keys: 'Ctrl+S', category: 'file', common: true },
+  {
+    id: 'save',
+    name: 'Save',
+    description: 'Save document',
+    keys: 'Ctrl+S',
+    category: 'file',
+    common: true,
+  },
   { id: 'print', name: 'Print', description: 'Print document', keys: 'Ctrl+P', category: 'file' },
 
   // Editing
-  { id: 'undo', name: 'Undo', description: 'Undo last action', keys: 'Ctrl+Z', category: 'editing', common: true },
-  { id: 'redo', name: 'Redo', description: 'Redo last action', keys: 'Ctrl+Y', altKeys: 'Ctrl+Shift+Z', category: 'editing', common: true },
-  { id: 'delete', name: 'Delete', description: 'Delete selected text', keys: 'Del', altKeys: 'Backspace', category: 'editing' },
-  { id: 'find', name: 'Find', description: 'Find text in document', keys: 'Ctrl+F', category: 'editing', common: true },
-  { id: 'replace', name: 'Find & Replace', description: 'Find and replace text', keys: 'Ctrl+H', category: 'editing' },
+  {
+    id: 'undo',
+    name: 'Undo',
+    description: 'Undo last action',
+    keys: 'Ctrl+Z',
+    category: 'editing',
+    common: true,
+  },
+  {
+    id: 'redo',
+    name: 'Redo',
+    description: 'Redo last action',
+    keys: 'Ctrl+Y',
+    altKeys: 'Ctrl+Shift+Z',
+    category: 'editing',
+    common: true,
+  },
+  {
+    id: 'delete',
+    name: 'Delete',
+    description: 'Delete selected text',
+    keys: 'Del',
+    altKeys: 'Backspace',
+    category: 'editing',
+  },
+  {
+    id: 'find',
+    name: 'Find',
+    description: 'Find text in document',
+    keys: 'Ctrl+F',
+    category: 'editing',
+    common: true,
+  },
+  {
+    id: 'replace',
+    name: 'Find & Replace',
+    description: 'Find and replace text',
+    keys: 'Ctrl+H',
+    category: 'editing',
+  },
 
   // Clipboard
-  { id: 'cut', name: 'Cut', description: 'Cut selected text', keys: 'Ctrl+X', category: 'clipboard', common: true },
-  { id: 'copy', name: 'Copy', description: 'Copy selected text', keys: 'Ctrl+C', category: 'clipboard', common: true },
-  { id: 'paste', name: 'Paste', description: 'Paste from clipboard', keys: 'Ctrl+V', category: 'clipboard', common: true },
-  { id: 'paste-plain', name: 'Paste as Plain Text', description: 'Paste without formatting', keys: 'Ctrl+Shift+V', category: 'clipboard' },
+  {
+    id: 'cut',
+    name: 'Cut',
+    description: 'Cut selected text',
+    keys: 'Ctrl+X',
+    category: 'clipboard',
+    common: true,
+  },
+  {
+    id: 'copy',
+    name: 'Copy',
+    description: 'Copy selected text',
+    keys: 'Ctrl+C',
+    category: 'clipboard',
+    common: true,
+  },
+  {
+    id: 'paste',
+    name: 'Paste',
+    description: 'Paste from clipboard',
+    keys: 'Ctrl+V',
+    category: 'clipboard',
+    common: true,
+  },
+  {
+    id: 'paste-plain',
+    name: 'Paste as Plain Text',
+    description: 'Paste without formatting',
+    keys: 'Ctrl+Shift+V',
+    category: 'clipboard',
+  },
 
   // Formatting
-  { id: 'bold', name: 'Bold', description: 'Toggle bold formatting', keys: 'Ctrl+B', category: 'formatting', common: true },
-  { id: 'italic', name: 'Italic', description: 'Toggle italic formatting', keys: 'Ctrl+I', category: 'formatting', common: true },
-  { id: 'underline', name: 'Underline', description: 'Toggle underline formatting', keys: 'Ctrl+U', category: 'formatting', common: true },
-  { id: 'strikethrough', name: 'Strikethrough', description: 'Toggle strikethrough', keys: 'Ctrl+Shift+X', category: 'formatting' },
-  { id: 'subscript', name: 'Subscript', description: 'Toggle subscript', keys: 'Ctrl+=', category: 'formatting' },
-  { id: 'superscript', name: 'Superscript', description: 'Toggle superscript', keys: 'Ctrl+Shift+=', category: 'formatting' },
-  { id: 'align-left', name: 'Align Left', description: 'Left align paragraph', keys: 'Ctrl+L', category: 'formatting' },
-  { id: 'align-center', name: 'Align Center', description: 'Center align paragraph', keys: 'Ctrl+E', category: 'formatting' },
-  { id: 'align-right', name: 'Align Right', description: 'Right align paragraph', keys: 'Ctrl+R', category: 'formatting' },
-  { id: 'align-justify', name: 'Justify', description: 'Justify paragraph', keys: 'Ctrl+J', category: 'formatting' },
-  { id: 'indent', name: 'Increase Indent', description: 'Increase paragraph indent', keys: 'Tab', category: 'formatting' },
-  { id: 'outdent', name: 'Decrease Indent', description: 'Decrease paragraph indent', keys: 'Shift+Tab', category: 'formatting' },
+  {
+    id: 'bold',
+    name: 'Bold',
+    description: 'Toggle bold formatting',
+    keys: 'Ctrl+B',
+    category: 'formatting',
+    common: true,
+  },
+  {
+    id: 'italic',
+    name: 'Italic',
+    description: 'Toggle italic formatting',
+    keys: 'Ctrl+I',
+    category: 'formatting',
+    common: true,
+  },
+  {
+    id: 'underline',
+    name: 'Underline',
+    description: 'Toggle underline formatting',
+    keys: 'Ctrl+U',
+    category: 'formatting',
+    common: true,
+  },
+  {
+    id: 'strikethrough',
+    name: 'Strikethrough',
+    description: 'Toggle strikethrough',
+    keys: 'Ctrl+Shift+X',
+    category: 'formatting',
+  },
+  {
+    id: 'subscript',
+    name: 'Subscript',
+    description: 'Toggle subscript',
+    keys: 'Ctrl+=',
+    category: 'formatting',
+  },
+  {
+    id: 'superscript',
+    name: 'Superscript',
+    description: 'Toggle superscript',
+    keys: 'Ctrl+Shift+=',
+    category: 'formatting',
+  },
+  {
+    id: 'align-left',
+    name: 'Align Left',
+    description: 'Left align paragraph',
+    keys: 'Ctrl+L',
+    category: 'formatting',
+  },
+  {
+    id: 'align-center',
+    name: 'Align Center',
+    description: 'Center align paragraph',
+    keys: 'Ctrl+E',
+    category: 'formatting',
+  },
+  {
+    id: 'align-right',
+    name: 'Align Right',
+    description: 'Right align paragraph',
+    keys: 'Ctrl+R',
+    category: 'formatting',
+  },
+  {
+    id: 'align-justify',
+    name: 'Justify',
+    description: 'Justify paragraph',
+    keys: 'Ctrl+J',
+    category: 'formatting',
+  },
+  {
+    id: 'indent',
+    name: 'Increase Indent',
+    description: 'Increase paragraph indent',
+    keys: 'Tab',
+    category: 'formatting',
+  },
+  {
+    id: 'outdent',
+    name: 'Decrease Indent',
+    description: 'Decrease paragraph indent',
+    keys: 'Shift+Tab',
+    category: 'formatting',
+  },
 
   // Selection
-  { id: 'select-all', name: 'Select All', description: 'Select all content', keys: 'Ctrl+A', category: 'selection', common: true },
-  { id: 'select-word', name: 'Select Word', description: 'Select current word', keys: 'Double-click', category: 'selection' },
-  { id: 'select-paragraph', name: 'Select Paragraph', description: 'Select current paragraph', keys: 'Triple-click', category: 'selection' },
-  { id: 'extend-selection-word', name: 'Extend Selection by Word', description: 'Extend selection to next/previous word', keys: 'Ctrl+Shift+Arrow', category: 'selection' },
-  { id: 'extend-selection-line', name: 'Extend Selection to Line Edge', description: 'Extend selection to line start/end', keys: 'Shift+Home/End', category: 'selection' },
+  {
+    id: 'select-all',
+    name: 'Select All',
+    description: 'Select all content',
+    keys: 'Ctrl+A',
+    category: 'selection',
+    common: true,
+  },
+  {
+    id: 'select-word',
+    name: 'Select Word',
+    description: 'Select current word',
+    keys: 'Double-click',
+    category: 'selection',
+  },
+  {
+    id: 'select-paragraph',
+    name: 'Select Paragraph',
+    description: 'Select current paragraph',
+    keys: 'Triple-click',
+    category: 'selection',
+  },
+  {
+    id: 'extend-selection-word',
+    name: 'Extend Selection by Word',
+    description: 'Extend selection to next/previous word',
+    keys: 'Ctrl+Shift+Arrow',
+    category: 'selection',
+  },
+  {
+    id: 'extend-selection-line',
+    name: 'Extend Selection to Line Edge',
+    description: 'Extend selection to line start/end',
+    keys: 'Shift+Home/End',
+    category: 'selection',
+  },
 
   // Navigation
-  { id: 'move-word', name: 'Move by Word', description: 'Move cursor to next/previous word', keys: 'Ctrl+Arrow', category: 'navigation' },
-  { id: 'move-line-start', name: 'Move to Line Start', description: 'Move cursor to start of line', keys: 'Home', category: 'navigation' },
-  { id: 'move-line-end', name: 'Move to Line End', description: 'Move cursor to end of line', keys: 'End', category: 'navigation' },
-  { id: 'move-doc-start', name: 'Move to Document Start', description: 'Move cursor to start of document', keys: 'Ctrl+Home', category: 'navigation' },
-  { id: 'move-doc-end', name: 'Move to Document End', description: 'Move cursor to end of document', keys: 'Ctrl+End', category: 'navigation' },
-  { id: 'page-up', name: 'Page Up', description: 'Scroll up one page', keys: 'Page Up', category: 'navigation' },
-  { id: 'page-down', name: 'Page Down', description: 'Scroll down one page', keys: 'Page Down', category: 'navigation' },
+  {
+    id: 'move-word',
+    name: 'Move by Word',
+    description: 'Move cursor to next/previous word',
+    keys: 'Ctrl+Arrow',
+    category: 'navigation',
+  },
+  {
+    id: 'move-line-start',
+    name: 'Move to Line Start',
+    description: 'Move cursor to start of line',
+    keys: 'Home',
+    category: 'navigation',
+  },
+  {
+    id: 'move-line-end',
+    name: 'Move to Line End',
+    description: 'Move cursor to end of line',
+    keys: 'End',
+    category: 'navigation',
+  },
+  {
+    id: 'move-doc-start',
+    name: 'Move to Document Start',
+    description: 'Move cursor to start of document',
+    keys: 'Ctrl+Home',
+    category: 'navigation',
+  },
+  {
+    id: 'move-doc-end',
+    name: 'Move to Document End',
+    description: 'Move cursor to end of document',
+    keys: 'Ctrl+End',
+    category: 'navigation',
+  },
+  {
+    id: 'page-up',
+    name: 'Page Up',
+    description: 'Scroll up one page',
+    keys: 'Page Up',
+    category: 'navigation',
+  },
+  {
+    id: 'page-down',
+    name: 'Page Down',
+    description: 'Scroll down one page',
+    keys: 'Page Down',
+    category: 'navigation',
+  },
 
   // View
-  { id: 'zoom-in', name: 'Zoom In', description: 'Increase zoom level', keys: 'Ctrl++', altKeys: 'Ctrl+Scroll Up', category: 'view' },
-  { id: 'zoom-out', name: 'Zoom Out', description: 'Decrease zoom level', keys: 'Ctrl+-', altKeys: 'Ctrl+Scroll Down', category: 'view' },
-  { id: 'zoom-reset', name: 'Reset Zoom', description: 'Reset zoom to 100%', keys: 'Ctrl+0', category: 'view' },
-  { id: 'shortcuts', name: 'Keyboard Shortcuts', description: 'Show this help dialog', keys: 'Ctrl+/', altKeys: 'F1', category: 'view' },
+  {
+    id: 'zoom-in',
+    name: 'Zoom In',
+    description: 'Increase zoom level',
+    keys: 'Ctrl++',
+    altKeys: 'Ctrl+Scroll Up',
+    category: 'view',
+  },
+  {
+    id: 'zoom-out',
+    name: 'Zoom Out',
+    description: 'Decrease zoom level',
+    keys: 'Ctrl+-',
+    altKeys: 'Ctrl+Scroll Down',
+    category: 'view',
+  },
+  {
+    id: 'zoom-reset',
+    name: 'Reset Zoom',
+    description: 'Reset zoom to 100%',
+    keys: 'Ctrl+0',
+    category: 'view',
+  },
+  {
+    id: 'shortcuts',
+    name: 'Keyboard Shortcuts',
+    description: 'Show this help dialog',
+    keys: 'Ctrl+/',
+    altKeys: 'F1',
+    category: 'view',
+  },
 ];
 
 // ============================================================================
@@ -476,7 +720,12 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
             }}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path
+                d="M5 5l10 10M15 5L5 15"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
           </button>
         </div>
@@ -556,7 +805,18 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
             textAlign: 'center',
           }}
         >
-          Press <kbd style={{ padding: '2px 6px', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dadce0' }}>Esc</kbd> to close
+          Press{' '}
+          <kbd
+            style={{
+              padding: '2px 6px',
+              backgroundColor: '#fff',
+              borderRadius: '4px',
+              border: '1px solid #dadce0',
+            }}
+          >
+            Esc
+          </kbd>{' '}
+          to close
         </div>
       </div>
     </div>
@@ -573,7 +833,7 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
 export function useKeyboardShortcutsDialog(
   options: UseKeyboardShortcutsDialogOptions = {}
 ): UseKeyboardShortcutsDialogReturn {
-  const { enabled = true, openShortcut = 'Ctrl+/' } = options;
+  const { enabled = true, openShortcut: _openShortcut = 'Ctrl+/' } = options;
   const [isOpen, setIsOpen] = useState(false);
 
   const open = useCallback(() => {

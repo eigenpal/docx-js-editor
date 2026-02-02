@@ -27,10 +27,6 @@ import type {
   VerticalAlign,
   LineNumberRestart,
   Column,
-  HeaderReference,
-  FooterReference,
-  FootnoteProperties,
-  EndnoteProperties,
   BorderSpec,
   ColorValue,
   ThemeColorSlot,
@@ -44,14 +40,8 @@ import {
   parseBooleanElement,
   type XmlElement,
 } from './xmlParser';
-import {
-  parseHeaderReference,
-  parseFooterReference,
-} from './headerFooterParser';
-import {
-  parseFootnoteProperties,
-  parseEndnoteProperties,
-} from './footnoteParser';
+import { parseHeaderReference, parseFooterReference } from './headerFooterParser';
+import { parseFootnoteProperties, parseEndnoteProperties } from './footnoteParser';
 
 // ============================================================================
 // HELPER PARSERS
@@ -218,7 +208,7 @@ function parseLineNumberRestart(restart: string | null): LineNumberRestart | und
  */
 export function parseSectionProperties(
   sectPr: XmlElement | null,
-  rels?: RelationshipMap | null
+  _rels?: RelationshipMap | null
 ): SectionProperties {
   const props: SectionProperties = {};
 
@@ -553,8 +543,12 @@ export function parseSectionProperties(
     props.docGrid = {};
 
     const gridType = getAttribute(docGrid, 'w', 'type');
-    if (gridType === 'default' || gridType === 'lines' ||
-        gridType === 'linesAndChars' || gridType === 'snapToChars') {
+    if (
+      gridType === 'default' ||
+      gridType === 'lines' ||
+      gridType === 'linesAndChars' ||
+      gridType === 'snapToChars'
+    ) {
       props.docGrid.type = gridType;
     }
 
@@ -599,10 +593,7 @@ export function parseSectionProperties(
  * @param defaultWidth - Default width in twips (default: 12240 = 8.5 inches)
  * @returns Width in pixels
  */
-export function getPageWidthPixels(
-  props: SectionProperties,
-  defaultWidth: number = 12240
-): number {
+export function getPageWidthPixels(props: SectionProperties, defaultWidth: number = 12240): number {
   const twips = props.pageWidth ?? defaultWidth;
   // 1 inch = 1440 twips, 1 inch = 96 pixels at 96 DPI
   return Math.round((twips / 1440) * 96);
@@ -734,10 +725,10 @@ export function hasLineNumbers(props: SectionProperties): boolean {
  */
 export function getDefaultSectionProperties(): SectionProperties {
   return {
-    pageWidth: 12240,  // 8.5 inches
+    pageWidth: 12240, // 8.5 inches
     pageHeight: 15840, // 11 inches
     orientation: 'portrait',
-    marginTop: 1440,   // 1 inch
+    marginTop: 1440, // 1 inch
     marginBottom: 1440,
     marginLeft: 1440,
     marginRight: 1440,
@@ -745,7 +736,7 @@ export function getDefaultSectionProperties(): SectionProperties {
     footerDistance: 720,
     gutter: 0,
     columnCount: 1,
-    columnSpace: 720,  // 0.5 inch
+    columnSpace: 720, // 0.5 inch
     equalWidth: true,
     sectionStart: 'nextPage',
     verticalAlign: 'top',
@@ -787,7 +778,8 @@ export function mergeSectionProperties(
   if (override.headerReferences !== undefined) result.headerReferences = override.headerReferences;
   if (override.footerReferences !== undefined) result.footerReferences = override.footerReferences;
   if (override.titlePg !== undefined) result.titlePg = override.titlePg;
-  if (override.evenAndOddHeaders !== undefined) result.evenAndOddHeaders = override.evenAndOddHeaders;
+  if (override.evenAndOddHeaders !== undefined)
+    result.evenAndOddHeaders = override.evenAndOddHeaders;
   if (override.lineNumbers !== undefined) result.lineNumbers = override.lineNumbers;
   if (override.pageBorders !== undefined) result.pageBorders = override.pageBorders;
   if (override.background !== undefined) result.background = override.background;

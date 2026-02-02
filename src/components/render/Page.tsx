@@ -168,19 +168,13 @@ export function Page({
     >
       {/* Header area */}
       {header && (
-        <div
-          className="docx-page-header-area"
-          style={buildHeaderAreaStyle(sectionProps, zoom)}
-        >
+        <div className="docx-page-header-area" style={buildHeaderAreaStyle(sectionProps, zoom)}>
           {renderHeader ? renderHeader(header) : renderDefaultHeader(header)}
         </div>
       )}
 
       {/* Content area */}
-      <div
-        className="docx-page-content"
-        style={buildContentAreaStyle(sectionProps, zoom)}
-      >
+      <div className="docx-page-content" style={buildContentAreaStyle(sectionProps, zoom)}>
         {content.map((item, index) => {
           if (item.type === 'paragraph') {
             return (
@@ -223,10 +217,7 @@ export function Page({
 
       {/* Footer area */}
       {footer && (
-        <div
-          className="docx-page-footer-area"
-          style={buildFooterAreaStyle(sectionProps, zoom)}
-        >
+        <div className="docx-page-footer-area" style={buildFooterAreaStyle(sectionProps, zoom)}>
           {renderFooter ? renderFooter(footer) : renderDefaultFooter(footer)}
         </div>
       )}
@@ -264,20 +255,16 @@ export function SimplePage({
   marginGuideColor,
 }: SimplePageProps): React.ReactElement {
   const effectiveSectionProps: SectionProperties = sectionProps ?? {
-    pageSize: {
-      width: widthTwips,
-      height: heightTwips,
-      orientation: 'portrait',
-    },
-    pageMargins: {
-      top: DEFAULT_MARGIN_TWIPS,
-      bottom: DEFAULT_MARGIN_TWIPS,
-      left: DEFAULT_MARGIN_TWIPS,
-      right: DEFAULT_MARGIN_TWIPS,
-      header: DEFAULT_HEADER_FOOTER_DISTANCE,
-      footer: DEFAULT_HEADER_FOOTER_DISTANCE,
-      gutter: 0,
-    },
+    pageWidth: widthTwips,
+    pageHeight: heightTwips,
+    orientation: 'portrait',
+    marginTop: DEFAULT_MARGIN_TWIPS,
+    marginBottom: DEFAULT_MARGIN_TWIPS,
+    marginLeft: DEFAULT_MARGIN_TWIPS,
+    marginRight: DEFAULT_MARGIN_TWIPS,
+    headerDistance: DEFAULT_HEADER_FOOTER_DISTANCE,
+    footerDistance: DEFAULT_HEADER_FOOTER_DISTANCE,
+    gutter: 0,
   };
 
   const pageWidth = twipsToPixels(widthTwips) * zoom;
@@ -317,10 +304,7 @@ export function SimplePage({
       )}
 
       {/* Content area */}
-      <div
-        className="docx-page-content"
-        style={buildContentAreaStyle(effectiveSectionProps, zoom)}
-      >
+      <div className="docx-page-content" style={buildContentAreaStyle(effectiveSectionProps, zoom)}>
         {children}
       </div>
 
@@ -336,7 +320,11 @@ export function SimplePage({
 
       {/* Margin guides */}
       {showMarginGuides && (
-        <PageMarginGuides sectionProps={effectiveSectionProps} zoom={zoom} color={marginGuideColor} />
+        <PageMarginGuides
+          sectionProps={effectiveSectionProps}
+          zoom={zoom}
+          color={marginGuideColor}
+        />
       )}
     </div>
   );
@@ -360,12 +348,15 @@ interface PageMarginGuidesProps {
 /**
  * PageMarginGuides component - renders dotted lines showing margin boundaries
  */
-function PageMarginGuides({ sectionProps, zoom, color = DEFAULT_MARGIN_GUIDE_COLOR }: PageMarginGuidesProps): React.ReactElement {
-  const margins = sectionProps.pageMargins ?? {};
-  const topMargin = margins.top ?? DEFAULT_MARGIN_TWIPS;
-  const bottomMargin = margins.bottom ?? DEFAULT_MARGIN_TWIPS;
-  const leftMargin = margins.left ?? DEFAULT_MARGIN_TWIPS;
-  const rightMargin = margins.right ?? DEFAULT_MARGIN_TWIPS;
+function PageMarginGuides({
+  sectionProps,
+  zoom,
+  color = DEFAULT_MARGIN_GUIDE_COLOR,
+}: PageMarginGuidesProps): React.ReactElement {
+  const topMargin = sectionProps.marginTop ?? DEFAULT_MARGIN_TWIPS;
+  const bottomMargin = sectionProps.marginBottom ?? DEFAULT_MARGIN_TWIPS;
+  const leftMargin = sectionProps.marginLeft ?? DEFAULT_MARGIN_TWIPS;
+  const rightMargin = sectionProps.marginRight ?? DEFAULT_MARGIN_TWIPS;
 
   // Convert to pixels
   const topPx = twipsToPixels(topMargin) * zoom;
@@ -469,7 +460,14 @@ interface MarginCornerProps {
 /**
  * Small corner marker showing where margins intersect
  */
-function MarginCorner({ position, top, bottom, left, right, color }: MarginCornerProps): React.ReactElement {
+function MarginCorner({
+  position,
+  top,
+  bottom,
+  left,
+  right,
+  color,
+}: MarginCornerProps): React.ReactElement {
   const size = 6; // Corner marker size in pixels
 
   const style: CSSProperties = {
@@ -493,36 +491,28 @@ function MarginCorner({ position, top, bottom, left, right, color }: MarginCorne
     style.right = formatPx(right - size / 2);
   }
 
-  // Draw corner lines based on position
-  let borderStyle = '';
-  switch (position) {
-    case 'top-left':
-      borderStyle = `border-top: 1px solid ${color}; border-left: 1px solid ${color};`;
-      break;
-    case 'top-right':
-      borderStyle = `border-top: 1px solid ${color}; border-right: 1px solid ${color};`;
-      break;
-    case 'bottom-left':
-      borderStyle = `border-bottom: 1px solid ${color}; border-left: 1px solid ${color};`;
-      break;
-    case 'bottom-right':
-      borderStyle = `border-bottom: 1px solid ${color}; border-right: 1px solid ${color};`;
-      break;
-  }
-
   return (
-    <div
-      className={`docx-margin-corner docx-margin-corner-${position}`}
-      style={style}
-    >
+    <div className={`docx-margin-corner docx-margin-corner-${position}`} style={style}>
       <div
         style={{
           width: '100%',
           height: '100%',
-          ...(position === 'top-left' && { borderTop: `1px solid ${color}`, borderLeft: `1px solid ${color}` }),
-          ...(position === 'top-right' && { borderTop: `1px solid ${color}`, borderRight: `1px solid ${color}` }),
-          ...(position === 'bottom-left' && { borderBottom: `1px solid ${color}`, borderLeft: `1px solid ${color}` }),
-          ...(position === 'bottom-right' && { borderBottom: `1px solid ${color}`, borderRight: `1px solid ${color}` }),
+          ...(position === 'top-left' && {
+            borderTop: `1px solid ${color}`,
+            borderLeft: `1px solid ${color}`,
+          }),
+          ...(position === 'top-right' && {
+            borderTop: `1px solid ${color}`,
+            borderRight: `1px solid ${color}`,
+          }),
+          ...(position === 'bottom-left' && {
+            borderBottom: `1px solid ${color}`,
+            borderLeft: `1px solid ${color}`,
+          }),
+          ...(position === 'bottom-right' && {
+            borderBottom: `1px solid ${color}`,
+            borderRight: `1px solid ${color}`,
+          }),
         }}
       />
     </div>
@@ -532,6 +522,39 @@ function MarginCorner({ position, top, bottom, left, right, color }: MarginCorne
 // ============================================================================
 // PAGE BORDERS
 // ============================================================================
+
+/**
+ * Map DOCX border style to CSS border style
+ */
+function mapBorderStyleToCss(
+  borderStyle: string | undefined
+): 'none' | 'solid' | 'double' | 'dotted' | 'dashed' | 'groove' | 'ridge' | 'inset' | 'outset' {
+  switch (borderStyle) {
+    case 'none':
+    case 'nil':
+      return 'none';
+    case 'double':
+    case 'triple':
+      return 'double';
+    case 'dotted':
+      return 'dotted';
+    case 'dashed':
+    case 'dashSmallGap':
+      return 'dashed';
+    case 'threeDEmboss':
+      return 'ridge';
+    case 'threeDEngrave':
+      return 'groove';
+    case 'outset':
+      return 'outset';
+    case 'inset':
+      return 'inset';
+    case 'single':
+    case 'thick':
+    default:
+      return 'solid';
+  }
+}
 
 interface PageBordersProps {
   borders: SectionProperties['pageBorders'];
@@ -562,32 +585,32 @@ function PageBorders({ borders, theme, zoom }: PageBordersProps): React.ReactEle
 
   // Apply borders
   if (borders.top) {
-    style.borderTopWidth = formatPx(twipsToPixels(borders.top.width ?? 8) * zoom);
-    style.borderTopStyle = borders.top.style || 'solid';
+    style.borderTopWidth = formatPx(twipsToPixels(borders.top.size ?? 8) * zoom);
+    style.borderTopStyle = mapBorderStyleToCss(borders.top.style);
     style.borderTopColor = borders.top.color
       ? resolveColor(borders.top.color, theme, '#000000')
       : '#000000';
   }
 
   if (borders.bottom) {
-    style.borderBottomWidth = formatPx(twipsToPixels(borders.bottom.width ?? 8) * zoom);
-    style.borderBottomStyle = borders.bottom.style || 'solid';
+    style.borderBottomWidth = formatPx(twipsToPixels(borders.bottom.size ?? 8) * zoom);
+    style.borderBottomStyle = mapBorderStyleToCss(borders.bottom.style);
     style.borderBottomColor = borders.bottom.color
       ? resolveColor(borders.bottom.color, theme, '#000000')
       : '#000000';
   }
 
   if (borders.left) {
-    style.borderLeftWidth = formatPx(twipsToPixels(borders.left.width ?? 8) * zoom);
-    style.borderLeftStyle = borders.left.style || 'solid';
+    style.borderLeftWidth = formatPx(twipsToPixels(borders.left.size ?? 8) * zoom);
+    style.borderLeftStyle = mapBorderStyleToCss(borders.left.style);
     style.borderLeftColor = borders.left.color
       ? resolveColor(borders.left.color, theme, '#000000')
       : '#000000';
   }
 
   if (borders.right) {
-    style.borderRightWidth = formatPx(twipsToPixels(borders.right.width ?? 8) * zoom);
-    style.borderRightStyle = borders.right.style || 'solid';
+    style.borderRightWidth = formatPx(twipsToPixels(borders.right.size ?? 8) * zoom);
+    style.borderRightStyle = mapBorderStyleToCss(borders.right.style);
     style.borderRightColor = borders.right.color
       ? resolveColor(borders.right.color, theme, '#000000')
       : '#000000';
@@ -606,7 +629,7 @@ function PageBorders({ borders, theme, zoom }: PageBordersProps): React.ReactEle
 function buildPageStyle(
   sectionProps: SectionProperties,
   theme: Theme | null | undefined,
-  zoom: number,
+  _zoom: number,
   showShadow: boolean
 ): CSSProperties {
   const style: CSSProperties = {
@@ -635,11 +658,10 @@ function buildPageStyle(
  * Build header area style
  */
 function buildHeaderAreaStyle(sectionProps: SectionProperties, zoom: number): CSSProperties {
-  const margins = sectionProps.pageMargins ?? {};
-  const headerDistance = margins.header ?? DEFAULT_HEADER_FOOTER_DISTANCE;
-  const topMargin = margins.top ?? DEFAULT_MARGIN_TWIPS;
-  const leftMargin = margins.left ?? DEFAULT_MARGIN_TWIPS;
-  const rightMargin = margins.right ?? DEFAULT_MARGIN_TWIPS;
+  const headerDistance = sectionProps.headerDistance ?? DEFAULT_HEADER_FOOTER_DISTANCE;
+  const topMargin = sectionProps.marginTop ?? DEFAULT_MARGIN_TWIPS;
+  const leftMargin = sectionProps.marginLeft ?? DEFAULT_MARGIN_TWIPS;
+  const rightMargin = sectionProps.marginRight ?? DEFAULT_MARGIN_TWIPS;
 
   return {
     position: 'absolute',
@@ -656,11 +678,10 @@ function buildHeaderAreaStyle(sectionProps: SectionProperties, zoom: number): CS
  * Build content area style
  */
 function buildContentAreaStyle(sectionProps: SectionProperties, zoom: number): CSSProperties {
-  const margins = sectionProps.pageMargins ?? {};
-  const topMargin = margins.top ?? DEFAULT_MARGIN_TWIPS;
-  const bottomMargin = margins.bottom ?? DEFAULT_MARGIN_TWIPS;
-  const leftMargin = margins.left ?? DEFAULT_MARGIN_TWIPS;
-  const rightMargin = margins.right ?? DEFAULT_MARGIN_TWIPS;
+  const topMargin = sectionProps.marginTop ?? DEFAULT_MARGIN_TWIPS;
+  const bottomMargin = sectionProps.marginBottom ?? DEFAULT_MARGIN_TWIPS;
+  const leftMargin = sectionProps.marginLeft ?? DEFAULT_MARGIN_TWIPS;
+  const rightMargin = sectionProps.marginRight ?? DEFAULT_MARGIN_TWIPS;
 
   return {
     position: 'absolute',
@@ -677,11 +698,10 @@ function buildContentAreaStyle(sectionProps: SectionProperties, zoom: number): C
  * Build footer area style
  */
 function buildFooterAreaStyle(sectionProps: SectionProperties, zoom: number): CSSProperties {
-  const margins = sectionProps.pageMargins ?? {};
-  const footerDistance = margins.footer ?? DEFAULT_HEADER_FOOTER_DISTANCE;
-  const bottomMargin = margins.bottom ?? DEFAULT_MARGIN_TWIPS;
-  const leftMargin = margins.left ?? DEFAULT_MARGIN_TWIPS;
-  const rightMargin = margins.right ?? DEFAULT_MARGIN_TWIPS;
+  const footerDistance = sectionProps.footerDistance ?? DEFAULT_HEADER_FOOTER_DISTANCE;
+  const bottomMargin = sectionProps.marginBottom ?? DEFAULT_MARGIN_TWIPS;
+  const leftMargin = sectionProps.marginLeft ?? DEFAULT_MARGIN_TWIPS;
+  const rightMargin = sectionProps.marginRight ?? DEFAULT_MARGIN_TWIPS;
 
   return {
     position: 'absolute',
@@ -742,22 +762,14 @@ function renderDefaultFooter(footer: HeaderFooterType): ReactNode {
  * Default paragraph renderer
  */
 function renderDefaultParagraph(paragraph: Paragraph): ReactNode {
-  return (
-    <div className="docx-para-default">
-      {getBlockText(paragraph)}
-    </div>
-  );
+  return <div className="docx-para-default">{getBlockText(paragraph)}</div>;
 }
 
 /**
  * Default table renderer
  */
 function renderDefaultTable(table: Table): ReactNode {
-  return (
-    <div className="docx-table-default">
-      [Table with {table.rows.length} rows]
-    </div>
-  );
+  return <div className="docx-table-default">[Table with {table.rows.length} rows]</div>;
 }
 
 /**
@@ -791,8 +803,8 @@ export function getPageDimensionsPx(
   sectionProps?: SectionProperties,
   zoom: number = 1
 ): { width: number; height: number } {
-  const width = sectionProps?.pageSize?.width ?? DEFAULT_PAGE_WIDTH_TWIPS;
-  const height = sectionProps?.pageSize?.height ?? DEFAULT_PAGE_HEIGHT_TWIPS;
+  const width = sectionProps?.pageWidth ?? DEFAULT_PAGE_WIDTH_TWIPS;
+  const height = sectionProps?.pageHeight ?? DEFAULT_PAGE_HEIGHT_TWIPS;
 
   return {
     width: twipsToPixels(width) * zoom,
@@ -807,14 +819,13 @@ export function getContentAreaPx(
   sectionProps?: SectionProperties,
   zoom: number = 1
 ): { width: number; height: number; top: number; left: number } {
-  const pageWidth = sectionProps?.pageSize?.width ?? DEFAULT_PAGE_WIDTH_TWIPS;
-  const pageHeight = sectionProps?.pageSize?.height ?? DEFAULT_PAGE_HEIGHT_TWIPS;
-  const margins = sectionProps?.pageMargins ?? {};
+  const pageWidth = sectionProps?.pageWidth ?? DEFAULT_PAGE_WIDTH_TWIPS;
+  const pageHeight = sectionProps?.pageHeight ?? DEFAULT_PAGE_HEIGHT_TWIPS;
 
-  const topMargin = margins.top ?? DEFAULT_MARGIN_TWIPS;
-  const bottomMargin = margins.bottom ?? DEFAULT_MARGIN_TWIPS;
-  const leftMargin = margins.left ?? DEFAULT_MARGIN_TWIPS;
-  const rightMargin = margins.right ?? DEFAULT_MARGIN_TWIPS;
+  const topMargin = sectionProps?.marginTop ?? DEFAULT_MARGIN_TWIPS;
+  const bottomMargin = sectionProps?.marginBottom ?? DEFAULT_MARGIN_TWIPS;
+  const leftMargin = sectionProps?.marginLeft ?? DEFAULT_MARGIN_TWIPS;
+  const rightMargin = sectionProps?.marginRight ?? DEFAULT_MARGIN_TWIPS;
 
   return {
     width: twipsToPixels(pageWidth - leftMargin - rightMargin) * zoom,
@@ -828,15 +839,15 @@ export function getContentAreaPx(
  * Check if page is landscape
  */
 export function isLandscape(sectionProps?: SectionProperties): boolean {
-  return sectionProps?.pageSize?.orientation === 'landscape';
+  return sectionProps?.orientation === 'landscape';
 }
 
 /**
  * Get standard page size name
  */
 export function getPageSizeName(sectionProps?: SectionProperties): string {
-  const width = sectionProps?.pageSize?.width ?? DEFAULT_PAGE_WIDTH_TWIPS;
-  const height = sectionProps?.pageSize?.height ?? DEFAULT_PAGE_HEIGHT_TWIPS;
+  const width = sectionProps?.pageWidth ?? DEFAULT_PAGE_WIDTH_TWIPS;
+  const height = sectionProps?.pageHeight ?? DEFAULT_PAGE_HEIGHT_TWIPS;
 
   // Standard sizes (in twips, portrait)
   if (width === 12240 && height === 15840) return 'Letter';

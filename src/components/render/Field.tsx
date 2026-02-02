@@ -202,10 +202,7 @@ function renderFieldValue(
 /**
  * Render simple field content (child runs)
  */
-function renderSimpleFieldContent(
-  field: SimpleField,
-  theme: Theme | null | undefined
-): ReactNode {
+function renderSimpleFieldContent(field: SimpleField, theme: Theme | null | undefined): ReactNode {
   if (field.content.length === 0) {
     // No content - show placeholder based on field type
     return renderFieldPlaceholder(field);
@@ -227,10 +224,7 @@ function renderSimpleFieldContent(
 /**
  * Render complex field result runs
  */
-function renderComplexFieldResult(
-  field: ComplexField,
-  theme: Theme | null | undefined
-): ReactNode {
+function renderComplexFieldResult(field: ComplexField, theme: Theme | null | undefined): ReactNode {
   if (field.fieldResult.length === 0) {
     // No result - show placeholder
     return renderFieldPlaceholder(field);
@@ -248,10 +242,7 @@ function renderComplexFieldResult(
 /**
  * Render field code (instruction) for display
  */
-function renderFieldCode(
-  field: FieldType,
-  theme: Theme | null | undefined
-): ReactNode {
+function renderFieldCode(field: FieldType, theme: Theme | null | undefined): ReactNode {
   const instruction = field.instruction;
 
   if (field.type === 'complexField' && field.fieldCode.length > 0) {

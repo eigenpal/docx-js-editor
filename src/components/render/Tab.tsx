@@ -260,10 +260,7 @@ export function getDefaultTabWidthPx(): number {
  * @param fontSize - Font size in pixels
  * @returns Estimated width in twips
  */
-export function estimateFollowingContentWidth(
-  text: string,
-  fontSize: number = 12
-): number {
+export function estimateFollowingContentWidth(text: string, fontSize: number = 12): number {
   // Rough estimate: average character width is about 0.5 * font size
   const avgCharWidth = fontSize * 0.5;
   const widthPx = text.length * avgCharWidth;

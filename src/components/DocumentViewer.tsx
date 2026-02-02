@@ -19,8 +19,13 @@ import type {
   Table,
   HeaderFooter as HeaderFooterType,
 } from '../types/document';
-import { Page, type PageProps } from './render/Page';
-import { calculatePages, type PageLayoutResult, type Page as PageData, type PageContent } from '../layout/pageLayout';
+import { Page } from './render/Page';
+import {
+  calculatePages,
+  type PageLayoutResult,
+  type Page as PageData,
+  type PageContent,
+} from '../layout/pageLayout';
 
 // ============================================================================
 // TYPES
@@ -219,21 +224,15 @@ export function DocumentViewer({
   // Render placeholder when no document
   if (!document || !layoutResult || layoutResult.pages.length === 0) {
     return (
-      <div
-        className={classNames.join(' ')}
-        style={style}
-        onClick={handleContainerClick}
-      >
+      <div className={classNames.join(' ')} style={style} onClick={handleContainerClick}>
         {placeholder || <DefaultPlaceholder />}
       </div>
     );
   }
 
   // Calculate total height for virtual scrolling (future enhancement)
-  const totalHeight = layoutResult.pages.reduce(
-    (sum, page) => sum + page.heightPx * zoom + pageGap,
-    0
-  ) - pageGap; // Remove last gap
+  const totalHeight =
+    layoutResult.pages.reduce((sum, page) => sum + page.heightPx * zoom + pageGap, 0) - pageGap; // Remove last gap
 
   return (
     <div
@@ -324,10 +323,7 @@ function PageWrapper({
   }, [renderFooter, page.pageNumber]);
 
   return (
-    <div
-      className="docx-page-wrapper"
-      style={{ position: 'relative' }}
-    >
+    <div className="docx-page-wrapper" style={{ position: 'relative' }}>
       <Page
         page={page}
         theme={theme}
@@ -438,9 +434,7 @@ function DefaultPlaceholder(): React.ReactElement {
         <line x1="10" y1="9" x2="8" y2="9" />
       </svg>
       <div style={{ marginTop: '16px' }}>No document loaded</div>
-      <div style={{ marginTop: '8px', fontSize: '12px' }}>
-        Open a DOCX file to view it here
-      </div>
+      <div style={{ marginTop: '8px', fontSize: '12px' }}>Open a DOCX file to view it here</div>
     </div>
   );
 }

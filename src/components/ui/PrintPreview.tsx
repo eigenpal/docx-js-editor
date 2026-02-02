@@ -10,8 +10,14 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import type { Document, Theme, Paragraph, Table, HeaderFooter as HeaderFooterType } from '../../types/document';
-import { calculatePages, type PageLayoutResult, type Page as PageData, type PageContent } from '../../layout/pageLayout';
+import type {
+  Document,
+  Theme,
+  Paragraph,
+  Table,
+  HeaderFooter as HeaderFooterType,
+} from '../../types/document';
+import { calculatePages, type Page as PageData, type PageContent } from '../../layout/pageLayout';
 import { twipsToPixels, formatPx } from '../../utils/units';
 import { resolveColor } from '../../utils/colorResolver';
 
@@ -99,8 +105,6 @@ const DEFAULT_PRINT_OPTIONS: PrintOptions = {
   margins: 'default',
 };
 
-const DEFAULT_PAGE_WIDTH_TWIPS = 12240; // 8.5 inches
-const DEFAULT_PAGE_HEIGHT_TWIPS = 15840; // 11 inches
 const DEFAULT_MARGIN_TWIPS = 1440; // 1 inch
 const DEFAULT_HEADER_FOOTER_DISTANCE = 720; // 0.5 inches
 
@@ -134,7 +138,6 @@ export function PrintPreview({
     try {
       return calculatePages(doc, {
         theme,
-        contentWidth: undefined, // Use default from section
       });
     } catch (error) {
       console.error('Failed to calculate pages for print:', error);
@@ -212,11 +215,7 @@ export function PrintPreview({
               <PrintIcon size={16} />
               <span>Print</span>
             </button>
-            <button
-              onClick={onClose}
-              style={closeButtonStyle}
-              aria-label="Close print preview"
-            >
+            <button onClick={onClose} style={closeButtonStyle} aria-label="Close print preview">
               <CloseIcon />
             </button>
           </div>
@@ -230,7 +229,7 @@ export function PrintPreview({
             </div>
           ) : (
             <div className="docx-print-pages" style={pagesContainerStyle}>
-              {pagesToPrint.map((page, index) => (
+              {pagesToPrint.map((page, _index) => (
                 <PrintPage
                   key={page.pageNumber}
                   page={page}
@@ -283,19 +282,24 @@ function PrintPage({
   renderFooter,
 }: PrintPageProps): React.ReactElement {
   const { sectionProps, content, header, footer } = page;
-  const { scale = 1, includeHeaders, includeFooters, includePageNumbers, printBackground } = options;
+  const {
+    scale = 1,
+    includeHeaders,
+    includeFooters,
+    includePageNumbers,
+    printBackground,
+  } = options;
 
   // Get page dimensions
   const pageWidth = page.widthPx * scale;
   const pageHeight = page.heightPx * scale;
 
-  const margins = sectionProps.pageMargins ?? {};
-  const topMargin = margins.top ?? DEFAULT_MARGIN_TWIPS;
-  const bottomMargin = margins.bottom ?? DEFAULT_MARGIN_TWIPS;
-  const leftMargin = margins.left ?? DEFAULT_MARGIN_TWIPS;
-  const rightMargin = margins.right ?? DEFAULT_MARGIN_TWIPS;
-  const headerDistance = margins.header ?? DEFAULT_HEADER_FOOTER_DISTANCE;
-  const footerDistance = margins.footer ?? DEFAULT_HEADER_FOOTER_DISTANCE;
+  const topMargin = sectionProps.marginTop ?? DEFAULT_MARGIN_TWIPS;
+  const bottomMargin = sectionProps.marginBottom ?? DEFAULT_MARGIN_TWIPS;
+  const leftMargin = sectionProps.marginLeft ?? DEFAULT_MARGIN_TWIPS;
+  const rightMargin = sectionProps.marginRight ?? DEFAULT_MARGIN_TWIPS;
+  const headerDistance = sectionProps.headerDistance ?? DEFAULT_HEADER_FOOTER_DISTANCE;
+  const footerDistance = sectionProps.footerDistance ?? DEFAULT_HEADER_FOOTER_DISTANCE;
 
   // Build page style
   const pageStyle: CSSProperties = {
@@ -347,11 +351,7 @@ function PrintPage({
   };
 
   return (
-    <div
-      className="docx-print-page"
-      style={pageStyle}
-      data-page-number={pageNumber}
-    >
+    <div className="docx-print-page" style={pageStyle} data-page-number={pageNumber}>
       {/* Header */}
       {includeHeaders && header && (
         <div className="docx-print-header" style={headerAreaStyle}>
@@ -423,7 +423,11 @@ function PrintPage({
 // DEFAULT CONTENT RENDERERS
 // ============================================================================
 
-function DefaultHeaderFooterContent({ content }: { content: HeaderFooterType }): React.ReactElement {
+function DefaultHeaderFooterContent({
+  content,
+}: {
+  content: HeaderFooterType;
+}): React.ReactElement {
   return (
     <div>
       {content.content.map((block, index) => {
@@ -463,10 +467,12 @@ function getParagraphText(paragraph: Paragraph): string {
         }
       }
     } else if (content.type === 'hyperlink') {
-      for (const run of content.children) {
-        for (const item of run.content) {
-          if (item.type === 'text') {
-            parts.push(item.text);
+      for (const child of content.children) {
+        if (child.type === 'run') {
+          for (const item of child.content) {
+            if (item.type === 'text') {
+              parts.push(item.text);
+            }
           }
         }
       }
@@ -755,10 +761,7 @@ export function triggerPrint(): void {
 /**
  * Create print-optimized document view in a new window
  */
-export function openPrintWindow(
-  title: string = 'Document',
-  content: string
-): Window | null {
+export function openPrintWindow(title: string = 'Document', content: string): Window | null {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return null;
 

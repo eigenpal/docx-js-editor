@@ -197,10 +197,7 @@ function extractFontsFromStyles(styles: StyleDefinitions, fonts: Set<string>): v
 /**
  * Extract fonts from text formatting (rPr)
  */
-function extractFontsFromTextFormatting(
-  formatting: TextFormatting,
-  fonts: Set<string>
-): void {
+function extractFontsFromTextFormatting(formatting: TextFormatting, fonts: Set<string>): void {
   const fontFamily = formatting.fontFamily;
   if (!fontFamily) return;
 
@@ -260,10 +257,7 @@ function extractFontsFromParagraph(para: Paragraph, fonts: Set<string>): void {
 /**
  * Extract fonts from paragraph content item
  */
-function extractFontsFromParagraphContent(
-  content: ParagraphContent,
-  fonts: Set<string>
-): void {
+function extractFontsFromParagraphContent(content: ParagraphContent, fonts: Set<string>): void {
   if (content.type === 'run') {
     extractFontsFromRun(content, fonts);
   } else if (content.type === 'hyperlink') {

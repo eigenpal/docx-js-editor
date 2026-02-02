@@ -31,19 +31,16 @@ import type {
   SoftHyphenContent,
   NoBreakHyphenContent,
   DrawingContent,
-  ShapeContent,
   TextFormatting,
   ColorValue,
   ShadingProperties,
   UnderlineStyle,
   Theme,
   Image,
-  Shape,
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import {
   findChild,
-  findChildren,
   getAttribute,
   getChildElements,
   getTextContent,
@@ -147,7 +144,7 @@ function parseShadingProperties(shd: XmlElement | null): ShadingProperties | und
 export function parseRunProperties(
   rPr: XmlElement | null,
   theme: Theme | null,
-  styles?: StyleMap
+  _styles?: StyleMap
 ): TextFormatting | undefined {
   if (!rPr) return undefined;
 
@@ -268,7 +265,11 @@ export function parseRunProperties(
     // Theme font references
     const asciiTheme = getAttribute(rFonts, 'w', 'asciiTheme');
     if (asciiTheme) {
-      formatting.fontFamily.asciiTheme = asciiTheme as TextFormatting['fontFamily'] extends { asciiTheme?: infer T } ? T : never;
+      formatting.fontFamily.asciiTheme = asciiTheme as TextFormatting['fontFamily'] extends {
+        asciiTheme?: infer T;
+      }
+        ? T
+        : never;
       // Also resolve the actual font name for convenience
       if (theme && !formatting.fontFamily.ascii) {
         formatting.fontFamily.ascii = resolveThemeFontRef(theme, asciiTheme);
@@ -460,8 +461,11 @@ function parseEndnoteReference(element: XmlElement): NoteReferenceContent {
  */
 function parseFieldChar(element: XmlElement): FieldCharContent {
   const fldCharType = getAttribute(element, 'w', 'fldCharType');
-  const fldLock = getAttribute(element, 'w', 'fldLock') === 'true' || getAttribute(element, 'w', 'fldLock') === '1';
-  const dirty = getAttribute(element, 'w', 'dirty') === 'true' || getAttribute(element, 'w', 'dirty') === '1';
+  const fldLock =
+    getAttribute(element, 'w', 'fldLock') === 'true' ||
+    getAttribute(element, 'w', 'fldLock') === '1';
+  const dirty =
+    getAttribute(element, 'w', 'dirty') === 'true' || getAttribute(element, 'w', 'dirty') === '1';
 
   let charType: FieldCharContent['charType'] = 'begin';
   if (fldCharType === 'separate') charType = 'separate';
@@ -649,11 +653,7 @@ function parseRunContents(runElement: XmlElement): RunContent[] {
  * @param theme - Theme for resolving theme colors/fonts
  * @returns Parsed Run object
  */
-export function parseRun(
-  node: XmlElement,
-  styles: StyleMap | null,
-  theme: Theme | null
-): Run {
+export function parseRun(node: XmlElement, styles: StyleMap | null, theme: Theme | null): Run {
   const run: Run = {
     type: 'run',
     content: [],
@@ -728,9 +728,7 @@ export function hasImage(run: Run): boolean {
  * @returns Array of Image objects
  */
 export function getImages(run: Run): Image[] {
-  return run.content
-    .filter((c): c is DrawingContent => c.type === 'drawing')
-    .map((c) => c.image);
+  return run.content.filter((c): c is DrawingContent => c.type === 'drawing').map((c) => c.image);
 }
 
 /**

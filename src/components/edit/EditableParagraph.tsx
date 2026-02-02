@@ -9,31 +9,27 @@
  * - Tracks cursor position
  */
 
-import React, { useRef, useCallback, useEffect, useState } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import type {
   Paragraph as ParagraphType,
   ParagraphContent,
   Theme,
   Run as RunType,
-  TextFormatting,
-  TabStop,
-  Hyperlink as HyperlinkType,
   Image as ImageType,
   Shape as ShapeType,
   TextBox as TextBoxType,
 } from '../../types/document';
 import { paragraphToStyle, textToStyle, mergeStyles } from '../../utils/formatToStyle';
-import { twipsToPixels, formatPx } from '../../utils/units';
 import { SELECTION_DATA_ATTRIBUTES } from '../../hooks/useSelection';
-import { EditableRun, getEditableRunText, createTextRun, splitRunAtOffset, mergeRuns } from './EditableRun';
-import { handleNavigationKey, isNavigationKey, parseNavigationAction } from '../../utils/keyboardNavigation';
-import { Tab } from '../render/Tab';
+import { EditableRun, getEditableRunText, splitRunAtOffset, mergeRuns } from './EditableRun';
+import {
+  handleNavigationKey,
+  isNavigationKey,
+  parseNavigationAction,
+} from '../../utils/keyboardNavigation';
 import { Hyperlink } from '../render/Hyperlink';
 import { Field } from '../render/Field';
-import { DocImage } from '../render/DocImage';
-import { Shape } from '../render/Shape';
-import { TextBox } from '../render/TextBox';
 
 // ============================================================================
 // TYPES
@@ -137,22 +133,24 @@ export function getParagraphPlainText(paragraph: ParagraphType): string {
     return '';
   }
 
-  return paragraph.content.map((content) => {
-    if (content.type === 'run') {
-      return getEditableRunText(content);
-    }
-    if (content.type === 'hyperlink') {
-      return content.children
-        .map((child) => {
-          if (child.type === 'run') {
-            return getEditableRunText(child);
-          }
-          return '';
-        })
-        .join('');
-    }
-    return '';
-  }).join('');
+  return paragraph.content
+    .map((content) => {
+      if (content.type === 'run') {
+        return getEditableRunText(content);
+      }
+      if (content.type === 'hyperlink') {
+        return content.children
+          .map((child) => {
+            if (child.type === 'run') {
+              return getEditableRunText(child);
+            }
+            return '';
+          })
+          .join('');
+      }
+      return '';
+    })
+    .join('');
 }
 
 /**
@@ -194,9 +192,7 @@ export function isCursorAtEnd(paragraph: ParagraphType, position: CursorPosition
 /**
  * Get cursor position from DOM selection
  */
-function getCursorPositionFromDOM(
-  paragraphElement: HTMLElement
-): CursorPosition | null {
+function getCursorPositionFromDOM(paragraphElement: HTMLElement): CursorPosition | null {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) {
     return null;
@@ -305,15 +301,12 @@ export function splitParagraphAt(
 /**
  * Merge two paragraphs
  */
-export function mergeParagraphs(
-  first: ParagraphType,
-  second: ParagraphType
-): ParagraphMergeResult {
+export function mergeParagraphs(first: ParagraphType, second: ParagraphType): ParagraphMergeResult {
   const firstContent = first.content || [];
   const secondContent = second.content || [];
 
   // Calculate cursor position (at the end of first paragraph content)
-  let cursorContentIndex = firstContent.length > 0 ? firstContent.length - 1 : 0;
+  const cursorContentIndex = firstContent.length > 0 ? firstContent.length - 1 : 0;
   let cursorOffset = 0;
 
   if (firstContent.length > 0) {
@@ -324,16 +317,12 @@ export function mergeParagraphs(
   }
 
   // Try to merge adjacent runs with same formatting
-  let mergedContent: ParagraphContent[] = [...firstContent];
+  const mergedContent: ParagraphContent[] = [...firstContent];
 
   for (const content of secondContent) {
     const lastMerged = mergedContent[mergedContent.length - 1];
 
-    if (
-      lastMerged &&
-      lastMerged.type === 'run' &&
-      content.type === 'run'
-    ) {
+    if (lastMerged && lastMerged.type === 'run' && content.type === 'run') {
       // Try to merge the runs
       const merged = mergeRuns(lastMerged, content);
       if (merged) {
@@ -371,10 +360,7 @@ export function createEmptyParagraph(formatting?: ParagraphType['formatting']): 
 /**
  * Build class names for the paragraph element
  */
-function buildClassNames(
-  paragraph: ParagraphType,
-  additionalClassName?: string
-): string {
+function buildClassNames(paragraph: ParagraphType, additionalClassName?: string): string {
   const classNames: string[] = ['docx-paragraph', 'docx-paragraph-editable'];
 
   if (additionalClassName) {
@@ -475,7 +461,7 @@ export function EditableParagraph({
   editable = true,
   pageNumber,
   totalPages,
-  pageWidth,
+  pageWidth: _pageWidth,
   onChange,
   onSplit,
   onMergeWithPrevious,
@@ -489,12 +475,15 @@ export function EditableParagraph({
   onNavigateToDocumentEnd,
   onBookmarkClick,
   disableLinks = false,
-  renderImage,
-  renderShape,
-  renderTextBox,
+  renderImage: _renderImage,
+  renderShape: _renderShape,
+  renderTextBox: _renderTextBox,
 }: EditableParagraphProps): React.ReactElement {
   const paragraphRef = useRef<HTMLParagraphElement>(null);
-  const [cursorPosition, setCursorPosition] = useState<CursorPosition>({ contentIndex: 0, offset: 0 });
+  const [cursorPosition, setCursorPosition] = useState<CursorPosition>({
+    contentIndex: 0,
+    offset: 0,
+  });
   const [isFocused, setIsFocused] = useState(false);
 
   // Get CSS styles from paragraph formatting
@@ -532,10 +521,7 @@ export function EditableParagraph({
 
       newContent[contentIndex] = newRun;
 
-      onChange(
-        { ...paragraph, content: newContent },
-        paragraphIndex
-      );
+      onChange({ ...paragraph, content: newContent }, paragraphIndex);
     },
     [paragraph, paragraphIndex, onChange]
   );
@@ -544,7 +530,7 @@ export function EditableParagraph({
    * Handle key down in runs
    */
   const handleRunKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLSpanElement>, runIndex: number) => {
+    (event: KeyboardEvent<HTMLSpanElement>, _runIndex: number) => {
       const key = event.key;
 
       // Get current cursor position
@@ -656,7 +642,7 @@ export function EditableParagraph({
    * Handle run focus
    */
   const handleRunFocus = useCallback(
-    (runIndex: number) => {
+    (_runIndex: number) => {
       if (!isFocused) {
         setIsFocused(true);
         onFocus?.(paragraphIndex);
@@ -669,7 +655,7 @@ export function EditableParagraph({
    * Handle run blur
    */
   const handleRunBlur = useCallback(
-    (runIndex: number) => {
+    (_runIndex: number) => {
       // Delay to check if focus moved to another run in the same paragraph
       setTimeout(() => {
         if (paragraphRef.current && !paragraphRef.current.contains(document.activeElement)) {
@@ -730,11 +716,6 @@ export function EditableParagraph({
     );
   }
 
-  // Collect tab stops from formatting
-  const tabStops: TabStop[] = paragraph.formatting?.tabs || [];
-
-  // Track position for tab width calculation
-  let currentPosition = 0;
   let runIndex = 0;
 
   // Render paragraph content
@@ -804,11 +785,7 @@ export function EditableParagraph({
 
       case 'bookmarkEnd':
         children.push(
-          <span
-            key={key}
-            className="docx-bookmark-end"
-            data-bookmark-id={content.id}
-          />
+          <span key={key} className="docx-bookmark-end" data-bookmark-id={content.id} />
         );
         break;
 
@@ -848,10 +825,7 @@ export function EditableParagraph({
 /**
  * Set cursor position within a paragraph element
  */
-export function setCursorPosition(
-  paragraphElement: HTMLElement,
-  position: CursorPosition
-): void {
+export function setCursorPosition(paragraphElement: HTMLElement, position: CursorPosition): void {
   const selection = window.getSelection();
   if (!selection) return;
 
@@ -865,11 +839,7 @@ export function setCursorPosition(
   const contentElement = contentElements[0];
 
   // Create a tree walker to find the text node at the offset
-  const walker = document.createTreeWalker(
-    contentElement,
-    NodeFilter.SHOW_TEXT,
-    null
-  );
+  const walker = document.createTreeWalker(contentElement, NodeFilter.SHOW_TEXT, null);
 
   let currentOffset = 0;
   let node = walker.nextNode();

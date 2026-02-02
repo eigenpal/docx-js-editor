@@ -13,11 +13,7 @@ export type {
 } from './useSelection';
 
 export { useHistory, useAutoHistory, useDocumentHistory, HistoryManager } from './useHistory';
-export type {
-  HistoryEntry,
-  UseHistoryOptions,
-  UseHistoryReturn,
-} from './useHistory';
+export type { HistoryEntry, UseHistoryOptions, UseHistoryReturn } from './useHistory';
 
 export { useTableSelection, TABLE_DATA_ATTRIBUTES } from './useTableSelection';
 export type {
@@ -33,16 +29,8 @@ export type {
   SelectionOverlayProps,
 } from './useSelectionHighlight';
 
-export {
-  useClipboard,
-  createSelectionFromDOM,
-  getSelectionRuns,
-} from './useClipboard';
-export type {
-  ClipboardSelection,
-  UseClipboardOptions,
-  UseClipboardReturn,
-} from './useClipboard';
+export { useClipboard, createSelectionFromDOM, getSelectionRuns } from './useClipboard';
+export type { ClipboardSelection, UseClipboardOptions, UseClipboardReturn } from './useClipboard';
 
 export {
   useAutoSave,
@@ -71,7 +59,4 @@ export {
   clampZoom,
   ZOOM_PRESETS,
 } from './useWheelZoom';
-export type {
-  UseWheelZoomOptions,
-  UseWheelZoomReturn,
-} from './useWheelZoom';
+export type { UseWheelZoomOptions, UseWheelZoomReturn } from './useWheelZoom';

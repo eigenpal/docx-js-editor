@@ -163,11 +163,17 @@ const BulletListIcon = () => (
 
 const NumberedListIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <text x="1" y="5" fontSize="5" fontFamily="sans-serif">1.</text>
+    <text x="1" y="5" fontSize="5" fontFamily="sans-serif">
+      1.
+    </text>
     <rect x="6" y="3" width="8" height="2" />
-    <text x="1" y="9" fontSize="5" fontFamily="sans-serif">2.</text>
+    <text x="1" y="9" fontSize="5" fontFamily="sans-serif">
+      2.
+    </text>
     <rect x="6" y="7" width="8" height="2" />
-    <text x="1" y="13" fontSize="5" fontFamily="sans-serif">3.</text>
+    <text x="1" y="13" fontSize="5" fontFamily="sans-serif">
+      3.
+    </text>
     <rect x="6" y="11" width="8" height="2" />
   </svg>
 );
@@ -212,10 +218,10 @@ export function ListButton({
     ...(disabled
       ? BUTTON_DISABLED_STYLE
       : active
-      ? BUTTON_ACTIVE_STYLE
-      : isHovered
-      ? BUTTON_HOVER_STYLE
-      : BUTTON_STYLE),
+        ? BUTTON_ACTIVE_STYLE
+        : isHovered
+          ? BUTTON_HOVER_STYLE
+          : BUTTON_STYLE),
     ...style,
   };
 

@@ -12,7 +12,7 @@
  * ============================================================================ */
 
 /* Base cursor styles for all editable elements */
-[contenteditable="true"] {
+[contenteditable='true'] {
   /* Black caret for light backgrounds - highly visible */
   caret-color: #000;
 
@@ -24,7 +24,7 @@
 }
 
 /* Editable runs - the main text editing elements */
-.docx-run-editable[contenteditable="true"] {
+.docx-run-editable[contenteditable='true'] {
   caret-color: #000;
 
   /* Ensure minimum height for cursor visibility in empty runs */
@@ -35,7 +35,7 @@
 }
 
 /* Empty paragraph cursor placeholder */
-.docx-paragraph-empty [contenteditable="true"] {
+.docx-paragraph-empty [contenteditable='true'] {
   /* Ensure cursor is visible in empty paragraphs */
   min-height: 1em;
   min-width: 1px;
@@ -53,7 +53,7 @@
  * ============================================================================ */
 
 /* Subtle focus indicator without disrupting layout */
-.docx-run-editable[contenteditable="true"]:focus {
+.docx-run-editable[contenteditable='true']:focus {
   outline: none;
   /* Optional: very subtle indicator - uncomment if needed */
   /* box-shadow: 0 0 0 1px rgba(26, 115, 232, 0.2); */
@@ -85,8 +85,8 @@
 .docx-run-editable *::selection,
 .docx-run::selection,
 .docx-run *::selection,
-[contenteditable="true"]::selection,
-[contenteditable="true"] *::selection {
+[contenteditable='true']::selection,
+[contenteditable='true'] *::selection {
   background-color: rgba(26, 115, 232, 0.3) !important;
   color: inherit !important;
 }
@@ -96,8 +96,8 @@
 .docx-run-editable *::-moz-selection,
 .docx-run::-moz-selection,
 .docx-run *::-moz-selection,
-[contenteditable="true"]::-moz-selection,
-[contenteditable="true"] *::-moz-selection {
+[contenteditable='true']::-moz-selection,
+[contenteditable='true'] *::-moz-selection {
   background-color: rgba(26, 115, 232, 0.3) !important;
   color: inherit !important;
 }
@@ -241,12 +241,12 @@
  * ============================================================================ */
 
 /* Highlighted text - ensure caret is visible against yellow */
-.docx-run-highlighted[contenteditable="true"] {
+.docx-run-highlighted[contenteditable='true'] {
   caret-color: #333;
 }
 
 /* Dark background text - use white caret */
-.docx-run-dark-bg[contenteditable="true"] {
+.docx-run-dark-bg[contenteditable='true'] {
   caret-color: #fff;
 }
 
@@ -281,7 +281,7 @@
  * ============================================================================ */
 
 /* Template variable highlighting - non-editable within run */
-.docx-run-has-variable [contenteditable="false"] {
+.docx-run-has-variable [contenteditable='false'] {
   cursor: default;
   user-select: all;
 }

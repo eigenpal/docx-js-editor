@@ -476,10 +476,7 @@ export function roundPixels(px: number, decimalPlaces: number = 2): number {
  * @param converter - Conversion function
  * @returns Rounded pixel value
  */
-export function toWholePixels(
-  value: number,
-  converter: (v: number) => number
-): number {
+export function toWholePixels(value: number, converter: (v: number) => number): number {
   return Math.round(converter(value));
 }
 
@@ -600,8 +597,9 @@ export function getPageSizePixels(
  * @param name - Page size name ('LETTER', 'LEGAL', 'A4', 'A5', 'EXECUTIVE')
  * @returns Page dimensions in twips
  */
-export function getStandardPageSize(
-  name: keyof typeof PAGE_SIZES
-): { width: number; height: number } {
+export function getStandardPageSize(name: keyof typeof PAGE_SIZES): {
+  width: number;
+  height: number;
+} {
   return { ...PAGE_SIZES[name] };
 }

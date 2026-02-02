@@ -140,11 +140,7 @@ export function Hyperlink({
           run={child}
           theme={theme}
           // Don't apply default link color to runs if they have their own color
-          style={
-            child.formatting?.color
-              ? undefined
-              : { color: 'inherit' }
-          }
+          style={child.formatting?.color ? undefined : { color: 'inherit' }}
         />
       );
     }
@@ -161,13 +157,7 @@ export function Hyperlink({
       );
     }
     if (child.type === 'bookmarkEnd') {
-      return (
-        <span
-          key={index}
-          className="docx-bookmark-end"
-          data-bookmark-id={child.id}
-        />
-      );
+      return <span key={index} className="docx-bookmark-end" data-bookmark-id={child.id} />;
     }
     return null;
   });

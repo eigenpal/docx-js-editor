@@ -7,7 +7,7 @@
  * - Applies line spacing to paragraph formatting
  */
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 
 // ============================================================================
@@ -233,10 +233,7 @@ export function LineSpacingPicker({
    */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -301,9 +298,7 @@ export function LineSpacingPicker({
             const idx = currentIndex >= 0 ? currentIndex : 0;
             setFocusedIndex(idx);
           } else {
-            setFocusedIndex((prev) =>
-              prev < options.length - 1 ? prev + 1 : prev
-            );
+            setFocusedIndex((prev) => (prev < options.length - 1 ? prev + 1 : prev));
           }
           break;
 
@@ -349,10 +344,10 @@ export function LineSpacingPicker({
   const triggerStyle: CSSProperties = disabled
     ? { ...PICKER_TRIGGER_DISABLED_STYLE, width }
     : isOpen
-    ? { ...PICKER_TRIGGER_FOCUS_STYLE, width }
-    : isHovered
-    ? { ...PICKER_TRIGGER_HOVER_STYLE, width }
-    : { ...PICKER_TRIGGER_STYLE, width };
+      ? { ...PICKER_TRIGGER_FOCUS_STYLE, width }
+      : isHovered
+        ? { ...PICKER_TRIGGER_HOVER_STYLE, width }
+        : { ...PICKER_TRIGGER_STYLE, width };
 
   // Display value
   const displayValue = currentOption?.label || '1.0';
@@ -397,8 +392,8 @@ export function LineSpacingPicker({
             const itemStyle: CSSProperties = isSelected
               ? DROPDOWN_ITEM_SELECTED_STYLE
               : isFocusedItem
-              ? DROPDOWN_ITEM_HOVER_STYLE
-              : DROPDOWN_ITEM_STYLE;
+                ? DROPDOWN_ITEM_HOVER_STYLE
+                : DROPDOWN_ITEM_STYLE;
 
             return (
               <button
@@ -411,9 +406,7 @@ export function LineSpacingPicker({
                 role="option"
                 aria-selected={isSelected}
               >
-                <span style={{ width: '16px' }}>
-                  {isSelected && <CheckIcon />}
-                </span>
+                <span style={{ width: '16px' }}>{isSelected && <CheckIcon />}</span>
                 <span>{option.label}</span>
               </button>
             );

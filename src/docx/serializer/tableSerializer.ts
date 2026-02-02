@@ -63,10 +63,7 @@ function serializeMeasurement(
 ): string {
   if (!measurement) return '';
 
-  const attrs: string[] = [
-    `w:w="${measurement.value}"`,
-    `w:type="${measurement.type}"`,
-  ];
+  const attrs: string[] = [`w:w="${measurement.value}"`, `w:type="${measurement.type}"`];
 
   return `<w:${elementName} ${attrs.join(' ')}/>`;
 }
@@ -464,9 +461,7 @@ export function serializeTableRowFormatting(formatting: TableRowFormatting | und
 
   // Row height
   if (formatting.height) {
-    const attrs: string[] = [
-      `w:val="${formatting.height.value}"`,
-    ];
+    const attrs: string[] = [`w:val="${formatting.height.value}"`];
 
     if (formatting.heightRule) {
       attrs.push(`w:hRule="${formatting.heightRule}"`);
@@ -621,7 +616,7 @@ export function serializeTableCellFormatting(formatting: TableCellFormatting | u
 function serializeTableGrid(columnWidths: number[] | undefined): string {
   if (!columnWidths || columnWidths.length === 0) return '';
 
-  const cols = columnWidths.map(w => `<w:gridCol w:w="${w}"/>`);
+  const cols = columnWidths.map((w) => `<w:gridCol w:w="${w}"/>`);
 
   return `<w:tblGrid>${cols.join('')}</w:tblGrid>`;
 }
@@ -839,10 +834,7 @@ export function createEmptyTable(rows: number = 1, cols: number = 1): Table {
 /**
  * Create a table cell with text content
  */
-export function createTextCell(
-  text: string,
-  formatting?: TableCellFormatting
-): TableCell {
+export function createTextCell(text: string, formatting?: TableCellFormatting): TableCell {
   return {
     type: 'tableCell',
     formatting,

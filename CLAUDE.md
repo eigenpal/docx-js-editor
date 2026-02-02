@@ -36,6 +36,7 @@ RALPH_STATUS: {
 This is a WYSIWYG editor. The output must look identical to the document in Microsoft Word. This is non-negotiable and applies across every story, not just US-03.
 
 **What must be preserved:**
+
 - **Fonts:** Custom and embedded fonts referenced in the DOCX must render. If SuperDoc has a font-loading config option, use it. If fonts are embedded in the DOCX zip, they must not be dropped.
 - **Theme colors:** The DOCX contains a theme (theme1.xml) that defines the color palette. Text and shape colors that reference theme slots (e.g. `dk1`, `lt1`, `accent1`) must resolve to the correct colors.
 - **Styles:** The DOCX contains style definitions in styles.xml (heading styles, body text styles, named character styles). These must apply. Do not rely only on inline formatting.
@@ -46,6 +47,7 @@ This is a WYSIWYG editor. The output must look identical to the document in Micr
 - **Template round-trip:** When docxtemplater processes the DOCX, it must ONLY substitute text in document.xml. It must NOT touch or drop styles.xml, theme1.xml, fontTable.xml, embeddings, or any .rels file. The output zip must contain all original files. Fidelity must survive the full load → template → re-render cycle.
 
 **How to verify your assumptions:**
+
 - SuperDoc source is available locally at `~/superdoc`. This is the authoritative reference — always investigate there first. Start with `ls ~/superdoc` to understand the repo structure, then read the README, then dig into source files as needed. Look specifically for: constructor options, font loading/resolution config, style/theme application, how documents are passed in, how to destroy an instance. Do NOT rely on node_modules or guesswork.
 - Before writing docxtemplater code, confirm it only modifies document.xml by checking what PizZip contains before and after `.render()`. Read `node_modules/docxtemplater/README.md` and `node_modules/pizzip/README.md`.
 - Do not guess. Do not assume defaults are correct. Read the source.
@@ -74,7 +76,14 @@ The target users are non-technical clients at European banks/insurance companies
 ## Verify command
 
 ```
-bun install && bun build ./src/main.tsx --outdir ./dist --loader:.css=css
+bun install && bun run typecheck && bun build ./src/main.tsx --outdir ./dist --loader:.css=css
 ```
 
-Build must exit 0. That is the only success gate.
+**All checks must pass:**
+
+1. `bun run typecheck` — TypeScript type checking (catches type mismatches like `doc.package.body` vs `doc.package.document`)
+2. `bun build` — Bundle must compile successfully
+
+**IMPORTANT:** Never skip type checking. The `bun build` command does NOT run TypeScript — it only transpiles. Type errors will be silently ignored by the bundler but will cause runtime bugs. Always run `bun run typecheck` first.
+
+**Note:** If you encounter many pre-existing type errors, you may need to fix them before proceeding. Use `npx tsc --noEmit 2>&1 | head -100` to see the first errors.

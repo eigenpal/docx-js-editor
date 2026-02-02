@@ -23,7 +23,6 @@ import type {
   DocxPackage,
   DocumentBody,
   Theme,
-  NumberingDefinitions,
   Footnote,
   Endnote,
   HeaderFooter,
@@ -37,19 +36,10 @@ import { parseTheme } from './themeParser';
 import { parseStyles, parseStyleDefinitions, type StyleMap } from './styleParser';
 import { parseNumbering, type NumberingMap } from './numberingParser';
 import { parseDocumentBody, extractAllTemplateVariables } from './documentParser';
-import {
-  parseHeader,
-  parseFooter,
-  parseHeaderReferences,
-  parseFooterReferences,
-} from './headerFooterParser';
-import { parseFootnotes, parseEndnotes, type FootnoteMap, type EndnoteMap } from './footnoteParser';
+import { parseHeader, parseFooter } from './headerFooterParser';
+import { parseFootnotes, parseEndnotes } from './footnoteParser';
 import { loadFonts } from '../utils/fontLoader';
-import { extractFontsFromPackage } from '../utils/fontExtractor';
 import { getGoogleFontsToLoad } from '../utils/fontResolver';
-import { parseSectionProperties } from './sectionParser';
-import { findChild } from './xmlParser';
-import { parseXml, type XmlElement } from './xmlParser';
 
 // ============================================================================
 // PROGRESS CALLBACK
@@ -114,9 +104,7 @@ export async function parseDocx(
     // STAGE 2: Parse relationships (10-15%)
     // ========================================================================
     onProgress('Parsing relationships...', 10);
-    const rels = raw.documentRels
-      ? parseRelationships(raw.documentRels)
-      : new Map();
+    const rels = raw.documentRels ? parseRelationships(raw.documentRels) : new Map();
     onProgress('Parsed relationships', 15);
 
     // ========================================================================
@@ -160,14 +148,7 @@ export async function parseDocx(
     let documentBody: DocumentBody = { content: [] };
 
     if (raw.documentXml) {
-      documentBody = parseDocumentBody(
-        raw.documentXml,
-        styles,
-        theme,
-        numbering,
-        rels,
-        media
-      );
+      documentBody = parseDocumentBody(raw.documentXml, styles, theme, numbering, rels, media);
     } else {
       warnings.push('No document.xml found in DOCX');
     }
@@ -270,7 +251,6 @@ export async function parseDocx(
 
     onProgress('Complete', 100);
     return document;
-
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to parse DOCX: ${message}`);
@@ -284,10 +264,7 @@ export async function parseDocx(
 /**
  * Build media file map from raw content and relationships
  */
-function buildMediaMap(
-  raw: RawDocxContent,
-  rels: RelationshipMap
-): Map<string, MediaFile> {
+function buildMediaMap(raw: RawDocxContent, _rels: RelationshipMap): Map<string, MediaFile> {
   const media = new Map<string, MediaFile>();
 
   // Process each media file
@@ -366,15 +343,7 @@ function parseHeadersAndFooters(
       const footerXml = raw.footers.get(filename);
 
       if (footerXml) {
-        const footer = parseFooter(
-          footerXml,
-          'default',
-          styles,
-          theme,
-          numbering,
-          rels,
-          media
-        );
+        const footer = parseFooter(footerXml, 'default', styles, theme, numbering, rels, media);
         footers.set(rId, footer);
       }
     }
@@ -394,23 +363,9 @@ function parseNotesContent(
   rels: RelationshipMap,
   media: Map<string, MediaFile>
 ): { footnotes: Footnote[]; endnotes: Endnote[] } {
-  const footnoteMap = parseFootnotes(
-    raw.footnotesXml,
-    styles,
-    theme,
-    numbering,
-    rels,
-    media
-  );
+  const footnoteMap = parseFootnotes(raw.footnotesXml, styles, theme, numbering, rels, media);
 
-  const endnoteMap = parseEndnotes(
-    raw.endnotesXml,
-    styles,
-    theme,
-    numbering,
-    rels,
-    media
-  );
+  const endnoteMap = parseEndnotes(raw.endnotesXml, styles, theme, numbering, rels, media);
 
   return {
     footnotes: footnoteMap.getNormalFootnotes(),
@@ -424,7 +379,7 @@ function parseNotesContent(
 async function loadDocumentFonts(
   theme: Theme | null,
   styleDefinitions: StyleDefinitions | undefined,
-  documentBody: DocumentBody
+  _documentBody: DocumentBody
 ): Promise<void> {
   const docxFonts: string[] = [];
 
@@ -518,9 +473,7 @@ export async function getDocxSummary(buffer: ArrayBuffer): Promise<{
 }> {
   const raw = await unzipDocx(buffer);
   const variables = raw.documentXml
-    ? extractAllTemplateVariables(
-        parseDocumentBody(raw.documentXml).content
-      )
+    ? extractAllTemplateVariables(parseDocumentBody(raw.documentXml).content)
     : [];
 
   return {

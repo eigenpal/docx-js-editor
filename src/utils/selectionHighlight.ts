@@ -112,9 +112,7 @@ export const SELECTION_CSS_VARS = {
  * Uses getClientRects() to get accurate rectangles even when
  * selection spans multiple inline elements.
  */
-export function getSelectionRects(
-  containerElement?: HTMLElement | null
-): HighlightRect[] {
+export function getSelectionRects(containerElement?: HTMLElement | null): HighlightRect[] {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
     return [];
@@ -166,10 +164,7 @@ export function getSelectionRects(
  * This reduces the number of highlight elements needed and creates
  * a cleaner visual appearance.
  */
-export function mergeAdjacentRects(
-  rects: HighlightRect[],
-  tolerance: number = 2
-): HighlightRect[] {
+export function mergeAdjacentRects(rects: HighlightRect[], tolerance: number = 2): HighlightRect[] {
   if (rects.length <= 1) {
     return rects;
   }
@@ -212,9 +207,7 @@ export function mergeAdjacentRects(
 /**
  * Get selection rectangles with merging applied
  */
-export function getMergedSelectionRects(
-  containerElement?: HTMLElement | null
-): HighlightRect[] {
+export function getMergedSelectionRects(containerElement?: HTMLElement | null): HighlightRect[] {
   const rects = getSelectionRects(containerElement);
   return mergeAdjacentRects(rects);
 }
@@ -330,7 +323,7 @@ export function getSelectionBoundingRect(): DOMRect | null {
  * This is useful for find/replace highlighting, AI action previews, etc.
  */
 export function highlightTextRange(
-  containerElement: HTMLElement,
+  _containerElement: HTMLElement,
   startNode: Node,
   startOffset: number,
   endNode: Node,
@@ -530,8 +523,7 @@ export function removeSelectionStyles(): void {
  * Check if selection styles are injected
  */
 export function areSelectionStylesInjected(): boolean {
-  return injectedStyleElement !== null ||
-    document.getElementById('docx-selection-styles') !== null;
+  return injectedStyleElement !== null || document.getElementById('docx-selection-styles') !== null;
 }
 
 // ============================================================================

@@ -18,10 +18,22 @@
  * Theme color slots from theme1.xml
  */
 export type ThemeColorSlot =
-  | 'dk1' | 'lt1' | 'dk2' | 'lt2'
-  | 'accent1' | 'accent2' | 'accent3' | 'accent4' | 'accent5' | 'accent6'
-  | 'hlink' | 'folHlink'
-  | 'background1' | 'text1' | 'background2' | 'text2';
+  | 'dk1'
+  | 'lt1'
+  | 'dk2'
+  | 'lt2'
+  | 'accent1'
+  | 'accent2'
+  | 'accent3'
+  | 'accent4'
+  | 'accent5'
+  | 'accent6'
+  | 'hlink'
+  | 'folHlink'
+  | 'background1'
+  | 'text1'
+  | 'background2'
+  | 'text2';
 
 /**
  * Color value - can be direct RGB, theme reference, or auto
@@ -44,11 +56,29 @@ export interface ColorValue {
  */
 export interface BorderSpec {
   /** Border style */
-  style: 'none' | 'single' | 'double' | 'dotted' | 'dashed' | 'thick' | 'triple'
-    | 'thinThickSmallGap' | 'thickThinSmallGap' | 'thinThickMediumGap'
-    | 'thickThinMediumGap' | 'thinThickLargeGap' | 'thickThinLargeGap'
-    | 'wave' | 'doubleWave' | 'dashSmallGap' | 'dashDotStroked' | 'threeDEmboss'
-    | 'threeDEngrave' | 'outset' | 'inset' | 'nil';
+  style:
+    | 'none'
+    | 'single'
+    | 'double'
+    | 'dotted'
+    | 'dashed'
+    | 'thick'
+    | 'triple'
+    | 'thinThickSmallGap'
+    | 'thickThinSmallGap'
+    | 'thinThickMediumGap'
+    | 'thickThinMediumGap'
+    | 'thinThickLargeGap'
+    | 'thickThinLargeGap'
+    | 'wave'
+    | 'doubleWave'
+    | 'dashSmallGap'
+    | 'dashDotStroked'
+    | 'threeDEmboss'
+    | 'threeDEngrave'
+    | 'outset'
+    | 'inset'
+    | 'nil';
   /** Color of the border */
   color?: ColorValue;
   /** Width in eighths of a point (1/8 pt) */
@@ -70,13 +100,45 @@ export interface ShadingProperties {
   /** Background fill color */
   fill?: ColorValue;
   /** Shading pattern type */
-  pattern?: 'clear' | 'solid' | 'horzStripe' | 'vertStripe' | 'reverseDiagStripe'
-    | 'diagStripe' | 'horzCross' | 'diagCross' | 'thinHorzStripe' | 'thinVertStripe'
-    | 'thinReverseDiagStripe' | 'thinDiagStripe' | 'thinHorzCross' | 'thinDiagCross'
-    | 'pct5' | 'pct10' | 'pct12' | 'pct15' | 'pct20' | 'pct25' | 'pct30'
-    | 'pct35' | 'pct37' | 'pct40' | 'pct45' | 'pct50' | 'pct55' | 'pct60'
-    | 'pct62' | 'pct65' | 'pct70' | 'pct75' | 'pct80' | 'pct85' | 'pct87'
-    | 'pct90' | 'pct95' | 'nil';
+  pattern?:
+    | 'clear'
+    | 'solid'
+    | 'horzStripe'
+    | 'vertStripe'
+    | 'reverseDiagStripe'
+    | 'diagStripe'
+    | 'horzCross'
+    | 'diagCross'
+    | 'thinHorzStripe'
+    | 'thinVertStripe'
+    | 'thinReverseDiagStripe'
+    | 'thinDiagStripe'
+    | 'thinHorzCross'
+    | 'thinDiagCross'
+    | 'pct5'
+    | 'pct10'
+    | 'pct12'
+    | 'pct15'
+    | 'pct20'
+    | 'pct25'
+    | 'pct30'
+    | 'pct35'
+    | 'pct37'
+    | 'pct40'
+    | 'pct45'
+    | 'pct50'
+    | 'pct55'
+    | 'pct60'
+    | 'pct62'
+    | 'pct65'
+    | 'pct70'
+    | 'pct75'
+    | 'pct80'
+    | 'pct85'
+    | 'pct87'
+    | 'pct90'
+    | 'pct95'
+    | 'nil';
 }
 
 // ============================================================================
@@ -87,17 +149,36 @@ export interface ShadingProperties {
  * Underline style options
  */
 export type UnderlineStyle =
-  | 'none' | 'single' | 'words' | 'double' | 'thick' | 'dotted'
-  | 'dottedHeavy' | 'dash' | 'dashedHeavy' | 'dashLong' | 'dashLongHeavy'
-  | 'dotDash' | 'dashDotHeavy' | 'dotDotDash' | 'dashDotDotHeavy'
-  | 'wave' | 'wavyHeavy' | 'wavyDouble';
+  | 'none'
+  | 'single'
+  | 'words'
+  | 'double'
+  | 'thick'
+  | 'dotted'
+  | 'dottedHeavy'
+  | 'dash'
+  | 'dashedHeavy'
+  | 'dashLong'
+  | 'dashLongHeavy'
+  | 'dotDash'
+  | 'dashDotHeavy'
+  | 'dotDotDash'
+  | 'dashDotDotHeavy'
+  | 'wave'
+  | 'wavyHeavy'
+  | 'wavyDouble';
 
 /**
  * Text effect animations
  */
 export type TextEffect =
-  | 'none' | 'blinkBackground' | 'lights' | 'antsBlack' | 'antsRed'
-  | 'shimmer' | 'sparkle';
+  | 'none'
+  | 'blinkBackground'
+  | 'lights'
+  | 'antsBlack'
+  | 'antsRed'
+  | 'shimmer'
+  | 'sparkle';
 
 /**
  * Emphasis mark type
@@ -147,9 +228,24 @@ export interface TextFormatting {
   /** Text color (w:color) */
   color?: ColorValue;
   /** Highlight/background color (w:highlight) */
-  highlight?: 'black' | 'blue' | 'cyan' | 'darkBlue' | 'darkCyan' | 'darkGray'
-    | 'darkGreen' | 'darkMagenta' | 'darkRed' | 'darkYellow' | 'green' | 'lightGray'
-    | 'magenta' | 'none' | 'red' | 'white' | 'yellow';
+  highlight?:
+    | 'black'
+    | 'blue'
+    | 'cyan'
+    | 'darkBlue'
+    | 'darkCyan'
+    | 'darkGray'
+    | 'darkGreen'
+    | 'darkMagenta'
+    | 'darkRed'
+    | 'darkYellow'
+    | 'green'
+    | 'lightGray'
+    | 'magenta'
+    | 'none'
+    | 'red'
+    | 'white'
+    | 'yellow';
   /** Character shading (w:shd) */
   shading?: ShadingProperties;
 
@@ -165,8 +261,15 @@ export interface TextFormatting {
     eastAsia?: string;
     cs?: string;
     /** Theme font reference */
-    asciiTheme?: 'majorAscii' | 'majorHAnsi' | 'majorEastAsia' | 'majorBidi'
-      | 'minorAscii' | 'minorHAnsi' | 'minorEastAsia' | 'minorBidi';
+    asciiTheme?:
+      | 'majorAscii'
+      | 'majorHAnsi'
+      | 'majorEastAsia'
+      | 'majorBidi'
+      | 'minorAscii'
+      | 'minorHAnsi'
+      | 'minorEastAsia'
+      | 'minorBidi';
     hAnsiTheme?: string;
     eastAsiaTheme?: string;
     csTheme?: string;
@@ -241,7 +344,16 @@ export type LineSpacingRule = 'auto' | 'exact' | 'atLeast';
 /**
  * Paragraph alignment/justification
  */
-export type ParagraphAlignment = 'left' | 'center' | 'right' | 'both' | 'distribute' | 'mediumKashida' | 'highKashida' | 'lowKashida' | 'thaiDistribute';
+export type ParagraphAlignment =
+  | 'left'
+  | 'center'
+  | 'right'
+  | 'both'
+  | 'distribute'
+  | 'mediumKashida'
+  | 'highKashida'
+  | 'lowKashida'
+  | 'thaiDistribute';
 
 /**
  * Complete paragraph formatting properties (w:pPr)
@@ -544,18 +656,55 @@ export interface BookmarkEnd {
  * Known field types
  */
 export type FieldType =
-  | 'PAGE' | 'NUMPAGES' | 'NUMWORDS' | 'NUMCHARS'
-  | 'DATE' | 'TIME' | 'CREATEDATE' | 'SAVEDATE' | 'PRINTDATE'
-  | 'AUTHOR' | 'TITLE' | 'SUBJECT' | 'KEYWORDS' | 'COMMENTS'
-  | 'FILENAME' | 'FILESIZE' | 'TEMPLATE'
-  | 'DOCPROPERTY' | 'DOCVARIABLE'
-  | 'REF' | 'PAGEREF' | 'NOTEREF' | 'HYPERLINK'
-  | 'TOC' | 'TOA' | 'INDEX'
-  | 'SEQ' | 'STYLEREF' | 'AUTONUM' | 'AUTONUMLGL' | 'AUTONUMOUT'
-  | 'IF' | 'MERGEFIELD' | 'NEXT' | 'NEXTIF'
-  | 'ASK' | 'SET' | 'QUOTE' | 'INCLUDETEXT' | 'INCLUDEPICTURE'
-  | 'SYMBOL' | 'ADVANCE' | 'EDITTIME' | 'REVNUM'
-  | 'SECTION' | 'SECTIONPAGES' | 'USERADDRESS' | 'USERNAME' | 'USERINITIALS'
+  | 'PAGE'
+  | 'NUMPAGES'
+  | 'NUMWORDS'
+  | 'NUMCHARS'
+  | 'DATE'
+  | 'TIME'
+  | 'CREATEDATE'
+  | 'SAVEDATE'
+  | 'PRINTDATE'
+  | 'AUTHOR'
+  | 'TITLE'
+  | 'SUBJECT'
+  | 'KEYWORDS'
+  | 'COMMENTS'
+  | 'FILENAME'
+  | 'FILESIZE'
+  | 'TEMPLATE'
+  | 'DOCPROPERTY'
+  | 'DOCVARIABLE'
+  | 'REF'
+  | 'PAGEREF'
+  | 'NOTEREF'
+  | 'HYPERLINK'
+  | 'TOC'
+  | 'TOA'
+  | 'INDEX'
+  | 'SEQ'
+  | 'STYLEREF'
+  | 'AUTONUM'
+  | 'AUTONUMLGL'
+  | 'AUTONUMOUT'
+  | 'IF'
+  | 'MERGEFIELD'
+  | 'NEXT'
+  | 'NEXTIF'
+  | 'ASK'
+  | 'SET'
+  | 'QUOTE'
+  | 'INCLUDETEXT'
+  | 'INCLUDEPICTURE'
+  | 'SYMBOL'
+  | 'ADVANCE'
+  | 'EDITTIME'
+  | 'REVNUM'
+  | 'SECTION'
+  | 'SECTIONPAGES'
+  | 'USERADDRESS'
+  | 'USERNAME'
+  | 'USERINITIALS'
   | 'UNKNOWN';
 
 /**
@@ -630,13 +779,29 @@ export interface ImageWrap {
 export interface ImagePosition {
   /** Horizontal positioning */
   horizontal: {
-    relativeTo: 'character' | 'column' | 'insideMargin' | 'leftMargin' | 'margin' | 'outsideMargin' | 'page' | 'rightMargin';
+    relativeTo:
+      | 'character'
+      | 'column'
+      | 'insideMargin'
+      | 'leftMargin'
+      | 'margin'
+      | 'outsideMargin'
+      | 'page'
+      | 'rightMargin';
     alignment?: 'left' | 'right' | 'center' | 'inside' | 'outside';
     posOffset?: number;
   };
   /** Vertical positioning */
   vertical: {
-    relativeTo: 'insideMargin' | 'line' | 'margin' | 'outsideMargin' | 'page' | 'paragraph' | 'topMargin' | 'bottomMargin';
+    relativeTo:
+      | 'insideMargin'
+      | 'line'
+      | 'margin'
+      | 'outsideMargin'
+      | 'page'
+      | 'paragraph'
+      | 'topMargin'
+      | 'bottomMargin';
     alignment?: 'top' | 'bottom' | 'center' | 'inside' | 'outside';
     posOffset?: number;
   };
@@ -714,53 +879,178 @@ export interface Image {
  */
 export type ShapeType =
   // Basic shapes
-  | 'rect' | 'roundRect' | 'ellipse' | 'triangle' | 'rtTriangle'
-  | 'parallelogram' | 'trapezoid' | 'pentagon' | 'hexagon' | 'heptagon' | 'octagon'
-  | 'decagon' | 'dodecagon' | 'star4' | 'star5' | 'star6' | 'star7' | 'star8'
-  | 'star10' | 'star12' | 'star16' | 'star24' | 'star32'
+  | 'rect'
+  | 'roundRect'
+  | 'ellipse'
+  | 'triangle'
+  | 'rtTriangle'
+  | 'parallelogram'
+  | 'trapezoid'
+  | 'pentagon'
+  | 'hexagon'
+  | 'heptagon'
+  | 'octagon'
+  | 'decagon'
+  | 'dodecagon'
+  | 'star4'
+  | 'star5'
+  | 'star6'
+  | 'star7'
+  | 'star8'
+  | 'star10'
+  | 'star12'
+  | 'star16'
+  | 'star24'
+  | 'star32'
   // Lines and connectors
-  | 'line' | 'straightConnector1' | 'bentConnector2' | 'bentConnector3'
-  | 'bentConnector4' | 'bentConnector5' | 'curvedConnector2' | 'curvedConnector3'
-  | 'curvedConnector4' | 'curvedConnector5'
+  | 'line'
+  | 'straightConnector1'
+  | 'bentConnector2'
+  | 'bentConnector3'
+  | 'bentConnector4'
+  | 'bentConnector5'
+  | 'curvedConnector2'
+  | 'curvedConnector3'
+  | 'curvedConnector4'
+  | 'curvedConnector5'
   // Arrows
-  | 'rightArrow' | 'leftArrow' | 'upArrow' | 'downArrow'
-  | 'leftRightArrow' | 'upDownArrow' | 'quadArrow' | 'leftRightUpArrow'
-  | 'bentArrow' | 'uturnArrow' | 'leftUpArrow' | 'bentUpArrow'
-  | 'curvedRightArrow' | 'curvedLeftArrow' | 'curvedUpArrow' | 'curvedDownArrow'
-  | 'stripedRightArrow' | 'notchedRightArrow' | 'homePlate' | 'chevron'
-  | 'rightArrowCallout' | 'downArrowCallout' | 'leftArrowCallout' | 'upArrowCallout'
-  | 'leftRightArrowCallout' | 'quadArrowCallout' | 'circularArrow'
+  | 'rightArrow'
+  | 'leftArrow'
+  | 'upArrow'
+  | 'downArrow'
+  | 'leftRightArrow'
+  | 'upDownArrow'
+  | 'quadArrow'
+  | 'leftRightUpArrow'
+  | 'bentArrow'
+  | 'uturnArrow'
+  | 'leftUpArrow'
+  | 'bentUpArrow'
+  | 'curvedRightArrow'
+  | 'curvedLeftArrow'
+  | 'curvedUpArrow'
+  | 'curvedDownArrow'
+  | 'stripedRightArrow'
+  | 'notchedRightArrow'
+  | 'homePlate'
+  | 'chevron'
+  | 'rightArrowCallout'
+  | 'downArrowCallout'
+  | 'leftArrowCallout'
+  | 'upArrowCallout'
+  | 'leftRightArrowCallout'
+  | 'quadArrowCallout'
+  | 'circularArrow'
   // Flowchart
-  | 'flowChartProcess' | 'flowChartAlternateProcess' | 'flowChartDecision'
-  | 'flowChartInputOutput' | 'flowChartPredefinedProcess' | 'flowChartInternalStorage'
-  | 'flowChartDocument' | 'flowChartMultidocument' | 'flowChartTerminator'
-  | 'flowChartPreparation' | 'flowChartManualInput' | 'flowChartManualOperation'
-  | 'flowChartConnector' | 'flowChartOffpageConnector' | 'flowChartPunchedCard'
-  | 'flowChartPunchedTape' | 'flowChartSummingJunction' | 'flowChartOr'
-  | 'flowChartCollate' | 'flowChartSort' | 'flowChartExtract' | 'flowChartMerge'
-  | 'flowChartOnlineStorage' | 'flowChartDelay' | 'flowChartMagneticTape'
-  | 'flowChartMagneticDisk' | 'flowChartMagneticDrum' | 'flowChartDisplay'
+  | 'flowChartProcess'
+  | 'flowChartAlternateProcess'
+  | 'flowChartDecision'
+  | 'flowChartInputOutput'
+  | 'flowChartPredefinedProcess'
+  | 'flowChartInternalStorage'
+  | 'flowChartDocument'
+  | 'flowChartMultidocument'
+  | 'flowChartTerminator'
+  | 'flowChartPreparation'
+  | 'flowChartManualInput'
+  | 'flowChartManualOperation'
+  | 'flowChartConnector'
+  | 'flowChartOffpageConnector'
+  | 'flowChartPunchedCard'
+  | 'flowChartPunchedTape'
+  | 'flowChartSummingJunction'
+  | 'flowChartOr'
+  | 'flowChartCollate'
+  | 'flowChartSort'
+  | 'flowChartExtract'
+  | 'flowChartMerge'
+  | 'flowChartOnlineStorage'
+  | 'flowChartDelay'
+  | 'flowChartMagneticTape'
+  | 'flowChartMagneticDisk'
+  | 'flowChartMagneticDrum'
+  | 'flowChartDisplay'
   // Callouts
-  | 'wedgeRectCallout' | 'wedgeRoundRectCallout' | 'wedgeEllipseCallout'
-  | 'cloudCallout' | 'borderCallout1' | 'borderCallout2' | 'borderCallout3'
-  | 'accentCallout1' | 'accentCallout2' | 'accentCallout3'
-  | 'callout1' | 'callout2' | 'callout3' | 'accentBorderCallout1'
-  | 'accentBorderCallout2' | 'accentBorderCallout3'
+  | 'wedgeRectCallout'
+  | 'wedgeRoundRectCallout'
+  | 'wedgeEllipseCallout'
+  | 'cloudCallout'
+  | 'borderCallout1'
+  | 'borderCallout2'
+  | 'borderCallout3'
+  | 'accentCallout1'
+  | 'accentCallout2'
+  | 'accentCallout3'
+  | 'callout1'
+  | 'callout2'
+  | 'callout3'
+  | 'accentBorderCallout1'
+  | 'accentBorderCallout2'
+  | 'accentBorderCallout3'
   // Other
-  | 'actionButtonBlank' | 'actionButtonHome' | 'actionButtonHelp'
-  | 'actionButtonInformation' | 'actionButtonBackPrevious' | 'actionButtonForwardNext'
-  | 'actionButtonBeginning' | 'actionButtonEnd' | 'actionButtonReturn'
-  | 'actionButtonDocument' | 'actionButtonSound' | 'actionButtonMovie'
-  | 'irregularSeal1' | 'irregularSeal2'
-  | 'frame' | 'halfFrame' | 'corner' | 'diagStripe' | 'chord' | 'arc' | 'bracketPair'
-  | 'bracePair' | 'leftBracket' | 'rightBracket' | 'leftBrace' | 'rightBrace'
-  | 'can' | 'cube' | 'bevel' | 'donut' | 'noSmoking' | 'blockArc'
-  | 'foldedCorner' | 'smileyFace' | 'heart' | 'lightningBolt' | 'sun' | 'moon'
-  | 'cloud' | 'snip1Rect' | 'snip2SameRect' | 'snip2DiagRect' | 'snipRoundRect'
-  | 'round1Rect' | 'round2SameRect' | 'round2DiagRect' | 'plaque' | 'teardrop'
-  | 'mathPlus' | 'mathMinus' | 'mathMultiply' | 'mathDivide' | 'mathEqual' | 'mathNotEqual'
-  | 'gear6' | 'gear9' | 'funnel' | 'pieWedge' | 'pie' | 'leftCircularArrow'
-  | 'leftRightCircularArrow' | 'swooshArrow' | 'textBox';
+  | 'actionButtonBlank'
+  | 'actionButtonHome'
+  | 'actionButtonHelp'
+  | 'actionButtonInformation'
+  | 'actionButtonBackPrevious'
+  | 'actionButtonForwardNext'
+  | 'actionButtonBeginning'
+  | 'actionButtonEnd'
+  | 'actionButtonReturn'
+  | 'actionButtonDocument'
+  | 'actionButtonSound'
+  | 'actionButtonMovie'
+  | 'irregularSeal1'
+  | 'irregularSeal2'
+  | 'frame'
+  | 'halfFrame'
+  | 'corner'
+  | 'diagStripe'
+  | 'chord'
+  | 'arc'
+  | 'bracketPair'
+  | 'bracePair'
+  | 'leftBracket'
+  | 'rightBracket'
+  | 'leftBrace'
+  | 'rightBrace'
+  | 'can'
+  | 'cube'
+  | 'bevel'
+  | 'donut'
+  | 'noSmoking'
+  | 'blockArc'
+  | 'foldedCorner'
+  | 'smileyFace'
+  | 'heart'
+  | 'lightningBolt'
+  | 'sun'
+  | 'moon'
+  | 'cloud'
+  | 'snip1Rect'
+  | 'snip2SameRect'
+  | 'snip2DiagRect'
+  | 'snipRoundRect'
+  | 'round1Rect'
+  | 'round2SameRect'
+  | 'round2DiagRect'
+  | 'plaque'
+  | 'teardrop'
+  | 'mathPlus'
+  | 'mathMinus'
+  | 'mathMultiply'
+  | 'mathDivide'
+  | 'mathEqual'
+  | 'mathNotEqual'
+  | 'gear6'
+  | 'gear9'
+  | 'funnel'
+  | 'pieWedge'
+  | 'pie'
+  | 'leftCircularArrow'
+  | 'leftRightCircularArrow'
+  | 'swooshArrow'
+  | 'textBox';
 
 /**
  * Shape fill type
@@ -789,8 +1079,18 @@ export interface ShapeOutline {
   /** Line color */
   color?: ColorValue;
   /** Line style */
-  style?: 'solid' | 'dot' | 'dash' | 'lgDash' | 'dashDot' | 'lgDashDot'
-    | 'lgDashDotDot' | 'sysDot' | 'sysDash' | 'sysDashDot' | 'sysDashDotDot';
+  style?:
+    | 'solid'
+    | 'dot'
+    | 'dash'
+    | 'lgDash'
+    | 'dashDot'
+    | 'lgDashDot'
+    | 'lgDashDotDot'
+    | 'sysDot'
+    | 'sysDash'
+    | 'sysDashDot'
+    | 'sysDashDotDot';
   /** Line cap */
   cap?: 'flat' | 'round' | 'square';
   /** Line join */
@@ -1118,22 +1418,66 @@ export interface Table {
  * Number format type
  */
 export type NumberFormat =
-  | 'decimal' | 'upperRoman' | 'lowerRoman' | 'upperLetter' | 'lowerLetter'
-  | 'ordinal' | 'cardinalText' | 'ordinalText' | 'hex' | 'chicago'
-  | 'ideographDigital' | 'japaneseCounting' | 'aiueo' | 'iroha'
-  | 'decimalFullWidth' | 'decimalHalfWidth' | 'japaneseLegal' | 'japaneseDigitalTenThousand'
-  | 'decimalEnclosedCircle' | 'decimalFullWidth2' | 'aiueoFullWidth' | 'irohaFullWidth'
-  | 'decimalZero' | 'bullet' | 'ganada' | 'chosung'
-  | 'decimalEnclosedFullstop' | 'decimalEnclosedParen' | 'decimalEnclosedCircleChinese'
-  | 'ideographEnclosedCircle' | 'ideographTraditional' | 'ideographZodiac'
-  | 'ideographZodiacTraditional' | 'taiwaneseCounting' | 'ideographLegalTraditional'
-  | 'taiwaneseCountingThousand' | 'taiwaneseDigital' | 'chineseCounting'
-  | 'chineseLegalSimplified' | 'chineseCountingThousand' | 'koreanDigital'
-  | 'koreanCounting' | 'koreanLegal' | 'koreanDigital2' | 'vietnameseCounting'
-  | 'russianLower' | 'russianUpper' | 'none' | 'numberInDash'
-  | 'hebrew1' | 'hebrew2' | 'arabicAlpha' | 'arabicAbjad' | 'hindiVowels'
-  | 'hindiConsonants' | 'hindiNumbers' | 'hindiCounting' | 'thaiLetters'
-  | 'thaiNumbers' | 'thaiCounting';
+  | 'decimal'
+  | 'upperRoman'
+  | 'lowerRoman'
+  | 'upperLetter'
+  | 'lowerLetter'
+  | 'ordinal'
+  | 'cardinalText'
+  | 'ordinalText'
+  | 'hex'
+  | 'chicago'
+  | 'ideographDigital'
+  | 'japaneseCounting'
+  | 'aiueo'
+  | 'iroha'
+  | 'decimalFullWidth'
+  | 'decimalHalfWidth'
+  | 'japaneseLegal'
+  | 'japaneseDigitalTenThousand'
+  | 'decimalEnclosedCircle'
+  | 'decimalFullWidth2'
+  | 'aiueoFullWidth'
+  | 'irohaFullWidth'
+  | 'decimalZero'
+  | 'bullet'
+  | 'ganada'
+  | 'chosung'
+  | 'decimalEnclosedFullstop'
+  | 'decimalEnclosedParen'
+  | 'decimalEnclosedCircleChinese'
+  | 'ideographEnclosedCircle'
+  | 'ideographTraditional'
+  | 'ideographZodiac'
+  | 'ideographZodiacTraditional'
+  | 'taiwaneseCounting'
+  | 'ideographLegalTraditional'
+  | 'taiwaneseCountingThousand'
+  | 'taiwaneseDigital'
+  | 'chineseCounting'
+  | 'chineseLegalSimplified'
+  | 'chineseCountingThousand'
+  | 'koreanDigital'
+  | 'koreanCounting'
+  | 'koreanLegal'
+  | 'koreanDigital2'
+  | 'vietnameseCounting'
+  | 'russianLower'
+  | 'russianUpper'
+  | 'none'
+  | 'numberInDash'
+  | 'hebrew1'
+  | 'hebrew2'
+  | 'arabicAlpha'
+  | 'arabicAbjad'
+  | 'hindiVowels'
+  | 'hindiConsonants'
+  | 'hindiNumbers'
+  | 'hindiCounting'
+  | 'thaiLetters'
+  | 'thaiNumbers'
+  | 'thaiCounting';
 
 /**
  * Multi-level suffix (what follows the number)
@@ -1594,9 +1938,19 @@ export interface Style {
   tcPr?: TableCellFormatting;
   /** Conditional table style parts */
   tblStylePr?: Array<{
-    type: 'band1Horz' | 'band1Vert' | 'band2Horz' | 'band2Vert'
-      | 'firstCol' | 'firstRow' | 'lastCol' | 'lastRow'
-      | 'neCell' | 'nwCell' | 'seCell' | 'swCell';
+    type:
+      | 'band1Horz'
+      | 'band1Vert'
+      | 'band2Horz'
+      | 'band2Vert'
+      | 'firstCol'
+      | 'firstRow'
+      | 'lastCol'
+      | 'lastRow'
+      | 'neCell'
+      | 'nwCell'
+      | 'seCell'
+      | 'swCell';
     pPr?: ParagraphFormatting;
     rPr?: TextFormatting;
     tblPr?: TableFormatting;
@@ -1800,12 +2154,16 @@ export type RelationshipMap = Map<string, Relationship>;
 export interface MediaFile {
   /** File path in ZIP */
   path: string;
+  /** Original filename */
+  filename?: string;
   /** MIME type */
   mimeType: string;
   /** Binary data */
   data: ArrayBuffer;
   /** Base64 encoded data for rendering */
   base64?: string;
+  /** Data URL for direct use in src attributes */
+  dataUrl?: string;
 }
 
 // ============================================================================

@@ -10,18 +10,10 @@
  * - Soft hyphens
  */
 
-import type {
-  Paragraph,
-  Run,
-  RunContent,
-  ParagraphContent,
-  TextFormatting,
-  Theme,
-  TabStop,
-} from '../types/document';
-import { measureTextWidth, measureText, getLineHeight } from '../utils/textMeasure';
+import type { Paragraph, Run, TextFormatting, Theme, TabStop } from '../types/document';
+import { measureTextWidth, getLineHeight } from '../utils/textMeasure';
 import { twipsToPixels } from '../utils/units';
-import { getNextTabStop, calculateTabWidth, DEFAULT_TAB_INTERVAL_TWIPS } from '../docx/tabParser';
+import { getNextTabStop, DEFAULT_TAB_INTERVAL_TWIPS } from '../docx/tabParser';
 
 // ============================================================================
 // TYPES
@@ -124,7 +116,16 @@ const BREAK_AFTER_CHARS = new Set([' ', '\t', '-', '\u00AD', '\u200B']);
 const NON_BREAKING_CHARS = new Set(['\u00A0', '\u2011']);
 
 // Whitespace characters
-const WHITESPACE_CHARS = new Set([' ', '\t', '\u00A0', '\u200B', '\u2000', '\u2001', '\u2002', '\u2003']);
+const WHITESPACE_CHARS = new Set([
+  ' ',
+  '\t',
+  '\u00A0',
+  '\u200B',
+  '\u2000',
+  '\u2001',
+  '\u2002',
+  '\u2003',
+]);
 
 // ============================================================================
 // MAIN FUNCTION
@@ -137,10 +138,7 @@ const WHITESPACE_CHARS = new Set([' ', '\t', '\u00A0', '\u200B', '\u2000', '\u20
  * @param options - Line breaking options
  * @returns Array of lines
  */
-export function breakIntoLines(
-  paragraph: Paragraph,
-  options: LineBreakOptions
-): LineBreakResult {
+export function breakIntoLines(paragraph: Paragraph, options: LineBreakOptions): LineBreakResult {
   const {
     maxWidth,
     firstLineIndent = 0,
@@ -370,9 +368,10 @@ function runToFragments(
 ): LineFragment[] {
   const fragments: LineFragment[] = [];
   const formatting = { ...defaultFormatting, ...run.formatting };
+  const themeOrUndefined = theme ?? undefined;
 
   // Get measurements for this formatting
-  const lineHeight = getLineHeight(formatting, theme);
+  const lineHeight = getLineHeight(formatting, themeOrUndefined);
   const baseline = lineHeight * 0.8; // Approximate baseline
 
   for (let contentIndex = 0; contentIndex < run.content.length; contentIndex++) {
@@ -381,13 +380,7 @@ function runToFragments(
     switch (item.type) {
       case 'text':
         // Split text into word fragments
-        const textFragments = textToFragments(
-          item.text,
-          formatting,
-          runIndex,
-          contentIndex,
-          theme
-        );
+        const textFragments = textToFragments(item.text, formatting, runIndex, contentIndex, theme);
         fragments.push(...textFragments);
         break;
 
@@ -421,7 +414,7 @@ function runToFragments(
         break;
 
       case 'symbol':
-        const symbolMeasure = measureTextWidth(item.char || '?', formatting, theme);
+        const symbolMeasure = measureTextWidth(item.char || '?', formatting, themeOrUndefined);
         fragments.push({
           type: 'symbol',
           content: item.char || '?',
@@ -468,7 +461,7 @@ function runToFragments(
         break;
 
       case 'noBreakHyphen':
-        const hyphenMeasure = measureTextWidth('-', formatting, theme);
+        const hyphenMeasure = measureTextWidth('-', formatting, themeOrUndefined);
         fragments.push({
           type: 'text',
           content: '-',
@@ -493,7 +486,11 @@ function runToFragments(
       case 'endnoteRef':
         // Note references are small numbers
         const refText = `${item.id}`;
-        const refMeasure = measureTextWidth(refText, { ...formatting, superscript: true }, theme);
+        const refMeasure = measureTextWidth(
+          refText,
+          { ...formatting, vertAlign: 'superscript' },
+          themeOrUndefined
+        );
         fragments.push({
           type: 'field',
           content: refText,
@@ -502,7 +499,7 @@ function runToFragments(
           baseline: baseline * 0.6,
           runIndex,
           contentIndex,
-          formatting: { ...formatting, superscript: true },
+          formatting: { ...formatting, vertAlign: 'superscript' as const },
           canBreakAfter: true,
         });
         break;
@@ -523,7 +520,8 @@ function textToFragments(
   theme: Theme | null | undefined
 ): LineFragment[] {
   const fragments: LineFragment[] = [];
-  const lineHeight = getLineHeight(formatting, theme);
+  const themeOrUndefined = theme ?? undefined;
+  const lineHeight = getLineHeight(formatting, themeOrUndefined);
   const baseline = lineHeight * 0.8;
 
   // Split into words and spaces
@@ -534,7 +532,7 @@ function textToFragments(
     const isSpace = WHITESPACE_CHARS.has(part) || part === ' ';
     const isNonBreaking = part === '\u00A0' || part === '\u2011';
 
-    const width = measureTextWidth(part, formatting, theme);
+    const width = measureTextWidth(part, formatting, themeOrUndefined);
 
     fragments.push({
       type: isSpace ? 'space' : 'text',
@@ -547,7 +545,8 @@ function textToFragments(
       charOffset,
       charCount: part.length,
       formatting,
-      canBreakAfter: !isNonBreaking && (isSpace || BREAK_AFTER_CHARS.has(part.charAt(part.length - 1))),
+      canBreakAfter:
+        !isNonBreaking && (isSpace || BREAK_AFTER_CHARS.has(part.charAt(part.length - 1))),
       nonBreaking: isNonBreaking,
     });
 
@@ -602,6 +601,7 @@ function breakTextFragment(
   const text = fragment.content;
   const formatting = fragment.formatting;
   const parts: LineFragment[] = [];
+  const themeOrUndefined = theme ?? undefined;
 
   // Find break points in the text
   let currentPart = '';
@@ -610,7 +610,7 @@ function breakTextFragment(
 
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
-    const charWidth = measureTextWidth(char, formatting, theme);
+    const charWidth = measureTextWidth(char, formatting, themeOrUndefined);
     const maxWidth = isFirstPart ? remainingWidth : lineWidth;
 
     // Check if adding this character would overflow
@@ -623,12 +623,12 @@ function breakTextFragment(
         const part1 = currentPart.substring(0, breakPoint);
         const part2 = currentPart.substring(breakPoint);
 
-        parts.push(createTextFragment(part1, fragment, theme));
+        parts.push(createTextFragment(part1, fragment, themeOrUndefined));
         currentPart = part2 + char;
-        currentWidth = measureTextWidth(currentPart, formatting, theme);
+        currentWidth = measureTextWidth(currentPart, formatting, themeOrUndefined);
       } else {
         // No good break point, break between characters
-        parts.push(createTextFragment(currentPart, fragment, theme));
+        parts.push(createTextFragment(currentPart, fragment, themeOrUndefined));
         currentPart = char;
         currentWidth = charWidth;
       }
@@ -641,7 +641,7 @@ function breakTextFragment(
 
   // Add remaining text
   if (currentPart) {
-    parts.push(createTextFragment(currentPart, fragment, theme));
+    parts.push(createTextFragment(currentPart, fragment, themeOrUndefined));
   }
 
   return parts;
@@ -667,7 +667,7 @@ function findBreakPoint(text: string): number {
 function createTextFragment(
   text: string,
   original: LineFragment,
-  theme: Theme | null | undefined
+  theme: Theme | undefined
 ): LineFragment {
   return {
     ...original,
@@ -684,7 +684,7 @@ function calculateTabWidthForPosition(
   positionTwips: number,
   tabStops: TabStop[],
   maxWidthPx: number,
-  indent: number
+  _indent: number
 ): number {
   const maxWidthTwips = maxWidthPx * (1440 / 96);
   const tabInfo = getNextTabStop(positionTwips, tabStops, maxWidthTwips);
@@ -799,7 +799,6 @@ export function getXPositionForOffset(line: Line, offset: number): number {
       if (fragment.type === 'text' || fragment.type === 'space') {
         // Calculate position within the text
         const charOffset = offset - currentOffset;
-        const textBefore = fragment.content.substring(0, charOffset);
         // Note: This is approximate without actual measurement
         x += (fragment.width / fragmentLength) * charOffset;
       }

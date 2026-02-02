@@ -7,7 +7,7 @@
  * - Shows current size of selection
  */
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { CSSProperties, ChangeEvent, KeyboardEvent } from 'react';
 
 // ============================================================================
@@ -47,9 +47,7 @@ export interface FontSizePickerProps {
 /**
  * Common font sizes in points
  */
-const DEFAULT_SIZES: number[] = [
-  8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36, 48, 72,
-];
+const DEFAULT_SIZES: number[] = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36, 48, 72];
 
 /**
  * Size constraints
@@ -232,10 +230,7 @@ export function FontSizePicker({
    */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -322,9 +317,7 @@ export function FontSizePicker({
             const idx = currentSizeIndex >= 0 ? currentSizeIndex : 0;
             setFocusedIndex(idx);
           } else {
-            setFocusedIndex((prev) =>
-              prev < sizes.length - 1 ? prev + 1 : prev
-            );
+            setFocusedIndex((prev) => (prev < sizes.length - 1 ? prev + 1 : prev));
           }
           break;
 
@@ -350,7 +343,17 @@ export function FontSizePicker({
           break;
       }
     },
-    [disabled, isOpen, focusedIndex, sizes, onChange, inputValue, applySize, value, currentSizeIndex]
+    [
+      disabled,
+      isOpen,
+      focusedIndex,
+      sizes,
+      onChange,
+      inputValue,
+      applySize,
+      value,
+      currentSizeIndex,
+    ]
   );
 
   /**
@@ -394,16 +397,28 @@ export function FontSizePicker({
 
   // Determine styles
   const inputStyle: CSSProperties = disabled
-    ? { ...PICKER_INPUT_DISABLED_STYLE, width: typeof width === 'number' ? width - 20 : 'calc(' + width + ' - 20px)', borderRadius: '4px 0 0 4px' }
+    ? {
+        ...PICKER_INPUT_DISABLED_STYLE,
+        width: typeof width === 'number' ? width - 20 : 'calc(' + width + ' - 20px)',
+        borderRadius: '4px 0 0 4px',
+      }
     : isInputFocused
-    ? { ...PICKER_INPUT_FOCUS_STYLE, width: typeof width === 'number' ? width - 20 : 'calc(' + width + ' - 20px)', borderRadius: '4px 0 0 4px' }
-    : { ...PICKER_INPUT_STYLE, width: typeof width === 'number' ? width - 20 : 'calc(' + width + ' - 20px)', borderRadius: '4px 0 0 4px' };
+      ? {
+          ...PICKER_INPUT_FOCUS_STYLE,
+          width: typeof width === 'number' ? width - 20 : 'calc(' + width + ' - 20px)',
+          borderRadius: '4px 0 0 4px',
+        }
+      : {
+          ...PICKER_INPUT_STYLE,
+          width: typeof width === 'number' ? width - 20 : 'calc(' + width + ' - 20px)',
+          borderRadius: '4px 0 0 4px',
+        };
 
   const buttonStyle: CSSProperties = disabled
     ? BUTTON_WRAPPER_DISABLED_STYLE
     : isButtonHovered
-    ? BUTTON_WRAPPER_HOVER_STYLE
-    : BUTTON_WRAPPER_STYLE;
+      ? BUTTON_WRAPPER_HOVER_STYLE
+      : BUTTON_WRAPPER_STYLE;
 
   return (
     <div
@@ -462,8 +477,8 @@ export function FontSizePicker({
             const itemStyle: CSSProperties = isSelected
               ? DROPDOWN_ITEM_SELECTED_STYLE
               : isFocusedItem
-              ? DROPDOWN_ITEM_HOVER_STYLE
-              : DROPDOWN_ITEM_STYLE;
+                ? DROPDOWN_ITEM_HOVER_STYLE
+                : DROPDOWN_ITEM_STYLE;
 
             return (
               <button

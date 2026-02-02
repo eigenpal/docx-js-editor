@@ -227,7 +227,7 @@ export function VariableInserter({
   compact = false,
   showSuggestions = true,
   autoClear = true,
-  variant = 'inline',
+  variant: _variant = 'inline',
 }: VariableInserterProps): React.ReactElement {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -235,14 +235,12 @@ export function VariableInserter({
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLFormElement>(null);
 
   // Filter suggestions based on input
   const suggestions = showSuggestions
     ? existingVariables.filter(
-        (v) =>
-          v.toLowerCase().includes(inputValue.toLowerCase()) &&
-          v !== inputValue
+        (v) => v.toLowerCase().includes(inputValue.toLowerCase()) && v !== inputValue
       )
     : [];
 
@@ -305,9 +303,7 @@ export function VariableInserter({
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex((prev) =>
-            prev < suggestions.length - 1 ? prev + 1 : prev
-          );
+          setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
           break;
         case 'ArrowUp':
           e.preventDefault();
@@ -358,10 +354,7 @@ export function VariableInserter({
   // Click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
       }
     };
@@ -435,16 +428,12 @@ export function VariableInserter({
                   key={suggestion}
                   style={{
                     ...STYLES.suggestionItem,
-                    ...(index === selectedIndex
-                      ? STYLES.suggestionItemSelected
-                      : {}),
+                    ...(index === selectedIndex ? STYLES.suggestionItemSelected : {}),
                   }}
                   onClick={() => handleSuggestionClick(suggestion)}
                   onMouseEnter={() => setSelectedIndex(index)}
                 >
-                  <span style={STYLES.variableTag}>
-                    {`{{${suggestion}}}`}
-                  </span>
+                  <span style={STYLES.variableTag}>{`{{${suggestion}}}`}</span>
                 </li>
               ))}
             </ul>
@@ -508,10 +497,7 @@ export function VariableButton({
   // Click outside to close
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -632,13 +618,8 @@ export function VariableContextMenuItem({
 
   return (
     <div className="docx-variable-context-menu" style={{ padding: '8px' }}>
-      <div style={{ marginBottom: '8px', fontSize: '12px', color: '#666' }}>
-        Insert Variable
-      </div>
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: 'flex', gap: '4px', alignItems: 'center' }}
-      >
+      <div style={{ marginBottom: '8px', fontSize: '12px', color: '#666' }}>Insert Variable</div>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
         <span style={{ color: '#e4b416', fontWeight: 'bold' }}>{'{'}</span>
         <input
           ref={inputRef}
@@ -713,13 +694,7 @@ export function VariableContextMenuItem({
  */
 function VariableIcon(): React.ReactElement {
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M4 3C2.5 3 2 4 2 5.5V6.5C2 7 1.5 7.5 1 7.5V8.5C1.5 8.5 2 9 2 9.5V10.5C2 12 2.5 13 4 13"
         stroke="currentColor"
@@ -734,14 +709,7 @@ function VariableIcon(): React.ReactElement {
         strokeLinecap="round"
         fill="none"
       />
-      <text
-        x="8"
-        y="11"
-        fontSize="7"
-        fontWeight="bold"
-        textAnchor="middle"
-        fill="currentColor"
-      >
+      <text x="8" y="11" fontSize="7" fontWeight="bold" textAnchor="middle" fill="currentColor">
         x
       </text>
     </svg>
@@ -753,13 +721,7 @@ function VariableIcon(): React.ReactElement {
  */
 function InsertVariableIcon(): React.ReactElement {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M3.5 2C2.4 2 2 2.7 2 3.8V4.6C2 5 1.6 5.4 1.2 5.4V6.6C1.6 6.6 2 7 2 7.4V8.2C2 9.3 2.4 10 3.5 10"
         stroke="currentColor"
@@ -774,22 +736,8 @@ function InsertVariableIcon(): React.ReactElement {
         strokeLinecap="round"
         fill="none"
       />
-      <line
-        x1="5"
-        y1="6"
-        x2="9"
-        y2="6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <line
-        x1="7"
-        y1="4"
-        x2="7"
-        y2="8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
+      <line x1="5" y1="6" x2="9" y2="6" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="7" y1="4" x2="7" y2="8" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
@@ -799,13 +747,7 @@ function InsertVariableIcon(): React.ReactElement {
  */
 function DropdownArrowIcon(): React.ReactElement {
   return (
-    <svg
-      width="8"
-      height="8"
-      viewBox="0 0 8 8"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M1 2.5L4 5.5L7 2.5" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );

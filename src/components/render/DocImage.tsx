@@ -206,7 +206,11 @@ function buildImageStyle(image: ImageType, selected: boolean): CSSProperties {
     }
 
     // Apply float for square/tight/through wrapping
-    if (image.wrap.type === 'square' || image.wrap.type === 'tight' || image.wrap.type === 'through') {
+    if (
+      image.wrap.type === 'square' ||
+      image.wrap.type === 'tight' ||
+      image.wrap.type === 'through'
+    ) {
       // Determine float direction based on wrap text setting
       if (image.wrap.wrapText === 'left') {
         style.float = 'right';
@@ -323,9 +327,7 @@ export function calculateAspectRatioDimensions(
  */
 export function needsTextWrapping(image: ImageType): boolean {
   return (
-    image.wrap.type === 'square' ||
-    image.wrap.type === 'tight' ||
-    image.wrap.type === 'through'
+    image.wrap.type === 'square' || image.wrap.type === 'tight' || image.wrap.type === 'through'
   );
 }
 

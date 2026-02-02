@@ -93,11 +93,7 @@ export function processTemplateDetailed(
   variables: Record<string, string>,
   options: ProcessTemplateOptions = {}
 ): ProcessTemplateResult {
-  const {
-    nullGetter = 'keep',
-    linebreaks = true,
-    delimiters,
-  } = options;
+  const { nullGetter = 'keep', linebreaks = true, delimiters } = options;
 
   const warnings: string[] = [];
   const replacedVariables: string[] = [];
@@ -285,10 +281,7 @@ export function validateTemplate(buffer: ArrayBuffer): {
  * @param variables - Provided variable values
  * @returns Missing variable names
  */
-export function getMissingVariables(
-  tags: string[],
-  variables: Record<string, string>
-): string[] {
+export function getMissingVariables(tags: string[], variables: Record<string, string>): string[] {
   return tags.filter(
     (tag) => !(tag in variables) || variables[tag] === undefined || variables[tag] === null
   );
@@ -302,10 +295,7 @@ export function getMissingVariables(
  * @param variables - Map of variable names to values
  * @returns Preview text
  */
-export function previewTemplate(
-  buffer: ArrayBuffer,
-  variables: Record<string, string>
-): string {
+export function previewTemplate(buffer: ArrayBuffer, variables: Record<string, string>): string {
   try {
     const zip = new PizZip(buffer);
     const doc = new Docxtemplater(zip, {

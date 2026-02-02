@@ -365,15 +365,15 @@ export function useAutoHistory<T>(
 /**
  * Hook for document history with specialized comparison
  */
-export function useDocumentHistory<T extends { package?: { body?: unknown } }>(
+export function useDocumentHistory<T extends { package?: { document?: unknown } | null } | null>(
   document: T,
   options: Omit<UseHistoryOptions<T>, 'isEqual'> = {}
 ): UseHistoryReturn<T> {
-  // Compare only the body content for detecting changes
+  // Compare only the document content for detecting changes
   const isEqual = useCallback((a: T, b: T): boolean => {
-    const bodyA = JSON.stringify(a.package?.body);
-    const bodyB = JSON.stringify(b.package?.body);
-    return bodyA === bodyB;
+    const docA = JSON.stringify(a?.package?.document);
+    const docB = JSON.stringify(b?.package?.document);
+    return docA === docB;
   }, []);
 
   return useHistory(document, { ...options, isEqual });

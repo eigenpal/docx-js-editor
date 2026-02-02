@@ -9,8 +9,8 @@
  * - Keyboard navigation support
  */
 
-import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import type { CSSProperties, ReactNode, KeyboardEvent } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import type { CSSProperties, KeyboardEvent } from 'react';
 
 // ============================================================================
 // TYPES

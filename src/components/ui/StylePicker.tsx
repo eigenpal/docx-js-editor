@@ -10,9 +10,14 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import type { Style, StyleType, Theme, TextFormatting, ParagraphFormatting } from '../../types/document';
-import { textToStyle, paragraphToStyle } from '../../utils/formatToStyle';
-import { resolveColor } from '../../utils/colorResolver';
+import type {
+  Style,
+  StyleType,
+  Theme,
+  TextFormatting,
+  ParagraphFormatting,
+} from '../../types/document';
+import { textToStyle } from '../../utils/formatToStyle';
 import { halfPointsToPixels } from '../../utils/units';
 
 // ============================================================================
@@ -297,10 +302,7 @@ function styleToOption(style: Style): StyleOption {
 /**
  * Get preview CSS for a style option
  */
-function getPreviewStyle(
-  option: StyleOption,
-  theme: Theme | null | undefined
-): CSSProperties {
+function getPreviewStyle(option: StyleOption, theme: Theme | null | undefined): CSSProperties {
   const result: CSSProperties = {};
 
   // Apply text formatting
@@ -452,10 +454,7 @@ export function StylePicker({
    */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -497,9 +496,7 @@ export function StylePicker({
             setIsOpen(true);
             setFocusedIndex(0);
           } else {
-            setFocusedIndex((prev) =>
-              prev < flatStyleList.length - 1 ? prev + 1 : prev
-            );
+            setFocusedIndex((prev) => (prev < flatStyleList.length - 1 ? prev + 1 : prev));
           }
           break;
 
@@ -548,9 +545,7 @@ export function StylePicker({
       setIsOpen((prev) => !prev);
       if (!isOpen) {
         // Reset focused index when opening
-        const currentIndex = flatStyleList.findIndex(
-          (o) => o.styleId === currentStyle?.styleId
-        );
+        const currentIndex = flatStyleList.findIndex((o) => o.styleId === currentStyle?.styleId);
         setFocusedIndex(currentIndex >= 0 ? currentIndex : 0);
       }
     }
@@ -573,15 +568,14 @@ export function StylePicker({
   const buttonStyle: CSSProperties = disabled
     ? { ...PICKER_BUTTON_DISABLED_STYLE, width }
     : isFocused
-    ? { ...PICKER_BUTTON_FOCUS_STYLE, width }
-    : isHovered
-    ? { ...PICKER_BUTTON_HOVER_STYLE, width }
-    : { ...PICKER_BUTTON_STYLE, width };
+      ? { ...PICKER_BUTTON_FOCUS_STYLE, width }
+      : isHovered
+        ? { ...PICKER_BUTTON_HOVER_STYLE, width }
+        : { ...PICKER_BUTTON_STYLE, width };
 
   // Get display text style if preview enabled
-  const displayTextStyle: CSSProperties = showPreview && currentStyle
-    ? getPreviewStyle(currentStyle, theme)
-    : {};
+  const displayTextStyle: CSSProperties =
+    showPreview && currentStyle ? getPreviewStyle(currentStyle, theme) : {};
 
   // Render category section
   const renderCategory = (
@@ -594,11 +588,7 @@ export function StylePicker({
 
     return (
       <React.Fragment key={category}>
-        <div
-          style={isFirst ? FIRST_CATEGORY_HEADER_STYLE : CATEGORY_HEADER_STYLE}
-        >
-          {category}
-        </div>
+        <div style={isFirst ? FIRST_CATEGORY_HEADER_STYLE : CATEGORY_HEADER_STYLE}>{category}</div>
         {categoryStyles.map((option, index) => {
           const globalIndex = startIndex + index;
           const isSelected = option.styleId === currentStyle?.styleId;
@@ -607,12 +597,10 @@ export function StylePicker({
           const itemBaseStyle = isSelected
             ? DROPDOWN_ITEM_SELECTED_STYLE
             : isFocusedItem
-            ? DROPDOWN_ITEM_HOVER_STYLE
-            : DROPDOWN_ITEM_STYLE;
+              ? DROPDOWN_ITEM_HOVER_STYLE
+              : DROPDOWN_ITEM_STYLE;
 
-          const previewStyle = showPreview
-            ? getPreviewStyle(option, theme)
-            : {};
+          const previewStyle = showPreview ? getPreviewStyle(option, theme) : {};
 
           const itemStyle: CSSProperties = {
             ...itemBaseStyle,
@@ -704,14 +692,15 @@ export function StylePicker({
             return renderCategory(
               category,
               categoryStyles,
-              catIndex === 0 || !categoryOrder.slice(0, catIndex).some(c => stylesByCategory[c]?.length),
+              catIndex === 0 ||
+                !categoryOrder.slice(0, catIndex).some((c) => stylesByCategory[c]?.length),
               getCategoryStartIndex(category)
             );
           })}
           {/* Render any categories not in order */}
           {Object.entries(stylesByCategory)
             .filter(([category]) => !categoryOrder.includes(category))
-            .map(([category, options], extraIndex) => {
+            .map(([category, options], _extraIndex) => {
               const startIndex = flatStyleList.length - options.length;
               return renderCategory(category, options, false, startIndex);
             })}
@@ -783,9 +772,8 @@ export function findStyleById(styles: Style[], styleId: string): Style | undefin
  */
 export function findStyleByName(styles: Style[], name: string): Style | undefined {
   const nameLower = name.toLowerCase();
-  return styles.find((s) =>
-    s.name?.toLowerCase() === nameLower ||
-    s.styleId.toLowerCase() === nameLower
+  return styles.find(
+    (s) => s.name?.toLowerCase() === nameLower || s.styleId.toLowerCase() === nameLower
   );
 }
 
@@ -821,8 +809,10 @@ export function getQuickFormatStyles(styles: Style[]): Style[] {
  * Get default paragraph style (usually "Normal")
  */
 export function getDefaultParagraphStyle(styles: Style[]): Style | undefined {
-  return styles.find((s) => s.type === 'paragraph' && s.default) ||
-    styles.find((s) => s.styleId === 'Normal' || s.name === 'Normal');
+  return (
+    styles.find((s) => s.type === 'paragraph' && s.default) ||
+    styles.find((s) => s.styleId === 'Normal' || s.name === 'Normal')
+  );
 }
 
 /**

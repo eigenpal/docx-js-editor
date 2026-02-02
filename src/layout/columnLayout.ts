@@ -7,15 +7,9 @@
  * - Handles column widths and spacing
  */
 
-import type {
-  SectionProperties,
-  Paragraph,
-  Table,
-  BlockContent,
-  Theme,
-} from '../types/document';
+import type { SectionProperties, Paragraph, Table, BlockContent, Theme } from '../types/document';
 import { twipsToPixels } from '../utils/units';
-import { breakIntoLines, type Line, type LineBreakResult } from './lineBreaker';
+import { breakIntoLines, type Line } from './lineBreaker';
 
 // ============================================================================
 // TYPES
@@ -151,12 +145,7 @@ export function layoutColumns(
     }
 
     // Layout block in current column
-    const result = layoutBlockInColumn(
-      block,
-      blockIndex,
-      columns[currentColumnIndex],
-      theme
-    );
+    const result = layoutBlockInColumn(block, blockIndex, columns[currentColumnIndex], theme);
 
     if (result.fits) {
       // Block fits in current column
@@ -239,10 +228,11 @@ function getColumnConfiguration(
   sectionProps: SectionProperties,
   contentWidthPx: number
 ): ColumnConfig {
-  const colProps = sectionProps.columns;
+  const columnDefs = sectionProps.columns;
+  const count = sectionProps.columnCount ?? 1;
 
   // Default: single column
-  if (!colProps || colProps.count <= 1) {
+  if (count <= 1) {
     return {
       count: 1,
       columns: [{ widthPx: contentWidthPx, xPx: 0 }],
@@ -251,14 +241,13 @@ function getColumnConfiguration(
     };
   }
 
-  const count = colProps.count;
-  const spacingPx = colProps.space ? twipsToPixels(colProps.space) : 36; // Default ~0.5"
-  const equalWidth = colProps.equalWidth !== false;
+  const spacingPx = sectionProps.columnSpace ? twipsToPixels(sectionProps.columnSpace) : 36; // Default ~0.5"
+  const equalWidth = sectionProps.equalWidth !== false;
 
   // Calculate columns
   const columns: Array<{ widthPx: number; xPx: number }> = [];
 
-  if (equalWidth || !colProps.definitions || colProps.definitions.length === 0) {
+  if (equalWidth || !columnDefs || columnDefs.length === 0) {
     // Equal width columns
     const totalSpacing = spacingPx * (count - 1);
     const columnWidth = (contentWidthPx - totalSpacing) / count;
@@ -274,7 +263,7 @@ function getColumnConfiguration(
     let currentX = 0;
 
     for (let i = 0; i < count; i++) {
-      const def = colProps.definitions[i];
+      const def = columnDefs[i];
       const widthPx = def?.width ? twipsToPixels(def.width) : contentWidthPx / count;
       const colSpacing = def?.space ? twipsToPixels(def.space) : spacingPx;
 
@@ -345,20 +334,20 @@ function layoutParagraphInColumn(
   // Break paragraph into lines
   const lineResult = breakIntoLines(paragraph, {
     maxWidth: column.widthPx,
-    firstLineIndent: paragraph.formatting?.indentation?.firstLine
-      ? twipsToPixels(paragraph.formatting.indentation.firstLine)
+    firstLineIndent: paragraph.formatting?.indentFirstLine
+      ? twipsToPixels(paragraph.formatting.indentFirstLine)
       : 0,
     tabStops: paragraph.formatting?.tabs,
     theme,
-    defaultFormatting: paragraph.defaultRunFormatting,
+    defaultFormatting: paragraph.formatting?.runProperties,
   });
 
   // Calculate spacing
-  const spaceBefore = paragraph.formatting?.spacing?.spaceBefore
-    ? twipsToPixels(paragraph.formatting.spacing.spaceBefore)
+  const spaceBefore = paragraph.formatting?.spaceBefore
+    ? twipsToPixels(paragraph.formatting.spaceBefore)
     : 0;
-  const spaceAfter = paragraph.formatting?.spacing?.spaceAfter
-    ? twipsToPixels(paragraph.formatting.spacing.spaceAfter)
+  const spaceAfter = paragraph.formatting?.spaceAfter
+    ? twipsToPixels(paragraph.formatting.spaceAfter)
     : 0;
 
   const totalHeight = spaceBefore + lineResult.totalHeight + spaceAfter;
@@ -489,11 +478,7 @@ function layoutLinesInColumn(
 /**
  * Layout a table in a column
  */
-function layoutTableInColumn(
-  table: Table,
-  blockIndex: number,
-  column: Column
-): BlockLayoutResult {
+function layoutTableInColumn(table: Table, blockIndex: number, column: Column): BlockLayoutResult {
   const remainingHeight = column.heightPx - column.currentY;
 
   // Estimate table height
@@ -550,7 +535,7 @@ function hasColumnBreak(paragraph: Paragraph): boolean {
 /**
  * Create a partial block for overflow (placeholder)
  */
-function createPartialBlock(block: BlockContent, remainingLines?: Line[]): BlockContent {
+function createPartialBlock(block: BlockContent, _remainingLines?: Line[]): BlockContent {
   // In a real implementation, this would create a new paragraph
   // with only the remaining content
   return block;
@@ -564,7 +549,7 @@ function createPartialBlock(block: BlockContent, remainingLines?: Line[]): Block
  * Get column count from section properties
  */
 export function getColumnCount(sectionProps: SectionProperties): number {
-  return sectionProps.columns?.count ?? 1;
+  return sectionProps.columnCount ?? 1;
 }
 
 /**
@@ -577,10 +562,7 @@ export function isMultiColumn(sectionProps: SectionProperties): boolean {
 /**
  * Get column widths in pixels
  */
-export function getColumnWidths(
-  sectionProps: SectionProperties,
-  contentWidthPx: number
-): number[] {
+export function getColumnWidths(sectionProps: SectionProperties, contentWidthPx: number): number[] {
   const config = getColumnConfiguration(sectionProps, contentWidthPx);
   return config.columns.map((c) => c.widthPx);
 }
@@ -589,14 +571,14 @@ export function getColumnWidths(
  * Get column spacing in pixels
  */
 export function getColumnSpacing(sectionProps: SectionProperties): number {
-  return sectionProps.columns?.space ? twipsToPixels(sectionProps.columns.space) : 36;
+  return sectionProps.columnSpace ? twipsToPixels(sectionProps.columnSpace) : 36;
 }
 
 /**
  * Check if columns have separator line
  */
 export function hasColumnSeparator(sectionProps: SectionProperties): boolean {
-  return sectionProps.columns?.separator ?? false;
+  return sectionProps.separator ?? false;
 }
 
 /**

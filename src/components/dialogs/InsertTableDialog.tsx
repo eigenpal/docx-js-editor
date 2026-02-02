@@ -231,7 +231,16 @@ const DISABLED_BUTTON_STYLE: CSSProperties = {
 function TableIcon(): React.ReactElement {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="2" width="16" height="16" stroke="currentColor" strokeWidth="1.5" fill="none" rx="1" />
+      <rect
+        x="2"
+        y="2"
+        width="16"
+        height="16"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        rx="1"
+      />
       <line x1="2" y1="7" x2="18" y2="7" stroke="currentColor" strokeWidth="1.5" />
       <line x1="2" y1="12" x2="18" y2="12" stroke="currentColor" strokeWidth="1.5" />
       <line x1="8" y1="2" x2="8" y2="18" stroke="currentColor" strokeWidth="1.5" />
@@ -342,26 +351,32 @@ export function InsertTableDialog({
   /**
    * Handle row input change
    */
-  const handleRowsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    if (!isNaN(value)) {
-      setInputRows(Math.min(Math.max(1, value), maxRows));
-    } else if (e.target.value === '') {
-      setInputRows(1);
-    }
-  }, [maxRows]);
+  const handleRowsChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = parseInt(e.target.value, 10);
+      if (!isNaN(value)) {
+        setInputRows(Math.min(Math.max(1, value), maxRows));
+      } else if (e.target.value === '') {
+        setInputRows(1);
+      }
+    },
+    [maxRows]
+  );
 
   /**
    * Handle column input change
    */
-  const handleColsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    if (!isNaN(value)) {
-      setInputCols(Math.min(Math.max(1, value), maxColumns));
-    } else if (e.target.value === '') {
-      setInputCols(1);
-    }
-  }, [maxColumns]);
+  const handleColsChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = parseInt(e.target.value, 10);
+      if (!isNaN(value)) {
+        setInputCols(Math.min(Math.max(1, value), maxColumns));
+      } else if (e.target.value === '') {
+        setInputCols(1);
+      }
+    },
+    [maxColumns]
+  );
 
   // Don't render if not open
   if (!isOpen) {
@@ -388,9 +403,7 @@ export function InsertTableDialog({
 
   const canInsert = inputRows >= 1 && inputCols >= 1;
   const gridLabel =
-    hoverRows > 0 && hoverCols > 0
-      ? `${hoverCols} x ${hoverRows} Table`
-      : 'Hover to select size';
+    hoverRows > 0 && hoverCols > 0 ? `${hoverCols} x ${hoverRows} Table` : 'Hover to select size';
 
   return (
     <div
@@ -552,11 +565,7 @@ export function createDefaultTableConfig(rows = 3, columns = 3): TableConfig {
 /**
  * Validate TableConfig
  */
-export function isValidTableConfig(
-  config: TableConfig,
-  maxRows = 100,
-  maxColumns = 20
-): boolean {
+export function isValidTableConfig(config: TableConfig, maxRows = 100, maxColumns = 20): boolean {
   return (
     config.rows >= 1 &&
     config.rows <= maxRows &&
@@ -568,11 +577,7 @@ export function isValidTableConfig(
 /**
  * Clamp TableConfig to valid range
  */
-export function clampTableConfig(
-  config: TableConfig,
-  maxRows = 100,
-  maxColumns = 20
-): TableConfig {
+export function clampTableConfig(config: TableConfig, maxRows = 100, maxColumns = 20): TableConfig {
   return {
     rows: Math.min(Math.max(1, config.rows), maxRows),
     columns: Math.min(Math.max(1, config.columns), maxColumns),

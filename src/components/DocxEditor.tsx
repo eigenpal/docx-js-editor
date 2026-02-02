@@ -11,19 +11,41 @@
  * - Loading states
  */
 
-import React, { useRef, useCallback, useState, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, {
+  useRef,
+  useCallback,
+  useState,
+  useEffect,
+  useMemo,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import type { Document, Theme, TextFormatting, ParagraphFormatting } from '../types/document';
-import type { AIAction, AIActionRequest, AgentResponse, SelectionContext } from '../types/agentApi';
+import type { Document, Theme } from '../types/document';
+import type { AIAction, SelectionContext } from '../types/agentApi';
 
-import { Toolbar, type SelectionFormatting, type FormattingAction, getSelectionFormatting, applyFormattingAction } from './Toolbar';
-import { AIEditor, type AIEditorRef, type AIEditorProps, type AIRequestHandler } from './AIEditor';
-import { VariablePanel, type VariablePanelProps } from './VariablePanel';
-import { ErrorBoundary, ErrorProvider, useErrorNotifications } from './ErrorBoundary';
+import {
+  Toolbar,
+  type SelectionFormatting,
+  type FormattingAction,
+  getSelectionFormatting,
+  applyFormattingAction,
+} from './Toolbar';
+import { AIEditor, type AIEditorRef, type AIRequestHandler } from './AIEditor';
+import { VariablePanel } from './VariablePanel';
+import { ErrorBoundary, ErrorProvider } from './ErrorBoundary';
 import { ZoomControl } from './ui/ZoomControl';
 import { TableToolbar, type TableContext, type TableAction } from './ui/TableToolbar';
-import { PageNumberIndicator, type PageIndicatorPosition, type PageIndicatorVariant } from './ui/PageNumberIndicator';
-import { PageNavigator, type PageNavigatorPosition, type PageNavigatorVariant } from './ui/PageNavigator';
+import {
+  PageNumberIndicator,
+  type PageIndicatorPosition,
+  type PageIndicatorVariant,
+} from './ui/PageNumberIndicator';
+import {
+  PageNavigator,
+  type PageNavigatorPosition,
+  type PageNavigatorVariant,
+} from './ui/PageNavigator';
 import { HorizontalRuler } from './ui/HorizontalRuler';
 import { PrintPreview, PrintButton, type PrintOptions } from './ui/PrintPreview';
 import {
@@ -37,7 +59,7 @@ import {
 } from './dialogs/FindReplaceDialog';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import { parseDocx } from '../docx/parser';
-import { onFontsLoaded, isLoading as isFontsLoading } from '../utils/fontLoader';
+import { onFontsLoaded } from '../utils/fontLoader';
 import { executeCommand } from '../agent/executor';
 import { useTableSelection } from '../hooks/useTableSelection';
 import { useDocumentHistory } from '../hooks/useHistory';
@@ -325,7 +347,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       if (context && context.formatting) {
         setState((prev) => ({
           ...prev,
-          selectionFormatting: getSelectionFormatting(context.formatting, context.paragraphFormatting),
+          selectionFormatting: getSelectionFormatting(
+            context.formatting,
+            context.paragraphFormatting
+          ),
         }));
       } else {
         setState((prev) => ({
@@ -387,14 +412,14 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   const tableSelection = useTableSelection({
     document: history.state,
     onChange: handleDocumentChange,
-    onSelectionChange: (context) => {
+    onSelectionChange: (_context) => {
       // Could notify parent of table selection changes
     },
   });
 
   // Handle table action from TableToolbar
   const handleTableAction = useCallback(
-    (action: TableAction, context: TableContext) => {
+    (action: TableAction, _context: TableContext) => {
       tableSelection.handleAction(action);
     },
     [tableSelection]
@@ -649,7 +674,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       // Update selection formatting state
       setState((prev) => ({
         ...prev,
-        selectionFormatting: getSelectionFormatting(newFormatting, selectionContext.paragraphFormatting),
+        selectionFormatting: getSelectionFormatting(
+          newFormatting,
+          selectionContext.paragraphFormatting
+        ),
       }));
     },
     [history.state, handleDocumentChange, state.selectionFormatting.listState]
@@ -932,7 +960,15 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       openPrintPreview: handleOpenPrintPreview,
       print: handleDirectPrint,
     }),
-    [history.state, state.zoom, state.currentPage, state.totalPages, handleSave, handleOpenPrintPreview, handleDirectPrint]
+    [
+      history.state,
+      state.zoom,
+      state.currentPage,
+      state.totalPages,
+      handleSave,
+      handleOpenPrintPreview,
+      handleDirectPrint,
+    ]
   );
 
   // Get detected variables from document
@@ -1031,11 +1067,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                   {toolbarExtra}
                 </Toolbar>
                 {showPrintButton && (
-                  <PrintButton
-                    onPrint={handleOpenPrintPreview}
-                    disabled={!history.state}
-                    compact
-                  />
+                  <PrintButton onPrint={handleOpenPrintPreview} disabled={!history.state} compact />
                 )}
               </div>
 
@@ -1069,7 +1101,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                   }}
                 >
                   <HorizontalRuler
-                    sectionProps={history.state?.package.body?.sectionProperties}
+                    sectionProps={history.state?.package.document?.finalSectionProperties}
                     zoom={state.zoom}
                     unit={rulerUnit}
                     editable={false}
@@ -1096,8 +1128,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 />
 
                 {/* Page navigation / indicator */}
-                {showPageNumbers && state.totalPages > 0 && (
-                  enablePageNavigation ? (
+                {showPageNumbers &&
+                  state.totalPages > 0 &&
+                  (enablePageNavigation ? (
                     <PageNavigator
                       currentPage={state.currentPage}
                       totalPages={state.totalPages}
@@ -1114,8 +1147,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                       variant={pageNumberVariant as PageIndicatorVariant}
                       floating
                     />
-                  )
-                )}
+                  ))}
 
                 {/* Zoom control */}
                 {showZoomControl && (
@@ -1268,7 +1300,14 @@ function ParseError({ message }: { message: string }): React.ReactElement {
       }}
     >
       <div style={{ color: '#c5221f', marginBottom: '16px' }}>
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <circle cx="12" cy="12" r="10" />
           <path d="M12 8v4M12 16v.01" />
         </svg>

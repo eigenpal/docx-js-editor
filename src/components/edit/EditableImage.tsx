@@ -32,14 +32,14 @@ import { pixelsToEmu } from '../../utils/units';
  * Resize handle positions
  */
 export type ResizeHandle =
-  | 'nw'  // Northwest (top-left)
-  | 'n'   // North (top-center)
-  | 'ne'  // Northeast (top-right)
-  | 'e'   // East (right-center)
-  | 'se'  // Southeast (bottom-right)
-  | 's'   // South (bottom-center)
-  | 'sw'  // Southwest (bottom-left)
-  | 'w';  // West (left-center)
+  | 'nw' // Northwest (top-left)
+  | 'n' // North (top-center)
+  | 'ne' // Northeast (top-right)
+  | 'e' // East (right-center)
+  | 'se' // Southeast (bottom-right)
+  | 's' // South (bottom-center)
+  | 'sw' // Southwest (bottom-left)
+  | 'w'; // West (left-center)
 
 /**
  * Props for EditableImage component
@@ -249,9 +249,6 @@ export function EditableImage({
       setCurrentHeight(getImageHeightPx(image));
     }
   }, [image, isResizing]);
-
-  // Calculate aspect ratio
-  const aspectRatio = getImageWidthPx(image) / getImageHeightPx(image) || 1;
 
   // Handle click to select
   const handleClick = useCallback(
@@ -564,7 +561,12 @@ export function EditableImage({
           }}
         >
           [Image]
-          {image.filename && <><br /><small>{image.filename}</small></>}
+          {image.filename && (
+            <>
+              <br />
+              <small>{image.filename}</small>
+            </>
+          )}
         </span>
       </div>
     );
@@ -595,40 +597,16 @@ export function EditableImage({
       {editable && selected && (
         <>
           {/* Corner handles */}
-          <ResizeHandleComponent
-            position="nw"
-            onMouseDown={handleResizeStart('nw')}
-          />
-          <ResizeHandleComponent
-            position="ne"
-            onMouseDown={handleResizeStart('ne')}
-          />
-          <ResizeHandleComponent
-            position="se"
-            onMouseDown={handleResizeStart('se')}
-          />
-          <ResizeHandleComponent
-            position="sw"
-            onMouseDown={handleResizeStart('sw')}
-          />
+          <ResizeHandleComponent position="nw" onMouseDown={handleResizeStart('nw')} />
+          <ResizeHandleComponent position="ne" onMouseDown={handleResizeStart('ne')} />
+          <ResizeHandleComponent position="se" onMouseDown={handleResizeStart('se')} />
+          <ResizeHandleComponent position="sw" onMouseDown={handleResizeStart('sw')} />
 
           {/* Edge handles */}
-          <ResizeHandleComponent
-            position="n"
-            onMouseDown={handleResizeStart('n')}
-          />
-          <ResizeHandleComponent
-            position="e"
-            onMouseDown={handleResizeStart('e')}
-          />
-          <ResizeHandleComponent
-            position="s"
-            onMouseDown={handleResizeStart('s')}
-          />
-          <ResizeHandleComponent
-            position="w"
-            onMouseDown={handleResizeStart('w')}
-          />
+          <ResizeHandleComponent position="n" onMouseDown={handleResizeStart('n')} />
+          <ResizeHandleComponent position="e" onMouseDown={handleResizeStart('e')} />
+          <ResizeHandleComponent position="s" onMouseDown={handleResizeStart('s')} />
+          <ResizeHandleComponent position="w" onMouseDown={handleResizeStart('w')} />
         </>
       )}
 
@@ -782,12 +760,7 @@ export function isPointInImage(
   imageY: number
 ): boolean {
   const bounds = getImageBounds(image);
-  return (
-    x >= imageX &&
-    x <= imageX + bounds.width &&
-    y >= imageY &&
-    y <= imageY + bounds.height
-  );
+  return x >= imageX && x <= imageX + bounds.width && y >= imageY && y <= imageY + bounds.height;
 }
 
 export default EditableImage;

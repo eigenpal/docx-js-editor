@@ -14,7 +14,7 @@
 
 import React from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import type { Run as RunType, RunContent, TextFormatting, Theme } from '../../types/document';
+import type { Run as RunType, RunContent, Theme } from '../../types/document';
 import { textToStyle, mergeStyles } from '../../utils/formatToStyle';
 
 /**
@@ -93,11 +93,7 @@ function renderTextWithVariables(text: string): ReactNode {
 function renderContent(content: RunContent, index: number): ReactNode {
   switch (content.type) {
     case 'text':
-      return (
-        <React.Fragment key={index}>
-          {renderTextWithVariables(content.text)}
-        </React.Fragment>
-      );
+      return <React.Fragment key={index}>{renderTextWithVariables(content.text)}</React.Fragment>;
 
     case 'tab':
       // Render tab as a span with tab character styling
@@ -113,7 +109,11 @@ function renderContent(content: RunContent, index: number): ReactNode {
         case 'page':
           // Page breaks are typically handled at paragraph level
           return (
-            <span key={index} className="docx-page-break" style={{ display: 'block', pageBreakAfter: 'always' }}>
+            <span
+              key={index}
+              className="docx-page-break"
+              style={{ display: 'block', pageBreakAfter: 'always' }}
+            >
               {'\n'}
             </span>
           );
@@ -129,11 +129,7 @@ function renderContent(content: RunContent, index: number): ReactNode {
     case 'symbol':
       // Symbol with specific font
       return (
-        <span
-          key={index}
-          className="docx-symbol"
-          style={{ fontFamily: content.font }}
-        >
+        <span key={index} className="docx-symbol" style={{ fontFamily: content.font }}>
           {String.fromCharCode(parseInt(content.char, 16))}
         </span>
       );
@@ -143,7 +139,11 @@ function renderContent(content: RunContent, index: number): ReactNode {
       // Footnote/endnote reference - superscript number
       // The actual number would be resolved by the parent component
       return (
-        <sup key={index} className={`docx-${content.type}`} style={{ color: 'blue', cursor: 'pointer' }}>
+        <sup
+          key={index}
+          className={`docx-${content.type}`}
+          style={{ color: 'blue', cursor: 'pointer' }}
+        >
           [{content.id}]
         </sup>
       );
@@ -159,22 +159,34 @@ function renderContent(content: RunContent, index: number): ReactNode {
 
     case 'softHyphen':
       // Soft hyphen - visible only when line breaks there
-      return <span key={index} className="docx-soft-hyphen">{'\u00AD'}</span>;
+      return (
+        <span key={index} className="docx-soft-hyphen">
+          {'\u00AD'}
+        </span>
+      );
 
     case 'noBreakHyphen':
       // Non-breaking hyphen
-      return <span key={index} className="docx-no-break-hyphen">{'\u2011'}</span>;
+      return (
+        <span key={index} className="docx-no-break-hyphen">
+          {'\u2011'}
+        </span>
+      );
 
     case 'drawing':
       // Image - would be rendered by separate Image component
       // For now, placeholder
       return (
-        <span key={index} className="docx-drawing-placeholder" style={{
-          display: 'inline-block',
-          backgroundColor: '#f0f0f0',
-          padding: '4px 8px',
-          border: '1px dashed #ccc'
-        }}>
+        <span
+          key={index}
+          className="docx-drawing-placeholder"
+          style={{
+            display: 'inline-block',
+            backgroundColor: '#f0f0f0',
+            padding: '4px 8px',
+            border: '1px dashed #ccc',
+          }}
+        >
           [Image]
         </span>
       );
@@ -182,12 +194,16 @@ function renderContent(content: RunContent, index: number): ReactNode {
     case 'shape':
       // Shape - would be rendered by separate Shape component
       return (
-        <span key={index} className="docx-shape-placeholder" style={{
-          display: 'inline-block',
-          backgroundColor: '#e8f4ff',
-          padding: '4px 8px',
-          border: '1px dashed #88c'
-        }}>
+        <span
+          key={index}
+          className="docx-shape-placeholder"
+          style={{
+            display: 'inline-block',
+            backgroundColor: '#e8f4ff',
+            padding: '4px 8px',
+            border: '1px dashed #88c',
+          }}
+        >
           [Shape]
         </span>
       );
@@ -206,7 +222,7 @@ export function Run({
   theme,
   className,
   style: additionalStyle,
-  inline = true,
+  inline: _inline = true,
 }: RunProps): React.ReactElement | null {
   // Get CSS styles from formatting
   const formattingStyle = textToStyle(run.formatting, theme);
@@ -246,17 +262,14 @@ export function Run({
 
   // Check if any content contains template variables
   const hasVariables = run.content.some(
-    c => c.type === 'text' && containsTemplateVariable(c.text)
+    (c) => c.type === 'text' && containsTemplateVariable(c.text)
   );
   if (hasVariables) {
     classNames.push('docx-run-has-variable');
   }
 
   return (
-    <span
-      className={classNames.join(' ')}
-      style={combinedStyle}
-    >
+    <span className={classNames.join(' ')} style={combinedStyle}>
       {children}
     </span>
   );

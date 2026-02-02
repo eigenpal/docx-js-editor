@@ -81,9 +81,10 @@ export interface HeaderAreaProps {
 /**
  * Props for the FooterArea component (container)
  */
-export interface FooterAreaProps extends HeaderAreaProps {
+export interface FooterAreaProps extends Omit<HeaderAreaProps, 'header'> {
   /** Footer content to render */
   footer: HeaderFooterType | null | undefined;
+  /** Header is not used in FooterAreaProps */
   header?: undefined;
 }
 
@@ -98,9 +99,9 @@ export function HeaderFooter({
   headerFooter,
   position,
   sectionProps,
-  theme,
-  pageNumber,
-  totalPages,
+  theme: _theme,
+  pageNumber: _pageNumber,
+  totalPages: _totalPages,
   pageWidthPx,
   className,
   style: additionalStyle,
@@ -108,10 +109,7 @@ export function HeaderFooter({
   renderTable,
 }: HeaderFooterProps): React.ReactElement {
   // Build class names
-  const classNames: string[] = [
-    'docx-header-footer',
-    `docx-${position}`,
-  ];
+  const classNames: string[] = ['docx-header-footer', `docx-${position}`];
   if (headerFooter.type) {
     classNames.push(`docx-${position}-${headerFooter.type}`);
   }
@@ -202,15 +200,15 @@ export function HeaderArea({
   }
 
   // Calculate header distance from top
-  const headerDistance = sectionProps?.pageMargins?.header ?? 720; // Default 0.5 inch
-  const topMargin = sectionProps?.pageMargins?.top ?? 1440; // Default 1 inch
+  const headerDistance = sectionProps?.headerDistance ?? 720; // Default 0.5 inch
+  const topMargin = sectionProps?.marginTop ?? 1440; // Default 1 inch
 
   // Header container style
   const containerStyle: CSSProperties = {
     position: 'absolute',
     top: formatPx(twipsToPixels(headerDistance)),
-    left: formatPx(twipsToPixels(sectionProps?.pageMargins?.left ?? 1440)),
-    right: formatPx(twipsToPixels(sectionProps?.pageMargins?.right ?? 1440)),
+    left: formatPx(twipsToPixels(sectionProps?.marginLeft ?? 1440)),
+    right: formatPx(twipsToPixels(sectionProps?.marginRight ?? 1440)),
     height: formatPx(twipsToPixels(topMargin - headerDistance)),
     overflow: 'hidden',
     boxSizing: 'border-box',
@@ -257,15 +255,15 @@ export function FooterArea({
   }
 
   // Calculate footer distance from bottom
-  const footerDistance = sectionProps?.pageMargins?.footer ?? 720; // Default 0.5 inch
-  const bottomMargin = sectionProps?.pageMargins?.bottom ?? 1440; // Default 1 inch
+  const footerDistance = sectionProps?.footerDistance ?? 720; // Default 0.5 inch
+  const bottomMargin = sectionProps?.marginBottom ?? 1440; // Default 1 inch
 
   // Footer container style
   const containerStyle: CSSProperties = {
     position: 'absolute',
     bottom: formatPx(twipsToPixels(footerDistance)),
-    left: formatPx(twipsToPixels(sectionProps?.pageMargins?.left ?? 1440)),
-    right: formatPx(twipsToPixels(sectionProps?.pageMargins?.right ?? 1440)),
+    left: formatPx(twipsToPixels(sectionProps?.marginLeft ?? 1440)),
+    right: formatPx(twipsToPixels(sectionProps?.marginRight ?? 1440)),
     height: formatPx(twipsToPixels(bottomMargin - footerDistance)),
     overflow: 'hidden',
     boxSizing: 'border-box',
@@ -310,12 +308,12 @@ function getPositionStyles(
 
   // Set min-height based on section properties
   if (position === 'header') {
-    const headerDistance = sectionProps?.pageMargins?.header ?? 720;
-    const topMargin = sectionProps?.pageMargins?.top ?? 1440;
+    const headerDistance = sectionProps?.headerDistance ?? 720;
+    const topMargin = sectionProps?.marginTop ?? 1440;
     style.minHeight = formatPx(twipsToPixels(topMargin - headerDistance));
   } else {
-    const footerDistance = sectionProps?.pageMargins?.footer ?? 720;
-    const bottomMargin = sectionProps?.pageMargins?.bottom ?? 1440;
+    const footerDistance = sectionProps?.footerDistance ?? 720;
+    const bottomMargin = sectionProps?.marginBottom ?? 1440;
     style.minHeight = formatPx(twipsToPixels(bottomMargin - footerDistance));
   }
 
@@ -358,7 +356,7 @@ export function getHeaderForPage(
   sectionProps?: SectionProperties | null
 ): HeaderFooterType | null {
   // First page header (if enabled and available)
-  if (isFirstPage && sectionProps?.titlePage && headers.has('first')) {
+  if (isFirstPage && sectionProps?.titlePg && headers.has('first')) {
     return headers.get('first') || null;
   }
 
@@ -386,7 +384,7 @@ export function getFooterForPage(
   sectionProps?: SectionProperties | null
 ): HeaderFooterType | null {
   // First page footer (if enabled and available)
-  if (isFirstPage && sectionProps?.titlePage && footers.has('first')) {
+  if (isFirstPage && sectionProps?.titlePg && footers.has('first')) {
     return footers.get('first') || null;
   }
 
@@ -435,7 +433,7 @@ export function hasPageNumberField(hf: HeaderFooterType | null | undefined): boo
         if (content.type === 'run') {
           for (const item of content.content) {
             // Check for field char content (complex fields)
-            if (item.type === 'fieldChar' && item.fldCharType === 'begin') {
+            if (item.type === 'fieldChar' && item.charType === 'begin') {
               // This might be a PAGE field
               return true;
             }
@@ -521,7 +519,7 @@ export function createHeaderFooterMap(
   if (!items) return map;
 
   for (const item of items) {
-    const type = item.type || 'default';
+    const type = item.hdrFtrType || 'default';
     map.set(type, item);
   }
 

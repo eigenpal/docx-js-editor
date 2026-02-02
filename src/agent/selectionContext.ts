@@ -9,12 +9,9 @@ import type {
   Document,
   DocumentBody,
   Paragraph,
-  Table,
   Run,
   Hyperlink,
   TextFormatting,
-  ParagraphFormatting,
-  BlockContent,
 } from '../types/document';
 
 import type {
@@ -23,10 +20,9 @@ import type {
   SuggestedAction,
   Range,
   Position,
-  AIAction,
 } from '../types/agentApi';
 
-import { getAgentContext, getDocumentSummary } from './context';
+import { getDocumentSummary } from './context';
 
 // ============================================================================
 // TYPES
@@ -97,16 +93,10 @@ export function buildSelectionContext(
   range: Range,
   options: SelectionContextOptions = {}
 ): SelectionContext {
-  const {
-    contextCharsBefore = 200,
-    contextCharsAfter = 200,
-    includeSuggestions = true,
-  } = options;
+  const { contextCharsBefore = 200, contextCharsAfter = 200, includeSuggestions = true } = options;
 
   const body = doc.package.document;
-  const paragraphs = body.content.filter(
-    (block): block is Paragraph => block.type === 'paragraph'
-  );
+  const paragraphs = body.content.filter((block): block is Paragraph => block.type === 'paragraph');
 
   // Validate range
   if (range.start.paragraphIndex >= paragraphs.length) {
@@ -114,7 +104,6 @@ export function buildSelectionContext(
   }
 
   const startParagraph = paragraphs[range.start.paragraphIndex];
-  const endParagraph = paragraphs[range.end.paragraphIndex] || startParagraph;
 
   // Extract selected text
   const selectedText = extractSelectedText(paragraphs, range);
@@ -176,9 +165,7 @@ export function buildExtendedSelectionContext(
   const { includeDocumentSummary = true } = options;
 
   const body = doc.package.document;
-  const paragraphs = body.content.filter(
-    (block): block is Paragraph => block.type === 'paragraph'
-  );
+  const paragraphs = body.content.filter((block): block is Paragraph => block.type === 'paragraph');
 
   // Calculate additional stats
   const wordCount = countWords(baseContext.selectedText);
@@ -219,14 +206,9 @@ export function buildExtendedSelectionContext(
  * @param range - The selected range
  * @returns FormattingSummary object
  */
-export function getSelectionFormattingSummary(
-  doc: Document,
-  range: Range
-): FormattingSummary {
+export function getSelectionFormattingSummary(doc: Document, range: Range): FormattingSummary {
   const body = doc.package.document;
-  const paragraphs = body.content.filter(
-    (block): block is Paragraph => block.type === 'paragraph'
-  );
+  const paragraphs = body.content.filter((block): block is Paragraph => block.type === 'paragraph');
 
   const allFormatting: Partial<TextFormatting>[] = [];
 
@@ -241,8 +223,8 @@ export function getSelectionFormattingSummary(
   }
 
   // Check if formatting is consistent
-  const isConsistent = allFormatting.length <= 1 ||
-    allFormatting.every((f) => formatEqual(f, allFormatting[0]));
+  const isConsistent =
+    allFormatting.length <= 1 || allFormatting.every((f) => formatEqual(f, allFormatting[0]));
 
   // Get predominant formatting (first one or merge)
   const predominant = allFormatting.length > 0 ? allFormatting[0] : {};
@@ -290,11 +272,7 @@ function extractSelectedText(paragraphs: Paragraph[], range: Range): string {
 /**
  * Get text before a position
  */
-function getTextBefore(
-  paragraphs: Paragraph[],
-  position: Position,
-  maxChars: number
-): string {
+function getTextBefore(paragraphs: Paragraph[], position: Position, maxChars: number): string {
   const texts: string[] = [];
   let totalChars = 0;
 
@@ -326,11 +304,7 @@ function getTextBefore(
 /**
  * Get text after a position
  */
-function getTextAfter(
-  paragraphs: Paragraph[],
-  position: Position,
-  maxChars: number
-): string {
+function getTextAfter(paragraphs: Paragraph[], position: Position, maxChars: number): string {
   const texts: string[] = [];
   let totalChars = 0;
 
@@ -362,10 +336,7 @@ function getTextAfter(
 /**
  * Get formatting at a specific position
  */
-function getFormattingAtPosition(
-  paragraph: Paragraph,
-  offset: number
-): Partial<TextFormatting> {
+function getFormattingAtPosition(paragraph: Paragraph, offset: number): Partial<TextFormatting> {
   let currentOffset = 0;
 
   for (const item of paragraph.content) {
@@ -443,7 +414,7 @@ function collectFormattingInRange(
 /**
  * Check if position is in a table
  */
-function isPositionInTable(body: DocumentBody, position: Position): boolean {
+function isPositionInTable(_body: DocumentBody, _position: Position): boolean {
   // Tables are block-level, so position in a table would be in cell paragraphs
   // For now, return false - full implementation would track paragraph sources
   return false;
@@ -480,8 +451,8 @@ function isPositionInHyperlink(paragraph: Paragraph, offset: number): boolean {
  */
 function getSuggestedActions(
   selectedText: string,
-  formatting: Partial<TextFormatting>,
-  paragraphContext: ParagraphContext
+  _formatting: Partial<TextFormatting>,
+  _paragraphContext: ParagraphContext
 ): SuggestedAction[] {
   const actions: SuggestedAction[] = [];
 
@@ -518,8 +489,18 @@ function getSuggestedActions(
 
   // Always useful
   actions.push(
-    { id: 'fixGrammar', label: 'Fix Grammar', description: 'Fix grammar and spelling', priority: 7 },
-    { id: 'translate', label: 'Translate', description: 'Translate to another language', priority: 6 },
+    {
+      id: 'fixGrammar',
+      label: 'Fix Grammar',
+      description: 'Fix grammar and spelling',
+      priority: 7,
+    },
+    {
+      id: 'translate',
+      label: 'Translate',
+      description: 'Translate to another language',
+      priority: 6,
+    },
     { id: 'explain', label: 'Explain', description: 'Explain what this means', priority: 5 }
   );
 
@@ -548,7 +529,7 @@ function detectContentType(
     const para = paragraphs[i];
     if (!para) continue;
 
-    if (para.listRendering?.isListItem) {
+    if (para.listRendering) {
       types.add('list');
     } else if (para.formatting?.styleId?.toLowerCase().includes('heading')) {
       types.add('heading');
@@ -628,10 +609,7 @@ function countWords(text: string): number {
 /**
  * Check if two formatting objects are equal
  */
-function formatEqual(
-  a: Partial<TextFormatting>,
-  b: Partial<TextFormatting>
-): boolean {
+function formatEqual(a: Partial<TextFormatting>, b: Partial<TextFormatting>): boolean {
   const keysA = Object.keys(a);
   const keysB = Object.keys(b);
 
@@ -650,8 +628,6 @@ function formatEqual(
 
 export {
   buildSelectionContext as default,
-  buildExtendedSelectionContext,
-  getSelectionFormattingSummary,
   extractSelectedText,
   getTextBefore,
   getTextAfter,

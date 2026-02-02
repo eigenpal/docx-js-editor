@@ -67,28 +67,67 @@ export interface FontPickerProps {
 const DEFAULT_FONTS: FontOption[] = [
   // Sans-serif fonts
   { name: 'Arial', fontFamily: 'Arial, Helvetica, sans-serif', category: 'sans-serif' },
-  { name: 'Calibri', fontFamily: '"Carlito", "Calibri", Arial, sans-serif', googleFont: 'Carlito', category: 'sans-serif' },
+  {
+    name: 'Calibri',
+    fontFamily: '"Carlito", "Calibri", Arial, sans-serif',
+    googleFont: 'Carlito',
+    category: 'sans-serif',
+  },
   { name: 'Helvetica', fontFamily: 'Helvetica, Arial, sans-serif', category: 'sans-serif' },
   { name: 'Verdana', fontFamily: 'Verdana, Geneva, sans-serif', category: 'sans-serif' },
   { name: 'Tahoma', fontFamily: 'Tahoma, Geneva, sans-serif', category: 'sans-serif' },
   { name: 'Trebuchet MS', fontFamily: '"Trebuchet MS", sans-serif', category: 'sans-serif' },
-  { name: 'Open Sans', fontFamily: '"Open Sans", sans-serif', googleFont: 'Open Sans', category: 'sans-serif' },
-  { name: 'Roboto', fontFamily: 'Roboto, sans-serif', googleFont: 'Roboto', category: 'sans-serif' },
+  {
+    name: 'Open Sans',
+    fontFamily: '"Open Sans", sans-serif',
+    googleFont: 'Open Sans',
+    category: 'sans-serif',
+  },
+  {
+    name: 'Roboto',
+    fontFamily: 'Roboto, sans-serif',
+    googleFont: 'Roboto',
+    category: 'sans-serif',
+  },
   { name: 'Lato', fontFamily: 'Lato, sans-serif', googleFont: 'Lato', category: 'sans-serif' },
 
   // Serif fonts
   { name: 'Times New Roman', fontFamily: '"Times New Roman", Times, serif', category: 'serif' },
-  { name: 'Cambria', fontFamily: '"Caladea", "Cambria", Georgia, serif', googleFont: 'Caladea', category: 'serif' },
+  {
+    name: 'Cambria',
+    fontFamily: '"Caladea", "Cambria", Georgia, serif',
+    googleFont: 'Caladea',
+    category: 'serif',
+  },
   { name: 'Georgia', fontFamily: 'Georgia, serif', category: 'serif' },
-  { name: 'Palatino', fontFamily: '"Palatino Linotype", Palatino, Georgia, serif', category: 'serif' },
-  { name: 'Garamond', fontFamily: 'Garamond, "EB Garamond", serif', googleFont: 'EB Garamond', category: 'serif' },
+  {
+    name: 'Palatino',
+    fontFamily: '"Palatino Linotype", Palatino, Georgia, serif',
+    category: 'serif',
+  },
+  {
+    name: 'Garamond',
+    fontFamily: 'Garamond, "EB Garamond", serif',
+    googleFont: 'EB Garamond',
+    category: 'serif',
+  },
   { name: 'Book Antiqua', fontFamily: '"Book Antiqua", Palatino, serif', category: 'serif' },
 
   // Monospace fonts
   { name: 'Courier New', fontFamily: '"Courier New", Courier, monospace', category: 'monospace' },
-  { name: 'Consolas', fontFamily: 'Consolas, "Inconsolata", monospace', googleFont: 'Inconsolata', category: 'monospace' },
+  {
+    name: 'Consolas',
+    fontFamily: 'Consolas, "Inconsolata", monospace',
+    googleFont: 'Inconsolata',
+    category: 'monospace',
+  },
   { name: 'Monaco', fontFamily: 'Monaco, "Courier New", monospace', category: 'monospace' },
-  { name: 'Source Code Pro', fontFamily: '"Source Code Pro", monospace', googleFont: 'Source Code Pro', category: 'monospace' },
+  {
+    name: 'Source Code Pro',
+    fontFamily: '"Source Code Pro", monospace',
+    googleFont: 'Source Code Pro',
+    category: 'monospace',
+  },
 ];
 
 // ============================================================================
@@ -236,7 +275,7 @@ export function FontPicker({
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const [loadedFonts, setLoadedFonts] = useState<Set<string>>(new Set());
+  const [_loadedFonts, setLoadedFonts] = useState<Set<string>>(new Set());
 
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -246,9 +285,9 @@ export function FontPicker({
   const fontsByCategory = useMemo(() => {
     const groups: Record<string, FontOption[]> = {
       'sans-serif': [],
-      'serif': [],
-      'monospace': [],
-      'other': [],
+      serif: [],
+      monospace: [],
+      other: [],
     };
 
     for (const font of fonts) {
@@ -311,10 +350,7 @@ export function FontPicker({
    */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -356,9 +392,7 @@ export function FontPicker({
             setIsOpen(true);
             setFocusedIndex(0);
           } else {
-            setFocusedIndex((prev) =>
-              prev < flatFontList.length - 1 ? prev + 1 : prev
-            );
+            setFocusedIndex((prev) => (prev < flatFontList.length - 1 ? prev + 1 : prev));
           }
           break;
 
@@ -407,9 +441,7 @@ export function FontPicker({
       setIsOpen((prev) => !prev);
       if (!isOpen) {
         // Reset focused index when opening
-        const currentIndex = flatFontList.findIndex(
-          (f) => f.name === currentFont?.name
-        );
+        const currentIndex = flatFontList.findIndex((f) => f.name === currentFont?.name);
         setFocusedIndex(currentIndex >= 0 ? currentIndex : 0);
       }
     }
@@ -432,10 +464,10 @@ export function FontPicker({
   const buttonStyle: CSSProperties = disabled
     ? { ...PICKER_BUTTON_DISABLED_STYLE, width }
     : isFocused
-    ? { ...PICKER_BUTTON_FOCUS_STYLE, width }
-    : isHovered
-    ? { ...PICKER_BUTTON_HOVER_STYLE, width }
-    : { ...PICKER_BUTTON_STYLE, width };
+      ? { ...PICKER_BUTTON_FOCUS_STYLE, width }
+      : isHovered
+        ? { ...PICKER_BUTTON_HOVER_STYLE, width }
+        : { ...PICKER_BUTTON_STYLE, width };
 
   // Render category section
   const renderCategory = (
@@ -448,16 +480,14 @@ export function FontPicker({
 
     const categoryLabels: Record<string, string> = {
       'sans-serif': 'Sans Serif',
-      'serif': 'Serif',
-      'monospace': 'Monospace',
-      'other': 'Other',
+      serif: 'Serif',
+      monospace: 'Monospace',
+      other: 'Other',
     };
 
     return (
       <React.Fragment key={category}>
-        <div
-          style={isFirst ? FIRST_CATEGORY_HEADER_STYLE : CATEGORY_HEADER_STYLE}
-        >
+        <div style={isFirst ? FIRST_CATEGORY_HEADER_STYLE : CATEGORY_HEADER_STYLE}>
           {categoryLabels[category] || category}
         </div>
         {categoryFonts.map((font, index) => {
@@ -469,8 +499,8 @@ export function FontPicker({
             ...(isSelected
               ? DROPDOWN_ITEM_SELECTED_STYLE
               : isFocusedItem
-              ? DROPDOWN_ITEM_HOVER_STYLE
-              : DROPDOWN_ITEM_STYLE),
+                ? DROPDOWN_ITEM_HOVER_STYLE
+                : DROPDOWN_ITEM_STYLE),
             fontFamily: showPreview ? font.fontFamily : undefined,
           };
 
@@ -536,12 +566,7 @@ export function FontPicker({
           role="listbox"
           aria-label="Available fonts"
         >
-          {renderCategory(
-            'sans-serif',
-            fontsByCategory['sans-serif'],
-            true,
-            0
-          )}
+          {renderCategory('sans-serif', fontsByCategory['sans-serif'], true, 0)}
           {renderCategory(
             'serif',
             fontsByCategory['serif'],
@@ -620,10 +645,7 @@ export function createFontOption(fontName: string): FontOption {
 /**
  * Merge custom fonts with default fonts
  */
-export function mergeFontOptions(
-  customFonts: FontOption[],
-  includeDefaults = true
-): FontOption[] {
+export function mergeFontOptions(customFonts: FontOption[], includeDefaults = true): FontOption[] {
   if (!includeDefaults) {
     return customFonts;
   }

@@ -623,23 +623,26 @@ export function mergeStyles(...styles: (CSSProperties | undefined | null)[]): CS
  * @returns CSSProperties for the cell
  */
 export function tableCellToStyle(
-  formatting: {
-    verticalAlign?: 'top' | 'center' | 'bottom';
-    textDirection?: string;
-    shading?: ShadingProperties;
-    borders?: {
-      top?: BorderSpec;
-      bottom?: BorderSpec;
-      left?: BorderSpec;
-      right?: BorderSpec;
-    };
-    margins?: {
-      top?: { value: number; type: string };
-      bottom?: { value: number; type: string };
-      left?: { value: number; type: string };
-      right?: { value: number; type: string };
-    };
-  } | undefined | null,
+  formatting:
+    | {
+        verticalAlign?: 'top' | 'center' | 'bottom';
+        textDirection?: string;
+        shading?: ShadingProperties;
+        borders?: {
+          top?: BorderSpec;
+          bottom?: BorderSpec;
+          left?: BorderSpec;
+          right?: BorderSpec;
+        };
+        margins?: {
+          top?: { value: number; type: string };
+          bottom?: { value: number; type: string };
+          left?: { value: number; type: string };
+          right?: { value: number; type: string };
+        };
+      }
+    | undefined
+    | null,
   theme?: Theme | null
 ): CSSProperties {
   if (!formatting) {
@@ -711,15 +714,18 @@ export function tableCellToStyle(
  * @returns CSSProperties for the page container
  */
 export function sectionToStyle(
-  sectionProps: {
-    pageWidth?: number;
-    pageHeight?: number;
-    marginTop?: number;
-    marginBottom?: number;
-    marginLeft?: number;
-    marginRight?: number;
-    background?: { color?: { rgb?: string; themeColor?: string } };
-  } | undefined | null,
+  sectionProps:
+    | {
+        pageWidth?: number;
+        pageHeight?: number;
+        marginTop?: number;
+        marginBottom?: number;
+        marginLeft?: number;
+        marginRight?: number;
+        background?: { color?: { rgb?: string; themeColor?: string } };
+      }
+    | undefined
+    | null,
   theme?: Theme | null
 ): CSSProperties {
   if (!sectionProps) {

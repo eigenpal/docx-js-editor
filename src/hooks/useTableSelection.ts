@@ -8,7 +8,7 @@
  * - Clears selection when clicking outside tables
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import type { Document, Table } from '../types/document';
 import type { TableContext, TableSelection, TableAction } from '../components/ui/TableToolbar';
 import {
@@ -140,10 +140,10 @@ export function findTableFromClick(
  * Get a table from the document by index
  */
 export function getTableFromDocument(doc: Document, tableIndex: number): Table | null {
-  if (!doc.package?.body?.content) return null;
+  if (!doc.package?.document?.content) return null;
 
   let currentTableIndex = 0;
-  for (const block of doc.package.body.content) {
+  for (const block of doc.package.document.content) {
     if (block.type === 'table') {
       if (currentTableIndex === tableIndex) {
         return block;
@@ -163,10 +163,10 @@ export function updateTableInDocument(
   tableIndex: number,
   newTable: Table
 ): Document {
-  if (!doc.package?.body?.content) return doc;
+  if (!doc.package?.document?.content) return doc;
 
   let currentTableIndex = 0;
-  const newContent = doc.package.body.content.map((block) => {
+  const newContent = doc.package.document.content.map((block) => {
     if (block.type === 'table') {
       if (currentTableIndex === tableIndex) {
         currentTableIndex++;
@@ -181,8 +181,8 @@ export function updateTableInDocument(
     ...doc,
     package: {
       ...doc.package,
-      body: {
-        ...doc.package.body,
+      document: {
+        ...doc.package.document,
         content: newContent,
       },
     },
@@ -193,10 +193,10 @@ export function updateTableInDocument(
  * Delete a table from the document
  */
 export function deleteTableFromDocument(doc: Document, tableIndex: number): Document {
-  if (!doc.package?.body?.content) return doc;
+  if (!doc.package?.document?.content) return doc;
 
   let currentTableIndex = 0;
-  const newContent = doc.package.body.content.filter((block) => {
+  const newContent = doc.package.document.content.filter((block) => {
     if (block.type === 'table') {
       const shouldDelete = currentTableIndex === tableIndex;
       currentTableIndex++;
@@ -209,8 +209,8 @@ export function deleteTableFromDocument(doc: Document, tableIndex: number): Docu
     ...doc,
     package: {
       ...doc.package,
-      body: {
-        ...doc.package.body,
+      document: {
+        ...doc.package.document,
         content: newContent,
       },
     },
@@ -297,7 +297,13 @@ export function useTableSelection({
    */
   const handleAction = useCallback(
     (action: TableAction) => {
-      if (!doc || !state.context || state.tableIndex === null || state.rowIndex === null || state.columnIndex === null) {
+      if (
+        !doc ||
+        !state.context ||
+        state.tableIndex === null ||
+        state.rowIndex === null ||
+        state.columnIndex === null
+      ) {
         return;
       }
 

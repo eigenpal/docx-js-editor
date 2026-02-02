@@ -179,16 +179,14 @@ function extractFontParams(
   if (formatting.fontFamily) {
     // Priority: ascii > hAnsi > theme reference
     fontFamilyName =
-      formatting.fontFamily.ascii ||
-      formatting.fontFamily.hAnsi ||
-      DEFAULT_FONT_FAMILY;
+      formatting.fontFamily.ascii || formatting.fontFamily.hAnsi || DEFAULT_FONT_FAMILY;
 
     // Handle theme font references
-    if (!fontFamilyName && theme?.fonts) {
+    if (!fontFamilyName && theme?.fontScheme) {
       const themeRef = formatting.fontFamily.asciiTheme || formatting.fontFamily.hAnsiTheme;
       if (themeRef) {
         const isMajor = themeRef.toLowerCase().includes('major');
-        const themeFont = isMajor ? theme.fonts.majorFont : theme.fonts.minorFont;
+        const themeFont = isMajor ? theme.fontScheme.majorFont : theme.fontScheme.minorFont;
         fontFamilyName = themeFont?.latin || DEFAULT_FONT_FAMILY;
       }
     }
@@ -216,10 +214,7 @@ function extractFontParams(
 /**
  * Wait for a font to be available
  */
-async function waitForFontAvailable(
-  fontFamily: string,
-  timeout: number
-): Promise<boolean> {
+async function waitForFontAvailable(fontFamily: string, timeout: number): Promise<boolean> {
   // Check if font is already loaded via our loader
   const primaryFont = fontFamily.split(',')[0].trim().replace(/['"]/g, '');
   if (isFontLoaded(primaryFont)) {
@@ -273,10 +268,7 @@ export async function measureText(
     };
   }
 
-  const { fontFamily, fontSize, bold, italic } = extractFontParams(
-    formatting,
-    options?.theme
-  );
+  const { fontFamily, fontSize, bold, italic } = extractFontParams(formatting, options?.theme);
 
   // Check cache first
   const cacheKey = getCacheKey(text, fontFamily, fontSize, bold, italic);
@@ -318,7 +310,10 @@ export async function measureText(
     // Modern browsers with full metrics
     height = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
     baseline = metrics.fontBoundingBoxAscent;
-  } else if (metrics.actualBoundingBoxAscent !== undefined && metrics.actualBoundingBoxDescent !== undefined) {
+  } else if (
+    metrics.actualBoundingBoxAscent !== undefined &&
+    metrics.actualBoundingBoxDescent !== undefined
+  ) {
     // Actual text bounds (varies with specific glyphs)
     height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
     baseline = metrics.actualBoundingBoxAscent;
@@ -409,7 +404,10 @@ export function measureTextSync(
   if (metrics.fontBoundingBoxAscent !== undefined && metrics.fontBoundingBoxDescent !== undefined) {
     height = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
     baseline = metrics.fontBoundingBoxAscent;
-  } else if (metrics.actualBoundingBoxAscent !== undefined && metrics.actualBoundingBoxDescent !== undefined) {
+  } else if (
+    metrics.actualBoundingBoxAscent !== undefined &&
+    metrics.actualBoundingBoxDescent !== undefined
+  ) {
     height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
     baseline = metrics.actualBoundingBoxAscent;
   } else {
@@ -546,11 +544,7 @@ export function measureTexts(
 /**
  * Measure text width only (faster, skips height calculation)
  */
-export function measureTextWidth(
-  text: string,
-  formatting?: TextFormatting,
-  theme?: Theme
-): number {
+export function measureTextWidth(text: string, formatting?: TextFormatting, theme?: Theme): number {
   if (!text || text.length === 0) {
     return 0;
   }

@@ -143,7 +143,10 @@ function renderLine(shape: ShapeType, width: number, height: number): ReactNode 
   // Simple line from corner to corner
   // For diagonal lines, we draw from (0,0) to (width, height)
   // For horizontal/vertical, we adjust
-  let x1 = 0, y1 = 0, x2 = width, y2 = height;
+  let x1 = 0,
+    y1 = 0,
+    x2 = width,
+    y2 = height;
 
   // If line is mostly horizontal
   if (height < strokeWidth * 2) {
@@ -163,9 +166,7 @@ function renderLine(shape: ShapeType, width: number, height: number): ReactNode 
       className="docx-shape-svg"
       style={{ position: 'absolute', top: 0, left: 0 }}
     >
-      <defs>
-        {renderArrowMarkers(shape.outline, strokeColor)}
-      </defs>
+      <defs>{renderArrowMarkers(shape.outline, strokeColor)}</defs>
       <line
         x1={x1}
         y1={y1}
@@ -252,11 +253,29 @@ function renderBasicShape(shape: ShapeType, width: number, height: number): Reac
 
     case 'rightArrow':
     case 'leftArrow':
-      shapeElement = renderArrowShape(shape, svgWidth, svgHeight, padding, fillColor, strokeColor, strokeWidth, strokeDasharray);
+      shapeElement = renderArrowShape(
+        shape,
+        svgWidth,
+        svgHeight,
+        padding,
+        fillColor,
+        strokeColor,
+        strokeWidth,
+        strokeDasharray
+      );
       break;
 
     case 'star5':
-      shapeElement = renderStar(5, svgWidth, svgHeight, padding, fillColor, strokeColor, strokeWidth, strokeDasharray);
+      shapeElement = renderStar(
+        5,
+        svgWidth,
+        svgHeight,
+        padding,
+        fillColor,
+        strokeColor,
+        strokeWidth,
+        strokeDasharray
+      );
       break;
 
     case 'rect':
@@ -298,9 +317,7 @@ function renderBasicShape(shape: ShapeType, width: number, height: number): Reac
       className="docx-shape-svg"
       style={{ position: 'absolute', top: 0, left: 0 }}
     >
-      <g transform={transforms.length > 0 ? transforms.join(' ') : undefined}>
-        {shapeElement}
-      </g>
+      <g transform={transforms.length > 0 ? transforms.join(' ') : undefined}>{shapeElement}</g>
     </svg>
   );
 }
@@ -472,8 +489,8 @@ function getStrokeDasharray(outline: ShapeOutline | undefined): string | undefin
  */
 function renderTextBody(
   shape: ShapeType,
-  width: number,
-  height: number,
+  _width: number,
+  _height: number,
   renderParagraph?: (paragraph: Paragraph, index: number) => ReactNode
 ): ReactNode {
   if (!shape.textBody) return null;

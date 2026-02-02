@@ -265,9 +265,7 @@ export function isValidUrl(url: string): boolean {
   // HTTP/HTTPS URLs
   try {
     // Add protocol if missing for validation
-    const urlToValidate = trimmed.match(/^https?:\/\//)
-      ? trimmed
-      : `https://${trimmed}`;
+    const urlToValidate = trimmed.match(/^https?:\/\//) ? trimmed : `https://${trimmed}`;
     const parsed = new URL(urlToValidate);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
   } catch {
@@ -284,11 +282,7 @@ export function normalizeUrl(url: string): string {
   const trimmed = url.trim();
 
   // Keep special protocols as-is
-  if (
-    trimmed.startsWith('mailto:') ||
-    trimmed.startsWith('tel:') ||
-    trimmed.startsWith('ftp://')
-  ) {
+  if (trimmed.startsWith('mailto:') || trimmed.startsWith('tel:') || trimmed.startsWith('ftp://')) {
     return trimmed;
   }
 
@@ -486,8 +480,7 @@ export function HyperlinkDialog({
 
   const hasBookmarks = bookmarks.length > 0;
   const canSubmit =
-    (linkType === 'url' && url.trim() && !urlError) ||
-    (linkType === 'bookmark' && bookmark);
+    (linkType === 'url' && url.trim() && !urlError) || (linkType === 'bookmark' && bookmark);
 
   return (
     <div
@@ -502,10 +495,7 @@ export function HyperlinkDialog({
       <div className="docx-hyperlink-dialog" style={DIALOG_CONTENT_STYLE}>
         {/* Header */}
         <div className="docx-hyperlink-dialog-header" style={DIALOG_HEADER_STYLE}>
-          <h2
-            id="hyperlink-dialog-title"
-            style={DIALOG_TITLE_STYLE}
-          >
+          <h2 id="hyperlink-dialog-title" style={DIALOG_TITLE_STYLE}>
             {isEditing ? 'Edit Hyperlink' : 'Insert Hyperlink'}
           </h2>
           <button
@@ -552,10 +542,7 @@ export function HyperlinkDialog({
           {/* URL input */}
           {linkType === 'url' && (
             <div className="docx-hyperlink-dialog-field" style={FORM_GROUP_STYLE}>
-              <label
-                htmlFor="hyperlink-url"
-                style={LABEL_STYLE}
-              >
+              <label htmlFor="hyperlink-url" style={LABEL_STYLE}>
                 URL
               </label>
               <input
@@ -593,10 +580,7 @@ export function HyperlinkDialog({
           {/* Bookmark select */}
           {linkType === 'bookmark' && (
             <div className="docx-hyperlink-dialog-field" style={FORM_GROUP_STYLE}>
-              <label
-                htmlFor="hyperlink-bookmark"
-                style={LABEL_STYLE}
-              >
+              <label htmlFor="hyperlink-bookmark" style={LABEL_STYLE}>
                 Bookmark
               </label>
               <select
@@ -619,10 +603,7 @@ export function HyperlinkDialog({
 
           {/* Display text */}
           <div className="docx-hyperlink-dialog-field" style={FORM_GROUP_STYLE}>
-            <label
-              htmlFor="hyperlink-display-text"
-              style={LABEL_STYLE}
-            >
+            <label htmlFor="hyperlink-display-text" style={LABEL_STYLE}>
               Display Text
             </label>
             <input
@@ -634,17 +615,12 @@ export function HyperlinkDialog({
               onChange={(e) => setDisplayText(e.target.value)}
               placeholder="Text to display (optional)"
             />
-            <div style={HINT_TEXT_STYLE}>
-              Leave empty to use the selected text
-            </div>
+            <div style={HINT_TEXT_STYLE}>Leave empty to use the selected text</div>
           </div>
 
           {/* Tooltip */}
           <div className="docx-hyperlink-dialog-field" style={FORM_GROUP_STYLE}>
-            <label
-              htmlFor="hyperlink-tooltip"
-              style={LABEL_STYLE}
-            >
+            <label htmlFor="hyperlink-tooltip" style={LABEL_STYLE}>
               Tooltip (optional)
             </label>
             <input
@@ -702,10 +678,7 @@ export function HyperlinkDialog({
 /**
  * Create HyperlinkData from a URL string
  */
-export function createHyperlinkData(
-  url: string,
-  displayText?: string
-): HyperlinkData {
+export function createHyperlinkData(url: string, displayText?: string): HyperlinkData {
   return {
     url: normalizeUrl(url),
     displayText,
@@ -715,10 +688,7 @@ export function createHyperlinkData(
 /**
  * Create HyperlinkData for an internal bookmark
  */
-export function createBookmarkLinkData(
-  bookmark: string,
-  displayText?: string
-): HyperlinkData {
+export function createBookmarkLinkData(bookmark: string, displayText?: string): HyperlinkData {
   return {
     bookmark,
     displayText,

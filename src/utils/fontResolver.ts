@@ -45,17 +45,17 @@ interface FontMapping {
  */
 const FONT_MAPPINGS: Record<string, FontMapping> = {
   // Microsoft Office fonts -> Google equivalents (via Croscore)
-  'calibri': {
+  calibri: {
     googleFont: 'Carlito',
     category: 'sans-serif',
     fallbackStack: ['Carlito', 'Calibri', 'Arial', 'Helvetica', 'sans-serif'],
   },
-  'cambria': {
+  cambria: {
     googleFont: 'Caladea',
     category: 'serif',
     fallbackStack: ['Caladea', 'Cambria', 'Georgia', 'serif'],
   },
-  'arial': {
+  arial: {
     googleFont: 'Arimo',
     category: 'sans-serif',
     fallbackStack: ['Arimo', 'Arial', 'Helvetica', 'sans-serif'],
@@ -72,17 +72,17 @@ const FONT_MAPPINGS: Record<string, FontMapping> = {
   },
 
   // Additional common fonts
-  'georgia': {
+  georgia: {
     googleFont: 'Tinos', // Similar but not perfect match
     category: 'serif',
     fallbackStack: ['Georgia', 'Tinos', 'Times New Roman', 'serif'],
   },
-  'verdana': {
+  verdana: {
     googleFont: 'Open Sans', // Similar sans-serif
     category: 'sans-serif',
     fallbackStack: ['Verdana', 'Open Sans', 'Arial', 'sans-serif'],
   },
-  'tahoma': {
+  tahoma: {
     googleFont: 'Open Sans',
     category: 'sans-serif',
     fallbackStack: ['Tahoma', 'Open Sans', 'Arial', 'sans-serif'],
@@ -97,7 +97,7 @@ const FONT_MAPPINGS: Record<string, FontMapping> = {
     category: 'cursive',
     fallbackStack: ['Comic Sans MS', 'Comic Neue', 'cursive'],
   },
-  'impact': {
+  impact: {
     googleFont: 'Anton',
     category: 'sans-serif',
     fallbackStack: ['Impact', 'Anton', 'Arial Black', 'sans-serif'],
@@ -112,7 +112,7 @@ const FONT_MAPPINGS: Record<string, FontMapping> = {
     category: 'serif',
     fallbackStack: ['Book Antiqua', 'EB Garamond', 'Palatino', 'Georgia', 'serif'],
   },
-  'garamond': {
+  garamond: {
     googleFont: 'EB Garamond',
     category: 'serif',
     fallbackStack: ['Garamond', 'EB Garamond', 'Georgia', 'serif'],
@@ -132,7 +132,7 @@ const FONT_MAPPINGS: Record<string, FontMapping> = {
     category: 'monospace',
     fallbackStack: ['Lucida Console', 'Cousine', 'Courier New', 'monospace'],
   },
-  'consolas': {
+  consolas: {
     googleFont: 'Inconsolata',
     category: 'monospace',
     fallbackStack: ['Consolas', 'Inconsolata', 'Cousine', 'Courier New', 'monospace'],
@@ -149,12 +149,12 @@ const FONT_MAPPINGS: Record<string, FontMapping> = {
     category: 'sans-serif',
     fallbackStack: ['MS Gothic', 'Noto Sans JP', 'sans-serif'],
   },
-  'simhei': {
+  simhei: {
     googleFont: 'Noto Sans SC',
     category: 'sans-serif',
     fallbackStack: ['SimHei', 'Noto Sans SC', 'sans-serif'],
   },
-  'simsun': {
+  simsun: {
     googleFont: 'Noto Serif SC',
     category: 'serif',
     fallbackStack: ['SimSun', 'Noto Serif SC', 'serif'],
@@ -171,10 +171,10 @@ const FONT_MAPPINGS: Record<string, FontMapping> = {
  */
 const DEFAULT_FALLBACKS: Record<FontCategory, string> = {
   'sans-serif': 'Arial, Helvetica, sans-serif',
-  'serif': 'Times New Roman, Times, serif',
-  'monospace': 'Courier New, Courier, monospace',
-  'cursive': 'cursive',
-  'fantasy': 'fantasy',
+  serif: 'Times New Roman, Times, serif',
+  monospace: 'Courier New, Courier, monospace',
+  cursive: 'cursive',
+  fantasy: 'fantasy',
   'system-ui': 'system-ui, sans-serif',
 };
 
@@ -289,19 +289,14 @@ function quoteFontName(fontName: string): string {
  * @param fontScheme - Theme font scheme from the DOCX
  * @returns Resolved font name or null if not found
  */
-export function resolveThemeFont(
-  themeRef: string,
-  fontScheme?: ThemeFontScheme
-): string | null {
+export function resolveThemeFont(themeRef: string, fontScheme?: ThemeFontScheme): string | null {
   if (!fontScheme) {
     return null;
   }
 
   // Parse the theme reference
   const isMajor = themeRef.toLowerCase().startsWith('major');
-  const themeFont: ThemeFont | undefined = isMajor
-    ? fontScheme.majorFont
-    : fontScheme.minorFont;
+  const themeFont: ThemeFont | undefined = isMajor ? fontScheme.majorFont : fontScheme.minorFont;
 
   if (!themeFont) {
     return null;
@@ -353,7 +348,6 @@ export function buildFontFamilyString(
   category: FontCategory = 'sans-serif'
 ): string {
   const quoted = fonts.map(quoteFontName);
-  const fallback = DEFAULT_FALLBACKS[category];
 
   // Ensure we have the generic fallback
   const parts = [...quoted];

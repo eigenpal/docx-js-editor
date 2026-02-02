@@ -241,10 +241,10 @@ export function ToolbarButton({
   const buttonStyle: CSSProperties = disabled
     ? TOOLBAR_BUTTON_DISABLED_STYLE
     : active
-    ? TOOLBAR_BUTTON_ACTIVE_STYLE
-    : isHovered
-    ? { ...TOOLBAR_BUTTON_STYLE, ...TOOLBAR_BUTTON_HOVER_STYLE }
-    : TOOLBAR_BUTTON_STYLE;
+      ? TOOLBAR_BUTTON_ACTIVE_STYLE
+      : isHovered
+        ? { ...TOOLBAR_BUTTON_STYLE, ...TOOLBAR_BUTTON_HOVER_STYLE }
+        : TOOLBAR_BUTTON_STYLE;
 
   return (
     <button
@@ -330,14 +330,20 @@ const StrikethroughIcon = () => (
 const SuperscriptIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
     <path d="M2.5 14L6 8.5 2.5 3h2.7l2.3 3.5L9.8 3h2.7L9 8.5l3.5 5.5h-2.7L7.5 10.5 5.2 14H2.5z" />
-    <path d="M12 2h2v1h-2v1h3V1h-3V0h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-3V2z" transform="scale(0.8) translate(4, 0)" />
+    <path
+      d="M12 2h2v1h-2v1h3V1h-3V0h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-3V2z"
+      transform="scale(0.8) translate(4, 0)"
+    />
   </svg>
 );
 
 const SubscriptIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
     <path d="M2.5 12L6 6.5 2.5 1h2.7l2.3 3.5L9.8 1h2.7L9 6.5l3.5 5.5h-2.7L7.5 8.5 5.2 12H2.5z" />
-    <path d="M12 11h2v1h-2v1h3v-3h-3v-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-3v-2z" transform="scale(0.8) translate(4, 4)" />
+    <path
+      d="M12 11h2v1h-2v1h3v-3h-3v-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-3v-2z"
+      transform="scale(0.8) translate(4, 4)"
+    />
   </svg>
 );
 
@@ -677,9 +683,11 @@ export function Toolbar({
           )}
           {showFontSizePicker && (
             <FontSizePicker
-              value={currentFormatting.fontSize !== undefined
-                ? halfPointsToPoints(currentFormatting.fontSize)
-                : undefined}
+              value={
+                currentFormatting.fontSize !== undefined
+                  ? halfPointsToPoints(currentFormatting.fontSize)
+                  : undefined
+              }
               onChange={handleFontSizeChange}
               disabled={disabled}
               width={70}
@@ -832,12 +840,12 @@ export function Toolbar({
  * OOXML uses named colors for highlights (yellow, green, cyan, etc.)
  */
 const HIGHLIGHT_HEX_TO_NAME: Record<string, string> = {
-  'FFFF00': 'yellow',
+  FFFF00: 'yellow',
   '00FF00': 'green',
   '00FFFF': 'cyan',
-  'FF00FF': 'magenta',
+  FF00FF: 'magenta',
   '0000FF': 'blue',
-  'FF0000': 'red',
+  FF0000: 'red',
   '00008B': 'darkBlue',
   '008080': 'darkCyan',
   '008000': 'darkGreen',
@@ -845,9 +853,9 @@ const HIGHLIGHT_HEX_TO_NAME: Record<string, string> = {
   '8B0000': 'darkRed',
   '808000': 'darkYellow',
   '808080': 'darkGray',
-  'C0C0C0': 'lightGray',
+  C0C0C0: 'lightGray',
   '000000': 'black',
-  'FFFFFF': 'white',
+  FFFFFF: 'white',
 };
 
 function mapHexToHighlightName(hex: string): string | null {
@@ -867,7 +875,8 @@ export function getSelectionFormatting(
   if (formatting) {
     result.bold = formatting.bold;
     result.italic = formatting.italic;
-    result.underline = formatting.underline?.style !== 'none' && formatting.underline?.style !== undefined;
+    result.underline =
+      formatting.underline?.style !== 'none' && formatting.underline?.style !== undefined;
     result.strike = formatting.strike;
     result.superscript = formatting.vertAlign === 'superscript';
     result.subscript = formatting.vertAlign === 'subscript';
@@ -948,7 +957,8 @@ export function applyFormattingAction(
         } else {
           // Highlight color is stored as a name in OOXML (yellow, green, etc.)
           // But we receive hex values from the picker, so map them
-          newFormatting.highlight = mapHexToHighlightName(action.value) || 'yellow';
+          newFormatting.highlight = (mapHexToHighlightName(action.value) ||
+            'yellow') as TextFormatting['highlight'];
         }
         return newFormatting;
     }
@@ -973,10 +983,12 @@ export function applyFormattingAction(
       newFormatting.strike = !currentFormatting.strike;
       break;
     case 'superscript':
-      newFormatting.vertAlign = currentFormatting.vertAlign === 'superscript' ? 'baseline' : 'superscript';
+      newFormatting.vertAlign =
+        currentFormatting.vertAlign === 'superscript' ? 'baseline' : 'superscript';
       break;
     case 'subscript':
-      newFormatting.vertAlign = currentFormatting.vertAlign === 'subscript' ? 'baseline' : 'subscript';
+      newFormatting.vertAlign =
+        currentFormatting.vertAlign === 'subscript' ? 'baseline' : 'subscript';
       break;
     case 'clearFormatting':
       return {}; // Return empty formatting

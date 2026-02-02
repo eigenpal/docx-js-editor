@@ -34,11 +34,7 @@ import type {
 import type { StyleMap } from './styleParser';
 import type { Theme } from '../types/document';
 import { parseRun } from './runParser';
-import {
-  getAttribute,
-  findChildren,
-  type XmlElement,
-} from './xmlParser';
+import { getAttribute, findChildren, type XmlElement } from './xmlParser';
 
 // ============================================================================
 // FIELD TYPE DETECTION
@@ -49,29 +45,65 @@ import {
  */
 export const KNOWN_FIELD_TYPES: FieldType[] = [
   // Document information
-  'PAGE', 'NUMPAGES', 'NUMWORDS', 'NUMCHARS',
+  'PAGE',
+  'NUMPAGES',
+  'NUMWORDS',
+  'NUMCHARS',
   // Date and time
-  'DATE', 'TIME', 'CREATEDATE', 'SAVEDATE', 'PRINTDATE', 'EDITTIME',
+  'DATE',
+  'TIME',
+  'CREATEDATE',
+  'SAVEDATE',
+  'PRINTDATE',
+  'EDITTIME',
   // Document properties
-  'AUTHOR', 'TITLE', 'SUBJECT', 'KEYWORDS', 'COMMENTS',
-  'FILENAME', 'FILESIZE', 'TEMPLATE', 'REVNUM',
-  'DOCPROPERTY', 'DOCVARIABLE',
+  'AUTHOR',
+  'TITLE',
+  'SUBJECT',
+  'KEYWORDS',
+  'COMMENTS',
+  'FILENAME',
+  'FILESIZE',
+  'TEMPLATE',
+  'REVNUM',
+  'DOCPROPERTY',
+  'DOCVARIABLE',
   // Cross-references
-  'REF', 'PAGEREF', 'NOTEREF', 'HYPERLINK',
+  'REF',
+  'PAGEREF',
+  'NOTEREF',
+  'HYPERLINK',
   // Tables of contents and indexes
-  'TOC', 'TOA', 'INDEX',
+  'TOC',
+  'TOA',
+  'INDEX',
   // Numbering
-  'SEQ', 'STYLEREF', 'AUTONUM', 'AUTONUMLGL', 'AUTONUMOUT',
+  'SEQ',
+  'STYLEREF',
+  'AUTONUM',
+  'AUTONUMLGL',
+  'AUTONUMOUT',
   // Section info
-  'SECTION', 'SECTIONPAGES',
+  'SECTION',
+  'SECTIONPAGES',
   // User info
-  'USERADDRESS', 'USERNAME', 'USERINITIALS',
+  'USERADDRESS',
+  'USERNAME',
+  'USERINITIALS',
   // Mail merge
-  'IF', 'MERGEFIELD', 'NEXT', 'NEXTIF', 'ASK', 'SET',
+  'IF',
+  'MERGEFIELD',
+  'NEXT',
+  'NEXTIF',
+  'ASK',
+  'SET',
   // Inclusion
-  'QUOTE', 'INCLUDETEXT', 'INCLUDEPICTURE',
+  'QUOTE',
+  'INCLUDETEXT',
+  'INCLUDEPICTURE',
   // Other
-  'SYMBOL', 'ADVANCE',
+  'SYMBOL',
+  'ADVANCE',
 ];
 
 /**
@@ -159,7 +191,7 @@ export function parseFieldInstruction(instruction: string): ParsedFieldInstructi
   const fieldNameEnd = nameMatch ? nameMatch[0].length : 0;
 
   // Everything after the field name
-  let remaining = trimmed.substring(fieldNameEnd).trim();
+  const remaining = trimmed.substring(fieldNameEnd).trim();
 
   // Extract switches (start with \)
   const switchRegex = /\\(\*|@|#|!|[a-z])\s*(?:"([^"]*)"|([\S]*))?/gi;
@@ -180,7 +212,10 @@ export function parseFieldInstruction(instruction: string): ParsedFieldInstructi
     }
 
     switches.push(sw);
-    switchPositions.push({ start: switchMatch.index, end: switchMatch.index + switchMatch[0].length });
+    switchPositions.push({
+      start: switchMatch.index,
+      end: switchMatch.index + switchMatch[0].length,
+    });
   }
 
   // Find argument (text before first switch, excluding field name)
@@ -212,7 +247,7 @@ export function parseFieldInstruction(instruction: string): ParsedFieldInstructi
  * @returns Format string or undefined
  */
 export function getFormatSwitch(instruction: ParsedFieldInstruction): string | undefined {
-  const formatSwitch = instruction.switches.find(s => s.switch === '*' || s.switch === '@');
+  const formatSwitch = instruction.switches.find((s) => s.switch === '*' || s.switch === '@');
   return formatSwitch?.value;
 }
 
@@ -223,7 +258,7 @@ export function getFormatSwitch(instruction: ParsedFieldInstruction): string | u
  * @returns true if MERGEFORMAT is present
  */
 export function hasMergeFormat(instruction: ParsedFieldInstruction): boolean {
-  const formatSwitch = instruction.switches.find(s => s.switch === '*');
+  const formatSwitch = instruction.switches.find((s) => s.switch === '*');
   return formatSwitch?.value?.toUpperCase() === 'MERGEFORMAT';
 }
 
@@ -273,8 +308,6 @@ export function parseSimpleField(
     field.content.push(run);
   }
 
-  // Also check for hyperlinks
-  const hyperlinks = findChildren(node, 'w', 'hyperlink');
   // Note: Hyperlinks inside fields would need their own parsing
   // For now, we handle runs which is the common case
 
@@ -369,12 +402,10 @@ export function getFieldDisplayValue(field: Field): string {
   if (field.type === 'simpleField') {
     return field.content
       .filter((c): c is Run => 'content' in c)
-      .map(run => getRunText(run))
+      .map((run) => getRunText(run))
       .join('');
   } else {
-    return field.fieldResult
-      .map(run => getRunText(run))
-      .join('');
+    return field.fieldResult.map((run) => getRunText(run)).join('');
   }
 }
 
@@ -383,8 +414,8 @@ export function getFieldDisplayValue(field: Field): string {
  */
 function getRunText(run: Run): string {
   return run.content
-    .filter(c => c.type === 'text')
-    .map(c => (c as { type: 'text'; text: string }).text)
+    .filter((c) => c.type === 'text')
+    .map((c) => (c as { type: 'text'; text: string }).text)
     .join('');
 }
 
@@ -416,7 +447,12 @@ export function isTotalPagesField(field: Field): boolean {
  */
 export function isDateTimeField(field: Field): boolean {
   const dateTimeTypes: FieldType[] = [
-    'DATE', 'TIME', 'CREATEDATE', 'SAVEDATE', 'PRINTDATE', 'EDITTIME',
+    'DATE',
+    'TIME',
+    'CREATEDATE',
+    'SAVEDATE',
+    'PRINTDATE',
+    'EDITTIME',
   ];
   return dateTimeTypes.includes(field.fieldType);
 }
@@ -429,9 +465,17 @@ export function isDateTimeField(field: Field): boolean {
  */
 export function isDocPropertyField(field: Field): boolean {
   const docPropTypes: FieldType[] = [
-    'AUTHOR', 'TITLE', 'SUBJECT', 'KEYWORDS', 'COMMENTS',
-    'FILENAME', 'FILESIZE', 'TEMPLATE', 'REVNUM',
-    'DOCPROPERTY', 'DOCVARIABLE',
+    'AUTHOR',
+    'TITLE',
+    'SUBJECT',
+    'KEYWORDS',
+    'COMMENTS',
+    'FILENAME',
+    'FILESIZE',
+    'TEMPLATE',
+    'REVNUM',
+    'DOCPROPERTY',
+    'DOCVARIABLE',
   ];
   return docPropTypes.includes(field.fieldType);
 }
@@ -454,9 +498,7 @@ export function isReferenceField(field: Field): boolean {
  * @returns true if this is a mail merge field
  */
 export function isMergeField(field: Field): boolean {
-  const mergeTypes: FieldType[] = [
-    'MERGEFIELD', 'IF', 'NEXT', 'NEXTIF', 'ASK', 'SET',
-  ];
+  const mergeTypes: FieldType[] = ['MERGEFIELD', 'IF', 'NEXT', 'NEXTIF', 'ASK', 'SET'];
   return mergeTypes.includes(field.fieldType);
 }
 
@@ -575,16 +617,34 @@ function toLetter(num: number): string {
  */
 export function formatDate(date: Date, format: string): string {
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
   const shortMonths = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
-  const days = [
-    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
-  ];
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const shortDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const pad = (n: number) => n.toString().padStart(2, '0');
@@ -665,7 +725,7 @@ export function collectFields(content: Array<Run | Hyperlink | Field | unknown>)
  * @returns Filtered array of fields
  */
 export function getFieldsByType(fields: Field[], fieldType: FieldType): Field[] {
-  return fields.filter(f => f.fieldType === fieldType);
+  return fields.filter((f) => f.fieldType === fieldType);
 }
 
 /**
@@ -696,7 +756,7 @@ export function getMergeFields(fields: Field[]): Field[] {
  */
 export function getMergeFieldNames(fields: Field[]): string[] {
   return getMergeFields(fields)
-    .map(f => {
+    .map((f) => {
       const parsed = parseFieldInstruction(f.instruction);
       return parsed.argument;
     })

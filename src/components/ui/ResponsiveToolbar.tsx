@@ -12,15 +12,8 @@
  * - ResizeObserver for dynamic resizing
  */
 
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import type { ReactNode, CSSProperties, ReactElement } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode, CSSProperties } from 'react';
 
 // ============================================================================
 // TYPES
@@ -132,12 +125,6 @@ const MoreIcon = () => (
   </svg>
 );
 
-const ChevronDownIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 // ============================================================================
 // USE RESPONSIVE TOOLBAR HOOK
 // ============================================================================
@@ -185,7 +172,8 @@ export function useResponsiveToolbar(
     let count = 0;
 
     for (const item of sortedItems) {
-      const itemWidth = item.minWidth || itemWidthsRef.current.get(item.id) || DEFAULT_ITEM_MIN_WIDTH;
+      const itemWidth =
+        item.minWidth || itemWidthsRef.current.get(item.id) || DEFAULT_ITEM_MIN_WIDTH;
       const widthWithGap = itemWidth + (count > 0 ? itemGap : 0);
 
       // Reserve space for overflow button if not all items will fit
@@ -267,12 +255,7 @@ interface OverflowMenuProps {
   anchorRef: React.RefObject<HTMLElement>;
 }
 
-const OverflowMenu: React.FC<OverflowMenuProps> = ({
-  items,
-  isOpen,
-  onClose,
-  anchorRef,
-}) => {
+const OverflowMenu: React.FC<OverflowMenuProps> = ({ items, isOpen, onClose, anchorRef }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close on click outside
@@ -333,11 +316,7 @@ const OverflowMenu: React.FC<OverflowMenuProps> = ({
       role="menu"
     >
       {items.map((item) => (
-        <div
-          key={item.id}
-          className="docx-responsive-toolbar-overflow-item"
-          role="menuitem"
-        >
+        <div key={item.id} className="docx-responsive-toolbar-overflow-item" role="menuitem">
           {item.content}
         </div>
       ))}

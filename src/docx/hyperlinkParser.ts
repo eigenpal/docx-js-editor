@@ -268,7 +268,7 @@ export function getHyperlinkUrl(hyperlink: Hyperlink): string | undefined {
  * @returns true if hyperlink has child runs
  */
 export function hasContent(hyperlink: Hyperlink): boolean {
-  return hyperlink.children.some(child => child.type === 'run');
+  return hyperlink.children.some((child) => child.type === 'run');
 }
 
 /**

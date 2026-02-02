@@ -16,15 +16,14 @@ import type {
   ListRendering,
   ListLevel,
   Theme,
-  TextFormatting,
   NumberFormat,
   Image as ImageType,
   Shape as ShapeType,
   TextBox as TextBoxType,
 } from '../../types/document';
-import { textToStyle, paragraphToStyle, mergeStyles } from '../../utils/formatToStyle';
+import { textToStyle, mergeStyles } from '../../utils/formatToStyle';
 import { twipsToPixels, formatPx } from '../../utils/units';
-import { formatNumber, getBulletCharacter, isBulletLevel } from '../../docx/numberingParser';
+import { formatNumber, getBulletCharacter } from '../../docx/numberingParser';
 import { Paragraph } from './Paragraph';
 
 /**
@@ -72,15 +71,15 @@ export interface ListItemProps {
  * Follows common Word default patterns
  */
 const DEFAULT_BULLETS: string[] = [
-  '•',  // Level 0: Solid bullet
-  '○',  // Level 1: Circle
-  '▪',  // Level 2: Square
-  '•',  // Level 3: Solid bullet
-  '○',  // Level 4: Circle
-  '▪',  // Level 5: Square
-  '•',  // Level 6: Solid bullet
-  '○',  // Level 7: Circle
-  '▪',  // Level 8: Square
+  '•', // Level 0: Solid bullet
+  '○', // Level 1: Circle
+  '▪', // Level 2: Square
+  '•', // Level 3: Solid bullet
+  '○', // Level 4: Circle
+  '▪', // Level 5: Square
+  '•', // Level 6: Solid bullet
+  '○', // Level 7: Circle
+  '▪', // Level 8: Square
 ];
 
 /**
@@ -88,14 +87,14 @@ const DEFAULT_BULLETS: string[] = [
  */
 const BULLET_CHAR_MAP: Record<string, string> = {
   // Wingdings characters
-  'F0A7': '●', // Black circle (Wingdings)
-  'F0B7': '●', // Another bullet
-  'F0FC': '✓', // Checkmark
-  'F06C': '❖', // Diamond
-  'F076': '●', // Filled circle
-  'F0A8': '▪', // Small square
-  'F0D8': '→', // Arrow
-  'F0E0': '◆', // Diamond
+  F0A7: '●', // Black circle (Wingdings)
+  F0B7: '●', // Another bullet
+  F0FC: '✓', // Checkmark
+  F06C: '❖', // Diamond
+  F076: '●', // Filled circle
+  F0A8: '▪', // Small square
+  F0D8: '→', // Arrow
+  F0E0: '◆', // Diamond
   // Symbol characters
   '2022': '•', // Standard bullet
   '25CB': '○', // White circle
@@ -197,11 +196,7 @@ export function ListItem({
   return (
     <div className={classNames} style={containerStyle}>
       {/* List marker */}
-      <span
-        className="docx-list-marker"
-        style={markerStyle}
-        aria-hidden="true"
-      >
+      <span className="docx-list-marker" style={markerStyle} aria-hidden="true">
         {marker}
       </span>
 
@@ -324,7 +319,7 @@ function getContainerStyle(
  * Get marker styles
  */
 function getMarkerStyle(
-  listRendering: ListRendering,
+  _listRendering: ListRendering,
   levelDefinition?: ListLevel | null,
   theme?: Theme | null
 ): CSSProperties {
@@ -359,7 +354,10 @@ function getMarkerStyle(
   }
 
   // Handle hanging indent (marker width based on hanging indent)
-  if (levelDefinition?.pPr?.indentFirstLine !== undefined && levelDefinition.pPr.indentFirstLine < 0) {
+  if (
+    levelDefinition?.pPr?.indentFirstLine !== undefined &&
+    levelDefinition.pPr.indentFirstLine < 0
+  ) {
     const hangingWidth = Math.abs(twipsToPixels(levelDefinition.pPr.indentFirstLine));
     style.minWidth = formatPx(Math.max(hangingWidth, MARKER_WIDTH));
   }
@@ -371,8 +369,8 @@ function getMarkerStyle(
  * Get content styles
  */
 function getContentStyle(
-  listRendering: ListRendering,
-  levelDefinition?: ListLevel | null
+  _listRendering: ListRendering,
+  _levelDefinition?: ListLevel | null
 ): CSSProperties {
   return {
     flex: 1,
@@ -434,9 +432,10 @@ export function unicodeToChar(codePoint: string): string {
  * Check if a paragraph should be rendered as a list item
  */
 export function isListItemParagraph(paragraph: ParagraphType): boolean {
-  return paragraph.listRendering !== undefined ||
-    (paragraph.formatting?.numPr?.numId !== undefined &&
-      paragraph.formatting?.numPr?.numId !== 0);
+  return (
+    paragraph.listRendering !== undefined ||
+    (paragraph.formatting?.numPr?.numId !== undefined && paragraph.formatting?.numPr?.numId !== 0)
+  );
 }
 
 /**
@@ -499,10 +498,7 @@ export function getMarkerForFormat(
 /**
  * Calculate total list indent in pixels for a level
  */
-export function getListIndent(
-  level: number,
-  levelDefinition?: ListLevel | null
-): number {
+export function getListIndent(level: number, levelDefinition?: ListLevel | null): number {
   if (levelDefinition?.pPr?.indentLeft !== undefined) {
     return twipsToPixels(levelDefinition.pPr.indentLeft);
   }
@@ -513,8 +509,10 @@ export function getListIndent(
  * Get the hanging indent for a list level
  */
 export function getHangingIndent(levelDefinition?: ListLevel | null): number {
-  if (levelDefinition?.pPr?.indentFirstLine !== undefined &&
-      levelDefinition.pPr.indentFirstLine < 0) {
+  if (
+    levelDefinition?.pPr?.indentFirstLine !== undefined &&
+    levelDefinition.pPr.indentFirstLine < 0
+  ) {
     return Math.abs(twipsToPixels(levelDefinition.pPr.indentFirstLine));
   }
   return MARKER_WIDTH + MARKER_GAP;
@@ -537,7 +535,11 @@ export function getCommonBulletChars(): string[] {
 /**
  * Get common number formats for UI selection
  */
-export function getCommonNumberFormats(): { format: NumberFormat; label: string; example: string }[] {
+export function getCommonNumberFormats(): {
+  format: NumberFormat;
+  label: string;
+  example: string;
+}[] {
   return [
     { format: 'decimal', label: 'Numbers', example: '1, 2, 3' },
     { format: 'lowerLetter', label: 'Lowercase letters', example: 'a, b, c' },

@@ -14,7 +14,6 @@ import type {
   Paragraph,
   ParagraphContent,
   ParagraphFormatting,
-  Run,
   Hyperlink,
   BookmarkStart,
   BookmarkEnd,
@@ -23,7 +22,6 @@ import type {
   TabStop,
   BorderSpec,
   ShadingProperties,
-  ColorValue,
   TextFormatting,
 } from '../../types/document';
 
@@ -203,11 +201,8 @@ function serializeShading(shading: ShadingProperties | undefined): string {
 function serializeTabStops(tabs: TabStop[] | undefined): string {
   if (!tabs || tabs.length === 0) return '';
 
-  const tabElements = tabs.map(tab => {
-    const attrs: string[] = [
-      `w:val="${tab.alignment}"`,
-      `w:pos="${tab.position}"`,
-    ];
+  const tabElements = tabs.map((tab) => {
+    const attrs: string[] = [`w:val="${tab.alignment}"`, `w:pos="${tab.position}"`];
 
     if (tab.leader && tab.leader !== 'none') {
       attrs.push(`w:leader="${tab.leader}"`);
@@ -520,16 +515,18 @@ function serializeHyperlink(hyperlink: Hyperlink): string {
   }
 
   // Serialize children
-  const childrenXml = hyperlink.children.map(child => {
-    if (child.type === 'run') {
-      return serializeRun(child);
-    } else if (child.type === 'bookmarkStart') {
-      return serializeBookmarkStart(child);
-    } else if (child.type === 'bookmarkEnd') {
-      return serializeBookmarkEnd(child);
-    }
-    return '';
-  }).join('');
+  const childrenXml = hyperlink.children
+    .map((child) => {
+      if (child.type === 'run') {
+        return serializeRun(child);
+      } else if (child.type === 'bookmarkStart') {
+        return serializeBookmarkStart(child);
+      } else if (child.type === 'bookmarkEnd') {
+        return serializeBookmarkEnd(child);
+      }
+      return '';
+    })
+    .join('');
 
   const attrsStr = attrs.length > 0 ? ' ' + attrs.join(' ') : '';
   return `<w:hyperlink${attrsStr}>${childrenXml}</w:hyperlink>`;
@@ -539,10 +536,7 @@ function serializeHyperlink(hyperlink: Hyperlink): string {
  * Serialize bookmark start (w:bookmarkStart)
  */
 function serializeBookmarkStart(bookmark: BookmarkStart): string {
-  const attrs: string[] = [
-    `w:id="${bookmark.id}"`,
-    `w:name="${escapeXml(bookmark.name)}"`,
-  ];
+  const attrs: string[] = [`w:id="${bookmark.id}"`, `w:name="${escapeXml(bookmark.name)}"`];
 
   if (bookmark.colFirst !== undefined) {
     attrs.push(`w:colFirst="${bookmark.colFirst}"`);
@@ -566,9 +560,7 @@ function serializeBookmarkEnd(bookmark: BookmarkEnd): string {
  * Serialize a simple field (w:fldSimple)
  */
 function serializeSimpleField(field: SimpleField): string {
-  const attrs: string[] = [
-    `w:instr="${escapeXml(field.instruction)}"`,
-  ];
+  const attrs: string[] = [`w:instr="${escapeXml(field.instruction)}"`];
 
   if (field.fldLock) {
     attrs.push('w:fldLock="true"');
@@ -579,14 +571,16 @@ function serializeSimpleField(field: SimpleField): string {
   }
 
   // Serialize content
-  const contentXml = field.content.map(item => {
-    if (item.type === 'run') {
-      return serializeRun(item);
-    } else if (item.type === 'hyperlink') {
-      return serializeHyperlink(item);
-    }
-    return '';
-  }).join('');
+  const contentXml = field.content
+    .map((item) => {
+      if (item.type === 'run') {
+        return serializeRun(item);
+      } else if (item.type === 'hyperlink') {
+        return serializeHyperlink(item);
+      }
+      return '';
+    })
+    .join('');
 
   return `<w:fldSimple ${attrs.join(' ')}>${contentXml}</w:fldSimple>`;
 }
@@ -611,10 +605,11 @@ function serializeComplexField(field: ComplexField): string {
 
   // Field code (instrText)
   if (field.fieldCode.length > 0) {
-    parts.push(...field.fieldCode.map(run => serializeRun(run)));
+    parts.push(...field.fieldCode.map((run) => serializeRun(run)));
   } else {
     // Fallback: create instrText from instruction
-    const needsPreserve = field.instruction.startsWith(' ') ||
+    const needsPreserve =
+      field.instruction.startsWith(' ') ||
       field.instruction.endsWith(' ') ||
       field.instruction.includes('  ');
     const spaceAttr = needsPreserve ? ' xml:space="preserve"' : '';
@@ -625,7 +620,7 @@ function serializeComplexField(field: ComplexField): string {
   parts.push('<w:r><w:fldChar w:fldCharType="separate"/></w:r>');
 
   // Field result
-  parts.push(...field.fieldResult.map(run => serializeRun(run)));
+  parts.push(...field.fieldResult.map((run) => serializeRun(run)));
 
   // End field character
   parts.push('<w:r><w:fldChar w:fldCharType="end"/></w:r>');

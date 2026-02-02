@@ -20,9 +20,7 @@ import type {
   Run,
   TextFormatting,
   ParagraphFormatting,
-  BlockContent,
   Style,
-  Section,
   Hyperlink,
 } from '../types/document';
 
@@ -141,7 +139,7 @@ export class DocumentAgent {
         package: {
           document: { content: [] },
         },
-        originalBuffer: source instanceof ArrayBuffer ? source : source.buffer as ArrayBuffer,
+        originalBuffer: source instanceof ArrayBuffer ? source : (source.buffer as ArrayBuffer),
       };
     } else {
       this._document = source;
@@ -238,7 +236,7 @@ export class DocumentAgent {
           id: styleId,
           name: styleObj.name || styleId,
           type: styleObj.type === 'numbering' ? 'paragraph' : styleObj.type || 'paragraph',
-          builtIn: styleObj.builtIn,
+          builtIn: styleObj.default, // Use default property as proxy for built-in
         });
       }
     }
@@ -292,9 +290,8 @@ export class DocumentAgent {
    * @returns Number of paragraphs
    */
   getParagraphCount(): number {
-    return this._document.package.document.content.filter(
-      (block) => block.type === 'paragraph'
-    ).length;
+    return this._document.package.document.content.filter((block) => block.type === 'paragraph')
+      .length;
   }
 
   /**
@@ -303,9 +300,7 @@ export class DocumentAgent {
    * @returns Number of tables
    */
   getTableCount(): number {
-    return this._document.package.document.content.filter(
-      (block) => block.type === 'table'
-    ).length;
+    return this._document.package.document.content.filter((block) => block.type === 'table').length;
   }
 
   /**
@@ -328,7 +323,7 @@ export class DocumentAgent {
         style: styleId,
         isHeading: styleId?.toLowerCase().includes('heading') || false,
         headingLevel: this._parseHeadingLevel(styleId),
-        isListItem: !!para.listRendering?.isListItem,
+        isListItem: !!para.listRendering,
         isEmpty: text.trim().length === 0,
       };
     });
@@ -336,15 +331,16 @@ export class DocumentAgent {
     const sections: SectionInfo[] = (body.sections || []).map((section, index) => ({
       index,
       paragraphCount: section.content?.length || 0,
-      pageSize: section.properties?.pageSize
-        ? {
-            width: section.properties.pageSize.width,
-            height: section.properties.pageSize.height,
-          }
-        : undefined,
-      isLandscape: section.properties?.pageSize?.orientation === 'landscape',
-      hasHeader: !!section.properties?.headerRefs?.length,
-      hasFooter: !!section.properties?.footerRefs?.length,
+      pageSize:
+        section.properties?.pageWidth && section.properties?.pageHeight
+          ? {
+              width: section.properties.pageWidth,
+              height: section.properties.pageHeight,
+            }
+          : undefined,
+      isLandscape: section.properties?.orientation === 'landscape',
+      hasHeader: !!section.properties?.headerReferences?.length,
+      hasFooter: !!section.properties?.footerReferences?.length,
     }));
 
     return {
@@ -795,10 +791,7 @@ export class DocumentAgent {
   /**
    * Extract formatted text segments from a paragraph
    */
-  private _extractParagraphSegments(
-    paragraph: Paragraph,
-    segments: FormattedTextSegment[]
-  ): void {
+  private _extractParagraphSegments(paragraph: Paragraph, segments: FormattedTextSegment[]): void {
     for (const item of paragraph.content) {
       if (item.type === 'run') {
         const text = this._getRunText(item);

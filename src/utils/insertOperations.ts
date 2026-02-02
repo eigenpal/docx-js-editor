@@ -5,7 +5,14 @@
  * Provides functions for inserting page breaks, horizontal rules, and other elements.
  */
 
-import type { BreakContent, Run, Paragraph, RunContent, BlockContent, Document } from '../types/document';
+import type {
+  BreakContent,
+  Run,
+  Paragraph,
+  Document,
+  ParagraphContent,
+  RunContent,
+} from '../types/document';
 
 // ============================================================================
 // TYPES
@@ -63,6 +70,7 @@ export function createLineBreak(clear?: 'none' | 'left' | 'right' | 'all'): Brea
  */
 export function createPageBreakRun(): Run {
   return {
+    type: 'run',
     content: [createPageBreak()],
   };
 }
@@ -73,7 +81,7 @@ export function createPageBreakRun(): Run {
 export function createPageBreakParagraph(): Paragraph {
   return {
     type: 'paragraph',
-    runs: [],
+    content: [],
     formatting: {
       pageBreakBefore: true,
     },
@@ -81,15 +89,19 @@ export function createPageBreakParagraph(): Paragraph {
 }
 
 /**
+ * Get runs from paragraph content
+ */
+function getParagraphRuns(paragraph: Paragraph): Run[] {
+  return paragraph.content.filter((item): item is Run => item.type === 'run');
+}
+
+/**
  * Insert a page break at a position in the document
  * This inserts a new paragraph with pageBreakBefore: true
  */
-export function insertPageBreak(
-  doc: Document,
-  position: InsertPosition
-): Document {
+export function insertPageBreak(doc: Document, position: InsertPosition): Document {
   const { paragraphIndex } = position;
-  const content = [...(doc.body.content || [])];
+  const content = [...(doc.package.document.content || [])];
 
   // Create a new paragraph with page break before
   const pageBreakParagraph = createPageBreakParagraph();
@@ -99,9 +111,12 @@ export function insertPageBreak(
 
   return {
     ...doc,
-    body: {
-      ...doc.body,
-      content,
+    package: {
+      ...doc.package,
+      document: {
+        ...doc.package.document,
+        content,
+      },
     },
   };
 }
@@ -117,20 +132,18 @@ export function insertPageBreak(
 export function createHorizontalRule(): Paragraph {
   return {
     type: 'paragraph',
-    runs: [],
+    content: [],
     formatting: {
       borders: {
         bottom: {
           style: 'single',
           color: { rgb: '000000' },
-          width: 12, // 1.5pt
+          size: 12, // 1.5pt
           space: 1,
         },
       },
-      spacing: {
-        before: 120, // 6pt
-        after: 120, // 6pt
-      },
+      spaceBefore: 120, // 6pt
+      spaceAfter: 120, // 6pt
     },
   };
 }
@@ -138,12 +151,9 @@ export function createHorizontalRule(): Paragraph {
 /**
  * Insert a horizontal rule at a position in the document
  */
-export function insertHorizontalRule(
-  doc: Document,
-  position: InsertPosition
-): Document {
+export function insertHorizontalRule(doc: Document, position: InsertPosition): Document {
   const { paragraphIndex } = position;
-  const content = [...(doc.body.content || [])];
+  const content = [...(doc.package.document.content || [])];
 
   // Create a horizontal rule paragraph
   const hrParagraph = createHorizontalRule();
@@ -153,9 +163,12 @@ export function insertHorizontalRule(
 
   return {
     ...doc,
-    body: {
-      ...doc.body,
-      content,
+    package: {
+      ...doc.package,
+      document: {
+        ...doc.package.document,
+        content,
+      },
     },
   };
 }
@@ -205,7 +218,7 @@ export function hasPageBreakBefore(paragraph: Paragraph): boolean {
 export function countPageBreaks(doc: Document): number {
   let count = 0;
 
-  for (const block of doc.body.content || []) {
+  for (const block of doc.package.document.content || []) {
     if (block.type === 'paragraph') {
       const paragraph = block as Paragraph;
 
@@ -215,7 +228,8 @@ export function countPageBreaks(doc: Document): number {
       }
 
       // Check for page breaks in runs
-      for (const run of paragraph.runs) {
+      const runs = getParagraphRuns(paragraph);
+      for (const run of runs) {
         for (const content of run.content) {
           if (isPageBreak(content)) {
             count++;
@@ -234,7 +248,7 @@ export function countPageBreaks(doc: Document): number {
 export function findPageBreaks(doc: Document): InsertPosition[] {
   const positions: InsertPosition[] = [];
 
-  const content = doc.body.content || [];
+  const content = doc.package.document.content || [];
   for (let paragraphIndex = 0; paragraphIndex < content.length; paragraphIndex++) {
     const block = content[paragraphIndex];
 
@@ -247,10 +261,11 @@ export function findPageBreaks(doc: Document): InsertPosition[] {
       }
 
       // Check for page breaks in runs
-      for (let runIndex = 0; runIndex < paragraph.runs.length; runIndex++) {
-        const run = paragraph.runs[runIndex];
-        for (const content of run.content) {
-          if (isPageBreak(content)) {
+      const runs = getParagraphRuns(paragraph);
+      for (let runIndex = 0; runIndex < runs.length; runIndex++) {
+        const run = runs[runIndex];
+        for (const runContent of run.content) {
+          if (isPageBreak(runContent)) {
             positions.push({ paragraphIndex, runIndex });
           }
         }
@@ -264,12 +279,9 @@ export function findPageBreaks(doc: Document): InsertPosition[] {
 /**
  * Remove a page break at a specific position
  */
-export function removePageBreak(
-  doc: Document,
-  position: InsertPosition
-): Document {
+export function removePageBreak(doc: Document, position: InsertPosition): Document {
   const { paragraphIndex, runIndex } = position;
-  const content = [...(doc.body.content || [])];
+  const content = [...(doc.package.document.content || [])];
   const block = content[paragraphIndex];
 
   if (block.type !== 'paragraph') {
@@ -290,33 +302,48 @@ export function removePageBreak(
 
     return {
       ...doc,
-      body: {
-        ...doc.body,
-        content,
+      package: {
+        ...doc.package,
+        document: {
+          ...doc.package.document,
+          content,
+        },
       },
     };
   }
 
   // If page break in run, remove it
   if (runIndex !== undefined) {
-    const runs = [...paragraph.runs];
-    const run = runs[runIndex];
-    const newContent = run.content.filter((c) => !isPageBreak(c));
+    const newParagraphContent: ParagraphContent[] = [];
+    let currentRunIndex = 0;
 
-    if (newContent.length === 0) {
-      // Remove the entire run if empty
-      runs.splice(runIndex, 1);
-    } else {
-      runs[runIndex] = { ...run, content: newContent };
+    for (const item of paragraph.content) {
+      if (item.type === 'run') {
+        if (currentRunIndex === runIndex) {
+          const newRunContent = item.content.filter((c: RunContent) => !isPageBreak(c));
+
+          if (newRunContent.length > 0) {
+            newParagraphContent.push({ ...item, content: newRunContent });
+          }
+        } else {
+          newParagraphContent.push(item);
+        }
+        currentRunIndex++;
+      } else {
+        newParagraphContent.push(item);
+      }
     }
 
-    content[paragraphIndex] = { ...paragraph, runs };
+    content[paragraphIndex] = { ...paragraph, content: newParagraphContent };
 
     return {
       ...doc,
-      body: {
-        ...doc.body,
-        content,
+      package: {
+        ...doc.package,
+        document: {
+          ...doc.package.document,
+          content,
+        },
       },
     };
   }

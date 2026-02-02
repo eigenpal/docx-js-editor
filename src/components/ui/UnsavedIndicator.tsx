@@ -107,7 +107,13 @@ const DEFAULT_WARNING_MESSAGE = 'You have unsaved changes. Are you sure you want
 // ============================================================================
 
 const SaveIcon = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path
       d="M3 2h8l2 2v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z"
       stroke="currentColor"
@@ -133,7 +139,13 @@ const SaveIcon = ({ size = 16 }: { size?: number }) => (
 );
 
 const UnsavedIcon = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
     <path d="M8 5v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     <circle cx="8" cy="11" r="0.5" fill="currentColor" />
@@ -165,7 +177,8 @@ const getIndicatorStyles = (
     alignItems: 'center',
     justifyContent: 'center',
     transition: 'all 0.2s ease',
-    animation: hasUnsavedChanges && showPulse ? 'docx-unsaved-pulse 2s ease-in-out infinite' : 'none',
+    animation:
+      hasUnsavedChanges && showPulse ? 'docx-unsaved-pulse 2s ease-in-out infinite' : 'none',
   };
 
   // Position styles
@@ -240,6 +253,19 @@ export const UnsavedIndicator: React.FC<UnsavedIndicatorProps> = ({
   onClick,
   title,
 }) => {
+  // Inject keyframes if pulse is enabled - must be before early return
+  useEffect(() => {
+    if (!showPulse || !hasUnsavedChanges) return;
+
+    const styleId = 'docx-unsaved-pulse-keyframes';
+    if (!document.getElementById(styleId)) {
+      const styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      styleElement.textContent = pulseKeyframes;
+      document.head.appendChild(styleElement);
+    }
+  }, [showPulse, hasUnsavedChanges]);
+
   // Don't render if saved and showWhenSaved is false
   if (!hasUnsavedChanges && !showWhenSaved) {
     return null;
@@ -261,22 +287,7 @@ export const UnsavedIndicator: React.FC<UnsavedIndicatorProps> = ({
     cursor: onClick ? 'pointer' : undefined,
   };
 
-  const defaultTitle = hasUnsavedChanges
-    ? 'Document has unsaved changes'
-    : 'All changes saved';
-
-  // Inject keyframes if pulse is enabled
-  useEffect(() => {
-    if (!showPulse || !hasUnsavedChanges) return;
-
-    const styleId = 'docx-unsaved-pulse-keyframes';
-    if (!document.getElementById(styleId)) {
-      const styleElement = document.createElement('style');
-      styleElement.id = styleId;
-      styleElement.textContent = pulseKeyframes;
-      document.head.appendChild(styleElement);
-    }
-  }, [showPulse, hasUnsavedChanges]);
+  const defaultTitle = hasUnsavedChanges ? 'Document has unsaved changes' : 'All changes saved';
 
   const renderContent = () => {
     switch (variant) {
@@ -318,9 +329,7 @@ export const UnsavedIndicator: React.FC<UnsavedIndicatorProps> = ({
 /**
  * Hook to track unsaved changes in a document
  */
-export function useUnsavedChanges(
-  options: UseUnsavedChangesOptions = {}
-): UseUnsavedChangesReturn {
+export function useUnsavedChanges(options: UseUnsavedChangesOptions = {}): UseUnsavedChangesReturn {
   const {
     document: currentDocument,
     warnBeforeLeave = true,
@@ -423,7 +432,14 @@ export function useUnsavedChanges(
 
       previousDocumentRef.current = currentSerialized;
     }
-  }, [enabled, currentDocument, lastSavedDocument, hasUnsavedChanges, serializeDocument, onChangeStatusChange]);
+  }, [
+    enabled,
+    currentDocument,
+    lastSavedDocument,
+    hasUnsavedChanges,
+    serializeDocument,
+    onChangeStatusChange,
+  ]);
 
   // Warn before leaving page
   useEffect(() => {

@@ -37,12 +37,7 @@ import type {
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import type { NumberingMap } from './numberingParser';
-import {
-  parseXml,
-  findChildren,
-  getAttribute,
-  type XmlElement,
-} from './xmlParser';
+import { parseXml, findChildren, getAttribute, type XmlElement } from './xmlParser';
 import { parseParagraph } from './paragraphParser';
 import { parseTable } from './tableParser';
 
@@ -190,7 +185,7 @@ function parseHeaderFooterContent(
 
     // Parse paragraphs
     if (name === 'w:p' || name.endsWith(':p')) {
-      const paragraph = parseParagraph(el, styles, theme, numbering, rels, media);
+      const paragraph = parseParagraph(el, styles, theme, numbering, rels);
       content.push(paragraph);
     }
     // Parse tables
@@ -262,9 +257,7 @@ export function parseHeader(
 
   // Find the root header element (w:hdr)
   const rootElement = doc.elements?.find(
-    (el: XmlElement) =>
-      el.type === 'element' &&
-      (el.name === 'w:hdr' || el.name?.endsWith(':hdr'))
+    (el: XmlElement) => el.type === 'element' && (el.name === 'w:hdr' || el.name?.endsWith(':hdr'))
   ) as XmlElement | undefined;
 
   if (!rootElement) {
@@ -272,14 +265,7 @@ export function parseHeader(
   }
 
   // Parse content
-  result.content = parseHeaderFooterContent(
-    rootElement,
-    styles,
-    theme,
-    numbering,
-    rels,
-    media
-  );
+  result.content = parseHeaderFooterContent(rootElement, styles, theme, numbering, rels, media);
 
   return result;
 }
@@ -322,9 +308,7 @@ export function parseFooter(
 
   // Find the root footer element (w:ftr)
   const rootElement = doc.elements?.find(
-    (el: XmlElement) =>
-      el.type === 'element' &&
-      (el.name === 'w:ftr' || el.name?.endsWith(':ftr'))
+    (el: XmlElement) => el.type === 'element' && (el.name === 'w:ftr' || el.name?.endsWith(':ftr'))
   ) as XmlElement | undefined;
 
   if (!rootElement) {
@@ -332,14 +316,7 @@ export function parseFooter(
   }
 
   // Parse content
-  result.content = parseHeaderFooterContent(
-    rootElement,
-    styles,
-    theme,
-    numbering,
-    rels,
-    media
-  );
+  result.content = parseHeaderFooterContent(rootElement, styles, theme, numbering, rels, media);
 
   return result;
 }
@@ -381,9 +358,7 @@ export function parseHeaderFooter(
 /**
  * Create a HeaderFooterMap from parsed headers/footers
  */
-function createHeaderFooterMap(
-  byId: Map<string, HeaderFooter>
-): HeaderFooterMap {
+function createHeaderFooterMap(byId: Map<string, HeaderFooter>): HeaderFooterMap {
   return {
     byId,
 
@@ -445,16 +420,7 @@ export function buildHeaderFooterMap(
   for (const ref of references) {
     const xml = xmlContents.get(ref.rId);
     if (xml) {
-      const hf = parseHeaderFooter(
-        xml,
-        isHeader,
-        ref.type,
-        styles,
-        theme,
-        numbering,
-        rels,
-        media
-      );
+      const hf = parseHeaderFooter(xml, isHeader, ref.type, styles, theme, numbering, rels, media);
       byId.set(ref.rId, hf);
     }
   }

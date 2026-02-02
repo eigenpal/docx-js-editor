@@ -99,7 +99,7 @@ interface FootnoteItemProps {
  */
 export function FootnoteArea({
   footnotes,
-  pageNumber,
+  pageNumber: _pageNumber,
   theme,
   properties,
   startNumber = 1,
@@ -112,7 +112,7 @@ export function FootnoteArea({
 }: FootnoteAreaProps): React.ReactElement | null {
   // Filter out separator footnotes
   const displayableFootnotes = footnotes.filter(
-    (fn) => fn.type === 'normal' || fn.type === undefined
+    (fn) => fn.noteType === 'normal' || fn.noteType === undefined
   );
 
   if (displayableFootnotes.length === 0) {
@@ -137,16 +137,9 @@ export function FootnoteArea({
   const numberFormat = properties?.numFmt;
 
   return (
-    <div
-      className={classNames.join(' ')}
-      style={style}
-      role="region"
-      aria-label="Footnotes"
-    >
+    <div className={classNames.join(' ')} style={style} role="region" aria-label="Footnotes">
       {/* Separator line */}
-      {showSeparator && (
-        separator || <FootnoteSeparator />
-      )}
+      {showSeparator && (separator || <FootnoteSeparator />)}
 
       {/* Footnotes */}
       <div className="docx-footnote-list">
@@ -183,7 +176,7 @@ export function EndnoteArea({
 }: EndnoteAreaProps): React.ReactElement | null {
   // Filter out separator endnotes
   const displayableEndnotes = endnotes.filter(
-    (en) => en.type === 'normal' || en.type === undefined
+    (en) => en.noteType === 'normal' || en.noteType === undefined
   );
 
   if (displayableEndnotes.length === 0) {
@@ -208,15 +201,13 @@ export function EndnoteArea({
   const numberFormat = properties?.numFmt;
 
   return (
-    <div
-      className={classNames.join(' ')}
-      style={style}
-      role="region"
-      aria-label="Endnotes"
-    >
+    <div className={classNames.join(' ')} style={style} role="region" aria-label="Endnotes">
       {/* Title */}
       {showTitle && (
-        <div className="docx-endnote-title" style={{ fontWeight: 'bold', marginBottom: '12px', fontSize: '12px' }}>
+        <div
+          className="docx-endnote-title"
+          style={{ fontWeight: 'bold', marginBottom: '12px', fontSize: '12px' }}
+        >
           {title}
         </div>
       )}
@@ -268,7 +259,7 @@ function FootnoteItem({
   footnote,
   displayNumber,
   numberFormat,
-  theme,
+  theme: _theme,
   renderParagraph,
   onClick,
 }: FootnoteItemProps): React.ReactElement {
@@ -311,11 +302,7 @@ function FootnoteItem({
         {footnote.content.map((block, index) => {
           if (block.type === 'paragraph') {
             if (renderParagraph) {
-              return (
-                <React.Fragment key={index}>
-                  {renderParagraph(block, index)}
-                </React.Fragment>
-              );
+              return <React.Fragment key={index}>{renderParagraph(block, index)}</React.Fragment>;
             }
             return (
               <div key={index} className="docx-fn-para">
@@ -337,7 +324,7 @@ function EndnoteItem({
   endnote,
   displayNumber,
   numberFormat,
-  theme,
+  theme: _theme,
   renderParagraph,
   onClick,
 }: {
@@ -387,11 +374,7 @@ function EndnoteItem({
         {endnote.content.map((block, index) => {
           if (block.type === 'paragraph') {
             if (renderParagraph) {
-              return (
-                <React.Fragment key={index}>
-                  {renderParagraph(block, index)}
-                </React.Fragment>
-              );
+              return <React.Fragment key={index}>{renderParagraph(block, index)}</React.Fragment>;
             }
             return (
               <div key={index} className="docx-en-para">
@@ -440,7 +423,7 @@ export function calculateFootnoteAreaHeight(
 
   // Filter displayable footnotes
   const displayable = footnotes.filter(
-    (fn) => fn.type === 'normal' || fn.type === undefined
+    (fn) => fn.noteType === 'normal' || fn.noteType === undefined
   );
 
   if (displayable.length === 0) {
@@ -491,53 +474,37 @@ export function getFootnoteStartNumber(
 /**
  * Check if a page has footnotes
  */
-export function hasFootnotes(
-  footnotes: Footnote[] | undefined | null
-): boolean {
+export function hasFootnotes(footnotes: Footnote[] | undefined | null): boolean {
   if (!footnotes || footnotes.length === 0) return false;
 
-  return footnotes.some(
-    (fn) => fn.type === 'normal' || fn.type === undefined
-  );
+  return footnotes.some((fn) => fn.noteType === 'normal' || fn.noteType === undefined);
 }
 
 /**
  * Check if a page has endnotes
  */
-export function hasEndnotes(
-  endnotes: Endnote[] | undefined | null
-): boolean {
+export function hasEndnotes(endnotes: Endnote[] | undefined | null): boolean {
   if (!endnotes || endnotes.length === 0) return false;
 
-  return endnotes.some(
-    (en) => en.type === 'normal' || en.type === undefined
-  );
+  return endnotes.some((en) => en.noteType === 'normal' || en.noteType === undefined);
 }
 
 /**
  * Get footnote count (excluding separators)
  */
-export function getFootnoteCount(
-  footnotes: Footnote[] | undefined | null
-): number {
+export function getFootnoteCount(footnotes: Footnote[] | undefined | null): number {
   if (!footnotes) return 0;
 
-  return footnotes.filter(
-    (fn) => fn.type === 'normal' || fn.type === undefined
-  ).length;
+  return footnotes.filter((fn) => fn.noteType === 'normal' || fn.noteType === undefined).length;
 }
 
 /**
  * Get endnote count (excluding separators)
  */
-export function getEndnoteCount(
-  endnotes: Endnote[] | undefined | null
-): number {
+export function getEndnoteCount(endnotes: Endnote[] | undefined | null): number {
   if (!endnotes) return 0;
 
-  return endnotes.filter(
-    (en) => en.type === 'normal' || en.type === undefined
-  ).length;
+  return endnotes.filter((en) => en.noteType === 'normal' || en.noteType === undefined).length;
 }
 
 export default FootnoteArea;

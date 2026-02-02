@@ -31,7 +31,6 @@ import type {
   LineSpacingRule,
   ParagraphAlignment,
   RelationshipMap,
-  MediaFile,
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import type { NumberingMap } from './numberingParser';
@@ -40,7 +39,6 @@ import {
   findChildren,
   getAttribute,
   getChildElements,
-  getTextContent,
   parseBooleanElement,
   parseNumericAttribute,
   type XmlElement,
@@ -207,7 +205,9 @@ function parseTabStops(tabs: XmlElement | null): TabStop[] | undefined {
 /**
  * Parse frame properties (w:framePr)
  */
-function parseFrameProperties(framePr: XmlElement | null): ParagraphFormatting['frame'] | undefined {
+function parseFrameProperties(
+  framePr: XmlElement | null
+): ParagraphFormatting['frame'] | undefined {
   if (!framePr) return undefined;
 
   const frame: ParagraphFormatting['frame'] = {};
@@ -534,18 +534,55 @@ function parseFieldType(instruction: string): FieldType {
   const fieldName = match[1].toUpperCase();
 
   const knownFields: FieldType[] = [
-    'PAGE', 'NUMPAGES', 'NUMWORDS', 'NUMCHARS',
-    'DATE', 'TIME', 'CREATEDATE', 'SAVEDATE', 'PRINTDATE',
-    'AUTHOR', 'TITLE', 'SUBJECT', 'KEYWORDS', 'COMMENTS',
-    'FILENAME', 'FILESIZE', 'TEMPLATE',
-    'DOCPROPERTY', 'DOCVARIABLE',
-    'REF', 'PAGEREF', 'NOTEREF', 'HYPERLINK',
-    'TOC', 'TOA', 'INDEX',
-    'SEQ', 'STYLEREF', 'AUTONUM', 'AUTONUMLGL', 'AUTONUMOUT',
-    'IF', 'MERGEFIELD', 'NEXT', 'NEXTIF',
-    'ASK', 'SET', 'QUOTE', 'INCLUDETEXT', 'INCLUDEPICTURE',
-    'SYMBOL', 'ADVANCE', 'EDITTIME', 'REVNUM',
-    'SECTION', 'SECTIONPAGES', 'USERADDRESS', 'USERNAME', 'USERINITIALS',
+    'PAGE',
+    'NUMPAGES',
+    'NUMWORDS',
+    'NUMCHARS',
+    'DATE',
+    'TIME',
+    'CREATEDATE',
+    'SAVEDATE',
+    'PRINTDATE',
+    'AUTHOR',
+    'TITLE',
+    'SUBJECT',
+    'KEYWORDS',
+    'COMMENTS',
+    'FILENAME',
+    'FILESIZE',
+    'TEMPLATE',
+    'DOCPROPERTY',
+    'DOCVARIABLE',
+    'REF',
+    'PAGEREF',
+    'NOTEREF',
+    'HYPERLINK',
+    'TOC',
+    'TOA',
+    'INDEX',
+    'SEQ',
+    'STYLEREF',
+    'AUTONUM',
+    'AUTONUMLGL',
+    'AUTONUMOUT',
+    'IF',
+    'MERGEFIELD',
+    'NEXT',
+    'NEXTIF',
+    'ASK',
+    'SET',
+    'QUOTE',
+    'INCLUDETEXT',
+    'INCLUDEPICTURE',
+    'SYMBOL',
+    'ADVANCE',
+    'EDITTIME',
+    'REVNUM',
+    'SECTION',
+    'SECTIONPAGES',
+    'USERADDRESS',
+    'USERNAME',
+    'USERINITIALS',
   ];
 
   if (knownFields.includes(fieldName as FieldType)) {
@@ -606,7 +643,7 @@ function parseParagraphContents(
   paraElement: XmlElement,
   styles: StyleMap | null,
   theme: Theme | null,
-  numbering: NumberingMap | null,
+  _numbering: NumberingMap | null,
   rels: RelationshipMap | null
 ): ParagraphContent[] {
   const contents: ParagraphContent[] = [];
@@ -820,12 +857,10 @@ export function parseParagraph(
       const level = numbering.getLevel(numId, ilvl);
       if (level) {
         paragraph.listRendering = {
-          isListItem: true,
           level: ilvl,
+          numId,
           marker: level.lvlText,
           isBullet: level.numFmt === 'bullet',
-          indent: level.pPr?.indentLeft,
-          hanging: level.pPr?.hangingIndent ? -(level.pPr.indentFirstLine ?? 0) : undefined,
         };
       }
     }
@@ -903,10 +938,13 @@ export function getParagraphText(paragraph: Paragraph): string {
  * @returns true if paragraph has no visible content
  */
 export function isEmptyParagraph(paragraph: Paragraph): boolean {
-  return getParagraphText(paragraph).trim() === '' &&
-         !paragraph.content.some(c =>
-           c.type === 'run' && c.content.some(rc => rc.type === 'drawing' || rc.type === 'shape')
-         );
+  return (
+    getParagraphText(paragraph).trim() === '' &&
+    !paragraph.content.some(
+      (c) =>
+        c.type === 'run' && c.content.some((rc) => rc.type === 'drawing' || rc.type === 'shape')
+    )
+  );
 }
 
 /**
@@ -916,9 +954,11 @@ export function isEmptyParagraph(paragraph: Paragraph): boolean {
  * @returns true if paragraph has numbering properties
  */
 export function isListItem(paragraph: Paragraph): boolean {
-  return paragraph.formatting?.numPr !== undefined &&
-         paragraph.formatting.numPr.numId !== undefined &&
-         paragraph.formatting.numPr.numId !== 0;
+  return (
+    paragraph.formatting?.numPr !== undefined &&
+    paragraph.formatting.numPr.numId !== undefined &&
+    paragraph.formatting.numPr.numId !== 0
+  );
 }
 
 /**

@@ -8,7 +8,7 @@
  * - Shows empty state when no variables
  */
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { CSSProperties, FormEvent, ChangeEvent } from 'react';
 
 // ============================================================================
@@ -296,8 +296,7 @@ export function VariablePanel({
     const query = searchQuery.toLowerCase();
     return variables.filter(
       (v) =>
-        v.toLowerCase().includes(query) ||
-        (descriptions[v] || '').toLowerCase().includes(query)
+        v.toLowerCase().includes(query) || (descriptions[v] || '').toLowerCase().includes(query)
     );
   }, [variables, searchQuery, descriptions]);
 
@@ -380,19 +379,13 @@ export function VariablePanel({
   }
 
   return (
-    <form
-      className={classNames.join(' ')}
-      style={panelStyle}
-      onSubmit={handleApply}
-    >
+    <form className={classNames.join(' ')} style={panelStyle} onSubmit={handleApply}>
       {/* Header */}
       <div style={STYLES.header}>
         <span style={STYLES.headerTitle}>
           <VariableIcon />
           {title}
-          {showCount && (
-            <span style={STYLES.headerCount}>{variables.length}</span>
-          )}
+          {showCount && <span style={STYLES.headerCount}>{variables.length}</span>}
         </span>
         {collapsible && (
           <button
@@ -522,9 +515,7 @@ function VariableInputField({
       <label style={STYLES.variableLabel}>
         <span style={STYLES.variableName}>{`{{${name}}}`}</span>
       </label>
-      {description && (
-        <span style={STYLES.variableDescription}>{description}</span>
-      )}
+      {description && <span style={STYLES.variableDescription}>{description}</span>}
       <input
         type="text"
         value={value}
@@ -547,13 +538,7 @@ function VariableInputField({
 
 function VariableIcon(): React.ReactElement {
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M4 3C2.5 3 2 4 2 5.5V6.5C2 7 1.5 7.5 1 7.5V8.5C1.5 8.5 2 9 2 9.5V10.5C2 12 2.5 13 4 13"
         stroke="#e4b416"
@@ -574,29 +559,9 @@ function VariableIcon(): React.ReactElement {
 
 function EmptyVariablesIcon(): React.ReactElement {
   return (
-    <svg
-      width="48"
-      height="48"
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect
-        x="8"
-        y="12"
-        width="32"
-        height="24"
-        rx="2"
-        stroke="#ccc"
-        strokeWidth="2"
-        fill="none"
-      />
-      <path
-        d="M14 20H34M14 26H28"
-        stroke="#ccc"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="8" y="12" width="32" height="24" rx="2" stroke="#ccc" strokeWidth="2" fill="none" />
+      <path d="M14 20H34M14 26H28" stroke="#ccc" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -646,30 +611,21 @@ export function createInitialValues(
 /**
  * Check if all variables have values
  */
-export function allVariablesFilled(
-  variables: string[],
-  values: Record<string, string>
-): boolean {
+export function allVariablesFilled(variables: string[], values: Record<string, string>): boolean {
   return variables.every((v) => values[v]?.trim());
 }
 
 /**
  * Get list of empty/unfilled variables
  */
-export function getEmptyVariables(
-  variables: string[],
-  values: Record<string, string>
-): string[] {
+export function getEmptyVariables(variables: string[], values: Record<string, string>): string[] {
   return variables.filter((v) => !values[v]?.trim());
 }
 
 /**
  * Get list of filled variables
  */
-export function getFilledVariables(
-  variables: string[],
-  values: Record<string, string>
-): string[] {
+export function getFilledVariables(variables: string[], values: Record<string, string>): string[] {
   return variables.filter((v) => values[v]?.trim());
 }
 
@@ -677,7 +633,7 @@ export function getFilledVariables(
  * Validate variable values (basic validation)
  */
 export function validateVariableValues(
-  variables: string[],
+  _variables: string[],
   values: Record<string, string>,
   required: string[] = []
 ): { valid: boolean; errors: Record<string, string> } {
@@ -698,9 +654,7 @@ export function validateVariableValues(
 /**
  * Format values for display/export
  */
-export function formatValuesForExport(
-  values: Record<string, string>
-): string {
+export function formatValuesForExport(values: Record<string, string>): string {
   const lines: string[] = [];
   for (const [key, value] of Object.entries(values)) {
     if (value.trim()) {
@@ -713,9 +667,7 @@ export function formatValuesForExport(
 /**
  * Parse values from export format
  */
-export function parseValuesFromExport(
-  text: string
-): Record<string, string> {
+export function parseValuesFromExport(text: string): Record<string, string> {
   const values: Record<string, string> = {};
   const lines = text.split('\n');
 

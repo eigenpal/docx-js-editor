@@ -16,12 +16,9 @@ import type {
   SimpleField,
   ComplexField,
   BlockContent,
-  ParagraphContent,
-  RunContent,
   HeaderFooter,
   Footnote,
   Endnote,
-  Section,
   TextBox,
 } from '../types/document';
 
@@ -97,8 +94,8 @@ export function detectVariablesDetailed(doc: Document): VariableDetectionResult 
   };
 
   // Scan main body
-  if (doc.package?.body) {
-    const bodyVars = detectVariablesInBody(doc.package.body);
+  if (doc.package?.document) {
+    const bodyVars = detectVariablesInBody(doc.package.document);
     bodyVars.forEach((v) => {
       occurrences.push({ name: v, location: 'body' });
     });
@@ -106,11 +103,11 @@ export function detectVariablesDetailed(doc: Document): VariableDetectionResult 
   }
 
   // Scan headers and footers
-  if (doc.package?.body?.sections) {
-    doc.package.body.sections.forEach((section, sectionIndex) => {
+  if (doc.package?.document?.sections) {
+    doc.package.document.sections.forEach((section, _sectionIndex) => {
       // Headers
       if (section.properties.headerReferences) {
-        section.properties.headerReferences.forEach((headerRef) => {
+        section.properties.headerReferences.forEach((_headerRef) => {
           // If we have actual header content, scan it
           // Note: Headers are stored separately in the package
         });
@@ -286,9 +283,13 @@ export function detectVariablesInSimpleField(field: SimpleField): string[] {
 export function detectVariablesInComplexField(field: ComplexField): string[] {
   const variables: string[] = [];
 
-  // Check field code
+  // Check field code runs
   if (field.fieldCode) {
-    variables.push(...extractVariablesFromText(field.fieldCode));
+    for (const run of field.fieldCode) {
+      if (run.type === 'run') {
+        variables.push(...detectVariablesInRun(run));
+      }
+    }
   }
 
   // Check field result runs
@@ -345,9 +346,7 @@ export function detectVariablesInCell(cell: TableCell): string[] {
 /**
  * Detect variables in footnotes/endnotes
  */
-export function detectVariablesInNotes(
-  notes: (Footnote | Endnote)[]
-): string[] {
+export function detectVariablesInNotes(notes: (Footnote | Endnote)[]): string[] {
   const variables: string[] = [];
 
   for (const note of notes) {
@@ -388,12 +387,9 @@ export function detectVariablesInTextBox(textBox: TextBox): string[] {
 
   if (!textBox.content) return variables;
 
-  for (const block of textBox.content) {
-    if (block.type === 'paragraph') {
-      variables.push(...detectVariablesInParagraph(block));
-    } else if (block.type === 'table') {
-      variables.push(...detectVariablesInTable(block));
-    }
+  // TextBox.content is Paragraph[]
+  for (const paragraph of textBox.content) {
+    variables.push(...detectVariablesInParagraph(paragraph));
   }
 
   return variables;
@@ -550,10 +546,7 @@ export function parseVariable(variable: string): string | null {
  * @param values - Map of variable name to replacement value
  * @returns Text with variables replaced
  */
-export function replaceVariables(
-  text: string,
-  values: Record<string, string>
-): string {
+export function replaceVariables(text: string, values: Record<string, string>): string {
   if (!text) return text;
 
   return text.replace(VARIABLE_PATTERN_RELAXED, (match, varName) => {
@@ -590,7 +583,7 @@ export function highlightVariables(
 ): string {
   if (!text) return text;
 
-  return text.replace(VARIABLE_PATTERN_RELAXED, (match, varName) => {
+  return text.replace(VARIABLE_PATTERN_RELAXED, (_match, varName) => {
     return wrapper(varName.trim());
   });
 }
@@ -624,9 +617,7 @@ export function documentHasVariables(doc: Document): boolean {
 /**
  * Get variables grouped by first letter for large lists
  */
-export function groupVariablesByLetter(
-  variables: string[]
-): Record<string, string[]> {
+export function groupVariablesByLetter(variables: string[]): Record<string, string[]> {
   const groups: Record<string, string[]> = {};
 
   for (const variable of variables) {

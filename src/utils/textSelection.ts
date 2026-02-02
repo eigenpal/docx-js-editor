@@ -40,10 +40,7 @@ export function isWhitespace(char: string): boolean {
  * Find word boundaries around a position in text
  * Returns [startIndex, endIndex] inclusive start, exclusive end
  */
-export function findWordBoundaries(
-  text: string,
-  position: number
-): [number, number] {
+export function findWordBoundaries(text: string, position: number): [number, number] {
   if (!text || text.length === 0) {
     return [0, 0];
   }
@@ -220,10 +217,7 @@ export function selectWordAtCursor(): boolean {
 /**
  * Select a word in a specific text node at the given offset
  */
-export function selectWordInTextNode(
-  textNode: Text,
-  offset: number
-): boolean {
+export function selectWordInTextNode(textNode: Text, offset: number): boolean {
   const selection = window.getSelection();
   if (!selection) return false;
 
@@ -355,11 +349,7 @@ function findParagraphElement(node: Node | null): Element | null {
  */
 function getTextNodesIn(element: Element): Text[] {
   const textNodes: Text[] = [];
-  const walker = document.createTreeWalker(
-    element,
-    NodeFilter.SHOW_TEXT,
-    null
-  );
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
 
   let node: Node | null;
   while ((node = walker.nextNode())) {

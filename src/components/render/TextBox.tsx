@@ -16,9 +16,9 @@ import React from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { TextBox as TextBoxType, Paragraph, Table } from '../../types/document';
 import {
+  getTextBoxDimensionsPx,
   getTextBoxWidthPx,
   getTextBoxHeightPx,
-  getTextBoxDimensionsPx,
   getTextBoxMarginsPx,
   isFloatingTextBox,
   hasTextBoxFill,
@@ -70,10 +70,6 @@ export function TextBox({
   renderParagraph,
   renderTable,
 }: TextBoxProps): React.ReactElement {
-  // Get dimensions
-  const { width, height } = getTextBoxDimensionsPx(textBox);
-  const margins = getTextBoxMarginsPx(textBox);
-
   // Build class names
   const classNames: string[] = ['docx-textbox'];
   if (className) {
@@ -89,7 +85,7 @@ export function TextBox({
   }
 
   // Build styles
-  const boxStyle = buildTextBoxStyle(textBox, selected);
+  const boxStyle = buildTextBoxStyle(textBox, selected, !!onClick);
   const combinedStyle: CSSProperties = {
     ...boxStyle,
     ...additionalStyle,
@@ -113,7 +109,11 @@ export function TextBox({
 /**
  * Build CSS styles for the text box
  */
-function buildTextBoxStyle(textBox: TextBoxType, selected: boolean): CSSProperties {
+function buildTextBoxStyle(
+  textBox: TextBoxType,
+  selected: boolean,
+  hasClickHandler: boolean = false
+): CSSProperties {
   const style: CSSProperties = {
     display: 'block',
     boxSizing: 'border-box',
@@ -205,7 +205,7 @@ function buildTextBoxStyle(textBox: TextBoxType, selected: boolean): CSSProperti
   if (selected) {
     Object.assign(style, SELECTED_STYLE);
     style.cursor = 'pointer';
-  } else if (onClick) {
+  } else if (hasClickHandler) {
     style.cursor = 'pointer';
   }
 
@@ -218,7 +218,7 @@ function buildTextBoxStyle(textBox: TextBoxType, selected: boolean): CSSProperti
 function renderContent(
   textBox: TextBoxType,
   renderParagraph?: (paragraph: Paragraph, index: number) => ReactNode,
-  renderTable?: (table: Table, index: number) => ReactNode
+  _renderTable?: (table: Table, index: number) => ReactNode
 ): ReactNode {
   if (!hasTextBoxContent(textBox)) {
     return null;

@@ -17,7 +17,6 @@ import type {
   FootnoteProperties,
   EndnoteProperties,
   Theme,
-  Paragraph,
 } from '../../types/document';
 
 // ============================================================================
@@ -138,7 +137,7 @@ export function FootnoteRef({
   noteContent,
   customMark,
   displayNumber,
-  theme,
+  theme: _theme,
   className,
   style: additionalStyle,
   onClick,
@@ -153,10 +152,7 @@ export function FootnoteRef({
   const displayMark = customMark ?? String(displayNumber ?? id);
 
   // Build class names
-  const classNames: string[] = [
-    'docx-note-ref',
-    `docx-${type}-ref`,
-  ];
+  const classNames: string[] = ['docx-note-ref', `docx-${type}-ref`];
   if (className) {
     classNames.push(className);
   }
@@ -310,7 +306,7 @@ export function getFootnoteDisplayNumber(
 ): number {
   // Filter out separator footnotes
   const normalFootnotes = allFootnotes.filter(
-    (fn) => fn.type === 'normal' || fn.type === undefined
+    (fn) => fn.noteType === 'normal' || fn.noteType === undefined
   );
 
   // Find index of this footnote among normal footnotes
@@ -334,7 +330,7 @@ export function getEndnoteDisplayNumber(
 ): number {
   // Filter out separator endnotes
   const normalEndnotes = allEndnotes.filter(
-    (en) => en.type === 'normal' || en.type === undefined
+    (en) => en.noteType === 'normal' || en.noteType === undefined
   );
 
   // Find index of this endnote among normal endnotes
@@ -351,10 +347,7 @@ export function getEndnoteDisplayNumber(
 /**
  * Format a footnote/endnote number according to format settings
  */
-export function formatNoteNumber(
-  number: number,
-  format: string | undefined
-): string {
+export function formatNoteNumber(number: number, format: string | undefined): string {
   switch (format) {
     case 'upperRoman':
       return toUpperRoman(number);
@@ -459,9 +452,9 @@ function toChicago(num: number): string {
  */
 export function isSeparatorNote(note: Footnote | Endnote): boolean {
   return (
-    note.type === 'separator' ||
-    note.type === 'continuationSeparator' ||
-    note.type === 'continuationNotice'
+    note.noteType === 'separator' ||
+    note.noteType === 'continuationSeparator' ||
+    note.noteType === 'continuationNotice'
   );
 }
 
@@ -469,7 +462,7 @@ export function isSeparatorNote(note: Footnote | Endnote): boolean {
  * Check if a footnote reference needs a superscript number
  */
 export function needsSuperscriptNumber(note: Footnote | Endnote): boolean {
-  return note.type === 'normal' || note.type === undefined;
+  return note.noteType === 'normal' || note.noteType === undefined;
 }
 
 /**

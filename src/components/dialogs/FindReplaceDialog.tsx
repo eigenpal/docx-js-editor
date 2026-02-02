@@ -205,10 +205,6 @@ const BUTTON_BASE_STYLE: CSSProperties = {
   textAlign: 'center',
 };
 
-const BUTTON_HOVER_STYLE: CSSProperties = {
-  backgroundColor: '#e8e8e8',
-};
-
 const BUTTON_DISABLED_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
   backgroundColor: '#f0f0f0',
@@ -515,7 +511,16 @@ export function FindReplaceDialog({
         onHighlightMatches(newResult.matches);
       }
     }
-  }, [result, replaceText, searchText, matchCase, matchWholeWord, onReplace, onFind, onHighlightMatches]);
+  }, [
+    result,
+    replaceText,
+    searchText,
+    matchCase,
+    matchWholeWord,
+    onReplace,
+    onFind,
+    onHighlightMatches,
+  ]);
 
   /**
    * Handle Replace All
@@ -553,14 +558,11 @@ export function FindReplaceDialog({
   /**
    * Handle overlay click
    */
-  const handleOverlayClick = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.target === e.currentTarget) {
-        // Don't close on overlay click - this is a non-modal dialog
-      }
-    },
-    []
-  );
+  const handleOverlayClick = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      // Don't close on overlay click - this is a non-modal dialog
+    }
+  }, []);
 
   /**
    * Handle global key events
@@ -800,11 +802,9 @@ export function findAllMatches(
   const matches: Array<{ start: number; end: number }> = [];
 
   // Prepare search string
-  let searchContent = content;
   let searchFor = searchText;
 
   if (!options.matchCase) {
-    searchContent = content.toLowerCase();
     searchFor = searchText.toLowerCase();
   }
 
@@ -915,10 +915,7 @@ export function replaceFirstInContent(
     return { content, replaced: false, matchStart: -1, matchEnd: -1 };
   }
 
-  const newContent =
-    content.substring(0, match.start) +
-    replaceText +
-    content.substring(match.end);
+  const newContent = content.substring(0, match.start) + replaceText + content.substring(match.end);
 
   return {
     content: newContent,
@@ -1231,7 +1228,7 @@ export function findInDocument(
   if (!document || !searchText) return [];
 
   const matches: FindMatch[] = [];
-  const body = document.package?.document || document.package?.body;
+  const body = document.package?.document || document.package?.document;
   if (!body || !body.content) return matches;
 
   // Iterate through paragraphs
@@ -1348,10 +1345,7 @@ function findContentAtOffset(
 /**
  * Scroll to a match in the document (to be used with the editor)
  */
-export function scrollToMatch(
-  containerElement: HTMLElement | null,
-  match: FindMatch
-): void {
+export function scrollToMatch(containerElement: HTMLElement | null, match: FindMatch): void {
   if (!containerElement || !match) return;
 
   // Find the paragraph element

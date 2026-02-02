@@ -88,11 +88,7 @@ export async function loadFont(
 
     try {
       // Generate Google Fonts URL
-      const url = getGoogleFontsUrl(
-        normalizedFamily,
-        options?.weights,
-        options?.styles
-      );
+      const url = getGoogleFontsUrl(normalizedFamily, options?.weights, options?.styles);
 
       // Create link element
       const link = document.createElement('link');
@@ -261,10 +257,7 @@ async function waitForFontAvailable(fontFamily: string, timeout: number): Promis
  * @param fallbackFont - Fallback font to compare against
  * @returns true if font is available, false otherwise
  */
-export function canRenderFont(
-  fontFamily: string,
-  fallbackFont: string = 'sans-serif'
-): boolean {
+export function canRenderFont(fontFamily: string, fallbackFont: string = 'sans-serif'): boolean {
   // Skip if we're not in a browser
   if (typeof document === 'undefined') {
     return false;

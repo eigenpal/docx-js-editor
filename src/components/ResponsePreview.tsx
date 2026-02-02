@@ -69,12 +69,7 @@ const CheckIcon = () => (
 
 const XIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M4 4l8 8M12 4l-8 8"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
+    <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
@@ -117,14 +112,7 @@ const LoadingSpinner = () => (
     xmlns="http://www.w3.org/2000/svg"
     style={{ animation: 'spin 1s linear infinite' }}
   >
-    <circle
-      cx="10"
-      cy="10"
-      r="8"
-      stroke="#e0e0e0"
-      strokeWidth="2"
-      fill="none"
-    />
+    <circle cx="10" cy="10" r="8" stroke="#e0e0e0" strokeWidth="2" fill="none" />
     <path
       d="M10 2a8 8 0 018 8"
       stroke="#1a73e8"
@@ -187,7 +175,10 @@ function calculateDiff(original: string, modified: string): DiffSegment[] {
         segments.push({ type: 'added', text: modifiedWords[j] });
         i++;
         j++;
-      } else if (nextMatchInOriginal !== -1 && (nextMatchInModified === -1 || nextMatchInOriginal - i <= nextMatchInModified - j)) {
+      } else if (
+        nextMatchInOriginal !== -1 &&
+        (nextMatchInModified === -1 || nextMatchInOriginal - i <= nextMatchInModified - j)
+      ) {
         // Addition
         segments.push({ type: 'added', text: modifiedWords[j] });
         j++;
@@ -370,9 +361,7 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
           }}
         >
           <LoadingSpinner />
-          <div style={{ color: '#5f6368', fontSize: '14px' }}>
-            {getActionLabel(action)}...
-          </div>
+          <div style={{ color: '#5f6368', fontSize: '14px' }}>{getActionLabel(action)}...</div>
         </div>
       </div>
     );
@@ -446,11 +435,7 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
   }
 
   return (
-    <div
-      ref={containerRef}
-      className={`docx-response-preview ${className}`}
-      style={containerStyle}
-    >
+    <div ref={containerRef} className={`docx-response-preview ${className}`} style={containerStyle}>
       {/* Header */}
       <div
         style={{
@@ -513,16 +498,12 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
           </div>
         ) : showDiff ? (
           <div>
-            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>
-              Changes:
-            </div>
+            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>Changes:</div>
             <DiffView original={originalText} modified={newText} />
           </div>
         ) : (
           <div>
-            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>
-              Original:
-            </div>
+            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>Original:</div>
             <div
               style={{
                 padding: '8px 12px',
@@ -536,9 +517,7 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
             >
               {originalText}
             </div>
-            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>
-              New:
-            </div>
+            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>New:</div>
             <div
               style={{
                 padding: '8px 12px',
@@ -697,11 +676,7 @@ export function useResponsePreview() {
   });
 
   const showPreview = useCallback(
-    (
-      originalText: string,
-      action: AIAction,
-      position?: { x: number; y: number }
-    ) => {
+    (originalText: string, action: AIAction, position?: { x: number; y: number }) => {
       setState({
         isVisible: true,
         originalText,
@@ -753,10 +728,7 @@ export function useResponsePreview() {
 /**
  * Create a mock response for testing
  */
-export function createMockResponse(
-  newText: string,
-  warnings?: string[]
-): AgentResponse {
+export function createMockResponse(newText: string, warnings?: string[]): AgentResponse {
   return {
     success: true,
     newText,

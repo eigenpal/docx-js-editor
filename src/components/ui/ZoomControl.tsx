@@ -8,7 +8,7 @@
  * - Persists zoom preference via localStorage
  */
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 
 // ============================================================================
@@ -334,10 +334,7 @@ export function ZoomControl({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -440,9 +437,7 @@ export function ZoomControl({
             const idx = currentLevelIndex >= 0 ? currentLevelIndex : 0;
             setFocusedIndex(idx);
           } else {
-            setFocusedIndex((prev) =>
-              prev < levels.length - 1 ? prev + 1 : prev
-            );
+            setFocusedIndex((prev) => (prev < levels.length - 1 ? prev + 1 : prev));
           }
           break;
 
@@ -577,8 +572,8 @@ export function ZoomControl({
               const itemStyle: CSSProperties = isSelected
                 ? DROPDOWN_ITEM_SELECTED_STYLE
                 : isFocusedItem
-                ? DROPDOWN_ITEM_HOVER_STYLE
-                : DROPDOWN_ITEM_STYLE;
+                  ? DROPDOWN_ITEM_HOVER_STYLE
+                  : DROPDOWN_ITEM_STYLE;
 
               return (
                 <button
@@ -838,10 +833,7 @@ export function getZoomStep(): number {
 /**
  * Apply zoom transform to a CSS style object
  */
-export function applyZoomTransform(
-  style: CSSProperties,
-  zoom: number
-): CSSProperties {
+export function applyZoomTransform(style: CSSProperties, zoom: number): CSSProperties {
   return {
     ...style,
     transform: zoom !== 1 ? `scale(${zoom})` : undefined,

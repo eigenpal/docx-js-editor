@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
-import type { AIAction, AIActionRequest, SelectionContext } from '../types/agentApi';
+import type { AIAction, SelectionContext } from '../types/agentApi';
 import { getActionLabel, getActionDescription, DEFAULT_AI_ACTIONS } from '../types/agentApi';
 
 // ============================================================================
@@ -82,23 +82,13 @@ const RewriteIcon = () => (
 
 const ExpandIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M8 3v10M3 8h10"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
+    <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
 const SummarizeIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M3 4h10M3 8h7M3 12h4"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
+    <path d="M3 4h10M3 8h7M3 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
@@ -122,7 +112,12 @@ const TranslateIcon = () => (
 const ExplainIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M6 6c0-1.1.9-2 2-2s2 .9 2 2c0 1.5-2 1.5-2 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path
+      d="M6 6c0-1.1.9-2 2-2s2 .9 2 2c0 1.5-2 1.5-2 3"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
     <circle cx="8" cy="12" r="0.5" fill="currentColor" />
   </svg>
 );
@@ -136,7 +131,13 @@ const GrammarIcon = () => (
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <path d="M12 6l2 2-2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M12 6l2 2-2 2"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -150,7 +151,12 @@ const FormalIcon = () => (
 const CasualIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="8" cy="8" r="5" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M6 9c.5.5 1 1 2 1s1.5-.5 2-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path
+      d="M6 9c.5.5 1 1 2 1s1.5-.5 2-1"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
     <circle cx="6" cy="7" r="0.5" fill="currentColor" />
     <circle cx="10" cy="7" r="0.5" fill="currentColor" />
   </svg>
@@ -158,12 +164,7 @@ const CasualIcon = () => (
 
 const CustomIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M12 4L4 12M4 4l8 8"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
+    <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
@@ -201,12 +202,7 @@ function getActionIcon(action: AIAction): React.ReactNode {
 // MENU ITEM COMPONENT
 // ============================================================================
 
-const MenuItem: React.FC<MenuItemProps> = ({
-  action,
-  onClick,
-  isHighlighted,
-  onMouseEnter,
-}) => {
+const MenuItem: React.FC<MenuItemProps> = ({ action, onClick, isHighlighted, onMouseEnter }) => {
   const label = getActionLabel(action);
   const description = getActionDescription(action);
   const icon = getActionIcon(action);
@@ -289,7 +285,8 @@ const CustomPromptDialog: React.FC<CustomPromptDialogProps> = ({
     >
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>
-          Selected: "{selectedText.slice(0, 50)}{selectedText.length > 50 ? '...' : ''}"
+          Selected: "{selectedText.slice(0, 50)}
+          {selectedText.length > 50 ? '...' : ''}"
         </div>
         <input
           ref={inputRef}
@@ -350,7 +347,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   isOpen,
   position,
   selectedText,
-  selectionContext,
+  selectionContext: _selectionContext,
   onAction,
   onClose,
   actions = DEFAULT_AI_ACTIONS,
@@ -495,7 +492,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
           textOverflow: 'ellipsis',
         }}
       >
-        "{selectedText.slice(0, 30)}{selectedText.length > 30 ? '...' : ''}"
+        "{selectedText.slice(0, 30)}
+        {selectedText.length > 30 ? '...' : ''}"
       </div>
 
       {/* Menu items */}
@@ -538,11 +536,7 @@ export function useContextMenu() {
   const [selectionContext, setSelectionContext] = useState<SelectionContext | undefined>();
 
   const openMenu = useCallback(
-    (
-      e: React.MouseEvent | MouseEvent,
-      text: string,
-      context?: SelectionContext
-    ) => {
+    (e: React.MouseEvent | MouseEvent, text: string, context?: SelectionContext) => {
       e.preventDefault();
       setPosition({ x: e.clientX, y: e.clientY });
       setSelectedText(text);
@@ -587,9 +581,9 @@ export function getActionShortcut(action: AIAction): string | undefined {
  * Check if action is available for selection
  */
 export function isActionAvailable(
-  action: AIAction,
+  _action: AIAction,
   selectedText: string,
-  selectionContext?: SelectionContext
+  _selectionContext?: SelectionContext
 ): boolean {
   if (!selectedText || selectedText.trim().length === 0) {
     return false;

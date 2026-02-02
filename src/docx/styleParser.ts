@@ -43,13 +43,10 @@ import {
   findChild,
   findChildren,
   getAttribute,
-  getChildElements,
   parseBooleanElement,
   parseNumericAttribute,
-  getTextContent,
   type XmlElement,
 } from './xmlParser';
-import { resolveThemeFontRef, getThemeColor } from './themeParser';
 
 /**
  * Style map keyed by styleId
@@ -61,7 +58,7 @@ export type StyleMap = Map<string, Style>;
  */
 function parseRunProperties(
   rPr: XmlElement | null,
-  theme: Theme | null
+  _theme: Theme | null
 ): TextFormatting | undefined {
   if (!rPr) return undefined;
 
@@ -90,9 +87,12 @@ function parseRunProperties(
       const colorVal = getAttribute(u, 'w', 'color');
       const themeColor = getAttribute(u, 'w', 'themeColor');
       if (colorVal || themeColor) {
-        formatting.underline.color = parseColorValue(colorVal, themeColor,
+        formatting.underline.color = parseColorValue(
+          colorVal,
+          themeColor,
           getAttribute(u, 'w', 'themeTint'),
-          getAttribute(u, 'w', 'themeShade'));
+          getAttribute(u, 'w', 'themeShade')
+        );
       }
     }
   }
@@ -176,7 +176,11 @@ function parseRunProperties(
     // Theme font references
     const asciiTheme = getAttribute(rFonts, 'w', 'asciiTheme');
     if (asciiTheme) {
-      formatting.fontFamily.asciiTheme = asciiTheme as TextFormatting['fontFamily'] extends { asciiTheme?: infer T } ? T : never;
+      formatting.fontFamily.asciiTheme = asciiTheme as TextFormatting['fontFamily'] extends {
+        asciiTheme?: infer T;
+      }
+        ? T
+        : never;
     }
     const hAnsiTheme = getAttribute(rFonts, 'w', 'hAnsiTheme');
     if (hAnsiTheme) {
@@ -354,9 +358,12 @@ function parseBorderSpec(border: XmlElement | null): BorderSpec | undefined {
   const colorVal = getAttribute(border, 'w', 'color');
   const themeColor = getAttribute(border, 'w', 'themeColor');
   if (colorVal || themeColor) {
-    spec.color = parseColorValue(colorVal, themeColor,
+    spec.color = parseColorValue(
+      colorVal,
+      themeColor,
       getAttribute(border, 'w', 'themeTint'),
-      getAttribute(border, 'w', 'themeShade'));
+      getAttribute(border, 'w', 'themeShade')
+    );
   }
 
   const sz = parseNumericAttribute(border, 'w', 'sz');
@@ -552,11 +559,13 @@ function parseParagraphProperties(
 
   // Suppress line numbers
   const suppressLineNumbers = findChild(pPr, 'w', 'suppressLineNumbers');
-  if (suppressLineNumbers) formatting.suppressLineNumbers = parseBooleanElement(suppressLineNumbers);
+  if (suppressLineNumbers)
+    formatting.suppressLineNumbers = parseBooleanElement(suppressLineNumbers);
 
   // Suppress auto hyphens
   const suppressAutoHyphens = findChild(pPr, 'w', 'suppressAutoHyphens');
-  if (suppressAutoHyphens) formatting.suppressAutoHyphens = parseBooleanElement(suppressAutoHyphens);
+  if (suppressAutoHyphens)
+    formatting.suppressAutoHyphens = parseBooleanElement(suppressAutoHyphens);
 
   // Run properties for this paragraph (default run formatting)
   const rPr = findChild(pPr, 'w', 'rPr');
@@ -688,7 +697,7 @@ function parseTableLook(tblLook: XmlElement | null): TableLook | undefined {
  */
 function parseTableProperties(
   tblPr: XmlElement | null,
-  theme: Theme | null
+  _theme: Theme | null
 ): TableFormatting | undefined {
   if (!tblPr) return undefined;
 
@@ -771,9 +780,7 @@ function parseTableProperties(
 /**
  * Parse table row formatting properties (w:trPr)
  */
-function parseTableRowProperties(
-  trPr: XmlElement | null
-): TableRowFormatting | undefined {
+function parseTableRowProperties(trPr: XmlElement | null): TableRowFormatting | undefined {
   if (!trPr) return undefined;
 
   const formatting: TableRowFormatting = {};
@@ -817,7 +824,7 @@ function parseTableRowProperties(
  */
 function parseTableCellProperties(
   tcPr: XmlElement | null,
-  theme: Theme | null
+  _theme: Theme | null
 ): TableCellFormatting | undefined {
   if (!tcPr) return undefined;
 
@@ -1023,7 +1030,10 @@ function parseStyle(styleEl: XmlElement, theme: Theme | null): Style {
 /**
  * Parse document defaults (w:docDefaults)
  */
-function parseDocDefaults(docDefaults: XmlElement | null, theme: Theme | null): DocDefaults | undefined {
+function parseDocDefaults(
+  docDefaults: XmlElement | null,
+  theme: Theme | null
+): DocDefaults | undefined {
   if (!docDefaults) return undefined;
 
   const result: DocDefaults = {};
@@ -1046,7 +1056,7 @@ function parseDocDefaults(docDefaults: XmlElement | null, theme: Theme | null): 
     }
   }
 
-  return (result.rPr || result.pPr) ? result : undefined;
+  return result.rPr || result.pPr ? result : undefined;
 }
 
 /**
@@ -1065,9 +1075,10 @@ function mergeTextFormatting(
   for (const key of Object.keys(source) as (keyof TextFormatting)[]) {
     const value = source[key];
     if (value !== undefined) {
-      (result as any)[key] = typeof value === 'object' && value !== null
-        ? { ...(result[key] as any || {}), ...value }
-        : value;
+      (result as any)[key] =
+        typeof value === 'object' && value !== null
+          ? { ...((result[key] as any) || {}), ...value }
+          : value;
     }
   }
 
@@ -1092,7 +1103,9 @@ function mergeParagraphFormatting(
       if (key === 'runProperties') {
         result.runProperties = mergeTextFormatting(result.runProperties, source.runProperties);
       } else if (key === 'borders' || key === 'numPr' || key === 'frame') {
-        (result as any)[key] = { ...(result[key] as any || {}), ...value };
+        const baseValue = result[key] as Record<string, unknown> | undefined;
+        const sourceValue = value as Record<string, unknown> | undefined;
+        (result as Record<string, unknown>)[key] = { ...(baseValue || {}), ...(sourceValue || {}) };
       } else if (key === 'tabs' && Array.isArray(value)) {
         result.tabs = [...value];
       } else {

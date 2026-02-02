@@ -15,20 +15,15 @@ import type {
   Document,
   DocumentBody,
   BlockContent,
-  Section,
   SectionProperties,
-  Paragraph,
-  Table,
   HeaderReference,
   FooterReference,
   FootnoteProperties,
   EndnoteProperties,
   BorderSpec,
-  ColorValue,
-  Column,
 } from '../../types/document';
 
-import { serializeParagraph, serializeParagraphFormatting } from './paragraphSerializer';
+import { serializeParagraph } from './paragraphSerializer';
 import { serializeTable } from './tableSerializer';
 
 // ============================================================================
@@ -105,18 +100,6 @@ function buildNamespaceDeclarations(): string {
 // XML ESCAPING
 // ============================================================================
 
-/**
- * Escape special XML characters
- */
-function escapeXml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
 // ============================================================================
 // BORDER SERIALIZATION
 // ============================================================================
@@ -178,10 +161,7 @@ function serializeBorder(border: BorderSpec | undefined, elementName: string): s
  * Serialize header reference (w:headerReference)
  */
 function serializeHeaderReference(ref: HeaderReference): string {
-  const attrs: string[] = [
-    `w:type="${ref.type}"`,
-    `r:id="${ref.rId}"`,
-  ];
+  const attrs: string[] = [`w:type="${ref.type}"`, `r:id="${ref.rId}"`];
 
   return `<w:headerReference ${attrs.join(' ')}/>`;
 }
@@ -190,10 +170,7 @@ function serializeHeaderReference(ref: HeaderReference): string {
  * Serialize footer reference (w:footerReference)
  */
 function serializeFooterReference(ref: FooterReference): string {
-  const attrs: string[] = [
-    `w:type="${ref.type}"`,
-    `r:id="${ref.rId}"`,
-  ];
+  const attrs: string[] = [`w:type="${ref.type}"`, `r:id="${ref.rId}"`];
 
   return `<w:footerReference ${attrs.join(' ')}/>`;
 }
@@ -345,16 +322,18 @@ function serializeColumns(props: SectionProperties): string {
   // Individual column definitions
   let colElements = '';
   if (props.columns && props.columns.length > 0) {
-    colElements = props.columns.map(col => {
-      const colAttrs: string[] = [];
-      if (col.width !== undefined) {
-        colAttrs.push(`w:w="${col.width}"`);
-      }
-      if (col.space !== undefined) {
-        colAttrs.push(`w:space="${col.space}"`);
-      }
-      return `<w:col ${colAttrs.join(' ')}/>`;
-    }).join('');
+    colElements = props.columns
+      .map((col) => {
+        const colAttrs: string[] = [];
+        if (col.width !== undefined) {
+          colAttrs.push(`w:w="${col.width}"`);
+        }
+        if (col.space !== undefined) {
+          colAttrs.push(`w:space="${col.space}"`);
+        }
+        return `<w:col ${colAttrs.join(' ')}/>`;
+      })
+      .join('');
   }
 
   if (attrs.length === 0 && !colElements) return '';
@@ -439,36 +418,6 @@ function serializePageBorders(props: SectionProperties): string {
 
   const attrsStr = attrs.length > 0 ? ' ' + attrs.join(' ') : '';
   return `<w:pgBorders${attrsStr}>${borderElements.join('')}</w:pgBorders>`;
-}
-
-/**
- * Serialize background (w:background)
- */
-function serializeBackground(props: SectionProperties): string {
-  if (!props.background) return '';
-
-  const bg = props.background;
-  const attrs: string[] = [];
-
-  if (bg.color?.rgb) {
-    attrs.push(`w:color="${bg.color.rgb}"`);
-  }
-
-  if (bg.themeColor) {
-    attrs.push(`w:themeColor="${bg.themeColor}"`);
-  }
-
-  if (bg.themeTint) {
-    attrs.push(`w:themeTint="${bg.themeTint}"`);
-  }
-
-  if (bg.themeShade) {
-    attrs.push(`w:themeShade="${bg.themeShade}"`);
-  }
-
-  if (attrs.length === 0) return '';
-
-  return `<w:background ${attrs.join(' ')}/>`;
 }
 
 /**
@@ -629,7 +578,7 @@ function serializeBlockContent(block: BlockContent): string {
  * Serialize document body content
  */
 function serializeBodyContent(content: BlockContent[]): string {
-  return content.map(block => serializeBlockContent(block)).join('');
+  return content.map((block) => serializeBlockContent(block)).join('');
 }
 
 // ============================================================================
@@ -729,14 +678,14 @@ export function getDocumentContentCount(doc: Document): number {
  * Get paragraph count in document
  */
 export function getDocumentParagraphCount(doc: Document): number {
-  return doc.package.document.content.filter(b => b.type === 'paragraph').length;
+  return doc.package.document.content.filter((b) => b.type === 'paragraph').length;
 }
 
 /**
  * Get table count in document
  */
 export function getDocumentTableCount(doc: Document): number {
-  return doc.package.document.content.filter(b => b.type === 'table').length;
+  return doc.package.document.content.filter((b) => b.type === 'table').length;
 }
 
 /**
@@ -789,13 +738,15 @@ export function createSimpleDocument(
   return {
     package: {
       document: {
-        content: paragraphs.map(p => ({
+        content: paragraphs.map((p) => ({
           type: 'paragraph' as const,
           formatting: p.styleId ? { styleId: p.styleId } : undefined,
-          content: [{
-            type: 'run' as const,
-            content: [{ type: 'text' as const, text: p.text }],
-          }],
+          content: [
+            {
+              type: 'run' as const,
+              content: [{ type: 'text' as const, text: p.text }],
+            },
+          ],
         })),
       },
     },

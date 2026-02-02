@@ -5,7 +5,7 @@
  * Also provides error toast/notification system.
  */
 
-import React, { Component, createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import React, { Component, createContext, useContext, useState, useCallback, useRef } from 'react';
 import type { ReactNode, ErrorInfo, CSSProperties } from 'react';
 
 // ============================================================================
@@ -145,9 +145,7 @@ export function ErrorProvider({ children }: { children: ReactNode }) {
   );
 
   const dismissNotification = useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, dismissed: true } : n))
-    );
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, dismissed: true } : n)));
 
     // Remove from list after animation
     setTimeout(() => {
@@ -305,28 +303,51 @@ function NotificationToast({ notification, onDismiss }: NotificationToastProps) 
         return (
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M10 6v5M10 13v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M10 6v5M10 13v1"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         );
       case 'warning':
         return (
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M10 3L18 17H2L10 3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-            <path d="M10 8v4M10 14v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M10 3L18 17H2L10 3z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M10 8v4M10 14v1"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         );
       case 'info':
         return (
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M10 9v5M10 6v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M10 9v5M10 6v1"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         );
     }
   };
 
   return (
-    <div className={`docx-notification-toast docx-notification-${notification.severity}`} style={toastStyle}>
+    <div
+      className={`docx-notification-toast docx-notification-${notification.severity}`}
+      style={toastStyle}
+    >
       <style>
         {`
           @keyframes slideIn {
@@ -365,7 +386,12 @@ function NotificationToast({ notification, onDismiss }: NotificationToastProps) 
         </div>
         <button type="button" onClick={onDismiss} style={buttonStyle} title="Dismiss">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M4 4l8 8M12 4l-8 8"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         </button>
       </div>
@@ -631,12 +657,7 @@ export function ParseErrorDisplay({
     <div className={`docx-parse-error ${className}`} style={containerStyle}>
       <div style={iconStyle}>
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <path
-            d="M10 10h20v20H10z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
+          <path d="M10 10h20v20H10z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
           <path
             d="M25 10l-10 20M15 10l10 20"
             stroke="currentColor"

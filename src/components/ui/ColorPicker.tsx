@@ -8,10 +8,10 @@
  * - Shows current color of selection
  */
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import type { CSSProperties, ReactNode, MouseEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { ColorValue, Theme } from '../../types/document';
-import { resolveColor, resolveHighlightColor } from '../../utils/colorResolver';
+import { resolveHighlightColor } from '../../utils/colorResolver';
 
 // ============================================================================
 // TYPES
@@ -348,8 +348,12 @@ export function ColorGrid({
         const isHovered = hoveredIndex === index;
         const isNoColor = color.hex === '';
 
-        let cellStyle: CSSProperties = {
-          ...(isSelected ? GRID_CELL_SELECTED_STYLE : isHovered ? GRID_CELL_HOVER_STYLE : GRID_CELL_STYLE),
+        const cellStyle: CSSProperties = {
+          ...(isSelected
+            ? GRID_CELL_SELECTED_STYLE
+            : isHovered
+              ? GRID_CELL_HOVER_STYLE
+              : GRID_CELL_STYLE),
           width: `${cellSize}px`,
           height: `${cellSize}px`,
         };
@@ -390,7 +394,7 @@ export function ColorPicker({
   value,
   onChange,
   type = 'text',
-  theme,
+  theme: _theme,
   colors,
   disabled = false,
   className,
@@ -446,10 +450,7 @@ export function ColorPicker({
   useEffect(() => {
     const handleClickOutside = (event: Event) => {
       const mouseEvent = event as unknown as { target: Node };
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(mouseEvent.target)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(mouseEvent.target)) {
         setIsOpen(false);
       }
     };
@@ -494,10 +495,10 @@ export function ColorPicker({
   const buttonStyle: CSSProperties = disabled
     ? BUTTON_DISABLED_STYLE
     : isOpen
-    ? BUTTON_ACTIVE_STYLE
-    : isHovered
-    ? BUTTON_HOVER_STYLE
-    : BUTTON_STYLE;
+      ? BUTTON_ACTIVE_STYLE
+      : isHovered
+        ? BUTTON_HOVER_STYLE
+        : BUTTON_STYLE;
 
   const defaultTitle = type === 'text' ? 'Font Color' : 'Text Highlight Color';
 
@@ -542,9 +543,7 @@ export function ColorPicker({
           role="dialog"
           aria-label={`${type === 'text' ? 'Font' : 'Highlight'} color picker`}
         >
-          {type === 'highlight' && (
-            <div style={SECTION_LABEL_STYLE}>Highlight Colors</div>
-          )}
+          {type === 'highlight' && <div style={SECTION_LABEL_STYLE}>Highlight Colors</div>}
 
           <ColorGrid
             colors={displayColors}
@@ -562,7 +561,9 @@ export function ColorPicker({
                   type="text"
                   style={HEX_INPUT_STYLE}
                   value={customHex}
-                  onChange={(e) => setCustomHex(e.target.value.replace(/[^0-9A-Fa-f]/g, '').slice(0, 6))}
+                  onChange={(e) =>
+                    setCustomHex(e.target.value.replace(/[^0-9A-Fa-f]/g, '').slice(0, 6))
+                  }
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       handleCustomColorApply();

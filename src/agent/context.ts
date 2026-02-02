@@ -16,8 +16,6 @@ import type {
   Run,
   Hyperlink,
   Style,
-  Section,
-  BlockContent,
 } from '../types/document';
 
 import type {
@@ -29,7 +27,6 @@ import type {
   ParagraphContext,
   SuggestedAction,
   Range,
-  Position,
 } from '../types/agentApi';
 
 import { detectVariables } from '../utils/variableDetector';
@@ -73,21 +70,13 @@ export interface SelectionContextOptions {
  * @param options - Context building options
  * @returns AgentContext object (JSON serializable)
  */
-export function getAgentContext(
-  doc: Document,
-  options: AgentContextOptions = {}
-): AgentContext {
-  const {
-    outlineMaxChars = 100,
-    maxOutlineParagraphs = 50,
-  } = options;
+export function getAgentContext(doc: Document, options: AgentContextOptions = {}): AgentContext {
+  const { outlineMaxChars = 100, maxOutlineParagraphs = 50 } = options;
 
   const body = doc.package.document;
 
   // Get paragraphs
-  const paragraphs = body.content.filter(
-    (block): block is Paragraph => block.type === 'paragraph'
-  );
+  const paragraphs = body.content.filter((block): block is Paragraph => block.type === 'paragraph');
 
   // Build outline
   const outline = buildOutline(paragraphs, outlineMaxChars, maxOutlineParagraphs);
@@ -141,9 +130,7 @@ export function buildSelectionContext(
   const { contextChars = 200, includeSuggestions = true } = options;
 
   const body = doc.package.document;
-  const paragraphs = body.content.filter(
-    (block): block is Paragraph => block.type === 'paragraph'
-  );
+  const paragraphs = body.content.filter((block): block is Paragraph => block.type === 'paragraph');
 
   // Get the paragraph at the start of the selection
   const paragraph = paragraphs[range.start.paragraphIndex];
@@ -295,7 +282,7 @@ function buildOutline(
       style: styleId,
       isHeading: isHeadingStyle(styleId),
       headingLevel: parseHeadingLevel(styleId),
-      isListItem: !!para.listRendering?.isListItem,
+      isListItem: !!para.listRendering,
       isEmpty: text.trim().length === 0,
     });
   }
@@ -321,7 +308,7 @@ function getStylesFromDoc(doc: Document): StyleInfo[] {
         id: styleId,
         name: styleObj.name || styleId,
         type: styleObj.type === 'numbering' ? 'paragraph' : styleObj.type || 'paragraph',
-        builtIn: styleObj.builtIn,
+        builtIn: styleObj.default, // Use default property as proxy for built-in
       });
     }
   }
@@ -340,15 +327,16 @@ function getSectionsInfo(body: DocumentBody): SectionInfo[] {
   return body.sections.map((section, index) => ({
     index,
     paragraphCount: section.content?.length || 0,
-    pageSize: section.properties?.pageSize
-      ? {
-          width: section.properties.pageSize.width,
-          height: section.properties.pageSize.height,
-        }
-      : undefined,
-    isLandscape: section.properties?.pageSize?.orientation === 'landscape',
-    hasHeader: !!section.properties?.headerRefs?.length,
-    hasFooter: !!section.properties?.footerRefs?.length,
+    pageSize:
+      section.properties?.pageWidth && section.properties?.pageHeight
+        ? {
+            width: section.properties.pageWidth,
+            height: section.properties.pageHeight,
+          }
+        : undefined,
+    isLandscape: section.properties?.orientation === 'landscape',
+    hasHeader: !!section.properties?.headerReferences?.length,
+    hasFooter: !!section.properties?.footerReferences?.length,
   }));
 }
 
@@ -670,8 +658,8 @@ function isInHyperlink(paragraph: Paragraph, offset: number): boolean {
  */
 function getSuggestedActions(
   selectedText: string,
-  formatting: Partial<import('../types/document').TextFormatting>,
-  paragraphContext: ParagraphContext
+  _formatting: Partial<import('../types/document').TextFormatting>,
+  _paragraphContext: ParagraphContext
 ): SuggestedAction[] {
   const actions: SuggestedAction[] = [];
 
@@ -737,8 +725,6 @@ function getSuggestedActions(
 
 export {
   getAgentContext as default,
-  buildSelectionContext,
-  getDocumentSummary,
   getParagraphText,
   getRunText,
   calculateWordCount,

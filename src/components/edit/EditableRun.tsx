@@ -13,7 +13,13 @@
 
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, FormEvent } from 'react';
-import type { Run as RunType, RunContent, TextContent, TextFormatting, Theme } from '../../types/document';
+import type {
+  Run as RunType,
+  RunContent,
+  TextContent,
+  TextFormatting,
+  Theme,
+} from '../../types/document';
 import { textToStyle, mergeStyles } from '../../utils/formatToStyle';
 import { SELECTION_DATA_ATTRIBUTES } from '../../hooks/useSelection';
 
@@ -166,50 +172,6 @@ function createUpdatedRun(run: RunType, newText: string): RunType {
   };
 }
 
-/**
- * Normalize contentEditable HTML to plain text
- */
-function normalizeHtmlToText(html: string): string {
-  // Create a temporary element to parse HTML
-  const temp = document.createElement('div');
-  temp.innerHTML = html;
-
-  // Get text content, preserving line breaks
-  function extractText(node: Node): string {
-    if (node.nodeType === Node.TEXT_NODE) {
-      return node.textContent || '';
-    }
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      const el = node as Element;
-      const tagName = el.tagName.toLowerCase();
-
-      // Handle line breaks
-      if (tagName === 'br') {
-        return '\n';
-      }
-
-      // Block elements add newlines
-      if (['div', 'p'].includes(tagName)) {
-        const children = Array.from(node.childNodes).map(extractText).join('');
-        return children + (children.endsWith('\n') ? '' : '\n');
-      }
-
-      // Inline elements
-      return Array.from(node.childNodes).map(extractText).join('');
-    }
-    return '';
-  }
-
-  let text = extractText(temp);
-
-  // Remove trailing newline if present
-  if (text.endsWith('\n')) {
-    text = text.slice(0, -1);
-  }
-
-  return text;
-}
-
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -345,11 +307,7 @@ export function EditableRun({
 
     // Calculate offset within the run
     let offset = 0;
-    const walker = document.createTreeWalker(
-      spanRef.current,
-      NodeFilter.SHOW_TEXT,
-      null
-    );
+    const walker = document.createTreeWalker(spanRef.current, NodeFilter.SHOW_TEXT, null);
 
     let node = walker.nextNode();
     while (node && node !== range.startContainer) {
@@ -664,10 +622,7 @@ export function splitRunAtOffset(run: RunType, offset: number): [RunType, RunTyp
   const text1 = text.slice(0, offset);
   const text2 = text.slice(offset);
 
-  return [
-    createTextRun(text1, run.formatting),
-    createTextRun(text2, run.formatting),
-  ];
+  return [createTextRun(text1, run.formatting), createTextRun(text2, run.formatting)];
 }
 
 export default EditableRun;

@@ -38,6 +38,7 @@ import type {
   Theme,
   BorderSpec,
   ShadingProperties,
+  ColorValue,
   RelationshipMap,
   MediaFile,
 } from '../types/document';
@@ -116,9 +117,14 @@ export function parseBorderSpec(element: XmlElement | null): BorderSpec | undefi
   }
 
   // Color
-  const color = parseColorElement(element);
-  if (color) {
-    border.color = color;
+  const colorData = parseColorElement(element);
+  if (colorData) {
+    border.color = {
+      rgb: colorData.val,
+      themeColor: colorData.themeColor as ColorValue['themeColor'],
+      themeTint: colorData.themeTint,
+      themeShade: colorData.themeShade,
+    };
   }
 
   // Shadow effect
@@ -153,10 +159,14 @@ export function parseTableBorders(bordersElement: XmlElement | null): TableBorde
   const bottom = parseBorderSpec(findChild(bordersElement, 'w', 'bottom'));
   if (bottom) borders.bottom = bottom;
 
-  const left = parseBorderSpec(findChild(bordersElement, 'w', 'left') ?? findChild(bordersElement, 'w', 'start'));
+  const left = parseBorderSpec(
+    findChild(bordersElement, 'w', 'left') ?? findChild(bordersElement, 'w', 'start')
+  );
   if (left) borders.left = left;
 
-  const right = parseBorderSpec(findChild(bordersElement, 'w', 'right') ?? findChild(bordersElement, 'w', 'end'));
+  const right = parseBorderSpec(
+    findChild(bordersElement, 'w', 'right') ?? findChild(bordersElement, 'w', 'end')
+  );
   if (right) borders.right = right;
 
   const insideH = parseBorderSpec(findChild(bordersElement, 'w', 'insideH'));
@@ -192,10 +202,14 @@ export function parseCellMargins(marginsElement: XmlElement | null): CellMargins
   const bottom = parseWidth(findChild(marginsElement, 'w', 'bottom'));
   if (bottom) margins.bottom = bottom;
 
-  const left = parseWidth(findChild(marginsElement, 'w', 'left') ?? findChild(marginsElement, 'w', 'start'));
+  const left = parseWidth(
+    findChild(marginsElement, 'w', 'left') ?? findChild(marginsElement, 'w', 'start')
+  );
   if (left) margins.left = left;
 
-  const right = parseWidth(findChild(marginsElement, 'w', 'right') ?? findChild(marginsElement, 'w', 'end'));
+  const right = parseWidth(
+    findChild(marginsElement, 'w', 'right') ?? findChild(marginsElement, 'w', 'end')
+  );
   if (right) margins.right = right;
 
   if (Object.keys(margins).length === 0) return undefined;
@@ -475,7 +489,9 @@ export function parseTableProperties(tblPrElement: XmlElement | null): TableForm
  * @param trPrElement - The w:trPr element
  * @returns Parsed row formatting
  */
-export function parseTableRowProperties(trPrElement: XmlElement | null): TableRowFormatting | undefined {
+export function parseTableRowProperties(
+  trPrElement: XmlElement | null
+): TableRowFormatting | undefined {
   if (!trPrElement) return undefined;
 
   const formatting: TableRowFormatting = {};
@@ -603,7 +619,9 @@ export function parseConditionalFormatStyle(
  * @param tcPrElement - The w:tcPr element
  * @returns Parsed cell formatting
  */
-export function parseTableCellProperties(tcPrElement: XmlElement | null): TableCellFormatting | undefined {
+export function parseTableCellProperties(
+  tcPrElement: XmlElement | null
+): TableCellFormatting | undefined {
   if (!tcPrElement) return undefined;
 
   const formatting: TableCellFormatting = {};
@@ -978,7 +996,7 @@ export function getTableText(table: Table): string {
     for (const cell of row.cells) {
       const cellText = cell.content
         .filter((c): c is Paragraph => c.type === 'paragraph')
-        .map(p => getParagraphText(p))
+        .map((p) => getParagraphText(p))
         .join('\n');
       cells.push(cellText);
     }
@@ -994,12 +1012,10 @@ export function getTableText(table: Table): string {
  */
 function getParagraphText(para: Paragraph): string {
   return para.content
-    .filter(c => 'content' in c)
-    .flatMap(run => {
+    .filter((c) => 'content' in c)
+    .flatMap((run) => {
       if (!('content' in run)) return [];
-      return (run as any).content
-        .filter((c: any) => c.type === 'text')
-        .map((c: any) => c.text);
+      return (run as any).content.filter((c: any) => c.type === 'text').map((c: any) => c.text);
     })
     .join('');
 }
@@ -1022,7 +1038,7 @@ export function hasHeaderRow(table: Table): boolean {
  * @returns Array of header rows
  */
 export function getHeaderRows(table: Table): TableRow[] {
-  return table.rows.filter(row => row.formatting?.header === true);
+  return table.rows.filter((row) => row.formatting?.header === true);
 }
 
 /**

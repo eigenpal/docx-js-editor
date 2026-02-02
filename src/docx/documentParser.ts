@@ -24,12 +24,7 @@ import type {
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import type { NumberingMap } from './numberingParser';
-import {
-  parseXml,
-  findChild,
-  getChildElements,
-  type XmlElement,
-} from './xmlParser';
+import { parseXml, findChild, getChildElements, type XmlElement } from './xmlParser';
 import { parseParagraph, getParagraphText } from './paragraphParser';
 import { parseTable } from './tableParser';
 import { parseSectionProperties, getDefaultSectionProperties } from './sectionParser';
@@ -175,8 +170,7 @@ function parseBlockContent(
       // Find the content element inside SDT
       const sdtContent = (child.elements ?? []).find(
         (el: XmlElement) =>
-          el.type === 'element' &&
-          (el.name === 'w:sdtContent' || el.name?.endsWith(':sdtContent'))
+          el.type === 'element' && (el.name === 'w:sdtContent' || el.name?.endsWith(':sdtContent'))
       );
       if (sdtContent) {
         // Recursively parse content inside SDT
@@ -219,7 +213,6 @@ function buildSections(
 ): Section[] {
   const sections: Section[] = [];
   let currentSectionContent: BlockContent[] = [];
-  let currentSectionProperties: SectionProperties | undefined;
 
   for (const block of content) {
     currentSectionContent.push(block);
@@ -234,7 +227,6 @@ function buildSections(
 
       // Start new section
       currentSectionContent = [];
-      currentSectionProperties = undefined;
     }
   }
 
@@ -289,8 +281,7 @@ export function parseDocumentBody(
   // Find root document element (w:document)
   const documentEl = (doc.elements ?? []).find(
     (el: XmlElement) =>
-      el.type === 'element' &&
-      (el.name === 'w:document' || el.name?.endsWith(':document'))
+      el.type === 'element' && (el.name === 'w:document' || el.name?.endsWith(':document'))
   );
   if (!documentEl) {
     return result;
@@ -497,9 +488,7 @@ export function getDocumentOutline(
     const text = getParagraphText(paragraphs[i]).trim();
     if (text.length > 0) {
       outline.push(
-        text.length > maxCharsPerPara
-          ? text.substring(0, maxCharsPerPara) + '...'
-          : text
+        text.length > maxCharsPerPara ? text.substring(0, maxCharsPerPara) + '...' : text
       );
     }
   }

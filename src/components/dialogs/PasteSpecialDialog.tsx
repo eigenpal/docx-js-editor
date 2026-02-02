@@ -101,15 +101,8 @@ const PASTE_OPTIONS: PasteOptionItem[] = [
 
 const FormattedIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M4 4h12v2H4V4zM4 8h8v2H4V8zM4 12h10v2H4v-2zM4 16h6v2H4v-2z"
-      fill="currentColor"
-    />
-    <path
-      d="M14 10l3 3-3 3v-2h-2v-2h2v-2z"
-      fill="currentColor"
-      opacity="0.6"
-    />
+    <path d="M4 4h12v2H4V4zM4 8h8v2H4V8zM4 12h10v2H4v-2zM4 16h6v2H4v-2z" fill="currentColor" />
+    <path d="M14 10l3 3-3 3v-2h-2v-2h2v-2z" fill="currentColor" opacity="0.6" />
   </svg>
 );
 
@@ -330,8 +323,12 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
     const dialogWidth = 320;
     const dialogHeight = 200;
 
-    let x = position?.x ?? (typeof window !== 'undefined' ? window.innerWidth / 2 - dialogWidth / 2 : 100);
-    let y = position?.y ?? (typeof window !== 'undefined' ? window.innerHeight / 2 - dialogHeight / 2 : 100);
+    let x =
+      position?.x ??
+      (typeof window !== 'undefined' ? window.innerWidth / 2 - dialogWidth / 2 : 100);
+    let y =
+      position?.y ??
+      (typeof window !== 'undefined' ? window.innerHeight / 2 - dialogHeight / 2 : 100);
 
     // Adjust for viewport boundaries
     if (typeof window !== 'undefined') {
@@ -406,7 +403,12 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
           }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M4 4l8 8M12 4l-8 8"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         </button>
       </div>

@@ -87,7 +87,7 @@ function DemoApp() {
   }, [fileName]);
 
   // Handle document change
-  const handleDocumentChange = useCallback((doc: Document) => {
+  const handleDocumentChange = useCallback((_doc: Document) => {
     console.log('Document changed');
   }, []);
 
@@ -120,11 +120,7 @@ function DemoApp() {
             />
             Open DOCX
           </label>
-          <button
-            style={styles.button}
-            onClick={handleSave}
-            disabled={!documentBuffer}
-          >
+          <button style={styles.button} onClick={handleSave} disabled={!documentBuffer}>
             Save
           </button>
           {status && <span style={styles.status}>{status}</span>}
@@ -150,7 +146,14 @@ function DemoApp() {
           />
         ) : (
           <div style={styles.emptyState}>
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5">
+            <svg
+              width="80"
+              height="80"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#ccc"
+              strokeWidth="1.5"
+            >
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
               <line x1="16" y1="13" x2="8" y2="13" />
@@ -159,9 +162,7 @@ function DemoApp() {
             </svg>
             <h2 style={styles.emptyTitle}>No Document Loaded</h2>
             <p style={styles.emptyText}>Click "Open DOCX" to load a document</p>
-            <p style={styles.emptyHint}>
-              Features:
-            </p>
+            <p style={styles.emptyHint}>Features:</p>
             <ul style={styles.featureList}>
               <li>Full text formatting (bold, italic, underline, etc.)</li>
               <li>Paragraph styles and alignment</li>

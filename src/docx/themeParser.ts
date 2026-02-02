@@ -26,17 +26,17 @@ import {
  * Used when theme1.xml is missing or malformed
  */
 const DEFAULT_COLORS: ThemeColorScheme = {
-  dk1: '000000',    // Black
-  lt1: 'FFFFFF',    // White
-  dk2: '44546A',    // Dark blue-gray
-  lt2: 'E7E6E6',    // Light gray
+  dk1: '000000', // Black
+  lt1: 'FFFFFF', // White
+  dk2: '44546A', // Dark blue-gray
+  lt2: 'E7E6E6', // Light gray
   accent1: '4472C4', // Blue
   accent2: 'ED7D31', // Orange
   accent3: 'A5A5A5', // Gray
   accent4: 'FFC000', // Gold
   accent5: '5B9BD5', // Light blue
   accent6: '70AD47', // Green
-  hlink: '0563C1',   // Hyperlink blue
+  hlink: '0563C1', // Hyperlink blue
   folHlink: '954F72', // Followed hyperlink purple
 };
 
@@ -71,9 +71,18 @@ const DEFAULT_THEME: Theme = {
  * Color slot names in theme
  */
 const COLOR_SLOTS = [
-  'dk1', 'lt1', 'dk2', 'lt2',
-  'accent1', 'accent2', 'accent3', 'accent4', 'accent5', 'accent6',
-  'hlink', 'folHlink',
+  'dk1',
+  'lt1',
+  'dk2',
+  'lt2',
+  'accent1',
+  'accent2',
+  'accent3',
+  'accent4',
+  'accent5',
+  'accent6',
+  'hlink',
+  'folHlink',
 ] as const;
 
 /**
@@ -97,7 +106,8 @@ function parseColorElement(element: XmlElement | null): string | null {
     case 'sysClr': {
       // System color with fallback: <a:sysClr val="windowText" lastClr="000000"/>
       // Use lastClr as the fallback since we can't access actual system colors
-      const lastClr = getAttribute(element, 'a', 'lastClr') ?? getAttribute(element, null, 'lastClr');
+      const lastClr =
+        getAttribute(element, 'a', 'lastClr') ?? getAttribute(element, null, 'lastClr');
       if (lastClr) return lastClr;
 
       // Fallback based on common system color names
@@ -189,7 +199,8 @@ function parseThemeFonts(fontElement: XmlElement | null): ThemeFont {
   // Parse main font elements
   const latinEl = findChild(fontElement, 'a', 'latin');
   if (latinEl) {
-    result.latin = getAttribute(latinEl, 'a', 'typeface') ?? getAttribute(latinEl, null, 'typeface') ?? '';
+    result.latin =
+      getAttribute(latinEl, 'a', 'typeface') ?? getAttribute(latinEl, null, 'typeface') ?? '';
   }
 
   const eaEl = findChild(fontElement, 'a', 'ea');
@@ -260,7 +271,8 @@ export function parseTheme(themeXml: string | null): Theme {
     }
 
     // Get theme name from root element
-    const themeName = getAttribute(doc, 'a', 'name') ?? getAttribute(doc, null, 'name') ?? 'Office Theme';
+    const themeName =
+      getAttribute(doc, 'a', 'name') ?? getAttribute(doc, null, 'name') ?? 'Office Theme';
 
     // Find a:themeElements which contains clrScheme and fontScheme
     const themeElements = findChild(doc, 'a', 'themeElements');
@@ -291,12 +303,15 @@ export function parseTheme(themeXml: string | null): Theme {
  * @param slot - Color slot name (dk1, lt1, accent1, etc.)
  * @returns Hex color value (6 characters, no #)
  */
-export function getThemeColor(theme: Theme | null | undefined, slot: keyof ThemeColorScheme): string {
+export function getThemeColor(
+  theme: Theme | null | undefined,
+  slot: keyof ThemeColorScheme
+): string {
   if (!theme?.colorScheme) {
-    return DEFAULT_COLORS[slot];
+    return DEFAULT_COLORS[slot] ?? '000000';
   }
 
-  return theme.colorScheme[slot] ?? DEFAULT_COLORS[slot];
+  return theme.colorScheme[slot] ?? DEFAULT_COLORS[slot] ?? '000000';
 }
 
 /**

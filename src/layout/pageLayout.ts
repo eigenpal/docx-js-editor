@@ -11,8 +11,6 @@
 
 import type {
   Document,
-  DocumentBody,
-  Section,
   SectionProperties,
   Paragraph,
   Table,
@@ -145,21 +143,19 @@ interface LayoutState {
  * @param options - Layout options
  * @returns Page layout result with all pages
  */
-export function calculatePages(
-  doc: Document,
-  options: PageLayoutOptions = {}
-): PageLayoutResult {
-  const { theme, headers, footers, updatePageNumbers = true } = options;
+export function calculatePages(doc: Document, options: PageLayoutOptions = {}): PageLayoutResult {
+  const { theme, headers, footers, updatePageNumbers: _updatePageNumbers = true } = options;
 
-  const body = doc.package.body;
+  const body = doc.package.document;
   if (!body) {
     return { pages: [], totalPages: 0 };
   }
 
   // Process sections
-  const sections = body.sections.length > 0
-    ? body.sections
-    : [{ properties: getDefaultSectionProps(), content: body.content }];
+  const sections =
+    body.sections && body.sections.length > 0
+      ? body.sections
+      : [{ properties: getDefaultSectionProps(), content: body.content }];
 
   // Initialize layout state
   let state = initializeState(sections[0].properties);
@@ -171,7 +167,7 @@ export function calculatePages(
 
     // Check if we need to start a new page for this section
     if (sectionIndex > 0) {
-      const sectionStart = sectionProps.sectionType || 'nextPage';
+      const sectionStart = sectionProps.sectionStart || 'nextPage';
       if (shouldStartNewPage(sectionStart, state)) {
         state = finalizePage(state, headers, footers);
         state.sectionIndex = sectionIndex;
@@ -267,16 +263,16 @@ function finalizePage(
   );
 
   // Calculate page dimensions
-  const pageWidth = sectionProps.pageSize?.width ?? 12240; // Default 8.5"
-  const pageHeight = sectionProps.pageSize?.height ?? 15840; // Default 11"
-  const margins = sectionProps.pageMargins ?? {};
+  const pageWidth = sectionProps.pageWidth ?? 12240; // Default 8.5"
+  const pageHeight = sectionProps.pageHeight ?? 15840; // Default 11"
 
   const widthPx = twipsToPixels(pageWidth);
   const heightPx = twipsToPixels(pageHeight);
-  const contentLeftPx = twipsToPixels(margins.left ?? 1440);
-  const contentTopPx = twipsToPixels(margins.top ?? 1440);
-  const contentWidthPx = widthPx - contentLeftPx - twipsToPixels(margins.right ?? 1440);
-  const contentHeightPx = heightPx - contentTopPx - twipsToPixels(margins.bottom ?? 1440);
+  const contentLeftPx = twipsToPixels(sectionProps.marginLeft ?? 1440);
+  const contentTopPx = twipsToPixels(sectionProps.marginTop ?? 1440);
+  const contentWidthPx = widthPx - contentLeftPx - twipsToPixels(sectionProps.marginRight ?? 1440);
+  const contentHeightPx =
+    heightPx - contentTopPx - twipsToPixels(sectionProps.marginBottom ?? 1440);
 
   // Create page
   const page: Page = {
@@ -356,8 +352,8 @@ function layoutParagraph(
 
   // Calculate paragraph height
   const contentWidth = calculateContentWidth(currentState.sectionProps);
-  const firstLineIndent = paragraph.formatting?.indentation?.firstLine
-    ? twipsToPixels(paragraph.formatting.indentation.firstLine)
+  const firstLineIndent = paragraph.formatting?.indentFirstLine
+    ? twipsToPixels(paragraph.formatting.indentFirstLine)
     : 0;
 
   // Break paragraph into lines
@@ -366,15 +362,15 @@ function layoutParagraph(
     firstLineIndent,
     tabStops: paragraph.formatting?.tabs,
     theme,
-    defaultFormatting: paragraph.defaultRunFormatting,
+    defaultFormatting: paragraph.formatting?.runProperties,
   });
 
   // Calculate spacing
-  const spaceBefore = paragraph.formatting?.spacing?.spaceBefore
-    ? twipsToPixels(paragraph.formatting.spacing.spaceBefore)
+  const spaceBefore = paragraph.formatting?.spaceBefore
+    ? twipsToPixels(paragraph.formatting.spaceBefore)
     : 0;
-  const spaceAfter = paragraph.formatting?.spacing?.spaceAfter
-    ? twipsToPixels(paragraph.formatting.spacing.spaceAfter)
+  const spaceAfter = paragraph.formatting?.spaceAfter
+    ? twipsToPixels(paragraph.formatting.spaceAfter)
     : 0;
 
   const totalHeight = spaceBefore + lineResult.totalHeight + spaceAfter;
@@ -507,7 +503,7 @@ function layoutTable(
   table: Table,
   blockIndex: number,
   state: LayoutState,
-  theme: Theme | null | undefined,
+  _theme: Theme | null | undefined,
   headers?: Map<number, Map<HeaderFooterType, HeaderFooter>>,
   footers?: Map<number, Map<HeaderFooterType, HeaderFooter>>
 ): LayoutState {
@@ -565,10 +561,9 @@ function layoutTable(
  * Calculate content area height in pixels
  */
 function calculateContentHeight(sectionProps: SectionProperties): number {
-  const pageHeight = sectionProps.pageSize?.height ?? 15840; // Default 11"
-  const margins = sectionProps.pageMargins ?? {};
-  const topMargin = margins.top ?? 1440;
-  const bottomMargin = margins.bottom ?? 1440;
+  const pageHeight = sectionProps.pageHeight ?? 15840; // Default 11"
+  const topMargin = sectionProps.marginTop ?? 1440;
+  const bottomMargin = sectionProps.marginBottom ?? 1440;
 
   return twipsToPixels(pageHeight - topMargin - bottomMargin);
 }
@@ -577,10 +572,9 @@ function calculateContentHeight(sectionProps: SectionProperties): number {
  * Calculate content area width in pixels
  */
 function calculateContentWidth(sectionProps: SectionProperties): number {
-  const pageWidth = sectionProps.pageSize?.width ?? 12240; // Default 8.5"
-  const margins = sectionProps.pageMargins ?? {};
-  const leftMargin = margins.left ?? 1440;
-  const rightMargin = margins.right ?? 1440;
+  const pageWidth = sectionProps.pageWidth ?? 12240; // Default 8.5"
+  const leftMargin = sectionProps.marginLeft ?? 1440;
+  const rightMargin = sectionProps.marginRight ?? 1440;
 
   return twipsToPixels(pageWidth - leftMargin - rightMargin);
 }
@@ -588,10 +582,7 @@ function calculateContentWidth(sectionProps: SectionProperties): number {
 /**
  * Check if we should start a new page for a section
  */
-function shouldStartNewPage(
-  sectionType: string,
-  state: LayoutState
-): boolean {
+function shouldStartNewPage(sectionType: string, _state: LayoutState): boolean {
   switch (sectionType) {
     case 'nextPage':
     case 'oddPage':
@@ -623,7 +614,7 @@ function getHeaderForPage(
   if (!sectionHeaders) return null;
 
   // First page header
-  if (isFirstPageOfSection && sectionProps.titlePage && sectionHeaders.has('first')) {
+  if (isFirstPageOfSection && sectionProps.titlePg && sectionHeaders.has('first')) {
     return sectionHeaders.get('first') || null;
   }
 
@@ -655,7 +646,7 @@ function getFooterForPage(
   if (!sectionFooters) return null;
 
   // First page footer
-  if (isFirstPageOfSection && sectionProps.titlePage && sectionFooters.has('first')) {
+  if (isFirstPageOfSection && sectionProps.titlePg && sectionFooters.has('first')) {
     return sectionFooters.get('first') || null;
   }
 
@@ -676,20 +667,16 @@ function getFooterForPage(
  */
 function getDefaultSectionProps(): SectionProperties {
   return {
-    pageSize: {
-      width: 12240, // 8.5" in twips
-      height: 15840, // 11" in twips
-      orientation: 'portrait',
-    },
-    pageMargins: {
-      top: 1440, // 1"
-      bottom: 1440,
-      left: 1440,
-      right: 1440,
-      header: 720, // 0.5"
-      footer: 720,
-      gutter: 0,
-    },
+    pageWidth: 12240, // 8.5" in twips
+    pageHeight: 15840, // 11" in twips
+    orientation: 'portrait',
+    marginTop: 1440, // 1"
+    marginBottom: 1440,
+    marginLeft: 1440,
+    marginRight: 1440,
+    headerDistance: 720, // 0.5"
+    footerDistance: 720,
+    gutter: 0,
   };
 }
 
@@ -763,7 +750,11 @@ export function getPageAtY(result: PageLayoutResult, y: number, gap: number = 20
 /**
  * Get Y position for a page (for scrolling)
  */
-export function getYForPage(result: PageLayoutResult, pageNumber: number, gap: number = 20): number {
+export function getYForPage(
+  result: PageLayoutResult,
+  pageNumber: number,
+  gap: number = 20
+): number {
   let y = 0;
 
   for (let i = 0; i < pageNumber - 1 && i < result.pages.length; i++) {

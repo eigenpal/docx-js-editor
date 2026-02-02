@@ -27,9 +27,6 @@ import type {
   TextFormatting,
   ColorValue,
   ShadingProperties,
-  UnderlineStyle,
-  Image,
-  Shape,
 } from '../../types/document';
 
 // ============================================================================
@@ -51,41 +48,6 @@ function escapeXml(text: string): string {
 // ============================================================================
 // COLOR SERIALIZATION
 // ============================================================================
-
-/**
- * Serialize a color value to XML attributes
- */
-function serializeColorAttributes(
-  color: ColorValue | undefined,
-  prefix: string = ''
-): string {
-  if (!color) return '';
-
-  const attrs: string[] = [];
-
-  if (color.auto) {
-    attrs.push(`w:${prefix}val="auto"`);
-  } else if (color.rgb) {
-    attrs.push(`w:${prefix}val="${color.rgb}"`);
-  }
-
-  if (color.themeColor) {
-    const themeAttr = prefix ? `${prefix}themeColor` : 'themeColor';
-    attrs.push(`w:${themeAttr}="${color.themeColor}"`);
-  }
-
-  if (color.themeTint) {
-    const tintAttr = prefix ? `${prefix}themeTint` : 'themeTint';
-    attrs.push(`w:${tintAttr}="${color.themeTint}"`);
-  }
-
-  if (color.themeShade) {
-    const shadeAttr = prefix ? `${prefix}themeShade` : 'themeShade';
-    attrs.push(`w:${shadeAttr}="${color.themeShade}"`);
-  }
-
-  return attrs.join(' ');
-}
 
 /**
  * Serialize a color element (w:color)
@@ -384,7 +346,8 @@ export function serializeTextFormatting(formatting: TextFormatting | undefined):
  * Serialize text content (w:t)
  */
 function serializeTextContent(content: TextContent): string {
-  const needsPreserve = content.preserveSpace ||
+  const needsPreserve =
+    content.preserveSpace ||
     content.text.startsWith(' ') ||
     content.text.endsWith(' ') ||
     content.text.includes('  ');
@@ -464,9 +427,8 @@ function serializeFieldChar(content: FieldCharContent): string {
  * Serialize field instruction text (w:instrText)
  */
 function serializeInstrText(content: InstrTextContent): string {
-  const needsPreserve = content.text.startsWith(' ') ||
-    content.text.endsWith(' ') ||
-    content.text.includes('  ');
+  const needsPreserve =
+    content.text.startsWith(' ') || content.text.endsWith(' ') || content.text.includes('  ');
 
   const spaceAttr = needsPreserve ? ' xml:space="preserve"' : '';
 
@@ -607,7 +569,7 @@ export function hasRunFormatting(run: Run): boolean {
 export function getRunPlainText(run: Run): string {
   return run.content
     .filter((c): c is TextContent => c.type === 'text')
-    .map(c => c.text)
+    .map((c) => c.text)
     .join('');
 }
 
@@ -624,10 +586,7 @@ export function createEmptyRun(): Run {
 /**
  * Create a text run
  */
-export function createTextRun(
-  text: string,
-  formatting?: TextFormatting
-): Run {
+export function createTextRun(text: string, formatting?: TextFormatting): Run {
   return {
     type: 'run',
     formatting,

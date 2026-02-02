@@ -19,15 +19,12 @@ import type {
   TableRow,
   TableCell,
   TextFormatting,
-  ParagraphFormatting,
   Image,
   Hyperlink,
 } from '../types/document';
 
 import type {
   AgentCommand,
-  Position,
-  Range,
   InsertTextCommand,
   ReplaceTextCommand,
   DeleteTextCommand,
@@ -116,22 +113,6 @@ export function executeCommands(doc: Document, commands: AgentCommand[]): Docume
  */
 function cloneDocument(doc: Document): Document {
   return JSON.parse(JSON.stringify(doc));
-}
-
-/**
- * Get paragraph at a specific index from document body
- */
-function getParagraphAtIndex(body: DocumentBody, index: number): Paragraph | null {
-  let currentIndex = 0;
-  for (const block of body.content) {
-    if (block.type === 'paragraph') {
-      if (currentIndex === index) {
-        return block;
-      }
-      currentIndex++;
-    }
-  }
-  return null;
 }
 
 /**
@@ -865,7 +846,10 @@ function executeRemoveHyperlink(doc: Document, command: RemoveHyperlinkCommand):
 /**
  * Insert a paragraph break
  */
-function executeInsertParagraphBreak(doc: Document, command: InsertParagraphBreakCommand): Document {
+function executeInsertParagraphBreak(
+  doc: Document,
+  command: InsertParagraphBreakCommand
+): Document {
   const newDoc = cloneDocument(doc);
   const body = newDoc.package.document;
 

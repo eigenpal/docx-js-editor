@@ -7,24 +7,22 @@
  * - Full flow: select -> menu -> AI -> preview -> apply
  */
 
-import React, { useRef, useCallback, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
-import type { CSSProperties, ReactNode } from 'react';
-import type {
-  Document,
-  Paragraph as ParagraphType,
-  TextFormatting,
-  SectionProperties,
-  Image as ImageType,
-  Shape as ShapeType,
-  TextBox as TextBoxType,
-} from '../types/document';
+import React, {
+  useRef,
+  useCallback,
+  useState,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
+import type { Document } from '../types/document';
 import type {
   AIAction,
   AIActionRequest,
   AgentResponse,
   SelectionContext,
-  Range,
   Position,
+  Range as DocumentRange,
 } from '../types/agentApi';
 
 import { Editor, type EditorRef, type EditorProps } from './Editor';
@@ -77,7 +75,7 @@ export interface AIEditorRef extends EditorRef {
  */
 interface SelectionState {
   text: string;
-  range: Range;
+  range: DocumentRange;
   context: SelectionContext;
 }
 
@@ -99,8 +97,8 @@ function getSelectedText(): string {
  */
 function getSelectionRange(
   containerRef: React.RefObject<HTMLElement>,
-  document: Document
-): Range | null {
+  _document: Document
+): DocumentRange | null {
   if (typeof window === 'undefined') return null;
 
   const selection = window.getSelection();
@@ -134,11 +132,7 @@ function getSelectionRange(
 
   // Calculate offsets within paragraphs
   const calculateOffset = (paraElement: Element, node: Node, offset: number): number => {
-    const treeWalker = window.document.createTreeWalker(
-      paraElement,
-      NodeFilter.SHOW_TEXT,
-      null
-    );
+    const treeWalker = window.document.createTreeWalker(paraElement, NodeFilter.SHOW_TEXT, null);
 
     let charOffset = 0;
     let currentNode = treeWalker.nextNode();
@@ -154,16 +148,8 @@ function getSelectionRange(
     return charOffset + offset;
   };
 
-  const anchorOffset = calculateOffset(
-    anchorInfo.element,
-    anchorNode,
-    selection.anchorOffset
-  );
-  const focusOffset = calculateOffset(
-    focusInfo.element,
-    focusNode,
-    selection.focusOffset
-  );
+  const anchorOffset = calculateOffset(anchorInfo.element, anchorNode, selection.anchorOffset);
+  const focusOffset = calculateOffset(focusInfo.element, focusNode, selection.focusOffset);
 
   // Determine start and end based on document order
   let start: Position;
@@ -268,7 +254,7 @@ export const AIEditor = forwardRef<AIEditorRef, AIEditorProps>(function AIEditor
     async (action: AIAction, customPrompt?: string) => {
       if (!selectionState || !onAgentRequest) return;
 
-      const { text, range, context } = selectionState;
+      const { text, context } = selectionState;
 
       // Build request
       const request: AIActionRequest = {
@@ -432,9 +418,7 @@ export const AIEditor = forwardRef<AIEditorRef, AIEditorProps>(function AIEditor
 /**
  * Create a mock AI handler for testing
  */
-export function createMockAIHandler(
-  delay = 1000
-): AIRequestHandler {
+export function createMockAIHandler(delay = 1000): AIRequestHandler {
   return async (request: AIActionRequest): Promise<AgentResponse> => {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, delay));

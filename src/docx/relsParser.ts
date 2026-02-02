@@ -44,10 +44,14 @@ export const RELATIONSHIP_TYPES = {
   oleObject: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject',
   chart: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart',
   diagramData: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramData',
-  officeDocument: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument',
-  coreProperties: 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties',
-  extendedProperties: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties',
-  customProperties: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties',
+  officeDocument:
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument',
+  coreProperties:
+    'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties',
+  extendedProperties:
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties',
+  customProperties:
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties',
   customXml: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml',
 } as const;
 
@@ -139,10 +143,7 @@ export function getRelationshipTypeName(typeUri: string): string {
  * @returns true if this is an external hyperlink
  */
 export function isExternalHyperlink(rel: Relationship): boolean {
-  return (
-    rel.type === RELATIONSHIP_TYPES.hyperlink &&
-    rel.targetMode === 'External'
-  );
+  return rel.type === RELATIONSHIP_TYPES.hyperlink && rel.targetMode === 'External';
 }
 
 /**
@@ -182,10 +183,7 @@ export function isFooterRelationship(rel: Relationship): boolean {
  * @param type - Relationship type URI to filter by
  * @returns Array of matching relationships
  */
-export function filterByType(
-  map: RelationshipMap,
-  type: RelationshipType
-): Relationship[] {
+export function filterByType(map: RelationshipMap, type: RelationshipType): Relationship[] {
   const results: Relationship[] = [];
   for (const rel of map.values()) {
     if (rel.type === type) {
@@ -242,10 +240,7 @@ export function getFooters(map: RelationshipMap): Relationship[] {
  * @param rId - Relationship ID (e.g., "rId1")
  * @returns Target path or undefined if not found
  */
-export function resolveTarget(
-  map: RelationshipMap,
-  rId: string
-): string | undefined {
+export function resolveTarget(map: RelationshipMap, rId: string): string | undefined {
   const rel = map.get(rId);
   return rel?.target;
 }
@@ -257,10 +252,7 @@ export function resolveTarget(
  * @param rId - Relationship ID (e.g., "rId1")
  * @returns Relationship or undefined if not found
  */
-export function resolveRelationship(
-  map: RelationshipMap,
-  rId: string
-): Relationship | undefined {
+export function resolveRelationship(map: RelationshipMap, rId: string): Relationship | undefined {
   return map.get(rId);
 }
 

@@ -452,12 +452,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
  * Hook to manage loading states
  */
 export function useLoading(options: UseLoadingOptions = {}): UseLoadingReturn {
-  const {
-    initialLoading = false,
-    minDuration = MIN_LOADING_DURATION,
-    onStart,
-    onEnd,
-  } = options;
+  const { initialLoading = false, minDuration = MIN_LOADING_DURATION, onStart, onEnd } = options;
 
   const [isLoading, setIsLoading] = useState(initialLoading);
   const [message, setMessage] = useState<string | null>(null);

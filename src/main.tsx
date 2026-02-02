@@ -1,7 +1,6 @@
 /**
  * Main entry point for the DOCX editor application
  */
-import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 // Placeholder App component - will be replaced with DocxEditor

@@ -126,7 +126,16 @@ export interface TableToolbarButtonProps {
 export function AddRowAboveIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="6" width="14" height="9" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect
+        x="1"
+        y="6"
+        width="14"
+        height="9"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
       <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
       <line x1="5.5" y1="6" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
       <line x1="10.5" y1="6" x2="10.5" y2="15" stroke="currentColor" strokeWidth="1" />
@@ -142,7 +151,16 @@ export function AddRowAboveIcon(): React.ReactElement {
 export function AddRowBelowIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="14" height="9" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect
+        x="1"
+        y="1"
+        width="14"
+        height="9"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
       <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
       <line x1="5.5" y1="1" x2="5.5" y2="10" stroke="currentColor" strokeWidth="1" />
       <line x1="10.5" y1="1" x2="10.5" y2="10" stroke="currentColor" strokeWidth="1" />
@@ -158,7 +176,16 @@ export function AddRowBelowIcon(): React.ReactElement {
 export function AddColumnLeftIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="6" y="1" width="9" height="14" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect
+        x="6"
+        y="1"
+        width="9"
+        height="14"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
       <line x1="10.5" y1="1" x2="10.5" y2="15" stroke="currentColor" strokeWidth="1" />
       <line x1="6" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
       <line x1="6" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
@@ -174,7 +201,16 @@ export function AddColumnLeftIcon(): React.ReactElement {
 export function AddColumnRightIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="9" height="14" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect
+        x="1"
+        y="1"
+        width="9"
+        height="14"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
       <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
       <line x1="1" y1="5.5" x2="10" y2="5.5" stroke="currentColor" strokeWidth="1" />
       <line x1="1" y1="10.5" x2="10" y2="10.5" stroke="currentColor" strokeWidth="1" />
@@ -190,7 +226,16 @@ export function AddColumnRightIcon(): React.ReactElement {
 export function DeleteRowIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect
+        x="1"
+        y="1"
+        width="14"
+        height="14"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
       <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
       <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
       <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
@@ -206,7 +251,16 @@ export function DeleteRowIcon(): React.ReactElement {
 export function DeleteColumnIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect
+        x="1"
+        y="1"
+        width="14"
+        height="14"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
       <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
       <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
       <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
@@ -222,10 +276,35 @@ export function DeleteColumnIcon(): React.ReactElement {
 export function MergeCellsIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect
+        x="1"
+        y="1"
+        width="14"
+        height="14"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
       <line x1="1" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1" />
-      <line x1="8" y1="1" x2="8" y2="5" stroke="currentColor" strokeWidth="1" strokeDasharray="2 1" />
-      <line x1="8" y1="11" x2="8" y2="15" stroke="currentColor" strokeWidth="1" strokeDasharray="2 1" />
+      <line
+        x1="8"
+        y1="1"
+        x2="8"
+        y2="5"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeDasharray="2 1"
+      />
+      <line
+        x1="8"
+        y1="11"
+        x2="8"
+        y2="15"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeDasharray="2 1"
+      />
       <path d="M5 4 L8 7 L11 4" stroke="currentColor" strokeWidth="1.5" fill="none" />
       <path d="M5 12 L8 9 L11 12" stroke="currentColor" strokeWidth="1.5" fill="none" />
     </svg>
@@ -238,12 +317,49 @@ export function MergeCellsIcon(): React.ReactElement {
 export function SplitCellIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect
+        x="1"
+        y="1"
+        width="14"
+        height="14"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
       <line x1="8" y1="1" x2="8" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="1" y1="8" x2="5" y2="8" stroke="currentColor" strokeWidth="1" strokeDasharray="2 1" />
-      <line x1="11" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1" strokeDasharray="2 1" />
-      <path d="M4 5 L7 8 L4 11" stroke="currentColor" strokeWidth="1.5" fill="none" transform="rotate(180 5.5 8)" />
-      <path d="M12 5 L9 8 L12 11" stroke="currentColor" strokeWidth="1.5" fill="none" transform="rotate(180 10.5 8)" />
+      <line
+        x1="1"
+        y1="8"
+        x2="5"
+        y2="8"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeDasharray="2 1"
+      />
+      <line
+        x1="11"
+        y1="8"
+        x2="15"
+        y2="8"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeDasharray="2 1"
+      />
+      <path
+        d="M4 5 L7 8 L4 11"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        transform="rotate(180 5.5 8)"
+      />
+      <path
+        d="M12 5 L9 8 L12 11"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        transform="rotate(180 10.5 8)"
+      />
     </svg>
   );
 }
@@ -254,7 +370,16 @@ export function SplitCellIcon(): React.ReactElement {
 export function DeleteTableIcon(): React.ReactElement {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect
+        x="1"
+        y="1"
+        width="14"
+        height="14"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
       <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
       <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
       <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
@@ -433,7 +558,6 @@ export function TableToolbar({
   };
 
   // Check if actions are available
-  const canDelete = context.rowCount > 1 || context.columnCount > 1;
   const canDeleteRow = context.rowCount > 1;
   const canDeleteColumn = context.columnCount > 1;
   const canMerge = context.hasMultiCellSelection;
@@ -572,10 +696,7 @@ export function TableToolbar({
 /**
  * Create a table context from a table and selection
  */
-export function createTableContext(
-  table: Table,
-  selection: TableSelection
-): TableContext {
+export function createTableContext(table: Table, selection: TableSelection): TableContext {
   const rowCount = table.rows.length;
   const columnCount = getColumnCount(table);
 
@@ -590,8 +711,7 @@ export function createTableContext(
   const currentCell = getCellAt(table, selection.rowIndex, selection.columnIndex);
   const canSplitCell = !!(
     currentCell &&
-    ((currentCell.formatting?.gridSpan ?? 1) > 1 ||
-      currentCell.formatting?.vMerge === 'restart')
+    ((currentCell.formatting?.gridSpan ?? 1) > 1 || currentCell.formatting?.vMerge === 'restart')
   );
 
   return {
@@ -624,11 +744,7 @@ export function getColumnCount(table: Table): number {
 /**
  * Get cell at specific row and column index
  */
-export function getCellAt(
-  table: Table,
-  rowIndex: number,
-  columnIndex: number
-): TableCell | null {
+export function getCellAt(table: Table, rowIndex: number, columnIndex: number): TableCell | null {
   const row = table.rows[rowIndex];
   if (!row) return null;
 
@@ -700,9 +816,10 @@ export function createEmptyRow(templateRow: TableRow, columnCount: number): Tabl
   for (const templateCell of templateRow.cells) {
     const colspan = templateCell.formatting?.gridSpan ?? 1;
     cells.push({
+      type: 'tableCell',
       content: [
         {
-          type: 'paragraph',
+          type: 'paragraph' as const,
           content: [],
           formatting: {},
         },
@@ -718,9 +835,10 @@ export function createEmptyRow(templateRow: TableRow, columnCount: number): Tabl
   // If template row has fewer columns, add more cells
   while (colIndex < columnCount) {
     cells.push({
+      type: 'tableCell',
       content: [
         {
-          type: 'paragraph',
+          type: 'paragraph' as const,
           content: [],
           formatting: {},
         },
@@ -731,6 +849,7 @@ export function createEmptyRow(templateRow: TableRow, columnCount: number): Tabl
   }
 
   return {
+    type: 'tableRow',
     cells,
     formatting: {
       ...templateRow.formatting,
@@ -744,6 +863,7 @@ export function createEmptyRow(templateRow: TableRow, columnCount: number): Tabl
  */
 export function createEmptyCell(): TableCell {
   return {
+    type: 'tableCell',
     content: [
       {
         type: 'paragraph',
@@ -971,11 +1091,7 @@ export function mergeCells(table: Table, selection: TableSelection): Table {
 /**
  * Split a merged cell
  */
-export function splitCell(
-  table: Table,
-  rowIndex: number,
-  columnIndex: number
-): Table {
+export function splitCell(table: Table, rowIndex: number, columnIndex: number): Table {
   const cell = getCellAt(table, rowIndex, columnIndex);
   if (!cell) return table;
 
@@ -997,14 +1113,20 @@ export function splitCell(
     for (const rowCell of row.cells) {
       const cellColSpan = rowCell.formatting?.gridSpan ?? 1;
 
-      if (currentCol === columnIndex ||
-          (currentCol <= columnIndex && columnIndex < currentCol + cellColSpan)) {
+      if (
+        currentCol === columnIndex ||
+        (currentCol <= columnIndex && columnIndex < currentCol + cellColSpan)
+      ) {
         // This is the cell to split
         if (gridSpan > 1) {
           // Split horizontally
           for (let i = 0; i < gridSpan; i++) {
             newCells.push({
-              content: i === 0 ? rowCell.content : [{ type: 'paragraph', content: [], formatting: {} }],
+              type: 'tableCell',
+              content:
+                i === 0
+                  ? rowCell.content
+                  : [{ type: 'paragraph' as const, content: [], formatting: {} }],
               formatting: {
                 ...rowCell.formatting,
                 gridSpan: undefined,
@@ -1024,7 +1146,8 @@ export function splitCell(
         } else if (rowCell.formatting?.vMerge === 'continue') {
           // This row was part of vMerge - restore as regular cell
           newCells.push({
-            content: [{ type: 'paragraph', content: [], formatting: {} }],
+            type: 'tableCell',
+            content: [{ type: 'paragraph' as const, content: [], formatting: {} }],
             formatting: {
               ...rowCell.formatting,
               vMerge: undefined,
@@ -1081,7 +1204,7 @@ export function isDeleteAction(action: TableAction): boolean {
  * Handle keyboard shortcuts for table actions
  */
 export function handleTableShortcut(
-  event: KeyboardEvent,
+  _event: KeyboardEvent,
   context: TableContext | null
 ): TableAction | null {
   if (!context) return null;

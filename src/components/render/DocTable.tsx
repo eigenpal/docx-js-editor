@@ -23,11 +23,7 @@ import type {
   Theme,
   Paragraph,
 } from '../../types/document';
-import {
-  tableCellToStyle,
-  borderToStyle,
-  resolveShadingFill,
-} from '../../utils/formatToStyle';
+import { tableCellToStyle, borderToStyle, resolveShadingFill } from '../../utils/formatToStyle';
 import { twipsToPixels, formatPx } from '../../utils/units';
 import {
   getTableColumnCount,
@@ -114,16 +110,14 @@ export function DocTable({
   };
 
   // Render colgroup for column widths if available
-  const colgroup = table.columnWidths && table.columnWidths.length > 0 ? (
-    <colgroup>
-      {table.columnWidths.map((width, colIndex) => (
-        <col
-          key={`col-${colIndex}`}
-          style={{ width: formatPx(twipsToPixels(width)) }}
-        />
-      ))}
-    </colgroup>
-  ) : null;
+  const colgroup =
+    table.columnWidths && table.columnWidths.length > 0 ? (
+      <colgroup>
+        {table.columnWidths.map((width, colIndex) => (
+          <col key={`col-${colIndex}`} style={{ width: formatPx(twipsToPixels(width)) }} />
+        ))}
+      </colgroup>
+    ) : null;
 
   // Separate header rows and body rows
   const headerRows = table.rows.filter((row) => row.formatting?.header === true);
@@ -135,11 +129,7 @@ export function DocTable({
   const effectiveBodyRows = headerRows.length > 0 ? bodyRows : table.rows;
 
   return (
-    <table
-      className={classNames.join(' ')}
-      style={combinedStyle}
-      data-table-index={tableIndex}
-    >
+    <table className={classNames.join(' ')} style={combinedStyle} data-table-index={tableIndex}>
       {colgroup}
       {effectiveHeaderRows.length > 0 && (
         <thead className="docx-table-header">
@@ -209,11 +199,7 @@ function renderRow(
   let colIndex = 0;
 
   return (
-    <tr
-      key={`row-${rowIndex}`}
-      className={rowClassNames.join(' ')}
-      style={rowStyle}
-    >
+    <tr key={`row-${rowIndex}`} className={rowClassNames.join(' ')} style={rowStyle}>
       {row.cells.map((cell, cellIndex) => {
         // Check if this cell should be skipped due to vMerge continuation
         if (isCellMergeContinuation(cell)) {
@@ -308,7 +294,10 @@ function renderCell(
       }
       // Default: just show placeholder
       return (
-        <div key={`cell-${rowIndex}-${cellIndex}-content-${contentIndex}`} className="docx-cell-paragraph">
+        <div
+          key={`cell-${rowIndex}-${cellIndex}-content-${contentIndex}`}
+          className="docx-cell-paragraph"
+        >
           {getParagraphTextContent(item)}
         </div>
       );
@@ -338,7 +327,7 @@ function renderCell(
   });
 
   // Use th for header cells, td for regular cells
-  const isHeaderRow = rowIndex < (table.rows.filter(r => r.formatting?.header).length);
+  const isHeaderRow = rowIndex < table.rows.filter((r) => r.formatting?.header).length;
   const CellTag = isHeaderRow ? 'th' : 'td';
 
   // Handle cell click
@@ -353,10 +342,12 @@ function renderCell(
   // Add selected styling
   const finalStyle: CSSProperties = {
     ...cellStyle,
-    ...(isSelected ? {
-      outline: '2px solid #1a73e8',
-      outlineOffset: '-2px',
-    } : {}),
+    ...(isSelected
+      ? {
+          outline: '2px solid #1a73e8',
+          outlineOffset: '-2px',
+        }
+      : {}),
   };
 
   return (
@@ -456,7 +447,7 @@ function buildTableStyle(
  */
 function buildRowStyle(
   formatting: TableRowFormatting | undefined,
-  theme: Theme | null | undefined
+  _theme: Theme | null | undefined
 ): CSSProperties {
   if (!formatting) {
     return {};
@@ -598,7 +589,6 @@ function calculateRowspans(table: Table): Map<string, number> {
           if (startRow !== null) {
             // Calculate rowspan for the starting cell
             const key = `${startRow}-${colIndex + c}`;
-            const currentRowspan = rowspanMap.get(key) || 1;
             rowspanMap.set(key, rowIndex - startRow);
             mergeStartRows[colIndex + c] = null;
           }
@@ -670,14 +660,18 @@ export function isCellEmpty(cell: TableCell): boolean {
 
   return cell.content.every((item) => {
     if (item.type === 'paragraph') {
-      return item.content.length === 0 || item.content.every((c) => {
-        if (c.type === 'run') {
-          return c.content.length === 0 || c.content.every(
-            (rc) => rc.type === 'text' && rc.text.trim() === ''
-          );
-        }
-        return true;
-      });
+      return (
+        item.content.length === 0 ||
+        item.content.every((c) => {
+          if (c.type === 'run') {
+            return (
+              c.content.length === 0 ||
+              c.content.every((rc) => rc.type === 'text' && rc.text.trim() === '')
+            );
+          }
+          return true;
+        })
+      );
     }
     return false;
   });

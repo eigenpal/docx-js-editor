@@ -291,11 +291,40 @@ function applyShade(hex: string, shade: number): string {
  * @returns Hex color (6 characters, no #)
  */
 function getThemeColorValue(theme: Theme | null | undefined, slot: ThemeColorSlot): string {
+  // Map alias slots to actual color scheme keys
+  const schemeKey = THEME_COLOR_ALIASES[slot] ?? slot;
+
+  // Define the actual keys that exist on ThemeColorScheme
+  const schemeKeys = [
+    'dk1',
+    'lt1',
+    'dk2',
+    'lt2',
+    'accent1',
+    'accent2',
+    'accent3',
+    'accent4',
+    'accent5',
+    'accent6',
+    'hlink',
+    'folHlink',
+  ] as const;
+  type SchemeKey = (typeof schemeKeys)[number];
+
+  const isSchemeKey = (key: string): key is SchemeKey => schemeKeys.includes(key as SchemeKey);
+
   if (!theme?.colorScheme) {
-    return DEFAULT_THEME_COLORS[slot] ?? '000000';
+    if (isSchemeKey(schemeKey)) {
+      return DEFAULT_THEME_COLORS[schemeKey] ?? '000000';
+    }
+    return '000000';
   }
 
-  return theme.colorScheme[slot] ?? DEFAULT_THEME_COLORS[slot] ?? '000000';
+  if (isSchemeKey(schemeKey)) {
+    return theme.colorScheme[schemeKey] ?? DEFAULT_THEME_COLORS[schemeKey] ?? '000000';
+  }
+
+  return '000000';
 }
 
 /**
@@ -411,7 +440,10 @@ export function resolveShadingColor(
  * @param theme - Theme for resolving theme colors
  * @returns True if color resolves to black or very dark
  */
-export function isBlack(color: ColorValue | undefined | null, theme: Theme | null | undefined): boolean {
+export function isBlack(
+  color: ColorValue | undefined | null,
+  theme: Theme | null | undefined
+): boolean {
   if (!color) return false;
   if (color.auto) return true;
 
@@ -432,7 +464,10 @@ export function isBlack(color: ColorValue | undefined | null, theme: Theme | nul
  * @param theme - Theme for resolving theme colors
  * @returns True if color resolves to white or very light
  */
-export function isWhite(color: ColorValue | undefined | null, theme: Theme | null | undefined): boolean {
+export function isWhite(
+  color: ColorValue | undefined | null,
+  theme: Theme | null | undefined
+): boolean {
   if (!color) return false;
 
   const resolved = resolveColor(color, theme);

@@ -135,7 +135,7 @@ function parseFootnote(
   theme: Theme | null,
   numbering: NumberingMap | null,
   rels: RelationshipMap | null,
-  media: Map<string, MediaFile> | null
+  _media: Map<string, MediaFile> | null
 ): Footnote {
   const id = parseNumericAttribute(element, 'w', 'id') ?? 0;
   const typeAttr = getAttribute(element, 'w', 'type');
@@ -144,7 +144,7 @@ function parseFootnote(
   // Parse content paragraphs
   const paragraphElements = findChildren(element, 'w', 'p');
   const content: Paragraph[] = paragraphElements.map((pEl) =>
-    parseParagraph(pEl, styles, theme, numbering, rels, media)
+    parseParagraph(pEl, styles, theme, numbering, rels)
   );
 
   return {
@@ -189,8 +189,7 @@ export function parseFootnotes(
   // Find the root footnotes element
   const rootElement = doc.elements?.find(
     (el: XmlElement) =>
-      el.type === 'element' &&
-      (el.name === 'w:footnotes' || el.name?.endsWith(':footnotes'))
+      el.type === 'element' && (el.name === 'w:footnotes' || el.name?.endsWith(':footnotes'))
   ) as XmlElement | undefined;
 
   if (!rootElement) {
@@ -212,10 +211,7 @@ export function parseFootnotes(
 /**
  * Create FootnoteMap object with helper methods
  */
-function createFootnoteMap(
-  byId: Map<number, Footnote>,
-  footnotes: Footnote[]
-): FootnoteMap {
+function createFootnoteMap(byId: Map<number, Footnote>, footnotes: Footnote[]): FootnoteMap {
   return {
     byId,
     footnotes,
@@ -255,7 +251,7 @@ function parseEndnote(
   theme: Theme | null,
   numbering: NumberingMap | null,
   rels: RelationshipMap | null,
-  media: Map<string, MediaFile> | null
+  _media: Map<string, MediaFile> | null
 ): Endnote {
   const id = parseNumericAttribute(element, 'w', 'id') ?? 0;
   const typeAttr = getAttribute(element, 'w', 'type');
@@ -264,7 +260,7 @@ function parseEndnote(
   // Parse content paragraphs
   const paragraphElements = findChildren(element, 'w', 'p');
   const content: Paragraph[] = paragraphElements.map((pEl) =>
-    parseParagraph(pEl, styles, theme, numbering, rels, media)
+    parseParagraph(pEl, styles, theme, numbering, rels)
   );
 
   return {
@@ -309,8 +305,7 @@ export function parseEndnotes(
   // Find the root endnotes element
   const rootElement = doc.elements?.find(
     (el: XmlElement) =>
-      el.type === 'element' &&
-      (el.name === 'w:endnotes' || el.name?.endsWith(':endnotes'))
+      el.type === 'element' && (el.name === 'w:endnotes' || el.name?.endsWith(':endnotes'))
   ) as XmlElement | undefined;
 
   if (!rootElement) {
@@ -332,10 +327,7 @@ export function parseEndnotes(
 /**
  * Create EndnoteMap object with helper methods
  */
-function createEndnoteMap(
-  byId: Map<number, Endnote>,
-  endnotes: Endnote[]
-): EndnoteMap {
+function createEndnoteMap(byId: Map<number, Endnote>, endnotes: Endnote[]): EndnoteMap {
   return {
     byId,
     endnotes,

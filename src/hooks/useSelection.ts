@@ -110,8 +110,10 @@ function findContentElement(node: Node | null): HTMLElement | null {
   let current: Node | null = node;
   while (current) {
     if (current instanceof HTMLElement) {
-      if (current.hasAttribute(SELECTION_DATA_ATTRIBUTES.CONTENT_INDEX) ||
-          current.hasAttribute(SELECTION_DATA_ATTRIBUTES.RUN_INDEX)) {
+      if (
+        current.hasAttribute(SELECTION_DATA_ATTRIBUTES.CONTENT_INDEX) ||
+        current.hasAttribute(SELECTION_DATA_ATTRIBUTES.RUN_INDEX)
+      ) {
         return current;
       }
       // Stop if we hit the paragraph level
@@ -144,11 +146,7 @@ function calculateOffset(container: Node, targetNode: Node, targetOffset: number
   }
 
   // Walk the tree to find the offset
-  const walker = document.createTreeWalker(
-    container,
-    NodeFilter.SHOW_TEXT,
-    null
-  );
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
 
   let offset = 0;
   let node = walker.nextNode();
@@ -212,8 +210,9 @@ function domToDocumentPosition(
   }
 
   // Get content index
-  const contentIndexAttr = contentEl.getAttribute(SELECTION_DATA_ATTRIBUTES.CONTENT_INDEX) ??
-                           contentEl.getAttribute(SELECTION_DATA_ATTRIBUTES.RUN_INDEX);
+  const contentIndexAttr =
+    contentEl.getAttribute(SELECTION_DATA_ATTRIBUTES.CONTENT_INDEX) ??
+    contentEl.getAttribute(SELECTION_DATA_ATTRIBUTES.RUN_INDEX);
   if (contentIndexAttr === null) {
     return {
       paragraphIndex,
@@ -342,11 +341,7 @@ export function useSelection(options: UseSelectionOptions) {
       selection.anchorOffset,
       container
     );
-    const focusPos = domToDocumentPosition(
-      selection.focusNode,
-      selection.focusOffset,
-      container
-    );
+    const focusPos = domToDocumentPosition(selection.focusNode, selection.focusOffset, container);
 
     if (!anchorPos || !focusPos) {
       setSelectionState({
@@ -384,74 +379,80 @@ export function useSelection(options: UseSelectionOptions) {
   /**
    * Set the selection to a specific document range
    */
-  const setSelection = useCallback((range: DocumentRange | null) => {
-    if (!enabled) return;
+  const setSelection = useCallback(
+    (range: DocumentRange | null) => {
+      if (!enabled) return;
 
-    const container = containerRef.current;
-    if (!container) return;
+      const container = containerRef.current;
+      if (!container) return;
 
-    if (!range) {
-      // Clear selection
-      window.getSelection()?.removeAllRanges();
-      processSelection();
-      return;
-    }
-
-    isUpdatingSelection.current = true;
-
-    try {
-      // Find DOM elements for start and end positions
-      const startElement = findElementAtPosition(container, range.start);
-      const endElement = range.collapsed
-        ? startElement
-        : findElementAtPosition(container, range.end);
-
-      if (!startElement || !endElement) {
-        console.warn('Could not find DOM elements for selection range');
+      if (!range) {
+        // Clear selection
+        window.getSelection()?.removeAllRanges();
+        processSelection();
         return;
       }
 
-      // Find text nodes and offsets
-      const startPoint = findTextNodeAtOffset(startElement.element, startElement.offset);
-      const endPoint = range.collapsed
-        ? startPoint
-        : findTextNodeAtOffset(endElement.element, endElement.offset);
+      isUpdatingSelection.current = true;
 
-      if (!startPoint || !endPoint) {
-        console.warn('Could not find text nodes for selection');
-        return;
+      try {
+        // Find DOM elements for start and end positions
+        const startElement = findElementAtPosition(container, range.start);
+        const endElement = range.collapsed
+          ? startElement
+          : findElementAtPosition(container, range.end);
+
+        if (!startElement || !endElement) {
+          console.warn('Could not find DOM elements for selection range');
+          return;
+        }
+
+        // Find text nodes and offsets
+        const startPoint = findTextNodeAtOffset(startElement.element, startElement.offset);
+        const endPoint = range.collapsed
+          ? startPoint
+          : findTextNodeAtOffset(endElement.element, endElement.offset);
+
+        if (!startPoint || !endPoint) {
+          console.warn('Could not find text nodes for selection');
+          return;
+        }
+
+        // Create and apply the selection
+        const domRange = document.createRange();
+        domRange.setStart(startPoint.node, startPoint.offset);
+        domRange.setEnd(endPoint.node, endPoint.offset);
+
+        const selection = window.getSelection();
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(domRange);
+        }
+      } finally {
+        isUpdatingSelection.current = false;
+        processSelection();
       }
-
-      // Create and apply the selection
-      const domRange = document.createRange();
-      domRange.setStart(startPoint.node, startPoint.offset);
-      domRange.setEnd(endPoint.node, endPoint.offset);
-
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        selection.addRange(domRange);
-      }
-    } finally {
-      isUpdatingSelection.current = false;
-      processSelection();
-    }
-  }, [containerRef, enabled, processSelection]);
+    },
+    [containerRef, enabled, processSelection]
+  );
 
   /**
    * Collapse selection to start or end
    */
-  const collapseSelection = useCallback((toStart: boolean = true) => {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      if (toStart) {
-        selection.collapseToStart();
-      } else {
-        selection.collapseToEnd();
+  const collapseSelection = useCallback(
+    (toStart: boolean = true) => {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        if (toStart) {
+          selection.collapseToStart();
+        } else {
+          selection.collapseToEnd();
+        }
+        processSelection();
       }
-      processSelection();
-    }
-  }, [processSelection]);
+    },
+    [processSelection]
+  );
 
   /**
    * Select all content within the editor
@@ -560,15 +561,8 @@ interface TextNodeAtOffset {
 /**
  * Find the text node at a character offset within an element
  */
-function findTextNodeAtOffset(
-  element: HTMLElement,
-  offset: number
-): TextNodeAtOffset | null {
-  const walker = document.createTreeWalker(
-    element,
-    NodeFilter.SHOW_TEXT,
-    null
-  );
+function findTextNodeAtOffset(element: HTMLElement, offset: number): TextNodeAtOffset | null {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
 
   let currentOffset = 0;
   let node = walker.nextNode();
@@ -611,9 +605,11 @@ function findTextNodeAtOffset(
  * Check if two document positions are equal
  */
 export function positionsEqual(a: DocumentPosition, b: DocumentPosition): boolean {
-  return a.paragraphIndex === b.paragraphIndex &&
-         a.contentIndex === b.contentIndex &&
-         a.offset === b.offset;
+  return (
+    a.paragraphIndex === b.paragraphIndex &&
+    a.contentIndex === b.contentIndex &&
+    a.offset === b.offset
+  );
 }
 
 /**
@@ -623,9 +619,9 @@ export function rangesEqual(a: DocumentRange | null, b: DocumentRange | null): b
   if (a === null && b === null) return true;
   if (a === null || b === null) return false;
 
-  return positionsEqual(a.start, b.start) &&
-         positionsEqual(a.end, b.end) &&
-         a.collapsed === b.collapsed;
+  return (
+    positionsEqual(a.start, b.start) && positionsEqual(a.end, b.end) && a.collapsed === b.collapsed
+  );
 }
 
 /**
@@ -662,8 +658,10 @@ export function getRangeLength(range: DocumentRange): number {
   if (range.collapsed) return 0;
 
   // Same content element
-  if (range.start.paragraphIndex === range.end.paragraphIndex &&
-      range.start.contentIndex === range.end.contentIndex) {
+  if (
+    range.start.paragraphIndex === range.end.paragraphIndex &&
+    range.start.contentIndex === range.end.contentIndex
+  ) {
     return range.end.offset - range.start.offset;
   }
 

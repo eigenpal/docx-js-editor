@@ -36,12 +36,8 @@ import type {
   ImageTransform,
   ColorValue,
   Paragraph,
-  RelationshipMap,
-  MediaFile,
 } from '../types/document';
 import {
-  findChild,
-  findChildren,
   getChildElements,
   getAttribute,
   parseNumericAttribute,
@@ -63,33 +59,6 @@ const EMU_PER_INCH = 914400;
 /** CSS pixels per inch (standard) */
 const PIXELS_PER_INCH = 96;
 
-/** Stroke DPI (used for line widths) */
-const STROKE_DPI = 72;
-
-/** Default theme colors (fallback if theme not available) */
-const DEFAULT_THEME_COLORS: Record<string, string> = {
-  accent1: '5B9BD5',
-  accent2: 'ED7D31',
-  accent3: 'A5A5A5',
-  accent4: 'FFC000',
-  accent5: '4472C4',
-  accent6: '70AD47',
-  dk1: '000000',
-  lt1: 'FFFFFF',
-  dk2: '1F497D',
-  lt2: 'EEECE1',
-  tx1: '000000',
-  tx2: '1F497D',
-  bg1: 'FFFFFF',
-  bg2: 'EEECE1',
-  text1: '000000',
-  text2: '1F497D',
-  background1: 'FFFFFF',
-  background2: 'EEECE1',
-  hlink: '0563C1',
-  folHlink: '954F72',
-};
-
 // ============================================================================
 // EMU CONVERSIONS
 // ============================================================================
@@ -100,14 +69,6 @@ const DEFAULT_THEME_COLORS: Record<string, string> = {
 export function emuToPixels(emu: number | undefined | null): number {
   if (emu == null || isNaN(emu)) return 0;
   return Math.round((emu * PIXELS_PER_INCH) / EMU_PER_INCH);
-}
-
-/**
- * Convert EMU to points (for stroke widths)
- */
-function emuToPoints(emu: number | undefined | null): number {
-  if (emu == null || isNaN(emu)) return 0;
-  return (emu * STROKE_DPI) / EMU_PER_INCH;
 }
 
 /**
@@ -123,22 +84,6 @@ function rotToDegrees(rot: string | null | undefined): number | undefined {
 // ============================================================================
 // ELEMENT FINDERS
 // ============================================================================
-
-/**
- * Find element by local name (ignoring namespace prefix)
- */
-function findByLocalName(parent: XmlElement, localName: string): XmlElement | null {
-  const children = getChildElements(parent);
-  for (const child of children) {
-    const name = child.name || '';
-    const colonIdx = name.indexOf(':');
-    const childLocalName = colonIdx >= 0 ? name.substring(colonIdx + 1) : name;
-    if (childLocalName === localName) {
-      return child;
-    }
-  }
-  return null;
-}
 
 /**
  * Find element by full name with namespace prefix
@@ -293,13 +238,6 @@ function applyColorModifiers(color: ColorValue, element: XmlElement): ColorValue
   }
 
   return color;
-}
-
-/**
- * Get theme color hex value
- */
-function getThemeColorHex(name: string): string {
-  return DEFAULT_THEME_COLORS[name] ?? '000000';
 }
 
 // ============================================================================
@@ -526,12 +464,13 @@ function parseOutline(spPr: XmlElement | null, style: XmlElement | null): ShapeO
 /**
  * Parse line end (arrow head/tail)
  */
-function parseLineEnd(element: XmlElement): ShapeOutline['headEnd'] {
+function parseLineEnd(element: XmlElement): NonNullable<ShapeOutline['headEnd']> {
   const type = getAttribute(element, null, 'type') ?? 'none';
   const w = getAttribute(element, null, 'w') as 'sm' | 'med' | 'lg' | undefined;
   const len = getAttribute(element, null, 'len') as 'sm' | 'med' | 'lg' | undefined;
 
-  const typeMap: Record<string, ShapeOutline['headEnd']['type']> = {
+  type LineEndType = 'none' | 'triangle' | 'stealth' | 'diamond' | 'oval' | 'arrow';
+  const typeMap: Record<string, LineEndType> = {
     none: 'none',
     triangle: 'triangle',
     stealth: 'stealth',
@@ -751,7 +690,6 @@ export function parseShape(node: XmlElement): Shape {
   const children = getChildElements(node);
 
   // Get non-visual properties
-  const cNvSpPr = children.find((el) => el.name === 'wps:cNvSpPr');
   const cNvPr = children.find((el) => el.name === 'wps:cNvPr');
 
   // Get shape properties
@@ -829,9 +767,7 @@ export function parseShapeFromDrawing(drawingEl: XmlElement): Shape | null {
   const children = getChildElements(drawingEl);
 
   // Find wp:inline or wp:anchor
-  const container = children.find(
-    (el) => el.name === 'wp:inline' || el.name === 'wp:anchor'
-  );
+  const container = children.find((el) => el.name === 'wp:inline' || el.name === 'wp:anchor');
 
   if (!container) {
     return null;
@@ -1054,9 +990,7 @@ function parseWrap(anchor: XmlElement): ImageWrap | undefined {
  */
 export function isShapeDrawing(drawingEl: XmlElement): boolean {
   const children = getChildElements(drawingEl);
-  const container = children.find(
-    (el) => el.name === 'wp:inline' || el.name === 'wp:anchor'
-  );
+  const container = children.find((el) => el.name === 'wp:inline' || el.name === 'wp:anchor');
 
   if (!container) return false;
 
@@ -1094,7 +1028,10 @@ export function isLineShape(shape: Shape): boolean {
  * Check if a shape is a text box
  */
 export function isTextBoxShape(shape: Shape): boolean {
-  return shape.shapeType === 'textBox' || (shape.textBody !== undefined && shape.textBody.content.length > 0);
+  return (
+    shape.shapeType === 'textBox' ||
+    (shape.textBody !== undefined && shape.textBody.content.length > 0)
+  );
 }
 
 /**

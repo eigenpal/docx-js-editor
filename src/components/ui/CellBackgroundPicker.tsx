@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties } from 'react';
 import type { ShadingProperties } from '../../types/document';
 
 // ============================================================================
@@ -338,7 +338,9 @@ export function CellBackgroundPicker({
   const indicatorStyle: CSSProperties = {
     ...STYLES.colorIndicator,
     backgroundColor: value || 'transparent',
-    ...(value === null ? { background: 'repeating-linear-gradient(45deg, #fff, #fff 2px, #f0f0f0 2px, #f0f0f0 4px)' } : {}),
+    ...(value === null
+      ? { background: 'repeating-linear-gradient(45deg, #fff, #fff 2px, #f0f0f0 2px, #f0f0f0 4px)' }
+      : {}),
   };
 
   const classNames = ['docx-cell-background-picker'];

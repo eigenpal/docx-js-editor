@@ -172,7 +172,10 @@ export function findPreviousWordStart(text: string, position: number): number {
  * Find the start of the current line in a text node
  * Uses visual line detection based on bounding rectangles
  */
-export function findVisualLineStart(container: Node, offset: number): { node: Node; offset: number } | null {
+export function findVisualLineStart(
+  container: Node,
+  offset: number
+): { node: Node; offset: number } | null {
   const selection = window.getSelection();
   if (!selection) return null;
 
@@ -216,7 +219,10 @@ export function findVisualLineStart(container: Node, offset: number): { node: No
  * Find the end of the current line in a text node
  * Uses visual line detection based on bounding rectangles
  */
-export function findVisualLineEnd(container: Node, offset: number): { node: Node; offset: number } | null {
+export function findVisualLineEnd(
+  container: Node,
+  offset: number
+): { node: Node; offset: number } | null {
   const selection = window.getSelection();
   if (!selection) return null;
 
@@ -299,9 +305,8 @@ export function setSelectionPosition(node: Node, offset: number): void {
   if (!selection) return;
 
   const range = document.createRange();
-  const maxOffset = node.nodeType === Node.TEXT_NODE
-    ? (node.textContent?.length || 0)
-    : node.childNodes.length;
+  const maxOffset =
+    node.nodeType === Node.TEXT_NODE ? node.textContent?.length || 0 : node.childNodes.length;
 
   range.setStart(node, Math.min(offset, maxOffset));
   range.collapse(true);
@@ -321,9 +326,8 @@ export function extendSelectionTo(node: Node, offset: number): void {
     selection.extend(node, Math.min(offset, node.textContent?.length || 0));
   } catch (e) {
     // If extend fails (e.g., different containers), fall back to setBaseAndExtent
-    const maxOffset = node.nodeType === Node.TEXT_NODE
-      ? (node.textContent?.length || 0)
-      : node.childNodes.length;
+    const maxOffset =
+      node.nodeType === Node.TEXT_NODE ? node.textContent?.length || 0 : node.childNodes.length;
 
     selection.setBaseAndExtent(
       selection.anchorNode,
@@ -375,9 +379,10 @@ export function moveToLineEdge(edge: 'start' | 'end', extend: boolean = false): 
 
   // For text nodes, find visual line boundaries
   if (focusNode.nodeType === Node.TEXT_NODE) {
-    const result = edge === 'start'
-      ? findVisualLineStart(focusNode, selection.focusOffset)
-      : findVisualLineEnd(focusNode, selection.focusOffset);
+    const result =
+      edge === 'start'
+        ? findVisualLineStart(focusNode, selection.focusOffset)
+        : findVisualLineEnd(focusNode, selection.focusOffset);
 
     if (result) {
       if (extend) {
@@ -410,7 +415,7 @@ export function moveToLineEdge(edge: 'start' | 'end', extend: boolean = false): 
  * Parse a keyboard event into a navigation action
  */
 export function parseNavigationAction(event: KeyboardEvent): NavigationAction | null {
-  const { key, ctrlKey, metaKey, shiftKey, altKey } = event;
+  const { key, ctrlKey, metaKey, shiftKey, altKey: _altKey } = event;
 
   // Use Ctrl on Windows/Linux, Meta (Cmd) on Mac
   const isModifier = ctrlKey || metaKey;
@@ -484,7 +489,11 @@ export function handleNavigationKey(
 
   switch (action.unit) {
     case 'word':
-      if (moveByWord(action.direction, action.extend)) {
+      // moveByWord only supports horizontal directions
+      if (
+        (action.direction === 'left' || action.direction === 'right') &&
+        moveByWord(action.direction, action.extend)
+      ) {
         event.preventDefault();
         return true;
       }
@@ -691,15 +700,36 @@ export function getNavigationShortcutDescriptions(): Array<{
   return [
     { action: 'Move by word (left)', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.wordLeft) },
     { action: 'Move by word (right)', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.wordRight) },
-    { action: 'Select word (left)', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectWordLeft) },
-    { action: 'Select word (right)', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectWordRight) },
+    {
+      action: 'Select word (left)',
+      shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectWordLeft),
+    },
+    {
+      action: 'Select word (right)',
+      shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectWordRight),
+    },
     { action: 'Go to line start', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.lineStart) },
     { action: 'Go to line end', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.lineEnd) },
-    { action: 'Select to line start', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectToLineStart) },
-    { action: 'Select to line end', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectToLineEnd) },
-    { action: 'Go to document start', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.documentStart) },
+    {
+      action: 'Select to line start',
+      shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectToLineStart),
+    },
+    {
+      action: 'Select to line end',
+      shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectToLineEnd),
+    },
+    {
+      action: 'Go to document start',
+      shortcut: describeShortcut(NAVIGATION_SHORTCUTS.documentStart),
+    },
     { action: 'Go to document end', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.documentEnd) },
-    { action: 'Select to document start', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectToDocumentStart) },
-    { action: 'Select to document end', shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectToDocumentEnd) },
+    {
+      action: 'Select to document start',
+      shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectToDocumentStart),
+    },
+    {
+      action: 'Select to document end',
+      shortcut: describeShortcut(NAVIGATION_SHORTCUTS.selectToDocumentEnd),
+    },
   ];
 }

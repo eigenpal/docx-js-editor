@@ -12,7 +12,7 @@
  * - Debounced updates for performance
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import {
   HighlightRect,
@@ -23,7 +23,6 @@ import {
   getSelectedText,
   isSelectionWithin,
   injectSelectionStyles,
-  removeSelectionStyles,
   areSelectionStylesInjected,
 } from '../utils/selectionHighlight';
 
@@ -258,24 +257,26 @@ export function generateOverlayElements(
   rects: HighlightRect[],
   config: SelectionHighlightConfig = DEFAULT_SELECTION_STYLE
 ): React.ReactNode[] {
-  return rects.map((rect, index) => ({
-    key: `selection-overlay-${index}`,
-    style: {
-      position: 'absolute' as const,
-      left: `${rect.left}px`,
-      top: `${rect.top}px`,
-      width: `${rect.width}px`,
-      height: `${rect.height}px`,
-      backgroundColor: config.backgroundColor,
-      borderRadius: config.borderRadius ? `${config.borderRadius}px` : undefined,
-      border: config.borderColor ? `1px solid ${config.borderColor}` : undefined,
-      zIndex: config.zIndex ?? 0,
-      opacity: config.opacity ?? 1,
-      mixBlendMode: config.mixBlendMode,
-      pointerEvents: 'none' as const,
-      userSelect: 'none' as const,
-    },
-  }));
+  return rects.map((rect, index) =>
+    React.createElement('div', {
+      key: `selection-overlay-${index}`,
+      style: {
+        position: 'absolute' as const,
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        backgroundColor: config.backgroundColor,
+        borderRadius: config.borderRadius ? `${config.borderRadius}px` : undefined,
+        border: config.borderColor ? `1px solid ${config.borderColor}` : undefined,
+        zIndex: config.zIndex ?? 0,
+        opacity: config.opacity ?? 1,
+        mixBlendMode: config.mixBlendMode,
+        pointerEvents: 'none' as const,
+        userSelect: 'none' as const,
+      },
+    })
+  );
 }
 
 export default useSelectionHighlight;
