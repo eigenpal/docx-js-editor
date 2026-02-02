@@ -73,6 +73,8 @@ export interface EditableParagraphProps {
   paragraph: ParagraphType;
   /** Index of this paragraph in the document */
   paragraphIndex: number;
+  /** Position in the current list (0-indexed, for numbered list markers) */
+  listPosition?: number;
   /** Theme for resolving colors and fonts */
   theme?: Theme | null;
   /** Additional CSS class name */
@@ -95,6 +97,8 @@ export interface EditableParagraphProps {
   onMergeWithPrevious?: (paragraphIndex: number) => void;
   /** Callback when Delete at end (merge with next) */
   onMergeWithNext?: (paragraphIndex: number) => void;
+  /** Callback when Enter is pressed on an empty list item (exit list) */
+  onExitList?: (paragraphIndex: number) => void;
   /** Callback when cursor moves within paragraph */
   onCursorChange?: (position: CursorPosition, paragraphIndex: number) => void;
   /** Callback when paragraph receives focus */
@@ -429,6 +433,30 @@ function getListMarkerStyle(level: number): CSSProperties {
 }
 
 /**
+ * Compute the actual list marker text.
+ * For bullets, returns the marker as-is.
+ * For numbered lists, computes the number based on position.
+ */
+function computeListMarker(
+  listRendering: NonNullable<ParagraphType['listRendering']>,
+  listPosition: number
+): string {
+  if (listRendering.isBullet) {
+    return listRendering.marker || '•';
+  }
+
+  // For numbered lists, replace %1 placeholder with actual number
+  // or use the position + 1 if marker is a simple number format
+  const marker = listRendering.marker || '%1.';
+  if (marker.includes('%1')) {
+    return marker.replace('%1', String(listPosition + 1));
+  }
+
+  // If marker is like "1." just return position-based number
+  return `${listPosition + 1}.`;
+}
+
+/**
  * Default style for empty paragraphs (line break)
  */
 const EMPTY_PARAGRAPH_STYLE: CSSProperties = {
@@ -455,6 +483,7 @@ const EDITABLE_PARAGRAPH_STYLE: CSSProperties = {
 export function EditableParagraph({
   paragraph,
   paragraphIndex,
+  listPosition = 0,
   theme,
   className,
   style: additionalStyle,
@@ -466,6 +495,7 @@ export function EditableParagraph({
   onSplit,
   onMergeWithPrevious,
   onMergeWithNext,
+  onExitList,
   onCursorChange,
   onFocus,
   onBlur,
@@ -564,33 +594,52 @@ export function EditableParagraph({
         }
       }
 
-      // Enter key - split paragraph
-      if (key === 'Enter' && !event.shiftKey && onSplit) {
+      // Enter key - split paragraph or exit list
+      if (key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        const pos = currentPosition || cursorPosition;
-        const splitResult = splitParagraphAt(paragraph, pos);
-        onSplit(splitResult, paragraphIndex);
-        return;
+
+        // Check if this is an empty list item - exit list instead of splitting
+        const paragraphText = getParagraphPlainText(paragraph);
+        if (paragraph.listRendering && paragraphText === '' && onExitList) {
+          onExitList(paragraphIndex);
+          return;
+        }
+
+        // Normal split behavior
+        if (onSplit) {
+          const pos = currentPosition || cursorPosition;
+          const splitResult = splitParagraphAt(paragraph, pos);
+          onSplit(splitResult, paragraphIndex);
+          return;
+        }
       }
 
-      // Backspace at start - merge with previous
+      // Backspace at start - merge with previous (only if no selection)
       if (key === 'Backspace' && onMergeWithPrevious) {
+        const selection = window.getSelection();
+        const isCollapsed = selection?.isCollapsed ?? true;
         const pos = currentPosition || cursorPosition;
-        if (isCursorAtStart(pos)) {
+        // Only merge if cursor is at start AND no text is selected
+        if (isCollapsed && isCursorAtStart(pos)) {
           event.preventDefault();
           onMergeWithPrevious(paragraphIndex);
           return;
         }
+        // If there IS a selection, let the browser handle deletion
       }
 
-      // Delete at end - merge with next
+      // Delete at end - merge with next (only if no selection)
       if (key === 'Delete' && onMergeWithNext) {
+        const selection = window.getSelection();
+        const isCollapsed = selection?.isCollapsed ?? true;
         const pos = currentPosition || cursorPosition;
-        if (isCursorAtEnd(paragraph, pos)) {
+        // Only merge if cursor is at end AND no text is selected
+        if (isCollapsed && isCursorAtEnd(paragraph, pos)) {
           event.preventDefault();
           onMergeWithNext(paragraphIndex);
           return;
         }
+        // If there IS a selection, let the browser handle deletion
       }
 
       // Arrow up at first line
@@ -631,6 +680,7 @@ export function EditableParagraph({
       onSplit,
       onMergeWithPrevious,
       onMergeWithNext,
+      onExitList,
       onNavigateUp,
       onNavigateDown,
       onNavigateToDocumentStart,
@@ -700,6 +750,17 @@ export function EditableParagraph({
         data-text-id={paragraph.textId}
         {...{ [SELECTION_DATA_ATTRIBUTES.PARAGRAPH_INDEX]: paragraphIndex }}
       >
+        {/* Add list marker for empty list items */}
+        {paragraph.listRendering && (
+          <span
+            key="list-marker"
+            className="docx-list-marker"
+            style={getListMarkerStyle(paragraph.listRendering.level)}
+            contentEditable={false}
+          >
+            {computeListMarker(paragraph.listRendering, listPosition)}
+          </span>
+        )}
         <EditableRun
           run={emptyRun}
           runIndex={0}
@@ -730,7 +791,7 @@ export function EditableParagraph({
         style={getListMarkerStyle(paragraph.listRendering.level)}
         contentEditable={false}
       >
-        {paragraph.listRendering.marker}
+        {computeListMarker(paragraph.listRendering, listPosition)}
       </span>
     );
   }

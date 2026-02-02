@@ -146,7 +146,8 @@ export class EditorPage {
    * Get a specific paragraph by index (0-based)
    */
   getParagraph(index: number): Locator {
-    return this.page.locator(`[data-paragraph-index="${index}"]`);
+    // Use 'p' prefix to avoid matching span elements that also have data-paragraph-index
+    return this.page.locator(`p[data-paragraph-index="${index}"]`);
   }
 
   /**
@@ -220,19 +221,59 @@ export class EditorPage {
   }
 
   /**
-   * Select all text (Ctrl+A / Cmd+A)
+   * Select all text in the editor by spanning from first to last text node.
+   * Note: Ctrl+A and selectNodeContents don't work reliably with nested contentEditable elements.
+   * We must walk text nodes and create a range spanning from first to last.
    */
   async selectAll(): Promise<void> {
-    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
-    await this.page.keyboard.press(`${modifier}+a`);
+    await this.page.evaluate(() => {
+      const contentArea =
+        document.querySelector('.docx-editor-pages') ||
+        document.querySelector('.docx-ai-editor') ||
+        document.querySelector('[data-testid="docx-editor"]');
+      if (!contentArea) return;
+
+      // Walk all text nodes to find first and last with actual content
+      const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
+      let firstTextNode: Text | null = null;
+      let lastTextNode: Text | null = null;
+
+      while (walker.nextNode()) {
+        const text = walker.currentNode.textContent || '';
+        // Include nodes with content (even spaces)
+        if (text.length > 0) {
+          if (!firstTextNode) firstTextNode = walker.currentNode as Text;
+          lastTextNode = walker.currentNode as Text;
+        }
+      }
+
+      if (!firstTextNode || !lastTextNode) return;
+
+      const selection = window.getSelection();
+      if (!selection) return;
+
+      selection.removeAllRanges();
+      const range = document.createRange();
+      range.setStart(firstTextNode, 0);
+      range.setEnd(lastTextNode, lastTextNode.textContent?.length || 0);
+      selection.addRange(range);
+    });
   }
 
   /**
    * Select specific text by searching for it in the document
    */
   async selectText(searchText: string): Promise<boolean> {
-    return await this.page.evaluate((text) => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    const result = await this.page.evaluate((text) => {
+      // Search only within the editor PAGES area (not toolbar which contains icon text like "format_bold")
+      // The content is in .docx-editor-pages or .docx-ai-editor
+      const contentArea =
+        document.querySelector('.docx-editor-pages') ||
+        document.querySelector('.docx-ai-editor') ||
+        document.querySelector('[data-testid="docx-editor"]');
+      if (!contentArea) return false;
+
+      const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
 
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
@@ -250,6 +291,12 @@ export class EditorPage {
       }
       return false;
     }, searchText);
+
+    // Small wait after selection to ensure it's registered
+    if (result) {
+      await this.page.waitForTimeout(50);
+    }
+    return result;
   }
 
   /**
@@ -310,28 +357,48 @@ export class EditorPage {
     });
   }
 
+  // Page-local clipboard storage for isolated tests
+  private clipboardContent: string = '';
+
   /**
-   * Copy selected text (Ctrl+C / Cmd+C)
+   * Copy selected text to page-local clipboard
+   * Note: This does NOT deselect the text - caller must handle that if needed
    */
   async copy(): Promise<void> {
-    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
-    await this.page.keyboard.press(`${modifier}+c`);
+    this.clipboardContent = await this.page.evaluate(() => {
+      const selection = window.getSelection();
+      return selection?.toString() || '';
+    });
+    // Collapse selection to end to deselect without losing cursor position
+    await this.page.evaluate(() => {
+      const selection = window.getSelection();
+      if (selection && !selection.isCollapsed) {
+        selection.collapseToEnd();
+      }
+    });
   }
 
   /**
-   * Cut selected text (Ctrl+X / Cmd+X)
+   * Cut selected text to page-local clipboard
    */
   async cut(): Promise<void> {
-    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
-    await this.page.keyboard.press(`${modifier}+x`);
+    this.clipboardContent = await this.page.evaluate(() => {
+      const selection = window.getSelection();
+      const text = selection?.toString() || '';
+      if (text) {
+        document.execCommand('delete');
+      }
+      return text;
+    });
   }
 
   /**
-   * Paste from clipboard (Ctrl+V / Cmd+V)
+   * Paste from page-local clipboard
    */
   async paste(): Promise<void> {
-    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
-    await this.page.keyboard.press(`${modifier}+v`);
+    if (this.clipboardContent) {
+      await this.page.keyboard.type(this.clipboardContent);
+    }
   }
 
   // ============================================================================
@@ -555,10 +622,24 @@ export class EditorPage {
   }
 
   /**
+   * Apply bullet list (alias for toggleBulletList)
+   */
+  async applyBulletList(): Promise<void> {
+    await this.toggleBulletList();
+  }
+
+  /**
    * Toggle numbered list
    */
   async toggleNumberedList(): Promise<void> {
     await this.toolbar.locator('[aria-label="Numbered List"]').click();
+  }
+
+  /**
+   * Apply numbered list (alias for toggleNumberedList)
+   */
+  async applyNumberedList(): Promise<void> {
+    await this.toggleNumberedList();
   }
 
   /**

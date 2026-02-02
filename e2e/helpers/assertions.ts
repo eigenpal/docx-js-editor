@@ -13,7 +13,14 @@ import { checkFormattingAtSelection, getParagraphText, getParagraphCount } from 
  */
 export async function assertTextIsBold(page: Page, searchText: string): Promise<void> {
   const isBold = await page.evaluate((text) => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    // Search only in editor content area, not toolbar (which has icon text like "format_bold")
+    const contentArea =
+      document.querySelector('.docx-editor-pages') ||
+      document.querySelector('.docx-ai-editor') ||
+      document.querySelector('[data-testid="docx-editor"]');
+    if (!contentArea) return false;
+
+    const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
 
     let node: Text | null;
     while ((node = walker.nextNode() as Text | null)) {
@@ -43,7 +50,14 @@ export async function assertTextIsBold(page: Page, searchText: string): Promise<
  */
 export async function assertTextIsNotBold(page: Page, searchText: string): Promise<void> {
   const isBold = await page.evaluate((text) => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    // Search only in editor content area
+    const contentArea =
+      document.querySelector('.docx-editor-pages') ||
+      document.querySelector('.docx-ai-editor') ||
+      document.querySelector('[data-testid="docx-editor"]');
+    if (!contentArea) return false;
+
+    const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
 
     let node: Text | null;
     while ((node = walker.nextNode() as Text | null)) {
@@ -74,7 +88,14 @@ export async function assertTextIsNotBold(page: Page, searchText: string): Promi
  */
 export async function assertTextIsItalic(page: Page, searchText: string): Promise<void> {
   const isItalic = await page.evaluate((text) => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    // Search only in editor content area
+    const contentArea =
+      document.querySelector('.docx-editor-pages') ||
+      document.querySelector('.docx-ai-editor') ||
+      document.querySelector('[data-testid="docx-editor"]');
+    if (!contentArea) return false;
+
+    const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
 
     let node: Text | null;
     while ((node = walker.nextNode() as Text | null)) {
@@ -103,7 +124,14 @@ export async function assertTextIsItalic(page: Page, searchText: string): Promis
  */
 export async function assertTextIsUnderlined(page: Page, searchText: string): Promise<void> {
   const isUnderlined = await page.evaluate((text) => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    // Search only in editor content area
+    const contentArea =
+      document.querySelector('.docx-editor-pages') ||
+      document.querySelector('.docx-ai-editor') ||
+      document.querySelector('[data-testid="docx-editor"]');
+    if (!contentArea) return false;
+
+    const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
 
     let node: Text | null;
     while ((node = walker.nextNode() as Text | null)) {
@@ -135,7 +163,14 @@ export async function assertTextIsUnderlined(page: Page, searchText: string): Pr
  */
 export async function assertTextHasStrikethrough(page: Page, searchText: string): Promise<void> {
   const hasStrike = await page.evaluate((text) => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    // Search only in editor content area
+    const contentArea =
+      document.querySelector('.docx-editor-pages') ||
+      document.querySelector('.docx-ai-editor') ||
+      document.querySelector('[data-testid="docx-editor"]');
+    if (!contentArea) return false;
+
+    const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
 
     let node: Text | null;
     while ((node = walker.nextNode() as Text | null)) {
@@ -175,7 +210,14 @@ export async function assertTextHasFontFamily(
   fontFamily: string
 ): Promise<void> {
   const actualFont = await page.evaluate((text) => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    // Search only in editor content area
+    const contentArea =
+      document.querySelector('.docx-editor-pages') ||
+      document.querySelector('.docx-ai-editor') ||
+      document.querySelector('[data-testid="docx-editor"]');
+    if (!contentArea) return '';
+
+    const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
 
     let node: Text | null;
     while ((node = walker.nextNode() as Text | null)) {
@@ -205,7 +247,14 @@ export async function assertTextHasFontSize(
   expectedSize: string
 ): Promise<void> {
   const actualSize = await page.evaluate((text) => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    // Search only in editor content area
+    const contentArea =
+      document.querySelector('.docx-editor-pages') ||
+      document.querySelector('.docx-ai-editor') ||
+      document.querySelector('[data-testid="docx-editor"]');
+    if (!contentArea) return '';
+
+    const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
 
     let node: Text | null;
     while ((node = walker.nextNode() as Text | null)) {
@@ -234,7 +283,14 @@ export async function assertTextHasColor(
   expectedColor: string
 ): Promise<void> {
   const actualColor = await page.evaluate((text) => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    // Search only in editor content area
+    const contentArea =
+      document.querySelector('.docx-editor-pages') ||
+      document.querySelector('.docx-ai-editor') ||
+      document.querySelector('[data-testid="docx-editor"]');
+    if (!contentArea) return '';
+
+    const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
 
     let node: Text | null;
     while ((node = walker.nextNode() as Text | null)) {
@@ -287,20 +343,30 @@ export async function assertParagraphIsList(
 ): Promise<void> {
   const isList = await page.evaluate(
     ({ pIndex, type }) => {
-      const paragraph = document.querySelector(`[data-paragraph-index="${pIndex}"]`);
+      const paragraph = document.querySelector(`p[data-paragraph-index="${pIndex}"]`);
       if (!paragraph) return false;
 
-      // Check for list markers
+      // Check for our editor's list classes
+      if (type === 'bullet' && paragraph.classList.contains('docx-list-bullet')) return true;
+      if (type === 'numbered' && paragraph.classList.contains('docx-list-numbered')) return true;
+
+      // Also check for generic list-item class with list marker check
+      if (paragraph.classList.contains('docx-list-item')) {
+        // Look for list marker
+        const marker = paragraph.querySelector('.docx-list-marker');
+        if (marker) {
+          const markerText = marker.textContent || '';
+          if (type === 'bullet' && /^[•○▪◦▸]$/.test(markerText)) return true;
+          if (type === 'numbered' && /^\d+\.$/.test(markerText)) return true;
+        }
+      }
+
+      // Fallback: Check for ul/ol parent (for standard HTML lists)
       const parent = paragraph.closest('ul, ol');
       if (parent) {
         if (type === 'bullet' && parent.tagName === 'UL') return true;
         if (type === 'numbered' && parent.tagName === 'OL') return true;
       }
-
-      // Check for CSS list style
-      const style = window.getComputedStyle(paragraph);
-      if (type === 'bullet' && style.listStyleType === 'disc') return true;
-      if (type === 'numbered' && style.listStyleType === 'decimal') return true;
 
       return false;
     },
@@ -348,30 +414,54 @@ export async function assertParagraphExactText(
 }
 
 /**
- * Assert document contains specific text (checks all contenteditable elements)
+ * Normalize whitespace (replace non-breaking spaces with regular spaces)
+ */
+function normalizeWhitespace(text: string): string {
+  // Replace non-breaking spaces (char 160) with regular spaces (char 32)
+  return text.replace(/\u00A0/g, ' ');
+}
+
+/**
+ * Assert document contains specific text (checks editor content area only)
  */
 export async function assertDocumentContainsText(page: Page, expectedText: string): Promise<void> {
-  // Check across all contenteditable elements in the document
-  const allText = await page.locator('[contenteditable="true"]').allTextContents();
-  const fullText = allText.join(' ');
+  // Get text only from the editor content area
+  const rawText = await page.evaluate(() => {
+    const contentArea =
+      document.querySelector('.docx-editor-pages') ||
+      document.querySelector('.docx-ai-editor') ||
+      document.querySelector('[data-testid="docx-editor"]');
+    return contentArea?.textContent || '';
+  });
+  // Normalize whitespace for comparison (contentEditable uses &nbsp; instead of regular spaces)
+  const fullText = normalizeWhitespace(rawText);
+  const normalizedExpected = normalizeWhitespace(expectedText);
   expect(
-    fullText.includes(expectedText),
+    fullText.includes(normalizedExpected),
     `Expected document to contain "${expectedText}" but found: "${fullText}"`
   ).toBe(true);
 }
 
 /**
- * Assert document does not contain specific text (checks all contenteditable elements)
+ * Assert document does not contain specific text (checks editor content area only)
  */
 export async function assertDocumentNotContainsText(
   page: Page,
   expectedText: string
 ): Promise<void> {
-  // Check across all contenteditable elements in the document
-  const allText = await page.locator('[contenteditable="true"]').allTextContents();
-  const fullText = allText.join(' ');
+  // Get text only from the editor content area
+  const rawText = await page.evaluate(() => {
+    const contentArea =
+      document.querySelector('.docx-editor-pages') ||
+      document.querySelector('.docx-ai-editor') ||
+      document.querySelector('[data-testid="docx-editor"]');
+    return contentArea?.textContent || '';
+  });
+  // Normalize whitespace for comparison
+  const fullText = normalizeWhitespace(rawText);
+  const normalizedExpected = normalizeWhitespace(expectedText);
   expect(
-    !fullText.includes(expectedText),
+    !fullText.includes(normalizedExpected),
     `Expected document to NOT contain "${expectedText}" but found: "${fullText}"`
   ).toBe(true);
 }

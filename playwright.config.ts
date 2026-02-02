@@ -28,6 +28,8 @@ export default defineConfig({
     // Faster action timeouts
     actionTimeout: 10000,
     navigationTimeout: 15000,
+    // Grant clipboard permissions for copy/paste tests
+    permissions: ['clipboard-read', 'clipboard-write'],
   },
 
   projects: [
