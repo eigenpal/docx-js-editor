@@ -6085,3 +6085,54 @@ Verified that cell merge functionality is fully wired and working.
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-135: Add table border styling UI
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ui/TableBorderPicker.tsx` with comprehensive border styling UI.
+
+**Main Component:**
+- `TableBorderPicker` - UI for styling table/cell borders
+
+**Features:**
+- Border style dropdown (none, single, double, dotted, dashed, thick, triple)
+- Color picker for border color
+- Width selector (½ pt to 6 pt)
+- Position selector (all, outside, inside, none) with icons
+- Live preview of the border settings
+- Apply button to apply selected borders
+
+**Types:**
+- `BorderStyleType` - OOXML border styles
+- `BorderPosition` - Which borders to apply
+- `BorderConfig` - Style, color, width configuration
+
+**Icons:**
+- `BorderAllIcon` - All borders
+- `BorderOutsideIcon` - Outside borders only
+- `BorderInsideIcon` - Inside borders only
+- `BorderNoneIcon` - No borders
+
+**Utility Functions:**
+- `mapStyleToCss(style)` - Convert OOXML style to CSS
+- `createBorderSpec(config)` - Create OOXML BorderSpec from config
+- `createBorderConfig(spec)` - Create config from OOXML BorderSpec
+- `getBorderPositionLabel(position)` - Get display label
+- `getAvailableBorderStyles()` - Get style options
+- `getAvailableBorderWidths()` - Get width options
+
+**Constants:**
+- `BORDER_STYLES` - Available style options
+- `BORDER_WIDTHS` - Available width options in eighths of a point
+- `BORDER_POSITIONS` - Position options with icons
+- `DEFAULT_BORDER_CONFIG` - Default configuration
+
+**Exports Added to `src/index.ts`:**
+- Component, props, types, and all utility functions
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

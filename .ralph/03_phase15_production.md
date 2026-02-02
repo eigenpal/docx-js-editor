@@ -51,7 +51,7 @@
 - [x] US-132: Wire table row deletion - P1 - Delete selected rows
 - [x] US-133: Wire table column deletion - P1 - Delete selected columns
 - [x] US-134: Wire cell merge functionality - P2 - Merge multi-cell selection
-- [ ] US-135: Add table border styling UI - P2 - Change border style/color/width
+- [x] US-135: Add table border styling UI - P2 - Change border style/color/width
 - [ ] US-136: Add cell background color UI - P2 - Cell shading color picker
 
 ## Category 5: Insert Operations

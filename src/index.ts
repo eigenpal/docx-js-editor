@@ -178,6 +178,23 @@ export {
   formatPageRange as formatPrintPageRange,
   isPrintSupported,
 } from './components/ui/PrintPreview';
+export {
+  TableBorderPicker,
+  type TableBorderPickerProps,
+  type BorderConfig,
+  type BorderPosition,
+  type BorderStyleType,
+  createBorderSpec,
+  createBorderConfig,
+  getBorderPositionLabel,
+  getAvailableBorderStyles,
+  getAvailableBorderWidths,
+  mapStyleToCss,
+  BORDER_STYLES,
+  BORDER_WIDTHS,
+  BORDER_POSITIONS,
+  DEFAULT_BORDER_CONFIG,
+} from './components/ui/TableBorderPicker';
 
 // ============================================================================
 // DIALOGS
