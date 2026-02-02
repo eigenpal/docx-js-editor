@@ -41,7 +41,7 @@
 - [x] US-123: Implement footers rendering - P1 - Render footers on each page
 - [x] US-124: Add page number display - P2 - Show Page X of Y
 - [x] US-125: Implement scroll-to-page navigation - P2 - Jump to page number
-- [ ] US-126: Add horizontal ruler - P3 - Ruler with margin markers
+- [x] US-126: Add horizontal ruler - P3 - Ruler with margin markers
 - [ ] US-127: Add print preview/export - P3 - Print with correct layout
 
 ## Category 4: Table Editing

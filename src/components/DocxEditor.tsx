@@ -24,6 +24,7 @@ import { ZoomControl } from './ui/ZoomControl';
 import { TableToolbar, type TableContext, type TableAction } from './ui/TableToolbar';
 import { PageNumberIndicator, type PageIndicatorPosition, type PageIndicatorVariant } from './ui/PageNumberIndicator';
 import { PageNavigator, type PageNavigatorPosition, type PageNavigatorVariant } from './ui/PageNavigator';
+import { HorizontalRuler } from './ui/HorizontalRuler';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import { parseDocx } from '../docx/parser';
 import { onFontsLoaded, isLoading as isFontsLoading } from '../utils/fontLoader';
@@ -75,6 +76,10 @@ export interface DocxEditorProps {
   showMarginGuides?: boolean;
   /** Color for margin guides (default: '#c0c0c0') */
   marginGuideColor?: string;
+  /** Whether to show horizontal ruler (default: false) */
+  showRuler?: boolean;
+  /** Unit for ruler display (default: 'inch') */
+  rulerUnit?: 'inch' | 'cm';
   /** Initial zoom level (default: 1.0) */
   initialZoom?: number;
   /** Whether the editor is read-only */
@@ -169,6 +174,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     pageNumberVariant = 'default',
     showMarginGuides = false,
     marginGuideColor,
+    showRuler = false,
+    rulerUnit = 'inch',
     initialZoom = 1.0,
     readOnly = false,
     toolbarExtra,
@@ -706,8 +713,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
 
   const editorContainerStyle: CSSProperties = {
     flex: 1,
-    overflow: 'auto',
+    overflow: 'hidden',
     position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
   };
 
   const variablePanelStyle: CSSProperties = {
@@ -789,53 +798,77 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           <div style={mainContentStyle}>
             {/* Editor */}
             <div style={editorContainerStyle}>
-              <AIEditor
-                ref={editorRef}
-                document={history.state}
-                onChange={handleDocumentChange}
-                onAgentRequest={onAgentRequest}
-                editable={!readOnly}
-                zoom={state.zoom}
-                showMarginGuides={showMarginGuides}
-                marginGuideColor={marginGuideColor}
-                onTableCellClick={tableSelection.handleCellClick}
-                isTableCellSelected={tableSelection.isCellSelected}
-                onPageChange={handlePageChange}
-              />
-
-              {/* Page navigation / indicator */}
-              {showPageNumbers && state.totalPages > 0 && (
-                enablePageNavigation ? (
-                  <PageNavigator
-                    currentPage={state.currentPage}
-                    totalPages={state.totalPages}
-                    onNavigate={handlePageNavigate}
-                    position={pageNumberPosition as PageNavigatorPosition}
-                    variant={pageNumberVariant as PageNavigatorVariant}
-                    floating
-                  />
-                ) : (
-                  <PageNumberIndicator
-                    currentPage={state.currentPage}
-                    totalPages={state.totalPages}
-                    position={pageNumberPosition as PageIndicatorPosition}
-                    variant={pageNumberVariant as PageIndicatorVariant}
-                    floating
-                  />
-                )
-              )}
-
-              {/* Zoom control */}
-              {showZoomControl && (
-                <div style={zoomControlStyle}>
-                  <ZoomControl
-                    value={state.zoom}
-                    onChange={handleZoomChange}
-                    minZoom={0.25}
-                    maxZoom={3}
+              {/* Horizontal Ruler */}
+              {showRuler && (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    backgroundColor: '#f0f0f0',
+                    padding: '4px 20px',
+                    borderBottom: '1px solid #d0d0d0',
+                    overflow: 'auto',
+                    flexShrink: 0,
+                  }}
+                >
+                  <HorizontalRuler
+                    sectionProps={history.state?.package.body?.sectionProperties}
+                    zoom={state.zoom}
+                    unit={rulerUnit}
+                    editable={false}
                   />
                 </div>
               )}
+
+              <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+                <AIEditor
+                  ref={editorRef}
+                  document={history.state}
+                  onChange={handleDocumentChange}
+                  onAgentRequest={onAgentRequest}
+                  editable={!readOnly}
+                  zoom={state.zoom}
+                  showMarginGuides={showMarginGuides}
+                  marginGuideColor={marginGuideColor}
+                  onTableCellClick={tableSelection.handleCellClick}
+                  isTableCellSelected={tableSelection.isCellSelected}
+                  onPageChange={handlePageChange}
+                />
+
+                {/* Page navigation / indicator */}
+                {showPageNumbers && state.totalPages > 0 && (
+                  enablePageNavigation ? (
+                    <PageNavigator
+                      currentPage={state.currentPage}
+                      totalPages={state.totalPages}
+                      onNavigate={handlePageNavigate}
+                      position={pageNumberPosition as PageNavigatorPosition}
+                      variant={pageNumberVariant as PageNavigatorVariant}
+                      floating
+                    />
+                  ) : (
+                    <PageNumberIndicator
+                      currentPage={state.currentPage}
+                      totalPages={state.totalPages}
+                      position={pageNumberPosition as PageIndicatorPosition}
+                      variant={pageNumberVariant as PageIndicatorVariant}
+                      floating
+                    />
+                  )
+                )}
+
+                {/* Zoom control */}
+                {showZoomControl && (
+                  <div style={zoomControlStyle}>
+                    <ZoomControl
+                      value={state.zoom}
+                      onChange={handleZoomChange}
+                      minZoom={0.25}
+                      maxZoom={3}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Variable panel */}

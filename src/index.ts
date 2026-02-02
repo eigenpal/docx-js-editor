@@ -156,6 +156,14 @@ export {
   getColumnCount,
   getCellAt,
 } from './components/ui/TableToolbar';
+export {
+  HorizontalRuler,
+  type HorizontalRulerProps,
+  getRulerDimensions,
+  getMarginInUnits,
+  parseMarginFromUnits,
+  positionToMargin,
+} from './components/ui/HorizontalRuler';
 
 // ============================================================================
 // DIALOGS

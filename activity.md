@@ -5769,3 +5769,64 @@ Implemented interactive page navigation with jump-to-page functionality, previou
 - Playwright visual tests: 5/5 passed
 
 ---
+
+
+### US-126: Add horizontal ruler
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added a horizontal ruler component that displays above the document with margin markers, similar to Microsoft Word.
+
+**Implementation:**
+
+1. **Created `src/components/ui/HorizontalRuler.tsx`:**
+   - `HorizontalRuler` component with page width scale and tick marks
+   - Left and right margin indicators (triangular markers)
+   - Optional first line indent indicator
+   - Support for inch and centimeter units
+   - Zoom level support
+   - Gray margin areas, white content area
+   - Major/minor/sub-minor tick marks with labels
+
+2. **Updated `src/components/DocxEditor.tsx`:**
+   - Added `showRuler` prop (default: false)
+   - Added `rulerUnit` prop (default: 'inch')
+   - Integrated `HorizontalRuler` above the editor content
+   - Ruler reads section properties for page width and margins
+   - Ruler respects zoom level
+
+3. **Updated `src/index.ts`:**
+   - Exported `HorizontalRuler` component and types
+   - Exported utility functions: `getRulerDimensions`, `getMarginInUnits`, `parseMarginFromUnits`, `positionToMargin`
+
+**HorizontalRuler Features:**
+- Page width with tick marks every 1/8 inch (or mm for cm mode)
+- Major tick labels at full inches/centimeters
+- Gray shaded margin areas, white content area
+- Triangular margin markers at left and right margins
+- First line indent marker (optional)
+- Hover and active states for markers (blue highlight)
+- ARIA accessibility attributes
+
+**Margin Marker Styles:**
+- Down-pointing triangle at top
+- Vertical line extending down
+- Hover: blue (#1a73e8)
+- Active/dragging: darker blue (#1557b0)
+
+**Utility Functions:**
+- `generateTicks(pageWidthTwips, zoom, unit)` - Generate tick mark data
+- `getRulerDimensions(sectionProps, zoom)` - Get ruler dimensions in pixels
+- `getMarginInUnits(marginTwips, unit)` - Convert margin to display string
+- `parseMarginFromUnits(value, unit)` - Parse margin from display string
+- `positionToMargin(positionPx, side, pageWidthPx, zoom)` - Convert ruler position to margin
+
+**Props Added to DocxEditorProps:**
+- `showRuler?: boolean` - Show horizontal ruler (default: false)
+- `rulerUnit?: 'inch' | 'cm'` - Unit for ruler display (default: 'inch')
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
