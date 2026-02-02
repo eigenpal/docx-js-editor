@@ -108,6 +108,19 @@ export {
 // ============================================================================
 
 export { ZoomControl, type ZoomControlProps } from './components/ui/ZoomControl';
+export {
+  PageNumberIndicator,
+  type PageNumberIndicatorProps,
+  type PageIndicatorPosition,
+  type PageIndicatorVariant,
+  formatPageOrdinal,
+  createPageFormat,
+  getPageProgress,
+  isFirstPage,
+  isLastPage,
+  calculateVisiblePage,
+  calculateScrollToPage,
+} from './components/ui/PageNumberIndicator';
 export { FontPicker, type FontPickerProps, type FontOption } from './components/ui/FontPicker';
 export { FontSizePicker, type FontSizePickerProps } from './components/ui/FontSizePicker';
 export { LineSpacingPicker, type LineSpacingPickerProps, type LineSpacingOption } from './components/ui/LineSpacingPicker';

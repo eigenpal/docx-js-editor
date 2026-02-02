@@ -22,6 +22,7 @@ import { VariablePanel, type VariablePanelProps } from './VariablePanel';
 import { ErrorBoundary, ErrorProvider, useErrorNotifications } from './ErrorBoundary';
 import { ZoomControl } from './ui/ZoomControl';
 import { TableToolbar, type TableContext, type TableAction } from './ui/TableToolbar';
+import { PageNumberIndicator, type PageIndicatorPosition, type PageIndicatorVariant } from './ui/PageNumberIndicator';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import { parseDocx } from '../docx/parser';
 import { onFontsLoaded, isLoading as isFontsLoading } from '../utils/fontLoader';
@@ -61,6 +62,12 @@ export interface DocxEditorProps {
   showVariablePanel?: boolean;
   /** Whether to show zoom control (default: true) */
   showZoomControl?: boolean;
+  /** Whether to show page number indicator (default: true) */
+  showPageNumbers?: boolean;
+  /** Position of page number indicator (default: 'bottom-center') */
+  pageNumberPosition?: PageIndicatorPosition;
+  /** Variant of page number indicator (default: 'default') */
+  pageNumberVariant?: PageIndicatorVariant;
   /** Whether to show page margin guides/boundaries (default: false) */
   showMarginGuides?: boolean;
   /** Color for margin guides (default: '#c0c0c0') */
@@ -107,6 +114,12 @@ export interface DocxEditorRef {
   getSelectionContext: () => SelectionContext | null;
   /** Trigger an AI action */
   triggerAIAction: (action: AIAction, customPrompt?: string) => Promise<void>;
+  /** Get current page number */
+  getCurrentPage: () => number;
+  /** Get total page count */
+  getTotalPages: () => number;
+  /** Scroll to a specific page */
+  scrollToPage: (pageNumber: number) => void;
 }
 
 /**
@@ -120,6 +133,10 @@ interface EditorState {
   isApplyingVariables: boolean;
   /** Current selection formatting for toolbar */
   selectionFormatting: SelectionFormatting;
+  /** Current page number (1-indexed) */
+  currentPage: number;
+  /** Total page count */
+  totalPages: number;
 }
 
 // ============================================================================
@@ -143,6 +160,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     showToolbar = true,
     showVariablePanel = true,
     showZoomControl = true,
+    showPageNumbers = true,
+    pageNumberPosition = 'bottom-center',
+    pageNumberVariant = 'default',
     showMarginGuides = false,
     marginGuideColor,
     initialZoom = 1.0,
@@ -165,6 +185,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     variableValues: {},
     isApplyingVariables: false,
     selectionFormatting: {},
+    currentPage: 1,
+    totalPages: 1,
   });
 
   // History hook for undo/redo - start with null document
@@ -598,6 +620,11 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     setState((prev) => ({ ...prev, zoom }));
   }, []);
 
+  // Handle page change from editor
+  const handlePageChange = useCallback((currentPage: number, totalPages: number) => {
+    setState((prev) => ({ ...prev, currentPage, totalPages }));
+  }, []);
+
   // Handle save
   const handleSave = useCallback(async (): Promise<ArrayBuffer | null> => {
     if (!agentRef.current) return null;
@@ -635,8 +662,13 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       triggerAIAction: async (action: AIAction, customPrompt?: string) => {
         await editorRef.current?.triggerAIAction(action, customPrompt);
       },
+      getCurrentPage: () => state.currentPage,
+      getTotalPages: () => state.totalPages,
+      scrollToPage: (pageNumber: number) => {
+        editorRef.current?.scrollToPage(pageNumber);
+      },
     }),
-    [history.state, state.zoom, handleSave]
+    [history.state, state.zoom, state.currentPage, state.totalPages, handleSave]
   );
 
   // Get detected variables from document
@@ -759,7 +791,19 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 marginGuideColor={marginGuideColor}
                 onTableCellClick={tableSelection.handleCellClick}
                 isTableCellSelected={tableSelection.isCellSelected}
+                onPageChange={handlePageChange}
               />
+
+              {/* Page number indicator */}
+              {showPageNumbers && state.totalPages > 0 && (
+                <PageNumberIndicator
+                  currentPage={state.currentPage}
+                  totalPages={state.totalPages}
+                  position={pageNumberPosition}
+                  variant={pageNumberVariant}
+                  floating
+                />
+              )}
 
               {/* Zoom control */}
               {showZoomControl && (

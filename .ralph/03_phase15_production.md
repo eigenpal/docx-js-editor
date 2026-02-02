@@ -39,7 +39,7 @@
 - [x] US-121: Add page margins visualization - P1 - Show margins as visible boundaries
 - [x] US-122: Implement headers rendering - P1 - Render headers on each page
 - [x] US-123: Implement footers rendering - P1 - Render footers on each page
-- [ ] US-124: Add page number display - P2 - Show Page X of Y
+- [x] US-124: Add page number display - P2 - Show Page X of Y
 - [ ] US-125: Implement scroll-to-page navigation - P2 - Jump to page number
 - [ ] US-126: Add horizontal ruler - P3 - Ruler with margin markers
 - [ ] US-127: Add print preview/export - P3 - Print with correct layout
