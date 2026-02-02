@@ -15,7 +15,7 @@
 ## Category 1: Critical Bug Fixes
 
 - [x] US-100: Fix Toolbar props mismatch in DocxEditor - P0 - DocxEditor passes wrong props to Toolbar
-- [ ] US-101: Add visible cursor/caret styling - P0 - CSS for caret-color in contentEditable
+- [x] US-101: Add visible cursor/caret styling - P0 - CSS for caret-color in contentEditable
 - [ ] US-102: Fix text run fragmentation - P0 - Merge consecutive runs with identical formatting
 - [ ] US-103: Connect TableToolbar to table selection - P1 - Show toolbar when clicking table cells
 - [ ] US-104: Fix undo/redo history connection - P1 - Connect useHistory hook to Editor state
