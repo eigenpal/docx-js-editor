@@ -94,6 +94,10 @@ function getSelectedText(): string {
 
 /**
  * Convert DOM selection to document range
+ *
+ * Supports both text selections AND cursor-only positions (collapsed selections).
+ * This is critical for paragraph-level operations (lists, alignment, indentation)
+ * which should work when the cursor is in a paragraph WITHOUT selecting text.
  */
 function getSelectionRange(
   containerRef: React.RefObject<HTMLElement>,
@@ -102,13 +106,16 @@ function getSelectionRange(
   if (typeof window === 'undefined') return null;
 
   const selection = window.getSelection();
-  if (!selection || selection.isCollapsed) return null;
+  if (!selection) return null;
 
+  // Get the anchor node - for collapsed selections, anchor and focus are the same
   const anchorNode = selection.anchorNode;
-  const focusNode = selection.focusNode;
-
-  if (!anchorNode || !focusNode) return null;
+  if (!anchorNode) return null;
   if (!containerRef.current?.contains(anchorNode)) return null;
+
+  // For collapsed selections (cursor-only), use the same node for both anchor and focus
+  const focusNode = selection.isCollapsed ? anchorNode : selection.focusNode;
+  if (!focusNode) return null;
 
   // Find paragraph indices by traversing up to elements with data-paragraph-index
   const findParagraphInfo = (node: Node): { index: number; element: Element } | null => {
@@ -212,7 +219,7 @@ function getSelectionRange(
     end = { paragraphIndex: anchorInfo.index, offset: anchorOffset };
   }
 
-  return { start, end };
+  return { start, end, collapsed: selection.isCollapsed };
 }
 
 // ============================================================================

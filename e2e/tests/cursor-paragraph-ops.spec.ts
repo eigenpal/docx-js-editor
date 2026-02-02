@@ -36,7 +36,8 @@ test.describe('Cursor-Only List Operations', () => {
     await editor.toggleBulletList();
 
     // Verify the paragraph became a list item
-    const listItem = page.locator('[data-paragraph-index="0"]');
+    // Use 'p' selector to target paragraph element specifically (not span inside it)
+    const listItem = page.locator('p[data-paragraph-index="0"]');
     // Check for list marker or list styling
     const hasListStyle = await listItem.evaluate((el) => {
       const style = window.getComputedStyle(el);
@@ -126,7 +127,7 @@ test.describe('Cursor-Only Alignment Operations', () => {
     await editor.alignCenter();
 
     // Verify alignment changed
-    const paragraph = page.locator('[data-paragraph-index="0"]');
+    const paragraph = page.locator('p[data-paragraph-index="0"]');
     const textAlign = await paragraph.evaluate((el) => {
       return window.getComputedStyle(el).textAlign;
     });
@@ -143,7 +144,7 @@ test.describe('Cursor-Only Alignment Operations', () => {
 
     await editor.alignRight();
 
-    const paragraph = page.locator('[data-paragraph-index="0"]');
+    const paragraph = page.locator('p[data-paragraph-index="0"]');
     const textAlign = await paragraph.evaluate((el) => {
       return window.getComputedStyle(el).textAlign;
     });
@@ -156,9 +157,9 @@ test.describe('Cursor-Only Alignment Operations', () => {
 
     await page.keyboard.press('Home');
 
-    await editor.justify();
+    await editor.alignJustify();
 
-    const paragraph = page.locator('[data-paragraph-index="0"]');
+    const paragraph = page.locator('p[data-paragraph-index="0"]');
     const textAlign = await paragraph.evaluate((el) => {
       return window.getComputedStyle(el).textAlign;
     });
@@ -178,7 +179,7 @@ test.describe('Cursor-Only Alignment Operations', () => {
     // Then reset to left
     await editor.alignLeft();
 
-    const paragraph = page.locator('[data-paragraph-index="0"]');
+    const paragraph = page.locator('p[data-paragraph-index="0"]');
     const textAlign = await paragraph.evaluate((el) => {
       const align = window.getComputedStyle(el).textAlign;
       return align === 'start' ? 'left' : align;
@@ -195,7 +196,7 @@ test.describe('Cursor-Only Alignment Operations', () => {
     // Use keyboard shortcut
     await page.keyboard.press('Control+e');
 
-    const paragraph = page.locator('[data-paragraph-index="0"]');
+    const paragraph = page.locator('p[data-paragraph-index="0"]');
     const textAlign = await paragraph.evaluate((el) => {
       return window.getComputedStyle(el).textAlign;
     });
@@ -223,7 +224,7 @@ test.describe('Cursor-Only Indentation Operations', () => {
     // Indent should work without selection
     await editor.indent();
 
-    const paragraph = page.locator('[data-paragraph-index="0"]');
+    const paragraph = page.locator('p[data-paragraph-index="0"]');
     const marginLeft = await paragraph.evaluate((el) => {
       return window.getComputedStyle(el).marginLeft;
     });
@@ -257,7 +258,7 @@ test.describe('Cursor-Only Indentation Operations', () => {
     await editor.indent();
     await editor.indent();
 
-    const paragraph = page.locator('[data-paragraph-index="0"]');
+    const paragraph = page.locator('p[data-paragraph-index="0"]');
     const marginLeft = await paragraph.evaluate((el) => {
       return parseInt(window.getComputedStyle(el).marginLeft, 10);
     });
@@ -293,7 +294,7 @@ test.describe('Multi-Paragraph Operations', () => {
 
     // All paragraphs should be centered
     for (let i = 0; i < 3; i++) {
-      const paragraph = page.locator(`[data-paragraph-index="${i}"]`);
+      const paragraph = page.locator(`p[data-paragraph-index="${i}"]`);
       if ((await paragraph.count()) > 0) {
         const textAlign = await paragraph.evaluate((el) => {
           return window.getComputedStyle(el).textAlign;
