@@ -228,7 +228,6 @@
         { "action": "waitForReady" },
         { "action": "focus" },
         { "action": "typeText", "args": { "text": "List item" } },
-        { "action": "focusParagraph", "args": { "index": 0 } },
         { "action": "toggleBulletList" },
         { "assert": "expectParagraphIsList", "args": { "index": 0, "listType": "bullet" } }
       ]
@@ -241,7 +240,6 @@
         { "action": "waitForReady" },
         { "action": "focus" },
         { "action": "typeText", "args": { "text": "Numbered item" } },
-        { "action": "focusParagraph", "args": { "index": 0 } },
         { "action": "toggleNumberedList" },
         { "assert": "expectParagraphIsList", "args": { "index": 0, "listType": "numbered" } }
       ]

@@ -105,6 +105,15 @@ while true; do
   fi
   echo ""
 
+  echo "───────────────────────────────────────────"
+  echo "  📝 Live Progress (tail .ralph/progress.txt):"
+  if [ -f "$RALPH_DIR/progress.txt" ]; then
+    tail -10 "$RALPH_DIR/progress.txt" | sed 's/^/  /'
+  else
+    echo "  (no progress file)"
+  fi
+  echo ""
+
   echo "═══════════════════════════════════════════"
   echo "  $(date '+%H:%M:%S') | Refreshing every 5s"
 

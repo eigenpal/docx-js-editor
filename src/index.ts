@@ -105,14 +105,6 @@ export {
   ToolbarSeparator,
 } from './components/Toolbar';
 export { VariablePanel, type VariablePanelProps } from './components/VariablePanel';
-export { Editor, type EditorProps, type EditorRef, type EditorState } from './components/Editor';
-export {
-  AIEditor,
-  type AIEditorProps,
-  type AIEditorRef,
-  type AIRequestHandler,
-  createMockAIHandler,
-} from './components/AIEditor';
 export {
   DocumentViewer,
   type DocumentViewerProps,

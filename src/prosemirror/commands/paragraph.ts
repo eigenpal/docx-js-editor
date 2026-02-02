@@ -414,3 +414,33 @@ export function getListInfo(state: EditorState): { numId: number; ilvl: number }
     ilvl: paragraph.attrs.numPr.ilvl || 0,
   };
 }
+
+// ============================================================================
+// PARAGRAPH STYLES
+// ============================================================================
+
+/**
+ * Apply a paragraph style by ID (e.g., 'Heading1', 'Normal', 'Title')
+ * @param styleId - The style ID to apply
+ */
+export function applyStyle(styleId: string): Command {
+  return setParagraphAttr('styleId', styleId);
+}
+
+/**
+ * Clear paragraph style (reset to Normal)
+ */
+export const clearStyle: Command = (state, dispatch) => {
+  return setParagraphAttr('styleId', null)(state, dispatch);
+};
+
+/**
+ * Get current paragraph style ID
+ */
+export function getStyleId(state: EditorState): string | null {
+  const { $from } = state.selection;
+  const paragraph = $from.parent;
+
+  if (paragraph.type.name !== 'paragraph') return null;
+  return paragraph.attrs.styleId || null;
+}

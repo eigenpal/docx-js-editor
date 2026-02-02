@@ -6,6 +6,9 @@
       "name": "Create bullet list",
       "tags": ["list", "bullet", "core"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "First item" } },
         { "action": "toggleBulletList" }
       ],
@@ -15,6 +18,9 @@
       "name": "Create numbered list",
       "tags": ["list", "numbered", "core"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "First item" } },
         { "action": "toggleNumberedList" }
       ],
@@ -24,6 +30,9 @@
       "name": "Multiple bullet items",
       "tags": ["list", "bullet", "multiple"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "Item one" } },
         { "action": "toggleBulletList" },
         { "action": "pressEnter" },
@@ -41,6 +50,9 @@
       "name": "Multiple numbered items",
       "tags": ["list", "numbered", "multiple"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "First" } },
         { "action": "toggleNumberedList" },
         { "action": "pressEnter" },
@@ -58,6 +70,9 @@
       "name": "Toggle bullet list off",
       "tags": ["list", "bullet", "toggle"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "List item" } },
         { "action": "toggleBulletList" },
         { "action": "toggleBulletList" }
@@ -68,6 +83,9 @@
       "name": "Toggle numbered list off",
       "tags": ["list", "numbered", "toggle"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "List item" } },
         { "action": "toggleNumberedList" },
         { "action": "toggleNumberedList" }
@@ -78,6 +96,9 @@
       "name": "Convert bullet to numbered",
       "tags": ["list", "convert"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "List item" } },
         { "action": "toggleBulletList" },
         { "action": "toggleNumberedList" }
@@ -88,6 +109,9 @@
       "name": "Convert numbered to bullet",
       "tags": ["list", "convert"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "List item" } },
         { "action": "toggleNumberedList" },
         { "action": "toggleBulletList" }
@@ -98,6 +122,9 @@
       "name": "Indent list item",
       "tags": ["list", "indent", "core"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "Parent item" } },
         { "action": "toggleBulletList" },
         { "action": "pressEnter" },
@@ -113,6 +140,9 @@
       "name": "Outdent list item",
       "tags": ["list", "outdent", "core"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "Parent item" } },
         { "action": "toggleBulletList" },
         { "action": "pressEnter" },
@@ -129,6 +159,9 @@
       "name": "Nested bullet list",
       "tags": ["list", "bullet", "nested"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "Level 1" } },
         { "action": "toggleBulletList" },
         { "action": "pressEnter" },
@@ -148,6 +181,9 @@
       "name": "Nested numbered list",
       "tags": ["list", "numbered", "nested"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "First" } },
         { "action": "toggleNumberedList" },
         { "action": "pressEnter" },
@@ -166,6 +202,9 @@
       "name": "Bold text in list",
       "tags": ["list", "formatting"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "Bold item" } },
         { "action": "selectAll" },
         { "action": "applyBold" },
@@ -180,6 +219,9 @@
       "name": "Italic text in list",
       "tags": ["list", "formatting"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "Italic item" } },
         { "action": "selectAll" },
         { "action": "applyItalic" },
@@ -194,6 +236,9 @@
       "name": "Colored text in list",
       "tags": ["list", "formatting", "color"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "Colored item" } },
         { "action": "selectAll" },
         { "action": "setTextColor", "args": { "color": "#FF0000" } },
@@ -205,6 +250,9 @@
       "name": "Exit list with double Enter",
       "tags": ["list", "exit"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "List item" } },
         { "action": "toggleBulletList" },
         { "action": "pressEnter" },
@@ -220,6 +268,9 @@
       "name": "Undo bullet list",
       "tags": ["list", "undo"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "List item" } },
         { "action": "toggleBulletList" },
         { "action": "undo" }
@@ -230,6 +281,9 @@
       "name": "Undo numbered list",
       "tags": ["list", "undo"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "List item" } },
         { "action": "toggleNumberedList" },
         { "action": "undo" }
@@ -240,6 +294,9 @@
       "name": "Convert paragraph to list",
       "tags": ["list", "convert"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "First line" } },
         { "action": "pressEnter" },
         { "action": "typeText", "args": { "text": "Second line" } },
@@ -254,6 +311,9 @@
       "name": "Tab key indents list",
       "tags": ["list", "indent", "keyboard"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "Item" } },
         { "action": "toggleBulletList" },
         { "action": "pressEnter" },
@@ -269,6 +329,9 @@
       "name": "Shift+Tab outdents list",
       "tags": ["list", "outdent", "keyboard"],
       "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
         { "action": "typeText", "args": { "text": "Item" } },
         { "action": "toggleBulletList" },
         { "action": "pressEnter" },

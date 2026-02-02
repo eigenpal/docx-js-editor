@@ -4,14 +4,6 @@
  * Export all hooks for public API.
  */
 
-export { useSelection, SELECTION_DATA_ATTRIBUTES } from './useSelection';
-export type {
-  DocumentPosition,
-  DocumentRange,
-  SelectionState,
-  UseSelectionOptions,
-} from './useSelection';
-
 export { useHistory, useAutoHistory, useDocumentHistory, HistoryManager } from './useHistory';
 export type { HistoryEntry, UseHistoryOptions, UseHistoryReturn } from './useHistory';
 

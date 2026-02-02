@@ -82,4 +82,7 @@ export {
   getParagraphAlignment,
   isInList,
   getListInfo,
+  applyStyle,
+  clearStyle,
+  getStyleId,
 } from './commands';

@@ -12,15 +12,7 @@
 import './styles.css';
 import React, { useState, useRef, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-  DocxEditor,
-  type DocxEditorRef,
-  createMockAIHandler,
-  createEmptyDocument,
-  type AIActionRequest,
-  type AgentResponse,
-  type Document,
-} from '../src/index';
+import { DocxEditor, type DocxEditorRef, createEmptyDocument, type Document } from '../src/index';
 
 // ============================================================================
 // DEMO APP
@@ -34,16 +26,6 @@ function DemoApp() {
   const [documentBuffer, setDocumentBuffer] = useState<ArrayBuffer | null>(null);
   const [fileName, setFileName] = useState<string>('Untitled.docx');
   const [status, setStatus] = useState<string>('');
-  const [lastAction, setLastAction] = useState<string>('');
-
-  // Mock AI handler with delay
-  const mockAIHandler = useCallback(async (request: AIActionRequest): Promise<AgentResponse> => {
-    setLastAction(`AI: ${request.action}`);
-    const handler = createMockAIHandler(1500);
-    const response = await handler(request);
-    setLastAction(`AI: ${request.action} - Done`);
-    return response;
-  }, []);
 
   // Handle new document
   const handleNewDocument = useCallback(() => {
@@ -148,7 +130,6 @@ function DemoApp() {
             Save
           </button>
           {status && <span style={styles.status}>{status}</span>}
-          {lastAction && <span style={styles.action}>{lastAction}</span>}
         </div>
       </header>
 
@@ -158,7 +139,6 @@ function DemoApp() {
           ref={editorRef}
           document={documentBuffer ? undefined : currentDocument}
           documentBuffer={documentBuffer}
-          onAgentRequest={mockAIHandler}
           onChange={handleDocumentChange}
           onError={handleError}
           onFontsLoaded={handleFontsLoaded}
@@ -258,13 +238,6 @@ const styles: Record<string, React.CSSProperties> = {
   status: {
     fontSize: '12px',
     color: '#64748b',
-    padding: '4px 8px',
-    background: '#f1f5f9',
-    borderRadius: '4px',
-  },
-  action: {
-    fontSize: '12px',
-    color: '#475569',
     padding: '4px 8px',
     background: '#f1f5f9',
     borderRadius: '4px',

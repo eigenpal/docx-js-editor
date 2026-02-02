@@ -577,6 +577,44 @@ function executeFormatParagraph(doc: Document, command: FormatParagraphCommand):
   const paragraph = body.content[blockIndex] as Paragraph;
   paragraph.formatting = { ...paragraph.formatting, ...command.formatting };
 
+  // Handle listRendering when numPr changes
+  if ('numPr' in command.formatting) {
+    const numPr = command.formatting.numPr;
+    if (numPr && numPr.numId !== undefined && numPr.numId !== 0) {
+      // Setting a list - compute listRendering
+      const ilvl = numPr.ilvl ?? 0;
+      const isBullet = numPr.numId === 1; // numId 1 is typically bullets, 2 is numbered
+
+      // Try to get marker from numbering definitions if available
+      let marker = isBullet ? '•' : `${1}.`; // Default markers
+
+      if (newDoc.package.numbering) {
+        const num = newDoc.package.numbering.nums.find((n) => n.numId === numPr.numId);
+        if (num) {
+          const abstractNum = newDoc.package.numbering.abstractNums.find(
+            (a) => a.abstractNumId === num.abstractNumId
+          );
+          if (abstractNum) {
+            const level = abstractNum.levels.find((l) => l.ilvl === ilvl);
+            if (level) {
+              marker = level.lvlText || marker;
+            }
+          }
+        }
+      }
+
+      paragraph.listRendering = {
+        level: ilvl,
+        numId: numPr.numId,
+        marker,
+        isBullet,
+      };
+    } else {
+      // Removing list - clear listRendering
+      delete paragraph.listRendering;
+    }
+  }
+
   return newDoc;
 }
 

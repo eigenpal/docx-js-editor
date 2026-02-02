@@ -207,3 +207,12 @@
 [2026-02-02 12:31] NOTES: Fixed type errors - removed unused imports, added MarkAttrs helper
 [2026-02-02 12:31] NOTES: Typecheck passes
 [2026-02-02 12:31] STATUS: done
+[2026-02-02 12:32] NOTES: Committed ProseMirror infrastructure - 15 files, 3286 lines
+
+[2026-02-02 12:33] TASK: Integrate ProseMirror with DocxEditor.tsx
+[2026-02-02 12:33] STATUS: starting
+[2026-02-02 12:33] STATUS: reading
+[2026-02-02 12:33] NOTES: Reading DocxEditor.tsx to understand integration points
+[2026-02-02 12:35] NOTES: DocxEditor uses AIEditor, handleFormat calls executeCommand on Document model
+[2026-02-02 12:36] STATUS: editing
+[2026-02-02 12:36] NOTES: Adding useProseMirror feature flag for gradual migration

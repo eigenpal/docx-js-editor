@@ -68,6 +68,7 @@ import {
   setFontSize,
   setFontFamily,
   setAlignment,
+  setLineSpacing,
   toggleBulletList,
   toggleNumberedList,
   increaseIndent,
@@ -75,6 +76,7 @@ import {
   increaseListLevel,
   decreaseListLevel,
   clearFormatting,
+  applyStyle,
 } from '../prosemirror';
 
 // ============================================================================
@@ -497,6 +499,12 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           break;
         case 'fontFamily':
           setFontFamily(action.value)(view.state, view.dispatch);
+          break;
+        case 'lineSpacing':
+          setLineSpacing(action.value)(view.state, view.dispatch);
+          break;
+        case 'applyStyle':
+          applyStyle(action.value)(view.state, view.dispatch);
           break;
       }
     }
