@@ -28,7 +28,7 @@
 - [x] US-113: Add Highlight Color picker to toolbar - P1 - Background color picker
 - [x] US-114: Add Text Alignment buttons to toolbar - P1 - Left/center/right/justify
 - [x] US-115: Add Bullet List button to toolbar - P1 - Toggle bullet lists
-- [ ] US-116: Add Numbered List button to toolbar - P1 - Toggle numbered lists
+- [x] US-116: Add Numbered List button to toolbar - P1 - Toggle numbered lists
 - [ ] US-117: Add Indent/Outdent buttons to toolbar - P2 - Increase/decrease indent
 - [ ] US-118: Add Line Spacing dropdown to toolbar - P2 - 1.0, 1.15, 1.5, 2.0
 - [ ] US-119: Connect Style picker to toolbar - P2 - Wire StylePicker to document styles

@@ -5239,3 +5239,46 @@ Added the Bullet List button to the Toolbar using the existing ListButtons compo
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-116: Add Numbered List button to toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+The Numbered List button was already fully implemented as part of the ListButtons component during US-115. The implementation includes:
+
+**Already Existing Implementation:**
+
+1. **`src/components/ui/ListButtons.tsx`:**
+   - `NumberedListIcon` SVG component (lines 164-173)
+   - `ListButton` component with active/hover states (lines 200-241)
+   - `ListButtons` component renders both bullet and numbered list buttons (lines 250-334)
+   - Numbered list button connected to `onNumberedList` callback (lines 294-302)
+   - Active state detection via `isNumberedList = listState?.type === 'numbered'` (line 271)
+
+2. **`src/components/Toolbar.tsx`:**
+   - `handleNumberedList` callback that calls `onFormat('numberedList')` (lines 478-482)
+   - `'numberedList'` action type in `FormattingAction` union (line 67)
+   - `ListButtons` receives `onNumberedList={handleNumberedList}` (line 708)
+
+3. **`src/components/DocxEditor.tsx`:**
+   - Handler for `'numberedList'` action (lines 360-388)
+   - Toggles numbered list: if already numbered, removes it; otherwise sets `numPr` with `numId: 2`
+   - Uses `executeCommand` with `formatParagraph` command
+   - Updates `listState` to `{ type: 'numbered', level: 0, isInList: true, numId: 2 }`
+
+**Features:**
+- Numbered list button with toggle behavior
+- Active state shows when paragraph is a numbered list
+- Uses `numPr.numId = 2` for numbered lists (Word convention: numId 1 = bullets, numId 2 = numbered)
+- Click toggles list on/off for current paragraph
+- Compact mode for toolbar integration
+
+**List State Detection:**
+- Extracts `numPr` from paragraph formatting in `getSelectionFormatting()`
+- Uses `numId !== 1` as heuristic for numbered lists (lines 792-804 in Toolbar.tsx)
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
