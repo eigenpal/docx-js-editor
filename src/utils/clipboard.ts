@@ -153,7 +153,7 @@ export async function writeToClipboard(content: ClipboardContent): Promise<boole
 
     // Fallback to execCommand
     return writeToClipboardFallback(content);
-  } catch (error) {
+  } catch {
     // Fallback to execCommand
     return writeToClipboardFallback(content);
   }

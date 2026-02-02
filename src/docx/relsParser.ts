@@ -330,6 +330,7 @@ export function parsePackageRelationships(relsXml: string): RelationshipMap {
  * @param map - RelationshipMap to print
  */
 export function printRelationships(map: RelationshipMap): void {
+  /* eslint-disable no-console */
   console.log('Relationships:');
   for (const [id, rel] of map.entries()) {
     const typeName = getRelationshipTypeName(rel.type);
@@ -337,4 +338,5 @@ export function printRelationships(map: RelationshipMap): void {
       `  ${id}: ${typeName} -> ${rel.target}${rel.targetMode === 'External' ? ' (External)' : ''}`
     );
   }
+  /* eslint-enable no-console */
 }

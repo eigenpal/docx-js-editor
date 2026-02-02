@@ -716,7 +716,7 @@ export function EditableParagraph({
     );
   }
 
-  let runIndex = 0;
+  let runIndex = 0; // eslint-disable-line @typescript-eslint/no-unused-vars
 
   // Render paragraph content
   const children: ReactNode[] = [];

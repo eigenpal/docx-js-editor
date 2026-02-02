@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import type { CSSProperties, KeyboardEvent } from 'react';
+import type { CSSProperties } from 'react';
 
 // ============================================================================
 // TYPES
@@ -301,14 +301,14 @@ function PageInputPopover({
 
   // Handle escape key
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleEscape as any);
-    return () => document.removeEventListener('keydown', handleEscape as any);
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
   }, [onClose]);
 
   // Validate and navigate

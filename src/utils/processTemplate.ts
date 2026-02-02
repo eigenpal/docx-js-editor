@@ -21,7 +21,7 @@ export interface ProcessTemplateOptions {
   /** How to handle undefined variables */
   nullGetter?: 'keep' | 'empty' | 'error';
   /** Custom parser for variable names */
-  parser?: (tag: string) => { get: (scope: any) => any };
+  parser?: (tag: string) => { get: (scope: Record<string, unknown>) => unknown };
   /** Line breaks: keep raw \n or convert to w:br */
   linebreaks?: boolean;
   /** Delimiter settings */
@@ -370,17 +370,29 @@ function findUnclosedTags(text: string): string[] {
   return unclosed;
 }
 
+/** Type guard for docxtemplater multi-error */
+interface DocxTemplaterError extends Error {
+  properties?: {
+    errors?: Array<{
+      message?: string;
+      properties?: { tag?: string };
+    }>;
+  };
+}
+
+function isDocxTemplaterError(error: Error): error is DocxTemplaterError {
+  return 'properties' in error && typeof (error as DocxTemplaterError).properties === 'object';
+}
+
 /**
  * Format docxtemplater errors into useful messages
  */
 function formatTemplateError(error: unknown): TemplateError {
   if (error instanceof Error) {
     // Check for docxtemplater specific errors
-    const docxError = error as any;
-
-    if (docxError.properties && docxError.properties.errors) {
+    if (isDocxTemplaterError(error) && error.properties?.errors) {
       // Multi-error from docxtemplater
-      const firstError = docxError.properties.errors[0];
+      const firstError = error.properties.errors[0];
       return {
         message: firstError?.message || 'Template processing error',
         variable: firstError?.properties?.tag,

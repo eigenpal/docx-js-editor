@@ -251,7 +251,7 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
         if (!content) {
           setError('No content available to paste');
         }
-      } catch (err) {
+      } catch {
         setError('Unable to read clipboard. Please use Ctrl+V to paste.');
       } finally {
         setIsLoading(false);

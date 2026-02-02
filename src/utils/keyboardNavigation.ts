@@ -324,7 +324,7 @@ export function extendSelectionTo(node: Node, offset: number): void {
 
   try {
     selection.extend(node, Math.min(offset, node.textContent?.length || 0));
-  } catch (e) {
+  } catch {
     // If extend fails (e.g., different containers), fall back to setBaseAndExtent
     const maxOffset =
       node.nodeType === Node.TEXT_NODE ? node.textContent?.length || 0 : node.childNodes.length;

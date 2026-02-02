@@ -205,6 +205,7 @@ function formatXml(xml: string): string {
  * Print a summary of the DOCX exploration to the console
  */
 export function printExplorationSummary(exploration: DocxExploration): void {
+  /* eslint-disable no-console */
   console.log('=== DOCX Exploration Summary ===');
   console.log(`Total files: ${exploration.fileCount}`);
   console.log(`Total size: ${(exploration.totalSize / 1024).toFixed(2)} KB`);
@@ -225,6 +226,7 @@ export function printExplorationSummary(exploration: DocxExploration): void {
   for (const [dir, files] of Object.entries(exploration.directories)) {
     console.log(`  ${dir}/: ${files.length} file(s)`);
   }
+  /* eslint-enable no-console */
 }
 
 /**
