@@ -59,3 +59,22 @@ export {
   getDefaultPasteOption,
   isPasteSpecialShortcut,
 } from './PasteSpecialDialog';
+
+// Keyboard Shortcuts dialog for showing all shortcuts
+export {
+  KeyboardShortcutsDialog,
+  type KeyboardShortcutsDialogProps,
+  type KeyboardShortcut,
+  type ShortcutCategory,
+  type UseKeyboardShortcutsDialogOptions,
+  type UseKeyboardShortcutsDialogReturn,
+  // Hook
+  useKeyboardShortcutsDialog,
+  // Utility functions
+  getDefaultShortcuts,
+  getShortcutsByCategory,
+  getCommonShortcuts,
+  getCategoryLabel,
+  getAllCategories,
+  formatShortcutKeys,
+} from './KeyboardShortcutsDialog';

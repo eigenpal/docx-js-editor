@@ -327,6 +327,21 @@ export {
   getDefaultPasteOption,
   isPasteSpecialShortcut,
 } from './components/dialogs/PasteSpecialDialog';
+export {
+  KeyboardShortcutsDialog,
+  type KeyboardShortcutsDialogProps,
+  type KeyboardShortcut,
+  type ShortcutCategory,
+  type UseKeyboardShortcutsDialogOptions,
+  type UseKeyboardShortcutsDialogReturn,
+  useKeyboardShortcutsDialog,
+  getDefaultShortcuts,
+  getShortcutsByCategory,
+  getCommonShortcuts,
+  getCategoryLabel,
+  getAllCategories,
+  formatShortcutKeys,
+} from './components/dialogs/KeyboardShortcutsDialog';
 
 // ============================================================================
 // TYPES
