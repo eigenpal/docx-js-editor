@@ -1,5 +1,26 @@
 # Progress Log
 
+## 2026-02-01: Fix alignment button selectors
+
+**Problem:** E2e tests for alignment were failing because the selectors in `e2e/helpers/editor-page.ts` didn't match the actual aria-labels on the alignment buttons.
+
+**Root Cause:** The test selectors used lowercase labels like `[aria-label="Align left"]` but the actual AlignmentButtons component generates aria-labels that include the label from the ALIGNMENT_OPTIONS array plus keyboard shortcuts, e.g., `"Align Left (Ctrl+L)"`.
+
+**Solution:** Updated the alignment button selectors in `e2e/helpers/editor-page.ts`:
+- `alignLeft()`: Changed from `[aria-label="Align left"]` to `[aria-label="Align Left (Ctrl+L)"]`
+- `alignCenter()`: Changed from `[aria-label="Align center"]` to `[aria-label="Center (Ctrl+E)"]`
+- `alignRight()`: Changed from `[aria-label="Align right"]` to `[aria-label="Align Right (Ctrl+R)"]`
+- `alignJustify()`: Changed from `[aria-label="Justify"]` to `[aria-label="Justify (Ctrl+J)"]`
+
+**Files Modified:**
+- `e2e/helpers/editor-page.ts` - Updated alignment button selectors
+
+**Verification:**
+- `npx playwright test --grep "align text left" --timeout=30000` - alignment.spec.ts test passed
+- 18 of 29 alignment tests now pass (remaining failures are due to unrelated issues like undo/redo, formatting application)
+
+---
+
 ## 2026-02-01: Fix backwards text rendering
 
 **Problem:** Text typed in the editor appeared reversed ("Hello" → "olleH").
