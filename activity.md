@@ -6387,3 +6387,27 @@ Created `src/utils/insertOperations.ts` with comprehensive insert operations uti
 - bun build exits 0: ✓
 
 ---
+
+### US-144: Add Insert Horizontal Rule
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Already implemented as part of US-143 in `src/utils/insertOperations.ts`.
+
+**Functions:**
+- `createHorizontalRule()` - Creates a paragraph with bottom border simulating HR
+- `insertHorizontalRule(doc, position)` - Insert HR at position
+
+**Horizontal Rule Implementation:**
+- Paragraph with no text content
+- Bottom border: single style, black (#000000), 1.5pt width
+- Spacing: 6pt before and after
+
+**Already Exported in `src/index.ts`:**
+- `createHorizontalRule`
+- `insertHorizontalRule`
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
