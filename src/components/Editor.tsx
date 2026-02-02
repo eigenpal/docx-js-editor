@@ -22,6 +22,8 @@ import type {
   Image as ImageType,
   Shape as ShapeType,
   TextBox as TextBoxType,
+  HeaderFooter,
+  HeaderFooterType,
 } from '../types/document';
 import {
   EditableParagraph,
@@ -34,6 +36,7 @@ import {
   type CursorPosition,
 } from './edit/EditableParagraph';
 import { DocTable } from './render/DocTable';
+import { Paragraph } from './render/Paragraph';
 import { getDefaultSectionProperties } from '../docx/sectionParser';
 import { twipsToPixels, formatPx } from '../utils/units';
 import { SELECTION_DATA_ATTRIBUTES } from '../hooks/useSelection';
@@ -346,17 +349,59 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     return doc.package?.body ? countParagraphs(doc.package.body) : 0;
   }, [doc.package?.body]);
 
+  // Build headers map for layout engine from document package
+  const headersForLayout = useMemo(() => {
+    const result = new Map<number, Map<HeaderFooterType, HeaderFooter>>();
+    const docHeaders = doc.package?.headers;
+    const docBody = doc.package?.body;
+
+    if (!docHeaders || docHeaders.size === 0) {
+      return result;
+    }
+
+    // For now, all headers go to section 0 (most documents have one section)
+    // We need to determine header types from the sectPr references
+    const sectionHeadersMap = new Map<HeaderFooterType, HeaderFooter>();
+
+    // Get section properties to determine header types
+    const sectProps = docBody?.sectionProperties;
+    const headerRefs = sectProps?.headerReferences || [];
+
+    // Match headers from docHeaders (keyed by rId) to their types from sectPr
+    for (const ref of headerRefs) {
+      const header = docHeaders.get(ref.rId);
+      if (header) {
+        // Update the header's type from the reference
+        const typedHeader: HeaderFooter = {
+          ...header,
+          hdrFtrType: ref.type,
+        };
+        sectionHeadersMap.set(ref.type, typedHeader);
+      }
+    }
+
+    // If we have headers, add them to section 0
+    if (sectionHeadersMap.size > 0) {
+      result.set(0, sectionHeadersMap);
+    }
+
+    return result;
+  }, [doc.package?.headers, doc.package?.body?.sectionProperties]);
+
   // Calculate page layout when pagination is enabled
   const pageLayout = useMemo<PageLayoutResult | null>(() => {
     if (!enablePagination || !doc) return null;
 
     try {
-      return calculatePages(doc, { theme });
+      return calculatePages(doc, {
+        theme,
+        headers: headersForLayout.size > 0 ? headersForLayout : undefined,
+      });
     } catch (error) {
       console.error('Error calculating page layout:', error);
       return null;
     }
-  }, [doc, theme, enablePagination]);
+  }, [doc, theme, enablePagination, headersForLayout]);
 
   /**
    * Update document and notify parent
@@ -789,6 +834,44 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         return renderPage(pageContent, page.pageNumber - 1, page.sectionProps);
       }
 
+      // Calculate header area style
+      const headerDistance = twipsToPixels(page.sectionProps.pageMargins?.header ?? 720) * zoom;
+      const headerAreaStyle: CSSProperties = {
+        position: 'absolute',
+        top: formatPx(headerDistance),
+        left: formatPx(marginLeft),
+        right: formatPx(marginRight),
+        height: formatPx(marginTop - headerDistance),
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+      };
+
+      // Render header content
+      const renderHeaderContent = (header: HeaderFooter) => {
+        return header.content.map((block, index) => {
+          if (block.type === 'paragraph') {
+            return (
+              <Paragraph
+                key={`header-para-${index}`}
+                paragraph={block}
+                theme={theme}
+                pageNumber={page.pageNumber}
+                totalPages={totalPages}
+              />
+            );
+          } else if (block.type === 'table') {
+            return (
+              <DocTable
+                key={`header-table-${index}`}
+                table={block}
+                theme={theme}
+              />
+            );
+          }
+          return null;
+        });
+      };
+
       return (
         <div
           key={`page-${page.pageNumber}`}
@@ -796,6 +879,18 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
           style={pageStyle}
           data-page-number={page.pageNumber}
         >
+          {/* Header area */}
+          {page.header && (
+            <div
+              className="docx-page-header-area"
+              style={headerAreaStyle}
+              role="region"
+              aria-label="Page header"
+            >
+              {renderHeaderContent(page.header)}
+            </div>
+          )}
+
           {/* Content area */}
           <div className="docx-page-content-area" style={contentAreaStyle}>
             {pageContent}
@@ -872,7 +967,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         </div>
       );
     },
-    [zoom, showPageShadows, showMarginGuides, marginGuideColor, renderPageContent, renderPage]
+    [zoom, showPageShadows, showMarginGuides, marginGuideColor, renderPageContent, renderPage, theme]
   );
 
   /**

@@ -37,7 +37,7 @@
 
 - [x] US-120: Implement page break rendering - P0 - Render document across multiple pages
 - [x] US-121: Add page margins visualization - P1 - Show margins as visible boundaries
-- [ ] US-122: Implement headers rendering - P1 - Render headers on each page
+- [x] US-122: Implement headers rendering - P1 - Render headers on each page
 - [ ] US-123: Implement footers rendering - P1 - Render footers on each page
 - [ ] US-124: Add page number display - P2 - Show Page X of Y
 - [ ] US-125: Implement scroll-to-page navigation - P2 - Jump to page number

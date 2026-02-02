@@ -5482,3 +5482,110 @@ Implemented page break rendering in the Editor component, allowing documents to 
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-121: Add page margins visualization
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added page margin guides/boundaries visualization to show where the content margins are on each page.
+
+**Implementation:**
+
+1. **Updated `src/components/render/Page.tsx`:**
+   - Added `PageMarginGuides` component that renders dashed lines at margin boundaries
+   - Added `MarginCorner` component for small corner markers at margin intersections
+   - Added `showMarginGuides` prop to `PageProps` and `SimplePageProps`
+   - Added `marginGuideColor` prop to customize the guide line color (default: `#c0c0c0`)
+   - Margin guides render as non-interactive overlay (pointerEvents: none)
+
+2. **Updated `src/components/Editor.tsx`:**
+   - Added `showMarginGuides` and `marginGuideColor` props to `EditorProps`
+   - Added margin guides rendering in `renderSinglePage` function for paginated mode
+   - Added margin guides rendering in single-page fallback mode
+   - Updated memoization dependencies to include margin guide props
+
+3. **Updated `src/components/DocxEditor.tsx`:**
+   - Added `showMarginGuides` and `marginGuideColor` props to `DocxEditorProps`
+   - Props are passed through to AIEditor/Editor
+
+4. **Updated `src/components/AIEditor.tsx`:**
+   - Props flow through via `...editorProps` spread
+
+**Features:**
+- Dashed lines showing top, bottom, left, and right margin boundaries
+- Small corner markers where margins intersect for better visibility
+- Customizable guide color via `marginGuideColor` prop
+- Non-interactive overlay (doesn't interfere with editing)
+- Works with both paginated and single-page modes
+- Respects zoom level
+
+**CSS Classes:**
+- `docx-page-margin-guides` - Container for all guides
+- `docx-margin-guide` - Individual guide line
+- `docx-margin-guide-top/bottom/left/right` - Specific guide lines
+- `docx-margin-corner` - Corner markers
+
+**Props Added:**
+- `showMarginGuides?: boolean` - Whether to show margin guides (default: false)
+- `marginGuideColor?: string` - Color for margin guides (default: '#c0c0c0')
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
+
+### US-122: Implement headers rendering
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Implemented header rendering on each page, displaying document headers from the DOCX in the header area at the top of each page.
+
+**Implementation:**
+
+1. **Updated `src/components/Editor.tsx`:**
+   - Added imports for `HeaderFooter`, `HeaderFooterType` types
+   - Added import for `Paragraph` component from `./render/Paragraph`
+   - Added `headersForLayout` memoized map that converts document headers to the format expected by `calculatePages`
+   - Headers are extracted from `doc.package?.headers` (Map<rId, HeaderFooter>) and matched to their types via `sectionProperties.headerReferences`
+   - Passed `headers` option to `calculatePages()` function
+   - Added header rendering in `renderSinglePage` function with proper header area positioning
+
+2. **Header Area Rendering:**
+   - Header area is positioned absolutely at the top of the page
+   - Uses `headerDistance` from section properties (default: 720 twips = 0.5 inch)
+   - Height calculated as: `marginTop - headerDistance`
+   - Left/right margins match the page content margins
+   - Renders paragraph and table content from the header using `Paragraph` and `DocTable` components
+
+3. **Header Type Support:**
+   - Supports different header types: `default`, `first`, `even`
+   - `titlePage` flag in section properties enables first page headers
+   - `evenAndOddHeaders` flag enables different even/odd page headers
+   - Layout engine (`pageLayout.ts`) selects correct header for each page
+
+4. **Integration with Page Layout Engine:**
+   - `calculatePages()` receives headers via `PageLayoutOptions.headers`
+   - Headers are organized as `Map<sectionIndex, Map<HeaderFooterType, HeaderFooter>>`
+   - The `getHeaderForPage()` function in `pageLayout.ts` selects the appropriate header based on:
+     - Page number (for even/odd logic)
+     - First page of section (for title page logic)
+     - Section index
+
+**Code Changes:**
+- `Editor.tsx`: Added type imports, header extraction logic, and header rendering in pages
+- New `headersForLayout` memo for converting document headers to layout engine format
+- `renderSinglePage` now renders header area when `page.header` is present
+
+**Features:**
+- Headers render at the correct position (header distance from top)
+- Headers respect left/right margins
+- Page number and total pages are passed to header content for field rendering
+- Headers work with multi-page documents
+- ARIA labels for accessibility
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
