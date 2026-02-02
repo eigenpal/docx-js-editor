@@ -72,7 +72,7 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
   - Preserve all table formatting
   - **Verify**: Load table doc, edit text, save, reload - table intact
 
-- [ ] **Task 8: Add table CSS styling**
+- [x] **Task 8: Add table CSS styling**
   - Add table styles to `editor.css`
   - Handle borders, cell padding, alignment
   - **Verify**: Tables render with proper borders and spacing

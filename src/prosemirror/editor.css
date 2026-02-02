@@ -147,3 +147,70 @@
   margin: 12pt 0;
   height: 0;
 }
+
+/* ============================================================================
+   TABLE STYLES
+   ============================================================================ */
+
+/* Table container */
+.prosemirror-editor .ProseMirror table.docx-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12pt 0;
+  table-layout: auto;
+}
+
+/* Table cells */
+.prosemirror-editor .ProseMirror td.docx-table-cell,
+.prosemirror-editor .ProseMirror th.docx-table-header {
+  border: 1px solid #d0d0d0;
+  padding: 4px 8px;
+  vertical-align: top;
+  min-width: 20px;
+}
+
+/* Table header cells */
+.prosemirror-editor .ProseMirror th.docx-table-header {
+  font-weight: bold;
+  background-color: #f5f5f5;
+  text-align: left;
+}
+
+/* Cell content - paragraphs inside cells */
+.prosemirror-editor .ProseMirror td p,
+.prosemirror-editor .ProseMirror th p {
+  margin: 0;
+  padding: 0;
+  min-height: auto;
+}
+
+/* First paragraph in cell shouldn't have top margin */
+.prosemirror-editor .ProseMirror td p:first-child,
+.prosemirror-editor .ProseMirror th p:first-child {
+  margin-top: 0;
+}
+
+/* Last paragraph in cell shouldn't have bottom margin */
+.prosemirror-editor .ProseMirror td p:last-child,
+.prosemirror-editor .ProseMirror th p:last-child {
+  margin-bottom: 0;
+}
+
+/* Selected cell highlight */
+.prosemirror-editor .ProseMirror .selectedCell {
+  background-color: rgba(66, 133, 244, 0.15);
+}
+
+/* Table selection */
+.prosemirror-editor .ProseMirror .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(66, 133, 244, 0.1);
+  pointer-events: none;
+}
+
+/* Nested tables */
+.prosemirror-editor .ProseMirror table table {
+  margin: 4px 0;
+}
