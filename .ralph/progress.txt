@@ -350,3 +350,13 @@
 [2026-02-02 14:29] TASK: Verify all toolbar buttons work
 [2026-02-02 14:29] STATUS: done
 [2026-02-02 14:29] NOTES: All formatting commands implemented - bold, italic, underline, strike, superscript, subscript, colors, fonts, alignment, lists
+[2026-02-02 14:30] TASK: Run full E2E test suite
+[2026-02-02 14:30] STATUS: running
+[2026-02-02 14:30] NOTES: Running playwright tests with broader coverage
+[2026-02-02 14:31] STATUS: done
+[2026-02-02 14:31] NOTES: 59/61 tests passed. 2 pre-existing failures (cut/paste, End key)
+[2026-02-02 14:31] TASK: Update CLAUDE.md with new architecture
+[2026-02-02 14:31] STATUS: starting
+[2026-02-02 14:31] NOTES: Documenting ProseMirror integration and feature support
+[2026-02-02 14:31] STATUS: done
+[2026-02-02 14:31] NOTES: Updated CLAUDE.md with ProseMirror architecture section
