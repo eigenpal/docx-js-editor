@@ -5002,3 +5002,47 @@ Added the FontPicker component to the Toolbar for font family selection.
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-111: Add Font Size picker to toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added the FontSizePicker component to the Toolbar for font size selection.
+
+**Implementation:**
+
+1. **Updated `src/components/Toolbar.tsx`:**
+   - Imported `FontSizePicker`, `halfPointsToPoints`, `pointsToHalfPoints` from `./ui/FontSizePicker`
+   - Added `showFontSizePicker` prop (default: true)
+   - Extended `FormattingAction` type to support `{ type: 'fontSize'; value: number }`
+   - Added `handleFontSizeChange` callback
+   - Added FontSizePicker to the Font group after FontPicker
+   - Updated `applyFormattingAction` to handle fontSize action (converts points to half-points for OOXML)
+
+2. **FontSizePicker Integration:**
+   - Displays current font size from selection formatting (converted from half-points to points)
+   - Dropdown with common sizes (8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36, 48, 72)
+   - Text input for custom sizes with validation
+   - Keyboard navigation support (Arrow keys, Enter, Escape)
+   - Width: 70px, placeholder: "Size"
+
+3. **Unit Conversion:**
+   - OOXML uses half-points for font sizes (e.g., 24 half-points = 12 points)
+   - `halfPointsToPoints()` converts document values to display points
+   - `pointsToHalfPoints()` converts user input back to OOXML format
+
+4. **Formatting Flow:**
+   - User selects size from dropdown or types custom size
+   - `handleFontSizeChange(sizeInPoints)` called with points value
+   - Calls `onFormat({ type: 'fontSize', value: sizeInPoints })`
+   - `applyFormattingAction` converts to half-points and sets `newFormatting.fontSize`
+   - Document updated via `executeCommand` with `formatText` command
+
+**Props Added to Toolbar:**
+- `showFontSizePicker?: boolean` - Whether to show font size picker (default: true)
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

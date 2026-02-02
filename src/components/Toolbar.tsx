@@ -13,6 +13,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { TextFormatting } from '../types/document';
 import { FontPicker } from './ui/FontPicker';
+import { FontSizePicker, halfPointsToPoints, pointsToHalfPoints } from './ui/FontSizePicker';
 
 // ============================================================================
 // TYPES
@@ -55,7 +56,8 @@ export type FormattingAction =
   | 'superscript'
   | 'subscript'
   | 'clearFormatting'
-  | { type: 'fontFamily'; value: string };
+  | { type: 'fontFamily'; value: string }
+  | { type: 'fontSize'; value: number };
 
 /**
  * Props for the Toolbar component
@@ -87,6 +89,8 @@ export interface ToolbarProps {
   children?: ReactNode;
   /** Whether to show font family picker (default: true) */
   showFontPicker?: boolean;
+  /** Whether to show font size picker (default: true) */
+  showFontSizePicker?: boolean;
 }
 
 /**
@@ -341,6 +345,7 @@ export function Toolbar({
   editorRef,
   children,
   showFontPicker = true,
+  showFontSizePicker = true,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -381,6 +386,18 @@ export function Toolbar({
     (fontFamily: string) => {
       if (!disabled && onFormat) {
         onFormat({ type: 'fontFamily', value: fontFamily });
+      }
+    },
+    [disabled, onFormat]
+  );
+
+  /**
+   * Handle font size change
+   */
+  const handleFontSizeChange = useCallback(
+    (sizeInPoints: number) => {
+      if (!disabled && onFormat) {
+        onFormat({ type: 'fontSize', value: sizeInPoints });
       }
     },
     [disabled, onFormat]
@@ -470,16 +487,29 @@ export function Toolbar({
         </ToolbarButton>
       </ToolbarGroup>
 
-      {/* Font Family Picker */}
-      {showFontPicker && (
+      {/* Font Family and Size Pickers */}
+      {(showFontPicker || showFontSizePicker) && (
         <ToolbarGroup label="Font">
-          <FontPicker
-            value={currentFormatting.fontFamily}
-            onChange={handleFontFamilyChange}
-            disabled={disabled}
-            width={140}
-            placeholder="Font"
-          />
+          {showFontPicker && (
+            <FontPicker
+              value={currentFormatting.fontFamily}
+              onChange={handleFontFamilyChange}
+              disabled={disabled}
+              width={140}
+              placeholder="Font"
+            />
+          )}
+          {showFontSizePicker && (
+            <FontSizePicker
+              value={currentFormatting.fontSize !== undefined
+                ? halfPointsToPoints(currentFormatting.fontSize)
+                : undefined}
+              onChange={handleFontSizeChange}
+              disabled={disabled}
+              width={70}
+              placeholder="Size"
+            />
+          )}
         </ToolbarGroup>
       )}
 
@@ -597,7 +627,7 @@ export function applyFormattingAction(
 ): TextFormatting {
   const newFormatting = { ...currentFormatting };
 
-  // Handle object-type actions (fontFamily, etc.)
+  // Handle object-type actions (fontFamily, fontSize, etc.)
   if (typeof action === 'object') {
     switch (action.type) {
       case 'fontFamily':
@@ -606,6 +636,10 @@ export function applyFormattingAction(
           ascii: action.value,
           hAnsi: action.value,
         };
+        return newFormatting;
+      case 'fontSize':
+        // Convert points to half-points for OOXML
+        newFormatting.fontSize = pointsToHalfPoints(action.value);
         return newFormatting;
     }
   }
