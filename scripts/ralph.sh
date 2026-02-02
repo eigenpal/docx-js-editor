@@ -16,11 +16,17 @@ for ((i=1; i<=$1; i++)); do
   echo "Ralph Iteration $i of $1"
   echo "=========================================="
 
-  # Find the highest numbered plan file in .ralph/
-  CURRENT_PLAN=$(ls -1 "$RALPH_DIR"/*.md 2>/dev/null | sort -V | tail -1)
+  # Read current plan from CURRENT file (simpler than sorting)
+  if [ -f "$RALPH_DIR/CURRENT" ]; then
+    PLAN_FILE=$(cat "$RALPH_DIR/CURRENT" | tr -d '\n')
+    CURRENT_PLAN="$RALPH_DIR/$PLAN_FILE"
+  else
+    # Fallback: find highest numbered non-archived plan
+    CURRENT_PLAN=$(ls -1 "$RALPH_DIR"/*.md 2>/dev/null | grep -v ARCHIVED | sort -V | tail -1)
+  fi
 
-  if [ -z "$CURRENT_PLAN" ]; then
-    echo "No plan files found in $RALPH_DIR/"
+  if [ -z "$CURRENT_PLAN" ] || [ ! -f "$CURRENT_PLAN" ]; then
+    echo "No plan file found!"
     exit 1
   fi
 
