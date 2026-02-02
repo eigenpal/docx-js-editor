@@ -7727,3 +7727,24 @@ Fixed the aria-label selectors in `e2e/helpers/editor-page.ts` for the indent/ou
 - bun build exits 0: ✓
 
 ---
+
+### Test Infrastructure: Verify strikethrough button selector
+
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Verified that the strikethrough button selector is correctly configured and tests pass.
+
+**Analysis:**
+
+- Toolbar.tsx: Button uses `ariaLabel="Strikethrough"` and `title="Strikethrough"`
+- ToolbarButton component generates `data-testid="toolbar-strikethrough"` from ariaLabel
+- Test helper uses `[data-testid="toolbar-strikethrough"]` which matches
+
+**Verified:**
+
+- bun run typecheck: ✓
+- bun build exits 0: ✓
+- `npx playwright test --grep "strikethrough"` - 2 tests pass ✓
+
+---
