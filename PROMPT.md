@@ -54,7 +54,7 @@ A full-featured DOCX editor matching Microsoft Word fidelity:
 ## Your Task
 
 1. Read activity.md for progress and discoveries
-2. Find FIRST `passes: false` in plan.md (91 tasks total)
+2. Find FIRST unchecked task (`- [ ]`) in the current plan file (in `.ralph/`)
 3. Work on ONE task only
 4. **Explore DOCX structure** when implementing parsers - document findings in activity.md
 5. Verify build:
@@ -73,7 +73,7 @@ A full-featured DOCX editor matching Microsoft Word fidelity:
    - If tests fail, fix the issues before proceeding
 
 7. If build AND tests pass:
-   - Update `passes: false` → `passes: true`
+   - Mark task done: `- [ ]` → `- [x]`
    - Add progress entry to activity.md (include screenshot results if relevant)
    - Document any OOXML discoveries
    - **ALWAYS COMMIT after each task:**
@@ -180,9 +180,15 @@ Description of what you found and how you handled it.
 
 - ONE task per iteration
 - Document discoveries in activity.md
-- Add new tasks to plan if needed (discovery-driven)
+- Add new tasks to current plan file if needed (discovery-driven)
 - Build MUST exit 0
 - **COMMIT after EVERY completed task** - never skip this step
 
-When ALL 91 tasks have `passes: true`:
-<promise>COMPLETE</promise>
+When ALL tasks in the current plan are checked (`- [x]`), output:
+```
+RALPH_STATUS: {
+  "status": "complete",
+  "current_task": "none",
+  "exit_signal": true
+}
+```
