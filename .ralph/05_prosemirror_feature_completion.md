@@ -37,7 +37,7 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
   - Merge paragraph and run properties
   - **Verify**: Unit test that resolves Heading1 → Normal chain
 
-- [ ] **Task 2: Apply styles when rendering paragraphs**
+- [x] **Task 2: Apply styles when rendering paragraphs**
   - Update `paragraphAttrsToDOMStyle` in `nodes.ts` to accept resolved styles
   - Pass document styles to ProseMirror schema or use CSS classes
   - When `styleId` is set, apply the style's formatting

@@ -111,7 +111,10 @@ export interface ProseMirrorEditorRef {
  * Create initial editor state from document
  */
 function createEditorState(document: Document | null, _readOnly: boolean): EditorState {
-  const doc = document ? toProseDoc(document) : createEmptyDoc();
+  // Pass styles to toProseDoc for style resolution
+  const doc = document
+    ? toProseDoc(document, { styles: document.package.styles })
+    : createEmptyDoc();
 
   const plugins = [
     history(),
@@ -340,7 +343,7 @@ export const ProseMirrorEditor = memo(
       if (documentRef.current === document) return;
 
       documentRef.current = document;
-      const newDoc = toProseDoc(document);
+      const newDoc = toProseDoc(document, { styles: document.package.styles });
 
       // Only update if doc is actually different
       if (!view.state.doc.eq(newDoc)) {

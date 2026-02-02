@@ -23,6 +23,11 @@ export type {
 
 // Conversion
 export { toProseDoc, createEmptyDoc, fromProseDoc, updateDocumentContent } from './conversion';
+export type { ToProseDocOptions } from './conversion';
+
+// Styles
+export { StyleResolver, createStyleResolver } from './styles';
+export type { ResolvedParagraphStyle } from './styles';
 
 // Editor component
 export { ProseMirrorEditor } from './ProseMirrorEditor';

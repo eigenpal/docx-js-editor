@@ -5,4 +5,5 @@
  */
 
 export { toProseDoc, createEmptyDoc } from './toProseDoc';
+export type { ToProseDocOptions } from './toProseDoc';
 export { fromProseDoc, updateDocumentContent } from './fromProseDoc';
