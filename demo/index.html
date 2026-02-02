@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>docx-js-editor</title>
+
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Load Material Symbols font early with display=block to prevent FOUT -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
+
   <style>
     * {
       margin: 0;
@@ -26,7 +34,48 @@
       min-height: 100vh;
       color: #666;
     }
+
+    /* Hide Material Symbols text until font loads */
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+      /* Hide text until font loads */
+      visibility: hidden;
+    }
+
+    /* Show icons once font is loaded */
+    .fonts-loaded .material-symbols-outlined {
+      visibility: visible;
+    }
   </style>
+
+  <script>
+    // Detect when Material Symbols font is loaded
+    if (document.fonts) {
+      document.fonts.ready.then(function() {
+        document.documentElement.classList.add('fonts-loaded');
+      });
+      // Also check specifically for Material Symbols
+      document.fonts.load('24px "Material Symbols Outlined"').then(function() {
+        document.documentElement.classList.add('fonts-loaded');
+      });
+    } else {
+      // Fallback: add class after a short delay
+      setTimeout(function() {
+        document.documentElement.classList.add('fonts-loaded');
+      }, 500);
+    }
+  </script>
 </head>
 <body>
   <div id="app">

@@ -3,59 +3,11 @@
  *
  * Uses Google's Material Symbols (variable font icons)
  * https://fonts.google.com/icons
+ *
+ * Note: The font is loaded in demo/index.html for better performance.
  */
 
 import type { CSSProperties } from 'react';
-
-// Load Material Symbols font
-let fontLoaded = false;
-function loadMaterialSymbolsFont() {
-  if (fontLoaded || typeof document === 'undefined') return;
-  fontLoaded = true;
-
-  // Add preconnect links
-  const preconnect1 = document.createElement('link');
-  preconnect1.rel = 'preconnect';
-  preconnect1.href = 'https://fonts.googleapis.com';
-  document.head.appendChild(preconnect1);
-
-  const preconnect2 = document.createElement('link');
-  preconnect2.rel = 'preconnect';
-  preconnect2.href = 'https://fonts.gstatic.com';
-  preconnect2.crossOrigin = 'anonymous';
-  document.head.appendChild(preconnect2);
-
-  // Add font stylesheet
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href =
-    'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap';
-  document.head.appendChild(link);
-
-  // Add base styles
-  const style = document.createElement('style');
-  style.textContent = `
-    .material-symbols-outlined {
-      font-family: 'Material Symbols Outlined';
-      font-weight: normal;
-      font-style: normal;
-      font-size: 24px;
-      line-height: 1;
-      letter-spacing: normal;
-      text-transform: none;
-      display: inline-block;
-      white-space: nowrap;
-      word-wrap: normal;
-      direction: ltr;
-      -webkit-font-feature-settings: 'liga';
-      -webkit-font-smoothing: antialiased;
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-// Load font on module initialization
-loadMaterialSymbolsFont();
 
 export interface MaterialSymbolProps {
   /** Icon name from Material Symbols */
@@ -95,6 +47,8 @@ export function MaterialSymbol({
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
+    width: `${size}px`,
+    height: `${size}px`,
     ...style,
   };
 
