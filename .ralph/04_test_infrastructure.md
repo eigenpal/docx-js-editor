@@ -102,7 +102,7 @@ if (!selection || selection.isCollapsed) return null; // ← Fails on cursor-onl
 
 - [x] **Fix bullet list with cursor only** - Bullet list with cursor-only (no selection) works. Test passes. Verify: `npx playwright test --grep "bullet list applies with cursor only" --timeout=30000`
 
-- [ ] **Fix indent with cursor only** - After getSelectionRange fix, indent should work. Verify: `npx playwright test --grep "indent paragraph with cursor only" --timeout=30000`
+- [x] **Fix indent with cursor only** - Indent with cursor-only (no selection) works. Test passes. Verify: `npx playwright test --grep "indent paragraph with cursor only" --timeout=30000`
 
 - [ ] **Fix multi-paragraph formatting** - Update `handleFormat()` to loop from `range.start.paragraphIndex` to `range.end.paragraphIndex` instead of only applying to start. Verify: `npx playwright test --grep "align multiple paragraphs" --timeout=30000`
 
