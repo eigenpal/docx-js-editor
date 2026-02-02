@@ -239,6 +239,18 @@ export {
   getImageDimensions,
   formatFileSize,
 } from './components/dialogs/InsertImageDialog';
+export {
+  InsertSymbolDialog,
+  type InsertSymbolDialogProps,
+  type SymbolCategory,
+  useInsertSymbolDialog,
+  getSymbolCategories,
+  getSymbolsByCategory,
+  getSymbolInfo as getSymbolUnicodeInfo,
+  searchSymbols,
+  symbolFromCodePoint,
+  SYMBOL_CATEGORIES,
+} from './components/dialogs/InsertSymbolDialog';
 
 // ============================================================================
 // TYPES

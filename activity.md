@@ -6411,3 +6411,57 @@ Already implemented as part of US-143 in `src/utils/insertOperations.ts`.
 - bun build exits 0: ✓
 
 ---
+
+### US-145: Add Insert Special Characters
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/dialogs/InsertSymbolDialog.tsx` for inserting special characters and symbols.
+
+**Main Component:**
+- `InsertSymbolDialog` - Modal dialog for symbol selection and insertion
+
+**Features:**
+- 9 categorized symbol groups: Common, Arrows, Math, Greek, Shapes, Punctuation, Currency, Music, Emoji
+- Search by character or Unicode code point (e.g., "U+00A9")
+- Recent symbols tracking
+- Symbol preview with Unicode info (code point, decimal)
+- Double-click to insert immediately
+- Single-click to select, then Insert button
+
+**Types:**
+- `SymbolCategory` - Category with name, label, and symbols array
+- `InsertSymbolDialogProps` - Component props
+
+**Constants:**
+- `SYMBOL_CATEGORIES` - All 9 symbol categories with symbols
+
+**Hook:**
+- `useInsertSymbolDialog(maxRecent?)` - State management with recent symbols tracking
+  - `isOpen`, `recentSymbols`, `open`, `close`, `toggle`, `addRecent`
+
+**Utility Functions:**
+- `getSymbolCategories()` - Get all categories
+- `getSymbolsByCategory(name)` - Get symbols for category
+- `getSymbolInfo(symbol)` - Get Unicode info (codePoint, decimal, hex)
+- `searchSymbols(query)` - Search symbols by character or Unicode
+- `symbolFromCodePoint(str)` - Convert code point string to symbol
+
+**Symbol Categories:**
+- Common: ©, ®, ™, •, …, €, £, etc.
+- Arrows: ←, →, ↑, ↓, ⇒, etc.
+- Math: +, −, ×, ÷, ∑, ∏, ∫, etc.
+- Greek: α, β, γ, δ, π, etc.
+- Shapes: ■, □, ●, ○, ▲, etc.
+- Punctuation: –, —, ', ', ", ", etc.
+- Currency: $, €, £, ¥, etc.
+- Music: ♩, ♪, ♫, ♬, etc.
+- Emoji: 😀, ❤, 👍, etc.
+
+**Exports Added to `src/index.ts`:**
+- Component, props, types, hook, constants, and all utility functions
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

@@ -61,7 +61,7 @@
 - [x] US-142: Add Insert Hyperlink dialog - P2 - Insert/edit hyperlinks
 - [x] US-143: Add Insert Page Break - P2 - Insert page break at cursor
 - [x] US-144: Add Insert Horizontal Rule - P3 - Insert horizontal line
-- [ ] US-145: Add Insert Special Characters - P3 - Symbol picker dialog
+- [x] US-145: Add Insert Special Characters - P3 - Symbol picker dialog
 
 ## Category 6: Selection & Navigation
 
