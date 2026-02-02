@@ -20,6 +20,7 @@ import type {
   ParagraphFormatting,
   TextContent,
   BreakContent,
+  TabContent,
   DrawingContent,
   Image,
   Hyperlink,
@@ -118,7 +119,8 @@ function paragraphAttrsToFormatting(attrs: ParagraphAttrs): ParagraphFormatting 
     attrs.numPr ||
     attrs.styleId ||
     attrs.borders ||
-    attrs.shading;
+    attrs.shading ||
+    attrs.tabs;
 
   if (!hasFormatting) {
     return undefined;
@@ -138,6 +140,7 @@ function paragraphAttrsToFormatting(attrs: ParagraphAttrs): ParagraphFormatting 
     styleId: attrs.styleId || undefined,
     borders: attrs.borders || undefined,
     shading: attrs.shading || undefined,
+    tabs: attrs.tabs || undefined,
   };
 }
 
@@ -221,6 +224,14 @@ function extractParagraphContent(paragraph: PMNode): ParagraphContent[] {
         currentMarksKey = null;
       }
       content.push(createImageRun(node));
+    } else if (node.type.name === 'tab') {
+      // Tab ends current run
+      if (currentRun) {
+        content.push(currentRun);
+        currentRun = null;
+        currentMarksKey = null;
+      }
+      content.push(createTabRun());
     }
   });
 
@@ -320,6 +331,20 @@ function createBreakRun(): Run {
   return {
     type: 'run',
     content: [breakContent],
+  };
+}
+
+/**
+ * Create a Run containing a tab
+ */
+function createTabRun(): Run {
+  const tabContent: TabContent = {
+    type: 'tab',
+  };
+
+  return {
+    type: 'run',
+    content: [tabContent],
   };
 }
 
