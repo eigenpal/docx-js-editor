@@ -84,7 +84,7 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
 
 ### Phase 5.3: Tab Layout
 
-- [ ] **Task 10: Create tab calculation utility**
+- [x] **Task 10: Create tab calculation utility**
   - Create `src/prosemirror/utils/tabCalculator.ts`
   - Port logic from SuperDoc's `tabs.ts` (clean room)
   - Compute tab width based on position and tab stops

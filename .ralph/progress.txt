@@ -314,3 +314,13 @@
 [2026-02-02 14:23] STATUS: editing
 [2026-02-02 14:24] STATUS: done
 [2026-02-02 14:24] NOTES: Added goToNextCell and goToPrevCell commands for table navigation with Tab/Shift-Tab
+[2026-02-02 14:24] TASK: Create tab calculation utility
+[2026-02-02 14:24] STATUS: starting
+[2026-02-02 14:24] NOTES: Need to create src/prosemirror/utils/tabCalculator.ts
+[2026-02-02 14:24] STATUS: researching-superdoc
+[2026-02-02 14:24] NOTES: Searching for tab calculation logic in SuperDoc
+[2026-02-02 14:25] NOTES: SuperDoc uses 720 twips (0.5 inch) default tab interval
+[2026-02-02 14:25] NOTES: Tab stops can be: start, end, center, decimal, bar
+[2026-02-02 14:25] STATUS: editing
+[2026-02-02 14:26] STATUS: done
+[2026-02-02 14:26] NOTES: Created tabCalculator.ts with 24 passing unit tests
