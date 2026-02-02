@@ -98,3 +98,62 @@ Example of the bug:
 **Verification:**
 - `npx playwright test --grep "apply italic via toolbar" --timeout=30000` - 2 tests passed
 - `npx playwright test --grep "bold + italic" --timeout=30000` - 4 tests passed (combined formatting now works)
+
+---
+
+## 2026-02-02: Fix Enter key to create new paragraphs
+
+**Problem:** Pressing Enter after typing text in a paragraph did NOT create a new paragraph. Instead, subsequent text was lost or appended incorrectly. The debug test showed:
+- "Paragraph 1" typed correctly
+- Enter key pressed
+- "Paragraph 2" expected but only "Paph 2" appeared (characters lost)
+
+**Root Cause:** The issue was a multi-layered problem involving React component remounts:
+
+1. **Component remount on every state change**: When text is typed in the new paragraph (after Enter), the `EditableRun` component is completely unmounted and remounted by React due to key changes in the component tree (pagination recalculates, keys change).
+
+2. **Cursor position ref lost**: The `EditableRun` component uses `cursorPositionRef` to track cursor position, but when the component unmounts, this ref is destroyed. The new component instance has a fresh ref with `null` value.
+
+3. **Focus jumps to BODY**: After the component remounts, focus is lost to `document.body`, so subsequent keystrokes don't reach the correct element.
+
+**Debug Evidence:**
+```
+EditableRun instance 25 mounted, paragraphIndex=1, runIndex=0
+Typing: W
+EditableRun instance 25 unmounted, paragraphIndex=1, runIndex=0  // ← REMOUNT!
+EditableRun instance 34 mounted, paragraphIndex=1, runIndex=0
+```
+
+**Solution:** Moved cursor tracking to the Editor level (parent component that survives remounts):
+
+1. **Added `pendingFocusRef`** in `Editor.tsx` - Tracks explicit focus requests (like after Enter key splits a paragraph). Set before `updateDocument()`, consumed after React re-renders.
+
+2. **Added `activeCursorRef`** in `Editor.tsx` - Tracks cursor position during active editing. Updated in `handleParagraphChange()` before state update.
+
+3. **Added `useLayoutEffect`** in `Editor.tsx` - Runs after every render to check:
+   - If `pendingFocusRef` is set, focus the specified paragraph
+   - If `activeCursorRef` is set (within 100ms), restore cursor if focus was lost to body
+
+4. **Added `restoreCursorPosition()` helper** - Uses TreeWalker to find the correct text node and set cursor at the specified offset.
+
+5. **Added 50ms delay** in `pressEnter()` test helper - Ensures focus restoration completes before next keystroke.
+
+6. **Fixed `assertDocumentContainsText()`** - Changed from checking `.first()` contenteditable to checking ALL contenteditable elements with `allTextContents()`.
+
+**Files Modified:**
+- `src/components/Editor.tsx` - Added pendingFocusRef, activeCursorRef, useLayoutEffect for focus restoration, restoreCursorPosition helper
+- `src/components/edit/EditableParagraph.tsx` - Removed debug logging
+- `src/components/edit/EditableRun.tsx` - Removed debug logging
+- `e2e/helpers/editor-page.ts` - Added 50ms delay to pressEnter()
+- `e2e/helpers/assertions.ts` - Fixed assertDocumentContainsText to check all elements
+
+**Key Insight:** When React remounts components (due to key changes, tree restructuring, or pagination recalculation), any component-level refs are destroyed. For critical state like cursor position during active editing, the state must be stored at a level that survives remounts - typically the parent component or a context.
+
+**Verification:**
+- `npx playwright test --grep "Enter" --timeout=30000` - All 6 Enter key tests pass:
+  - Enter creates new paragraph ✓
+  - Multiple Enter presses create multiple paragraphs ✓
+  - Enter at start of paragraph ✓
+  - Enter at end of paragraph ✓
+  - Enter in middle of text ✓
+  - Shift+Enter creates soft break ✓

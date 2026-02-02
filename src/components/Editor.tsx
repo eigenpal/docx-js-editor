@@ -9,7 +9,7 @@
  * - Keyboard navigation between paragraphs
  */
 
-import React, { useRef, useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useCallback, useState, useEffect, useMemo, useLayoutEffect } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type {
   Document,
@@ -240,6 +240,54 @@ function countParagraphs(body: DocumentBody): number {
 }
 
 /**
+ * Restore cursor position within a paragraph element at a specific offset
+ */
+function restoreCursorPosition(paragraphElement: HTMLElement, offset: number): void {
+  const editableElement = paragraphElement.querySelector('[contenteditable="true"]');
+  if (!editableElement) return;
+
+  // Focus the element first
+  (editableElement as HTMLElement).focus();
+
+  const selection = window.getSelection();
+  if (!selection) return;
+
+  // Walk through text nodes to find the right position
+  const walker = document.createTreeWalker(editableElement, NodeFilter.SHOW_TEXT, null);
+
+  let currentOffset = 0;
+  let node = walker.nextNode();
+
+  while (node) {
+    const nodeLength = node.textContent?.length || 0;
+
+    if (currentOffset + nodeLength >= offset) {
+      // Found the right text node
+      const range = document.createRange();
+      const offsetInNode = Math.min(offset - currentOffset, nodeLength);
+      range.setStart(node, offsetInNode);
+      range.collapse(true);
+
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return;
+    }
+
+    currentOffset += nodeLength;
+    node = walker.nextNode();
+  }
+
+  // If we couldn't find the exact position, put cursor at end
+  if (editableElement.lastChild) {
+    const range = document.createRange();
+    range.selectNodeContents(editableElement);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+}
+
+/**
  * Default styles for editor container
  */
 const EDITOR_CONTAINER_STYLE: CSSProperties = {
@@ -337,10 +385,76 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
   const [focusedParagraphIndex, setFocusedParagraphIndex] = useState<number | null>(null);
   const [cursorPosition, setCursorPosition] = useState<CursorPosition | null>(null);
 
+  // Track pending focus restoration across React re-renders
+  // This is needed because component remounts lose internal cursor state
+  const pendingFocusRef = useRef<{
+    paragraphIndex: number;
+    position: 'start' | 'end' | number;
+  } | null>(null);
+
+  // Track cursor position during active editing to restore after re-renders
+  const activeCursorRef = useRef<{
+    paragraphIndex: number;
+    cursorOffset: number;
+    timestamp: number;
+  } | null>(null);
+
   // Sync with external document changes
   useEffect(() => {
     setDoc(initialDocument);
   }, [initialDocument]);
+
+  // Restore focus after React re-renders (handles component remounts)
+  useLayoutEffect(() => {
+    // Handle explicit pending focus (e.g., after Enter key split)
+    if (pendingFocusRef.current) {
+      const { paragraphIndex, position } = pendingFocusRef.current;
+      pendingFocusRef.current = null; // Clear before restoring to avoid loops
+
+      // Use requestAnimationFrame to ensure DOM is fully updated
+      requestAnimationFrame(() => {
+        const paraElement = paragraphRefs.current.get(paragraphIndex);
+        if (paraElement) {
+          if (position === 'start') {
+            focusParagraphStart(paraElement);
+          } else if (position === 'end') {
+            focusParagraphEnd(paraElement);
+          } else if (typeof position === 'number') {
+            // Numeric position - restore cursor at specific offset
+            restoreCursorPosition(paraElement, position);
+          }
+        }
+      });
+      return;
+    }
+
+    // Handle active cursor restoration (during continuous typing)
+    // Only restore if focus was recently lost (within 100ms)
+    if (activeCursorRef.current) {
+      const { paragraphIndex, cursorOffset, timestamp } = activeCursorRef.current;
+      const elapsed = Date.now() - timestamp;
+
+      // Only restore if it was very recent (likely a re-render, not intentional blur)
+      if (elapsed < 100) {
+        // Check if we've lost focus to body (sign of component remount)
+        if (
+          document.activeElement === document.body ||
+          !containerRef.current?.contains(document.activeElement)
+        ) {
+          requestAnimationFrame(() => {
+            const paraElement = paragraphRefs.current.get(paragraphIndex);
+            if (paraElement) {
+              restoreCursorPosition(paraElement, cursorOffset);
+            }
+            activeCursorRef.current = null;
+          });
+        }
+      } else {
+        // Clear stale cursor info
+        activeCursorRef.current = null;
+      }
+    }
+  });
 
   // Get theme and section properties
   const theme = doc.package?.theme || null;
@@ -602,6 +716,30 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     (newParagraph: ParagraphType, paragraphIndex: number) => {
       if (!doc.package?.document) return;
 
+      // Capture cursor position before state update for restoration after re-render
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const paraElement = paragraphRefs.current.get(paragraphIndex);
+        if (paraElement && paraElement.contains(range.startContainer)) {
+          // Calculate cursor offset within the paragraph
+          let offset = 0;
+          const walker = document.createTreeWalker(paraElement, NodeFilter.SHOW_TEXT, null);
+          let node = walker.nextNode();
+          while (node && node !== range.startContainer) {
+            offset += node.textContent?.length || 0;
+            node = walker.nextNode();
+          }
+          offset += range.startOffset;
+
+          activeCursorRef.current = {
+            paragraphIndex,
+            cursorOffset: offset,
+            timestamp: Date.now(),
+          };
+        }
+      }
+
       const newBody = updateParagraphInBody(doc.package.document, paragraphIndex, newParagraph);
       const newDoc: Document = {
         ...doc,
@@ -637,15 +775,14 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         },
       };
 
-      updateDocument(newDoc);
+      // Set pending focus BEFORE updating document state
+      // This ensures focus restoration survives React re-renders and component remounts
+      pendingFocusRef.current = {
+        paragraphIndex: paragraphIndex + 1,
+        position: 'start',
+      };
 
-      // Focus the new paragraph after render
-      setTimeout(() => {
-        const newParaElement = paragraphRefs.current.get(paragraphIndex + 1);
-        if (newParaElement) {
-          focusParagraphStart(newParaElement);
-        }
-      }, 0);
+      updateDocument(newDoc);
     },
     [doc, updateDocument]
   );

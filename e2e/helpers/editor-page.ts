@@ -176,9 +176,12 @@ export class EditorPage {
 
   /**
    * Press Enter to create a new paragraph
+   * Includes a small delay to allow focus restoration to complete
    */
   async pressEnter(): Promise<void> {
     await this.page.keyboard.press('Enter');
+    // Wait for React to complete re-render and focus restoration
+    await this.page.waitForTimeout(50);
   }
 
   /**

@@ -348,26 +348,32 @@ export async function assertParagraphExactText(
 }
 
 /**
- * Assert document contains specific text
+ * Assert document contains specific text (checks all contenteditable elements)
  */
 export async function assertDocumentContainsText(page: Page, expectedText: string): Promise<void> {
-  const content = page.locator('[contenteditable="true"]').first();
-  await expect(content, `Expected document to contain "${expectedText}"`).toContainText(
-    expectedText
-  );
+  // Check across all contenteditable elements in the document
+  const allText = await page.locator('[contenteditable="true"]').allTextContents();
+  const fullText = allText.join(' ');
+  expect(
+    fullText.includes(expectedText),
+    `Expected document to contain "${expectedText}" but found: "${fullText}"`
+  ).toBe(true);
 }
 
 /**
- * Assert document does not contain specific text
+ * Assert document does not contain specific text (checks all contenteditable elements)
  */
 export async function assertDocumentNotContainsText(
   page: Page,
   expectedText: string
 ): Promise<void> {
-  const content = page.locator('[contenteditable="true"]').first();
-  await expect(content, `Expected document to NOT contain "${expectedText}"`).not.toContainText(
-    expectedText
-  );
+  // Check across all contenteditable elements in the document
+  const allText = await page.locator('[contenteditable="true"]').allTextContents();
+  const fullText = allText.join(' ');
+  expect(
+    !fullText.includes(expectedText),
+    `Expected document to NOT contain "${expectedText}" but found: "${fullText}"`
+  ).toBe(true);
 }
 
 /**
