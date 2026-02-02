@@ -27,3 +27,11 @@
 [2026-02-02 09:12] STATUS: investigating
 [2026-02-02 09:12] STATUS: done
 [2026-02-02 09:12] NOTES: Test 'indent paragraph with cursor only (no selection)' passes.
+[2026-02-02 09:13] TASK: Fix multi-paragraph formatting
+[2026-02-02 09:13] STATUS: investigating
+[2026-02-02 09:14] STATUS: implementing
+[2026-02-02 09:14] NOTES: Found the issue - handleFormat only applies to range.start.paragraphIndex, needs to loop to end.paragraphIndex for paragraph-level ops
+[2026-02-02 09:30] STATUS: implementing
+[2026-02-02 09:30] NOTES: Found root cause - Ctrl+A doesn't work across multiple contentEditable elements. Added handleSelectAll in Editor.tsx and handleKeyDown handler. Also added mouseDown preventDefault to AlignmentButtons and ListButtons to preserve selection.
+[2026-02-02 09:45] STATUS: done
+[2026-02-02 09:45] NOTES: Fixed multi-paragraph alignment - 13/15 tests pass. Two remaining failures are separate issues (Ctrl+E keyboard shortcut and outdent button disabled for non-list paragraphs)

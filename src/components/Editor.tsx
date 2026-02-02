@@ -954,6 +954,61 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
   }, [paragraphCount]);
 
   /**
+   * Handle Ctrl+A - select all content in the editor
+   * Native Ctrl+A doesn't work across multiple contentEditable elements,
+   * so we need to manually create a selection spanning from the first
+   * paragraph to the last paragraph.
+   */
+  const handleSelectAll = useCallback(() => {
+    const container = containerRef.current;
+    if (!container || paragraphCount === 0) return;
+
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    // Find the first and last paragraph elements
+    const firstPara = paragraphRefs.current.get(0);
+    const lastPara = paragraphRefs.current.get(paragraphCount - 1);
+
+    if (!firstPara || !lastPara) {
+      // Fallback to selecting container contents
+      const range = document.createRange();
+      range.selectNodeContents(container);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return;
+    }
+
+    // Create a range from the start of the first paragraph to the end of the last
+    const range = document.createRange();
+
+    // Set the start to the beginning of the first paragraph's content
+    range.setStart(firstPara, 0);
+
+    // Set the end to the end of the last paragraph's content
+    range.setEnd(lastPara, lastPara.childNodes.length);
+
+    // Apply the selection
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }, [paragraphCount]);
+
+  /**
+   * Handle keydown events at the container level
+   * This captures keyboard shortcuts that need to work across multiple paragraphs
+   */
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      // Ctrl+A or Cmd+A - Select All
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+        event.preventDefault();
+        handleSelectAll();
+      }
+    },
+    [handleSelectAll]
+  );
+
+  /**
    * Handle double-click to select word
    * Uses native browser selection APIs for reliable word selection
    */
@@ -1678,6 +1733,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       style={{ ...EDITOR_CONTAINER_STYLE, ...style }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onKeyDown={handleKeyDown}
       {...{ [SELECTION_DATA_ATTRIBUTES.EDITOR_ROOT]: 'true' }}
     >
       <div

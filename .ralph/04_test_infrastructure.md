@@ -104,7 +104,7 @@ if (!selection || selection.isCollapsed) return null; // ← Fails on cursor-onl
 
 - [x] **Fix indent with cursor only** - Indent with cursor-only (no selection) works. Test passes. Verify: `npx playwright test --grep "indent paragraph with cursor only" --timeout=30000`
 
-- [ ] **Fix multi-paragraph formatting** - Update `handleFormat()` to loop from `range.start.paragraphIndex` to `range.end.paragraphIndex` instead of only applying to start. Verify: `npx playwright test --grep "align multiple paragraphs" --timeout=30000`
+- [x] **Fix multi-paragraph formatting** - Fixed multiple issues: (1) Added Ctrl+A handler in Editor.tsx to properly select across multiple contentEditable paragraphs, (2) Added mouseDown preventDefault to AlignmentButtons and ListButtons to preserve selection, (3) Alignment and bullet list loops in DocxEditor.tsx already existed but weren't being triggered due to selection issues. 13/15 cursor-paragraph-ops tests pass. Verify: `npx playwright test --grep "align multiple paragraphs" --timeout=30000`
 
 ---
 

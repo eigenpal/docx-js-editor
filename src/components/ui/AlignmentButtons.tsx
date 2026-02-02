@@ -184,6 +184,11 @@ export function AlignmentButton({
     ...style,
   };
 
+  // Prevent mousedown from stealing focus/selection from the editor
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+  };
+
   return (
     <button
       type="button"
@@ -191,6 +196,7 @@ export function AlignmentButton({
         disabled ? 'docx-alignment-button-disabled' : ''
       } ${className || ''}`}
       style={buttonStyle}
+      onMouseDown={handleMouseDown}
       onClick={disabled ? undefined : onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
