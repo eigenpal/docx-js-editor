@@ -98,7 +98,7 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
 
 ### Phase 5.4: Full Toolbar Integration
 
-- [ ] **Task 12: Connect superscript/subscript**
+- [x] **Task 12: Connect superscript/subscript**
   - Verify toggleSuperscript/toggleSubscript work
   - **Verify**: Apply superscript, text renders raised
 

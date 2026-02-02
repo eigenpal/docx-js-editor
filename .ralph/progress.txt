@@ -331,3 +331,8 @@
 [2026-02-02 14:27] NOTES: Enhancing tab CSS - full dynamic positioning would need NodeView
 [2026-02-02 14:27] STATUS: done
 [2026-02-02 14:27] NOTES: Enhanced tab CSS styling. Full dynamic width requires NodeView (deferred)
+[2026-02-02 14:28] TASK: Connect superscript/subscript
+[2026-02-02 14:28] STATUS: starting
+[2026-02-02 14:28] NOTES: Verifying toggleSuperscript/toggleSubscript commands work
+[2026-02-02 14:28] STATUS: done
+[2026-02-02 14:28] NOTES: Added superscript/subscript handling to DocxEditor.tsx handleFormat

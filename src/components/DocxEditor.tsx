@@ -63,6 +63,8 @@ import {
   toggleItalic,
   toggleUnderline,
   toggleStrike,
+  toggleSuperscript,
+  toggleSubscript,
   setTextColor,
   setHighlight,
   setFontSize,
@@ -454,6 +456,14 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     }
     if (action === 'strikethrough') {
       toggleStrike(view.state, view.dispatch);
+      return;
+    }
+    if (action === 'superscript') {
+      toggleSuperscript(view.state, view.dispatch);
+      return;
+    }
+    if (action === 'subscript') {
+      toggleSubscript(view.state, view.dispatch);
       return;
     }
     if (action === 'bulletList') {
