@@ -21,17 +21,19 @@ We are building a **complete WYSIWYG DOCX editor** with an exploratory approach.
 ```
 
 **How to use it:**
+
 1. `ls ~/wysiwyg-editor/packages` - see package structure
 2. `cat ~/wysiwyg-editor/packages/super-editor/src/...` - read implementation
 3. Look for: parsers, converters, renderers, layout logic
 
-**Learn from WYSIWYG Editor, but write your own code.** Understand their approach, then implement it yourself.
+**CRITICAL: Learn from WYSIWYG Editor, but write your own code.** Understand their approach, then implement it yourself. **NEVER copy-paste code verbatim** - this is for legal protection. Read, understand, close the file, then write your own implementation from memory.
 
 ## What We're Building
 
 A full-featured DOCX editor matching Microsoft Word fidelity:
 
 **Document Elements:**
+
 - All text formatting (bold, italic, underline, strike, super/subscript, caps, highlight, colors)
 - All paragraph formatting (alignment, spacing, indent, borders, shading, tabs)
 - Tables, images, shapes, text boxes
@@ -40,6 +42,7 @@ A full-featured DOCX editor matching Microsoft Word fidelity:
 - Page layout with margins and columns
 
 **Editor UI:**
+
 - Formatting toolbar with all controls
 - Font/size/color/style pickers
 - Find/replace, zoom
@@ -47,6 +50,7 @@ A full-featured DOCX editor matching Microsoft Word fidelity:
 - Copy/paste, undo/redo
 
 **Agent/AI:**
+
 - DocumentAgent API for programmatic editing
 - Right-click context menu with AI actions
 - Template variable substitution
@@ -58,15 +62,18 @@ A full-featured DOCX editor matching Microsoft Word fidelity:
 3. Work on ONE task only
 4. **Explore DOCX structure** when implementing parsers - document findings in activity.md
 5. Verify build:
+
    ```
    bun install && bun build ./src/main.tsx --outdir ./dist --loader:.css=css
    ```
 
 6. **Run Playwright visual tests** (for UI-related tasks):
+
    ```bash
    # Take screenshots and verify no JS errors
    bun run test:visual
    ```
+
    - Screenshots saved to `screenshots/` folder
    - Check for JavaScript errors
    - Verify components render correctly
@@ -95,12 +102,14 @@ bun run test:e2e
 ```
 
 **What Playwright checks:**
+
 - Page loads without JavaScript errors
 - Components render correctly
 - Screenshots captured for visual verification
 - Saves to `screenshots/` folder
 
 **When to run Playwright:**
+
 - After implementing any rendering component (US-32 to US-49)
 - After implementing editor features (US-55 to US-73)
 - After UI changes
@@ -111,6 +120,7 @@ bun run test:e2e
 If unsure how to implement a feature:
 
 1. **Find the relevant code:**
+
    ```bash
    # Search for keywords
    grep -r "hyperlink" ~/wysiwyg-editor/packages/super-editor/src/
@@ -118,6 +128,7 @@ If unsure how to implement a feature:
    ```
 
 2. **Read the implementation:**
+
    ```bash
    cat ~/wysiwyg-editor/packages/super-editor/src/core/converters/v2/importer/...
    ```
@@ -125,6 +136,7 @@ If unsure how to implement a feature:
 3. **Understand the approach, then write your own code**
 
 **Key WYSIWYG Editor locations:**
+
 - DOCX parsing: `~/wysiwyg-editor/packages/super-editor/src/core/converters/`
 - Style resolution: `~/wysiwyg-editor/packages/style-engine/src/`
 - Layout: `~/wysiwyg-editor/packages/layout-engine/`
@@ -139,16 +151,19 @@ If unsure how to implement a feature:
 **When to use subagents:**
 
 1. **Exploring WYSIWYG Editor implementation:**
+
    ```
    Task(subagent_type="Explore", prompt="Investigate how ~/wysiwyg-editor handles table parsing. Look at the tableParser, cell merging, borders. Summarize the approach.")
    ```
 
 2. **Understanding OOXML structure:**
+
    ```
    Task(subagent_type="Explore", prompt="Explore the structure of word/numbering.xml in fixtures/sample.docx. Document the XML structure for lists.")
    ```
 
 3. **Researching a specific feature:**
+
    ```
    Task(subagent_type="Explore", prompt="How does WYSIWYG Editor handle theme color resolution? Find the relevant code in ~/wysiwyg-editor and explain the approach.")
    ```
@@ -159,6 +174,7 @@ If unsure how to implement a feature:
    ```
 
 **Benefits:**
+
 - Thorough exploration without context bloat
 - Agent can read multiple files and synthesize findings
 - Returns concise summary you can act on
@@ -169,10 +185,12 @@ If unsure how to implement a feature:
 ## Handling Discoveries
 
 When you find unexpected DOCX structure:
+
 ```markdown
 ## Discoveries
 
 ### [Date] - Finding title
+
 Description of what you found and how you handled it.
 ```
 
@@ -185,6 +203,7 @@ Description of what you found and how you handled it.
 - **COMMIT after EVERY completed task** - never skip this step
 
 When ALL tasks in the current plan are checked (`- [x]`), output:
+
 ```
 RALPH_STATUS: {
   "status": "complete",

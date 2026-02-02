@@ -1,89 +1,207 @@
-# Ralph Loop — Eigenpal DOCX Editor
+# Ralph Loop — Eigenpal DOCX Editor (Optimized)
 
 ## Your job
 
-You are running inside a Ralph autonomous loop (frankbria/ralph-claude-code). Each iteration you must:
+You are running inside a Ralph autonomous loop. Each iteration you must:
 
-1. Read the current plan file in `.ralph/` (highest numbered `##_*.md` file, e.g., `02_current.md`).
+1. Read the current plan file in `.ralph/` (highest numbered `##_*.md` file).
 2. Find the **first** unchecked task (`- [ ]`).
-3. If all tasks are checked, output the exit signal (see below) and stop.
-4. Implement ONLY that one task. Do not touch other tasks.
-5. Run the verify command: `bun install && bun build ./src/main.tsx --outdir ./dist --loader:.css=css`
-6. If the build passes, mark the task as done (`- [x]`) in the current plan file, commit everything with a message like `feat: <task title>`, and update `progress.txt` with any learnings.
-7. If the build fails, fix the errors and retry until it passes. Do NOT move on.
-8. At the end of your response, always output a RALPH_STATUS block:
+3. If all tasks are checked, output the exit signal and stop.
+4. Implement ONLY that one task.
+5. Run the **fast verify**: `bun run typecheck` (catches most errors in <5s)
+6. Run **targeted tests only** - see "Test Strategy" below
+7. If tests pass, mark task done, commit, update progress.txt
+8. Output RALPH_STATUS block.
 
 ```
 RALPH_STATUS: {
-  "status": "in_progress",
-  "current_task": "<task title>",
-  "exit_signal": false
+  "status": "in_progress" | "complete",
+  "current_task": "<task title>" | "none",
+  "exit_signal": false | true
 }
 ```
 
-If ALL tasks are complete, output:
+---
+
+## SPEED OPTIMIZATIONS — Read This First
+
+### Fast Verification Cycle
+
+**DO NOT run the full test suite.** Run targeted tests only:
+
+```bash
+# Step 1: Type check (fast, catches 90% of issues)
+bun run typecheck
+
+# Step 2: Run ONLY the relevant test file(s)
+npx playwright test tests/<relevant>.spec.ts --timeout=30000 --workers=4
+
+# Step 3: If fixing a specific test, use --grep
+npx playwright test --grep "test name pattern" --timeout=30000
+```
+
+### Test File Mapping
+
+| Feature Area          | Test File                  | Quick Verify Pattern    |
+| --------------------- | -------------------------- | ----------------------- |
+| Bold/Italic/Underline | `formatting.spec.ts`       | `--grep "apply bold"`   |
+| Alignment             | `alignment.spec.ts`        | `--grep "align text"`   |
+| Lists                 | `lists.spec.ts`            | `--grep "bullet list"`  |
+| Colors                | `colors.spec.ts`           | `--grep "text color"`   |
+| Fonts                 | `fonts.spec.ts`            | `--grep "font family"`  |
+| Enter/Paragraphs      | `text-editing.spec.ts`     | `--grep "Enter"`        |
+| Undo/Redo             | `scenario-driven.spec.ts`  | `--grep "undo"`         |
+| Line spacing          | `line-spacing.spec.ts`     | `--grep "line spacing"` |
+| Paragraph styles      | `paragraph-styles.spec.ts` | `--grep "Heading"`      |
+| Toolbar state         | `toolbar-state.spec.ts`    | `--grep "toolbar"`      |
+
+### Avoid Hanging
+
+- **Never run all 500+ tests at once** unless explicitly validating final results
+- Use `--timeout=30000` (30s max per test)
+- Use `--workers=4` for parallel execution
+- If a command takes >60s, Ctrl+C and retry with narrower scope
+- Avoid `git log` with large outputs; use `--oneline -10`
+
+---
+
+## WYSIWYG Editor Reference — CRITICAL: Do NOT Copy Code
+
+**You may and should reference `~/wysiwyg-editor` to understand:**
+
+- Constructor options and API patterns
+- How fonts are loaded and resolved
+- How styles and themes are applied
+- Component architecture and data flow
+- How specific edge cases are handled
+
+**How to use WYSIWYG Editor source:**
+
+```bash
+# Understand repo structure
+ls ~/wysiwyg-editor
+
+# Read specific files for concepts
+cat ~/wysiwyg-editor/packages/editor/src/[relevant-file].ts | head -200
+
+# Search for patterns
+grep -r "selectionChanged" ~/wysiwyg-editor/packages --include="*.ts" -l
+```
+
+**ABSOLUTE RULES:**
+
+1. **NEVER copy-paste code verbatim** - understand the concept, then reimplement in your own words
+2. **NEVER copy function bodies** - understand the algorithm, write it fresh
+3. **NEVER copy class structures verbatim** - design your own API based on understanding
+4. **DO take note of:** edge cases handled, DOM APIs used, event sequences, timing considerations
+5. **If you see a solution**, close the file and implement from memory/understanding
+
+**Why:** Legal protection. This project must have independently-written code. The WYSIWYG Editor repo is for learning _what_ to do, not _how_ to write it character-by-character.
+
+**Good example:**
 
 ```
-RALPH_STATUS: {
-  "status": "complete",
-  "current_task": "none",
-  "exit_signal": true
-}
+I see WYSIWYG Editor handles Element node selections by checking nodeType.
+I'll implement my own calculateOffset() that handles Element vs Text nodes.
 ```
 
-## WYSIWYG Fidelity — Hard Rule (applies to ALL stories)
+**Bad example:**
 
-This is a WYSIWYG editor. The output must look identical to the document in Microsoft Word. This is non-negotiable and applies across every story, not just US-03.
+```
+// Copied from ~/wysiwyg-editor/packages/editor/src/selection.ts
+function calculateOffset(node, offset) { ... }
+```
 
-**What must be preserved:**
+---
 
-- **Fonts:** Custom and embedded fonts referenced in the DOCX must render. If WYSIWYG Editor has a font-loading config option, use it. If fonts are embedded in the DOCX zip, they must not be dropped.
-- **Theme colors:** The DOCX contains a theme (theme1.xml) that defines the color palette. Text and shape colors that reference theme slots (e.g. `dk1`, `lt1`, `accent1`) must resolve to the correct colors.
-- **Styles:** The DOCX contains style definitions in styles.xml (heading styles, body text styles, named character styles). These must apply. Do not rely only on inline formatting.
-- **Character formatting:** Bold, italic, font size, font family, font color, highlight color, underline, strikethrough — all must render.
-- **Tables:** Borders, cell shading, cell styles, merged cells must all render.
-- **Headers and footers:** Must render on each page.
-- **Section layout:** Page margins, page size, orientation must apply.
-- **Template round-trip:** When docxtemplater processes the DOCX, it must ONLY substitute text in document.xml. It must NOT touch or drop styles.xml, theme1.xml, fontTable.xml, embeddings, or any .rels file. The output zip must contain all original files. Fidelity must survive the full load → template → re-render cycle.
+## WYSIWYG Fidelity — Hard Rule
 
-**How to verify your assumptions:**
+This is a WYSIWYG editor. Output must look identical to Microsoft Word.
 
-- WYSIWYG Editor source is available locally at `~/wysiwyg-editor`. This is the authoritative reference — always investigate there first. Start with `ls ~/wysiwyg-editor` to understand the repo structure, then read the README, then dig into source files as needed. Look specifically for: constructor options, font loading/resolution config, style/theme application, how documents are passed in, how to destroy an instance. Do NOT rely on node_modules or guesswork.
-- Before writing docxtemplater code, confirm it only modifies document.xml by checking what PizZip contains before and after `.render()`. Read `node_modules/docxtemplater/README.md` and `node_modules/pizzip/README.md`.
-- Do not guess. Do not assume defaults are correct. Read the source.
+**Must preserve:**
+
+- **Fonts:** Custom/embedded fonts render correctly
+- **Theme colors:** Theme slots (`dk1`, `lt1`, `accent1`) resolve to correct colors
+- **Styles:** styles.xml definitions apply (headings, body, character styles)
+- **Character formatting:** Bold, italic, font size/family/color, highlight, underline, strikethrough
+- **Tables:** Borders, cell shading, merged cells
+- **Headers/footers:** Render on each page
+- **Section layout:** Margins, page size, orientation
+
+---
+
+## Known Bugs to Fix (Multi-Selection Issue)
+
+**Multi-selection with different formatting:**
+
+- User cannot select text spanning multiple runs with different formatting
+- When selecting across bold → normal → italic, the selection breaks
+- This is likely in `getSelectionRange()` or selection restoration logic
+- **Reference WYSIWYG Editor's selection handling** (for concepts, not code)
+
+---
+
+## Verify Commands
+
+**Fast cycle (use this 95% of the time):**
+
+```bash
+bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --workers=4
+```
+
+**Single test file:**
+
+```bash
+bun run typecheck && npx playwright test tests/formatting.spec.ts --timeout=30000
+```
+
+**Full suite (only for final validation):**
+
+```bash
+bun run typecheck && npx playwright test --timeout=60000 --workers=4
+```
+
+---
 
 ## Rules
 
-- **Screenshots:** Always save screenshots to the `screenshots/` folder (e.g., `screenshots/table-fixed.png`). Do NOT save screenshots in the project root to avoid polluting commits.
-- Work on exactly ONE task per iteration. Do not implement multiple tasks.
-- Do NOT modify other tasks in the current plan file. Only check off the task you completed.
-- Do NOT delete or rewrite files from previous tasks unless the current task explicitly requires it.
-- If you need to know how WYSIWYG Editor's API actually works (constructor options, how to pass a document, how to destroy an instance, font loading, style resolution), investigate `~/wysiwyg-editor`. Start with `ls ~/wysiwyg-editor`, read the README, then dig into source. Do not guess.
-- If you need to know how docxtemplater + PizZip work together, check: `cat node_modules/docxtemplater/README.md` and `cat node_modules/pizzip/README.md`. Do not guess.
-- Client-side only. No backend. No server-side processing. No WebSockets.
-- No collaboration, no comments, no tracked changes, no PDF export. Minimal UI.
-- CSS: import WYSIWYG Editor's CSS. For everything else, inline styles or a single minimal `.css` file is fine.
+- **Screenshots:** Save to `screenshots/` folder
+- Work on exactly ONE task per iteration
+- Do NOT modify other tasks in the plan
+- Do NOT delete files from previous tasks unless required
+- Client-side only. No backend.
+- No collaboration, comments, tracked changes, or PDF export
 
-## Project context
+---
 
-This is a minimal Bun + React (TSX) app for EigenPal. Two features only:
+## Project Context
 
-1. **Display a DOCX** — load a `.docx` file and render it with full formatting fidelity using WYSIWYG Editor.
-2. **Insert docxtemplater variables** — define `{{variable_name}}` mappings, run docxtemplater on the raw DOCX buffer, and re-render the result.
+Minimal Bun + React (TSX) app for EigenPal:
 
-The target users are non-technical clients at European banks/insurance companies. The DOCX files contain docxtemplater template tags like `{{client_name}}`, `{{contract_date}}`. The app lets them fill in values and see the rendered document update live.
+1. **Display DOCX** — render with full formatting fidelity using WYSIWYG Editor
+2. **Insert docxtemplater variables** — `{{variable}}` mappings with live preview
 
-## Verify command
+Target users: Non-technical clients at European banks/insurance companies.
 
+---
+
+## Commit Message Format
+
+```bash
+git commit -m "$(cat <<'EOF'
+feat: <task title>
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+EOF
+)"
 ```
-bun install && bun run typecheck && bun build ./src/main.tsx --outdir ./dist --loader:.css=css
-```
 
-**All checks must pass:**
+---
 
-1. `bun run typecheck` — TypeScript type checking (catches type mismatches like `doc.package.body` vs `doc.package.document`)
-2. `bun build` — Bundle must compile successfully
+## When Stuck
 
-**IMPORTANT:** Never skip type checking. The `bun build` command does NOT run TypeScript — it only transpiles. Type errors will be silently ignored by the bundler but will cause runtime bugs. Always run `bun run typecheck` first.
-
-**Note:** If you encounter many pre-existing type errors, you may need to fix them before proceeding. Use `npx tsc --noEmit 2>&1 | head -100` to see the first errors.
+1. **Type error?** Read the actual types, don't guess
+2. **Test failing?** Run with `--debug` and check console output
+3. **Selection bug?** Add `console.log` in `getSelectionRange()` to trace
+4. **Need API info?** Check `~/wysiwyg-editor` for concepts (don't copy code!)
+5. **Timeout?** Kill command, narrow test scope, retry

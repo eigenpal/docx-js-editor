@@ -1,12 +1,20 @@
 # Test Infrastructure & Bug Fixes Plan
 
-**Goal:** Get the 500+ Playwright e2e tests passing by fixing architectural gaps.
+**Goal:** Get Playwright e2e tests passing by fixing bugs. Run FAST - use targeted tests.
 
-**Verify command pattern:**
+**Fast verify pattern (use this):**
 
+```bash
+bun run typecheck && npx playwright test --grep "<pattern>" --timeout=30000 --workers=4
 ```
-bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
-```
+
+**Speed tips:**
+
+1. Type check first - catches 90% of issues in 5s
+2. Use `--grep "<pattern>"` - run only relevant tests
+3. Use `--workers=4` - parallel execution
+4. Never run all 500+ tests unless final validation
+5. Reference `~/wysiwyg-editor` for concepts (DO NOT COPY CODE)
 
 ---
 
@@ -128,63 +136,67 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 ---
 
-## PHASE 11: EDGE CASES & UNICODE
+## PHASE 11: CRITICAL - Multi-Selection Bug
 
-- [ ] **Fix unicode character handling** - Asian characters, emojis, special chars preserved. Verify: `npx playwright test --grep "unicode" --timeout=30000`
-
-- [ ] **Fix rapid operations** - Quick typing, fast format toggles don't corrupt. Verify: `npx playwright test --grep "rapid" --timeout=30000`
-
-- [ ] **Fix empty document operations** - Operations on empty doc don't crash. Verify: `npx playwright test --grep "empty document" --timeout=30000`
+- [ ] **Fix multi-selection across different formatting** - When selecting text that spans multiple runs with different formatting (e.g., "normal **bold** normal"), the selection breaks or formatting operations fail. Debug `getSelectionRange()` in AIEditor.tsx. Check how selection is calculated when anchor and focus are in different runs. Reference `~/wysiwyg-editor`'s selection handling for concepts (DO NOT COPY CODE). Verify: `npx playwright test --grep "partial" --timeout=30000 --workers=4`
 
 ---
 
-## PHASE 12: TOOLBAR STATE
+## PHASE 12: Edge Cases & Unicode
 
-- [ ] **Fix bold button state reflection** - Button shows active when cursor in bold text. Verify: `npx playwright test --grep "toolbar button reflects bold" --timeout=30000`
+- [ ] **Fix unicode character handling** - Asian characters, emojis, special chars preserved. Verify: `npx playwright test --grep "unicode" --timeout=30000 --workers=4`
 
-- [ ] **Fix italic button state reflection** - Verify: `npx playwright test --grep "toolbar button reflects italic" --timeout=30000`
+- [ ] **Fix rapid operations** - Quick typing, fast format toggles don't corrupt. Verify: `npx playwright test --grep "rapid" --timeout=30000 --workers=4`
 
-- [ ] **Fix alignment button state reflection** - Shows which alignment is active. Verify: `npx playwright test --grep "alignment.*active" --timeout=30000`
-
-- [ ] **Fix list button state reflection** - Shows when cursor in list. Verify: `npx playwright test --grep "bullet.*active" --timeout=30000`
+- [ ] **Fix empty document operations** - Operations on empty doc don't crash. Verify: `npx playwright test --grep "empty document" --timeout=30000 --workers=4`
 
 ---
 
-## PHASE 13: VALIDATION - Test Suite Runs
+## PHASE 13: Toolbar State Reflection
 
-- [ ] **Run formatting.spec.ts** - `npx playwright test tests/formatting.spec.ts --timeout=60000` - expect all pass
+- [ ] **Fix bold button state reflection** - Button shows active when cursor in bold text. Verify: `npx playwright test --grep "toolbar button reflects bold" --timeout=30000 --workers=4`
 
-- [ ] **Run alignment.spec.ts** - `npx playwright test tests/alignment.spec.ts --timeout=60000` - expect all pass
+- [ ] **Fix italic button state reflection** - Verify: `npx playwright test --grep "toolbar button reflects italic" --timeout=30000 --workers=4`
 
-- [ ] **Run lists.spec.ts** - `npx playwright test tests/lists.spec.ts --timeout=60000` - expect all pass
+- [ ] **Fix alignment button state reflection** - Shows which alignment is active. Verify: `npx playwright test --grep "alignment.*active" --timeout=30000 --workers=4`
 
-- [ ] **Run colors.spec.ts** - `npx playwright test tests/colors.spec.ts --timeout=60000` - expect all pass
-
-- [ ] **Run fonts.spec.ts** - `npx playwright test tests/fonts.spec.ts --timeout=60000` - expect all pass
-
-- [ ] **Run line-spacing.spec.ts** - `npx playwright test tests/line-spacing.spec.ts --timeout=60000` - expect all pass
-
-- [ ] **Run paragraph-styles.spec.ts** - `npx playwright test tests/paragraph-styles.spec.ts --timeout=60000` - expect all pass
-
-- [ ] **Run tables.spec.ts** - `npx playwright test tests/tables.spec.ts --timeout=60000` - expect all pass
-
-- [ ] **Run text-editing.spec.ts** - `npx playwright test tests/text-editing.spec.ts --timeout=60000` - expect all pass
-
-- [ ] **Run edge-cases.spec.ts** - `npx playwright test tests/edge-cases.spec.ts --timeout=60000` - expect all pass
-
-- [ ] **Run toolbar-state.spec.ts** - `npx playwright test tests/toolbar-state.spec.ts --timeout=60000` - expect all pass
-
-- [ ] **Run scenario-driven.spec.ts** - `npx playwright test tests/scenario-driven.spec.ts --timeout=60000` - expect all pass
+- [ ] **Fix list button state reflection** - Shows when cursor in list. Verify: `npx playwright test --grep "bullet.*active" --timeout=30000 --workers=4`
 
 ---
 
-## PHASE 14: FINAL VALIDATION
+## PHASE 14: Batch Validation
 
-- [ ] **Run complete e2e suite** - `npx playwright test --timeout=60000` - capture full results
+- [ ] **Validate text-editing.spec.ts** - `npx playwright test tests/text-editing.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+- [ ] **Validate formatting.spec.ts** - `npx playwright test tests/formatting.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+- [ ] **Validate alignment.spec.ts** - `npx playwright test tests/alignment.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+- [ ] **Validate lists.spec.ts** - `npx playwright test tests/lists.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+- [ ] **Validate colors.spec.ts** - `npx playwright test tests/colors.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+- [ ] **Validate fonts.spec.ts** - `npx playwright test tests/fonts.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+- [ ] **Validate line-spacing.spec.ts** - `npx playwright test tests/line-spacing.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+- [ ] **Validate paragraph-styles.spec.ts** - `npx playwright test tests/paragraph-styles.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+- [ ] **Validate edge-cases.spec.ts** - `npx playwright test tests/edge-cases.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+- [ ] **Validate toolbar-state.spec.ts** - `npx playwright test tests/toolbar-state.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+- [ ] **Validate scenario-driven.spec.ts** - `npx playwright test tests/scenario-driven.spec.ts --timeout=60000 --workers=4` - Fix any failures
+
+---
+
+## PHASE 15: Final Validation
+
+- [ ] **Run complete e2e suite** - `npx playwright test --timeout=60000 --workers=4` - Capture full results
 
 - [ ] **Document remaining failures** - If any tests still fail, create follow-up plan in `.ralph/05_remaining_fixes.md`
 
-- [ ] **Update progress.txt** - Document what was learned and fixed
+- [ ] **Update progress.txt** - Document final test counts, any known issues, and architecture learnings
 
 ---
 
@@ -195,3 +207,4 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 - Functional fixes (Phase 4-11) may require deeper investigation
 - Each task should be verified before moving to next
 - If deeper issues found, document in progress.txt and adapt
+- **Reference ~/wysiwyg-editor for concepts but DO NOT COPY CODE** - legal protection
