@@ -24,18 +24,30 @@ import type {
   Image,
   Hyperlink,
   ParagraphContent,
+  Table,
+  TableRow,
+  TableCell,
+  TableFormatting,
+  TableRowFormatting,
+  TableCellFormatting,
 } from '../../types/document';
-import type { ParagraphAttrs, ImageAttrs } from '../schema/nodes';
+import type {
+  ParagraphAttrs,
+  ImageAttrs,
+  TableAttrs,
+  TableRowAttrs,
+  TableCellAttrs,
+} from '../schema/nodes';
 import type { TextColorAttrs, UnderlineAttrs, FontFamilyAttrs } from '../schema/marks';
 
 /**
  * Convert a ProseMirror document to our Document type
  */
 export function fromProseDoc(pmDoc: PMNode, baseDocument?: Document): Document {
-  const paragraphs = extractParagraphs(pmDoc);
+  const blocks = extractBlocks(pmDoc);
 
   const documentBody: DocumentBody = {
-    content: paragraphs,
+    content: blocks,
   };
 
   // If we have a base document, preserve its package structure
@@ -58,18 +70,20 @@ export function fromProseDoc(pmDoc: PMNode, baseDocument?: Document): Document {
 }
 
 /**
- * Extract paragraphs from ProseMirror document
+ * Extract blocks (paragraphs and tables) from ProseMirror document
  */
-function extractParagraphs(pmDoc: PMNode): Paragraph[] {
-  const paragraphs: Paragraph[] = [];
+function extractBlocks(pmDoc: PMNode): (Paragraph | Table)[] {
+  const blocks: (Paragraph | Table)[] = [];
 
   pmDoc.forEach((node) => {
     if (node.type.name === 'paragraph') {
-      paragraphs.push(convertPMParagraph(node));
+      blocks.push(convertPMParagraph(node));
+    } else if (node.type.name === 'table') {
+      blocks.push(convertPMTable(node));
     }
   });
 
-  return paragraphs;
+  return blocks;
 }
 
 /**
@@ -420,6 +434,149 @@ function marksToTextFormatting(marks: readonly Mark[]): TextFormatting {
   }
 
   return formatting;
+}
+
+// ============================================================================
+// TABLE CONVERSION
+// ============================================================================
+
+/**
+ * Convert a ProseMirror table node to our Table type
+ */
+function convertPMTable(node: PMNode): Table {
+  const attrs = node.attrs as TableAttrs;
+  const rows: TableRow[] = [];
+
+  node.forEach((rowNode) => {
+    if (rowNode.type.name === 'tableRow') {
+      rows.push(convertPMTableRow(rowNode));
+    }
+  });
+
+  return {
+    type: 'table',
+    formatting: tableAttrsToFormatting(attrs),
+    rows,
+  };
+}
+
+/**
+ * Convert ProseMirror table attrs to TableFormatting
+ */
+function tableAttrsToFormatting(attrs: TableAttrs): TableFormatting | undefined {
+  const hasFormatting = attrs.styleId || attrs.width || attrs.justification;
+
+  if (!hasFormatting) {
+    return undefined;
+  }
+
+  return {
+    styleId: attrs.styleId || undefined,
+    width: attrs.width
+      ? {
+          value: attrs.width,
+          type: (attrs.widthType as 'auto' | 'dxa' | 'pct' | 'nil') || 'dxa',
+        }
+      : undefined,
+    justification: attrs.justification || undefined,
+  };
+}
+
+/**
+ * Convert a ProseMirror table row node to our TableRow type
+ */
+function convertPMTableRow(node: PMNode): TableRow {
+  const attrs = node.attrs as TableRowAttrs;
+  const cells: TableCell[] = [];
+
+  node.forEach((cellNode) => {
+    if (cellNode.type.name === 'tableCell' || cellNode.type.name === 'tableHeader') {
+      cells.push(convertPMTableCell(cellNode));
+    }
+  });
+
+  return {
+    type: 'tableRow',
+    formatting: tableRowAttrsToFormatting(attrs),
+    cells,
+  };
+}
+
+/**
+ * Convert ProseMirror table row attrs to TableRowFormatting
+ */
+function tableRowAttrsToFormatting(attrs: TableRowAttrs): TableRowFormatting | undefined {
+  const hasFormatting = attrs.height || attrs.isHeader;
+
+  if (!hasFormatting) {
+    return undefined;
+  }
+
+  return {
+    height: attrs.height
+      ? {
+          value: attrs.height,
+          type: 'dxa',
+        }
+      : undefined,
+    heightRule: (attrs.heightRule as 'auto' | 'atLeast' | 'exact') || undefined,
+    header: attrs.isHeader || undefined,
+  };
+}
+
+/**
+ * Convert a ProseMirror table cell node to our TableCell type
+ */
+function convertPMTableCell(node: PMNode): TableCell {
+  const attrs = node.attrs as TableCellAttrs;
+  const content: (Paragraph | Table)[] = [];
+
+  // Extract cell content (paragraphs and nested tables)
+  node.forEach((contentNode) => {
+    if (contentNode.type.name === 'paragraph') {
+      content.push(convertPMParagraph(contentNode));
+    } else if (contentNode.type.name === 'table') {
+      content.push(convertPMTable(contentNode));
+    }
+  });
+
+  return {
+    type: 'tableCell',
+    formatting: tableCellAttrsToFormatting(attrs),
+    content,
+  };
+}
+
+/**
+ * Convert ProseMirror table cell attrs to TableCellFormatting
+ */
+function tableCellAttrsToFormatting(attrs: TableCellAttrs): TableCellFormatting | undefined {
+  const hasFormatting =
+    attrs.colspan > 1 ||
+    attrs.rowspan > 1 ||
+    attrs.width ||
+    attrs.verticalAlign ||
+    attrs.backgroundColor;
+
+  if (!hasFormatting) {
+    return undefined;
+  }
+
+  return {
+    gridSpan: attrs.colspan > 1 ? attrs.colspan : undefined,
+    width: attrs.width
+      ? {
+          value: attrs.width,
+          type: (attrs.widthType as 'auto' | 'dxa' | 'pct' | 'nil') || 'dxa',
+        }
+      : undefined,
+    verticalAlign: attrs.verticalAlign || undefined,
+    shading: attrs.backgroundColor
+      ? {
+          fill: { rgb: attrs.backgroundColor },
+        }
+      : undefined,
+  };
 }
 
 /**

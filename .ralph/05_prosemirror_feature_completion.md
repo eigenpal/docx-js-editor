@@ -67,7 +67,7 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
   - Preserve cell spans (colspan, rowspan)
   - **Verify**: Load with-tables.docx, tables should render
 
-- [ ] **Task 7: Convert tables back in fromProseDoc**
+- [x] **Task 7: Convert tables back in fromProseDoc**
   - Convert ProseMirror table nodes back to Document tables
   - Preserve all table formatting
   - **Verify**: Load table doc, edit text, save, reload - table intact

@@ -288,3 +288,14 @@
 [2026-02-02 14:18] NOTES: Supports nested tables and header rows
 [2026-02-02 14:18] STATUS: done
 [2026-02-02 14:18] NOTES: Task 6 complete - Typecheck passes
+
+[2026-02-02 14:18] TASK: Convert tables back in fromProseDoc
+[2026-02-02 14:18] STATUS: starting
+[2026-02-02 14:18] NOTES: Need to convert PM table nodes back to Document tables
+[2026-02-02 14:19] TASK: Convert tables back in fromProseDoc
+[2026-02-02 14:19] STATUS: editing
+[2026-02-02 14:19] NOTES: Adding table conversion functions - convertPMTable, convertPMTableRow, convertPMTableCell
+[2026-02-02 14:20] STATUS: running
+[2026-02-02 14:20] NOTES: Typecheck passed. Testing round-trip...
+[2026-02-02 14:21] STATUS: done
+[2026-02-02 14:21] NOTES: Table conversion back to Document implemented and typecheck passes
