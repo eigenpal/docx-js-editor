@@ -551,6 +551,8 @@ export class EditorPage {
     await fontPicker.click();
     // Wait for dropdown to open and select the font by its text
     await this.page.locator(`[role="option"]:has-text("${fontFamily}")`).click();
+    // Refocus editor after selecting from dropdown
+    await this.focus();
   }
 
   /**
@@ -562,6 +564,8 @@ export class EditorPage {
     await fontSizePicker.click();
     // Wait for dropdown to open and select the size with exact text match
     await this.page.getByRole('option', { name: size.toString(), exact: true }).click();
+    // Refocus editor after selecting from dropdown
+    await this.focus();
   }
 
   /**

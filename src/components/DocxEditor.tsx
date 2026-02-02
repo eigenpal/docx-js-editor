@@ -23,6 +23,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { Document, Theme } from '../types/document';
 
 import { Toolbar, type SelectionFormatting, type FormattingAction } from './Toolbar';
+import { pointsToHalfPoints } from './ui/FontSizePicker';
 import { VariablePanel } from './VariablePanel';
 import { ErrorBoundary, ErrorProvider } from './ErrorBoundary';
 import { TableToolbar, type TableContext, type TableAction } from './ui/TableToolbar';
@@ -543,7 +544,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           setHighlight(action.value)(view.state, view.dispatch);
           break;
         case 'fontSize':
-          setFontSize(action.value)(view.state, view.dispatch);
+          // Convert points to half-points (OOXML uses half-points for font sizes)
+          setFontSize(pointsToHalfPoints(action.value))(view.state, view.dispatch);
           break;
         case 'fontFamily':
           setFontFamily(action.value)(view.state, view.dispatch);

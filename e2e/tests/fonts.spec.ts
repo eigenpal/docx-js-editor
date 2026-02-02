@@ -45,9 +45,15 @@ test.describe('Font Family', () => {
     await editor.selectAll();
     await editor.setFontFamily('Times New Roman');
 
+    // Verify font was applied (check the selected text's computed style)
     const fontFamily = await page.evaluate(() => {
-      const el = document.querySelector('[contenteditable="true"]');
-      return el ? window.getComputedStyle(el).fontFamily : '';
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const element = range.startContainer.parentElement;
+        return window.getComputedStyle(element!).fontFamily;
+      }
+      return '';
     });
     expect(fontFamily.toLowerCase()).toContain('times');
   });
