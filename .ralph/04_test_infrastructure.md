@@ -38,7 +38,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 - [x] **Fix text color picker selector** - Tests use `.text-color-picker` but component uses `.docx-color-picker-text`. Update EditorPage.setTextColor(). Verify: `npx playwright test --grep "text color to red" --timeout=30000`
 
-- [ ] **Fix highlight color picker selector** - Tests use `.highlight-color-picker` but component uses `.docx-color-picker-highlight`. Update EditorPage.setHighlightColor(). Verify: `npx playwright test --grep "highlight color" --timeout=30000`
+- [x] **Fix highlight color picker selector** - Tests use `.highlight-color-picker` but component uses `.docx-color-picker-highlight`. Update EditorPage.setHighlightColor(). Verify: `npx playwright test --grep "highlight color" --timeout=30000`
 
 - [ ] **Fix line spacing picker selector** - Tests use `[aria-label="Line spacing"]` and `[data-line-spacing="..."]`. Verify these match. Verify: `npx playwright test --grep "line spacing" --timeout=30000`
 

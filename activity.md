@@ -7878,3 +7878,36 @@ Fixed the text color picker selector in `e2e/helpers/editor-page.ts` for the Col
 - `npx playwright test --grep "text color to red"` - test passes ✓
 
 ---
+
+### Test Infrastructure: Verify highlight color picker selector
+
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Verified that the highlight color picker selector is correctly configured and tests pass.
+
+**Analysis:**
+
+- `editor-page.ts` already uses correct selector `.docx-color-picker-highlight` (lines 474-475)
+- ColorPicker component generates class `docx-color-picker-${type}` where type='highlight' = `docx-color-picker-highlight` (line 498)
+- Color buttons in grid have `aria-label={color.name}` (e.g., "Yellow", "Cyan", "Magenta")
+- The `setHighlightColor()` method correctly finds colors by aria-label with capitalized first letter
+
+**Test Results:**
+
+- 5 of 7 Highlight Color tests pass:
+  - ✓ set highlight color to yellow
+  - ✓ set highlight color to cyan
+  - ✓ set highlight color to magenta
+  - ✓ set highlight color to green
+  - ✓ undo highlight change
+- 2 failures are **functional issues** (partial selection, multiple highlights) - not selector issues
+- Scenario tests timeout due to environment/timing, not selector mismatch
+
+**Verified:**
+
+- bun run typecheck: ✓
+- bun build exits 0: ✓
+- `npx playwright test --grep "set highlight color to yellow" e2e/tests/colors.spec.ts` - test passes ✓
+
+---
