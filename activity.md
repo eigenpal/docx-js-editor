@@ -5589,3 +5589,54 @@ Implemented header rendering on each page, displaying document headers from the 
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-123: Implement footers rendering
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Implemented footer rendering on each page, displaying document footers from the DOCX in the footer area at the bottom of each page.
+
+**Implementation:**
+
+1. **Updated `src/components/Editor.tsx`:**
+   - Added `footersForLayout` memoized map that converts document footers to the format expected by `calculatePages`
+   - Footers are extracted from `doc.package?.footers` (Map<rId, HeaderFooter>) and matched to their types via `sectionProperties.footerReferences`
+   - Passed `footers` option to `calculatePages()` function
+   - Added footer rendering in `renderSinglePage` function with proper footer area positioning
+
+2. **Footer Area Rendering:**
+   - Footer area is positioned absolutely at the bottom of the page
+   - Uses `footerDistance` from section properties (default: 720 twips = 0.5 inch)
+   - Height calculated as: `marginBottom - footerDistance`
+   - Left/right margins match the page content margins
+   - Renders paragraph and table content from the footer using `Paragraph` and `DocTable` components
+
+3. **Footer Type Support:**
+   - Supports different footer types: `default`, `first`, `even`
+   - `titlePage` flag in section properties enables first page footers
+   - `evenAndOddHeaders` flag enables different even/odd page footers
+   - Layout engine (`pageLayout.ts`) selects correct footer for each page via `getFooterForPage()`
+
+4. **Integration with Page Layout Engine:**
+   - `calculatePages()` already had full support for footers via `PageLayoutOptions.footers`
+   - Footers are organized as `Map<sectionIndex, Map<HeaderFooterType, HeaderFooter>>`
+   - The `getFooterForPage()` function in `pageLayout.ts` selects the appropriate footer based on:
+     - Page number (for even/odd logic)
+     - First page of section (for title page logic)
+     - Section index
+
+**Code Changes:**
+- `Editor.tsx`: Added footer extraction logic (`footersForLayout` memo), updated `calculatePages` call, added footer rendering area
+
+**Features:**
+- Footers render at the correct position (footer distance from bottom)
+- Footers respect left/right margins
+- Page number and total pages are passed to footer content for field rendering (page numbers!)
+- Footers work with multi-page documents
+- ARIA labels for accessibility
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

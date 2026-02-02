@@ -388,6 +388,45 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     return result;
   }, [doc.package?.headers, doc.package?.body?.sectionProperties]);
 
+  // Build footers map for layout engine from document package
+  const footersForLayout = useMemo(() => {
+    const result = new Map<number, Map<HeaderFooterType, HeaderFooter>>();
+    const docFooters = doc.package?.footers;
+    const docBody = doc.package?.body;
+
+    if (!docFooters || docFooters.size === 0) {
+      return result;
+    }
+
+    // For now, all footers go to section 0 (most documents have one section)
+    // We need to determine footer types from the sectPr references
+    const sectionFootersMap = new Map<HeaderFooterType, HeaderFooter>();
+
+    // Get section properties to determine footer types
+    const sectProps = docBody?.sectionProperties;
+    const footerRefs = sectProps?.footerReferences || [];
+
+    // Match footers from docFooters (keyed by rId) to their types from sectPr
+    for (const ref of footerRefs) {
+      const footer = docFooters.get(ref.rId);
+      if (footer) {
+        // Update the footer's type from the reference
+        const typedFooter: HeaderFooter = {
+          ...footer,
+          hdrFtrType: ref.type,
+        };
+        sectionFootersMap.set(ref.type, typedFooter);
+      }
+    }
+
+    // If we have footers, add them to section 0
+    if (sectionFootersMap.size > 0) {
+      result.set(0, sectionFootersMap);
+    }
+
+    return result;
+  }, [doc.package?.footers, doc.package?.body?.sectionProperties]);
+
   // Calculate page layout when pagination is enabled
   const pageLayout = useMemo<PageLayoutResult | null>(() => {
     if (!enablePagination || !doc) return null;
@@ -396,12 +435,13 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       return calculatePages(doc, {
         theme,
         headers: headersForLayout.size > 0 ? headersForLayout : undefined,
+        footers: footersForLayout.size > 0 ? footersForLayout : undefined,
       });
     } catch (error) {
       console.error('Error calculating page layout:', error);
       return null;
     }
-  }, [doc, theme, enablePagination, headersForLayout]);
+  }, [doc, theme, enablePagination, headersForLayout, footersForLayout]);
 
   /**
    * Update document and notify parent
@@ -872,6 +912,44 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         });
       };
 
+      // Calculate footer area style
+      const footerDistance = twipsToPixels(page.sectionProps.pageMargins?.footer ?? 720) * zoom;
+      const footerAreaStyle: CSSProperties = {
+        position: 'absolute',
+        bottom: formatPx(footerDistance),
+        left: formatPx(marginLeft),
+        right: formatPx(marginRight),
+        height: formatPx(marginBottom - footerDistance),
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+      };
+
+      // Render footer content
+      const renderFooterContent = (footer: HeaderFooter) => {
+        return footer.content.map((block, index) => {
+          if (block.type === 'paragraph') {
+            return (
+              <Paragraph
+                key={`footer-para-${index}`}
+                paragraph={block}
+                theme={theme}
+                pageNumber={page.pageNumber}
+                totalPages={totalPages}
+              />
+            );
+          } else if (block.type === 'table') {
+            return (
+              <DocTable
+                key={`footer-table-${index}`}
+                table={block}
+                theme={theme}
+              />
+            );
+          }
+          return null;
+        });
+      };
+
       return (
         <div
           key={`page-${page.pageNumber}`}
@@ -895,6 +973,18 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
           <div className="docx-page-content-area" style={contentAreaStyle}>
             {pageContent}
           </div>
+
+          {/* Footer area */}
+          {page.footer && (
+            <div
+              className="docx-page-footer-area"
+              style={footerAreaStyle}
+              role="region"
+              aria-label="Page footer"
+            >
+              {renderFooterContent(page.footer)}
+            </div>
+          )}
 
           {/* Margin guides */}
           {showMarginGuides && (
