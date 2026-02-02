@@ -52,6 +52,7 @@ import {
   parseBookmarkEnd as parseBookmarkEndFromModule,
 } from './bookmarkParser';
 import { parseSectionProperties } from './sectionParser';
+import { consolidateParagraphContent } from './runConsolidator';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -806,7 +807,11 @@ export function parseParagraph(
   }
 
   // Parse paragraph contents (runs, hyperlinks, bookmarks, fields)
-  paragraph.content = parseParagraphContents(node, styles, theme, numbering, rels);
+  const rawContent = parseParagraphContents(node, styles, theme, numbering, rels);
+
+  // Consolidate consecutive runs with identical formatting
+  // This reduces fragmentation (e.g., 252 tiny runs → a few larger runs)
+  paragraph.content = consolidateParagraphContent(rawContent);
 
   // Compute list rendering if this is a list item
   if (paragraph.formatting?.numPr && numbering) {

@@ -4797,3 +4797,54 @@ Updated `demo/main.tsx` with complete demo using DocxEditor.
 - bun build exits 0: ✓
 
 ---
+
+### US-102: Fix text run fragmentation
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Fixed text run fragmentation by implementing run consolidation during parsing.
+
+**Problem:**
+Word creates many tiny runs with identical formatting due to:
+- Spell checking markers
+- Revision tracking history
+- Cursor positioning
+- Grammar checking
+
+This caused 252+ tiny `<span>` elements instead of a few larger ones, leading to:
+- Poor editing UX (cursor jumps between spans)
+- Performance issues
+- Excessive DOM nodes
+
+**Solution:**
+Created `src/docx/runConsolidator.ts` with:
+
+**Core Functions:**
+- `formattingEquals(a, b)` - Deep comparison of TextFormatting objects
+- `consolidateRuns(runs)` - Merge consecutive runs with identical formatting
+- `consolidateParagraphContent(content)` - Consolidate at paragraph level
+- `consolidateParagraph(paragraph)` - Consolidate entire paragraph
+
+**Features:**
+- Compares all formatting properties (bold, italic, color, font, etc.)
+- Handles nested structures (underline color, shading, font family themes)
+- Preserves merge boundaries (tabs, breaks, images, fields)
+- Merges text content at run boundaries
+- Handles hyperlinks (consolidates their internal runs)
+
+**Integration:**
+- Added to `paragraphParser.ts` after content parsing
+- Runs automatically on every parsed paragraph
+- No changes to rendering code needed
+
+**Utility Functions:**
+- `isTextOnlyRun(run)` - Check if run can be merged
+- `canMergeRun(run)` - Check if run content allows merging
+- `countRuns(paragraph)` - Count runs for metrics
+- `getConsolidationStats(original, consolidated)` - Get reduction stats
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
