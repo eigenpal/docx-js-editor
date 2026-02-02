@@ -354,6 +354,73 @@ export async function loadFontFromBuffer(
 }
 
 /**
+ * Mapping from common Office/system fonts to Google Fonts equivalents
+ *
+ * Google Fonts doesn't have exact matches for many Microsoft fonts,
+ * but these are close alternatives that work well for document rendering.
+ */
+export const FONT_MAPPING: Record<string, string> = {
+  // Microsoft Office fonts → Google Fonts equivalents
+  Calibri: 'Carlito',
+  Cambria: 'Caladea',
+  Arial: 'Arimo',
+  'Times New Roman': 'Tinos',
+  'Courier New': 'Cousine',
+  Garamond: 'EB Garamond',
+  'Book Antiqua': 'EB Garamond',
+  Georgia: 'Tinos',
+  Verdana: 'Open Sans',
+  Tahoma: 'Open Sans',
+  'Trebuchet MS': 'Source Sans Pro',
+  'Century Gothic': 'Poppins',
+  'Franklin Gothic': 'Libre Franklin',
+  Palatino: 'EB Garamond',
+  'Palatino Linotype': 'EB Garamond',
+  'Lucida Sans': 'Open Sans',
+  'Segoe UI': 'Open Sans',
+  Impact: 'Anton',
+  'Comic Sans MS': 'Comic Neue',
+  Consolas: 'Inconsolata',
+  'Lucida Console': 'Inconsolata',
+  Monaco: 'Fira Code',
+};
+
+/**
+ * Get the Google Fonts equivalent for a font name
+ *
+ * @param fontName - The original font name from the document
+ * @returns The Google Fonts equivalent, or the original name if no mapping exists
+ */
+export function getGoogleFontEquivalent(fontName: string): string {
+  const trimmed = fontName.trim();
+  return FONT_MAPPING[trimmed] || trimmed;
+}
+
+/**
+ * Load a font, automatically mapping to Google Fonts equivalent if needed
+ *
+ * @param fontFamily - The font family name (may be an Office font)
+ * @returns Promise resolving to true if font loaded
+ */
+export async function loadFontWithMapping(fontFamily: string): Promise<boolean> {
+  const googleFont = getGoogleFontEquivalent(fontFamily);
+  return loadFont(googleFont);
+}
+
+/**
+ * Load multiple fonts with automatic mapping to Google Fonts equivalents
+ *
+ * @param families - Array of font family names
+ * @returns Promise resolving when all fonts are loaded
+ */
+export async function loadFontsWithMapping(families: string[]): Promise<void> {
+  const googleFonts = families.map(getGoogleFontEquivalent);
+  // Remove duplicates
+  const uniqueFonts = [...new Set(googleFonts)];
+  await loadFonts(uniqueFonts);
+}
+
+/**
  * Preload a list of common document fonts
  *
  * This preloads fonts commonly used in DOCX documents that have
@@ -366,7 +433,71 @@ export async function preloadCommonFonts(): Promise<void> {
     'Arimo', // Arial equivalent
     'Tinos', // Times New Roman equivalent
     'Cousine', // Courier New equivalent
+    'EB Garamond', // Garamond equivalent
   ];
 
   await loadFonts(commonFonts);
+}
+
+/**
+ * Extract all font families used in a document
+ *
+ * Uses loose typing to handle any document-like structure.
+ *
+ * @param document - The parsed document
+ * @returns Set of unique font family names
+ */
+export function extractFontsFromDocument(document: unknown): Set<string> {
+  const fonts = new Set<string>();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const doc = document as any;
+  if (!doc?.package) return fonts;
+
+  // Extract from document content
+  const content = doc.package?.document?.content;
+  if (Array.isArray(content)) {
+    for (const paragraph of content) {
+      if (paragraph?.type === 'paragraph' && Array.isArray(paragraph.content)) {
+        for (const run of paragraph.content) {
+          if (run?.type === 'run' && run.formatting?.fontFamily) {
+            const { ascii, hAnsi } = run.formatting.fontFamily;
+            if (ascii) fonts.add(ascii);
+            if (hAnsi && hAnsi !== ascii) fonts.add(hAnsi);
+          }
+        }
+      }
+    }
+  }
+
+  // Extract from styles
+  const styles = doc.package?.styles?.styles;
+  if (Array.isArray(styles)) {
+    for (const style of styles) {
+      if (style?.runProperties?.fontFamily) {
+        const { ascii, hAnsi } = style.runProperties.fontFamily;
+        if (ascii) fonts.add(ascii);
+        if (hAnsi && hAnsi !== ascii) fonts.add(hAnsi);
+      }
+    }
+  }
+
+  return fonts;
+}
+
+/**
+ * Extract fonts from a document and load them from Google Fonts
+ *
+ * @param document - The parsed document
+ * @returns Promise resolving when fonts are loaded
+ */
+export async function loadDocumentFonts(document: unknown): Promise<void> {
+  const fonts = extractFontsFromDocument(document);
+
+  if (fonts.size === 0) {
+    return;
+  }
+
+  console.log('Loading document fonts:', Array.from(fonts));
+  await loadFontsWithMapping(Array.from(fonts));
 }

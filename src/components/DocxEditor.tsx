@@ -49,7 +49,7 @@ import {
 } from './dialogs/FindReplaceDialog';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import { parseDocx } from '../docx/parser';
-import { onFontsLoaded } from '../utils/fontLoader';
+import { onFontsLoaded, loadDocumentFonts } from '../utils/fontLoader';
 import { executeCommand } from '../agent/executor';
 import { useTableSelection } from '../hooks/useTableSelection';
 import { useDocumentHistory } from '../hooks/useHistory';
@@ -289,6 +289,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       if (initialDocument) {
         history.reset(initialDocument);
         setState((prev) => ({ ...prev, isLoading: false }));
+        // Load fonts for initial document
+        loadDocumentFonts(initialDocument).catch((err) => {
+          console.warn('Failed to load document fonts:', err);
+        });
       }
       return;
     }
@@ -311,6 +315,11 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           const variables = extractVariables(doc);
           setState((prev) => ({ ...prev, variableValues: variables }));
         }
+
+        // Load fonts used in the document from Google Fonts
+        loadDocumentFonts(doc).catch((err) => {
+          console.warn('Failed to load document fonts:', err);
+        });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to parse document';
         setState((prev) => ({
