@@ -19,3 +19,7 @@
 [2026-02-02 09:09] STATUS: done
 [2026-02-02 09:10] TASK: Fix alignment with cursor only
 [2026-02-02 09:10] STATUS: investigating
+[2026-02-02 09:11] TASK: Fix bullet list with cursor only
+[2026-02-02 09:11] STATUS: investigating
+[2026-02-02 09:12] STATUS: done
+[2026-02-02 09:12] NOTES: Test 'bullet list applies with cursor only (no selection)' passes.

@@ -100,7 +100,7 @@ if (!selection || selection.isCollapsed) return null; // ← Fails on cursor-onl
 
 - [x] **Fix alignment with cursor only** - Alignment with cursor-only (no selection) works. Test passes. The getSelectionRange fix from the previous task enabled this functionality. Verify: `npx playwright test --grep "align center with cursor only" --timeout=30000`
 
-- [ ] **Fix bullet list with cursor only** - After getSelectionRange fix, lists should work. Verify: `npx playwright test --grep "bullet list applies with cursor only" --timeout=30000`
+- [x] **Fix bullet list with cursor only** - Bullet list with cursor-only (no selection) works. Test passes. Verify: `npx playwright test --grep "bullet list applies with cursor only" --timeout=30000`
 
 - [ ] **Fix indent with cursor only** - After getSelectionRange fix, indent should work. Verify: `npx playwright test --grep "indent paragraph with cursor only" --timeout=30000`
 
