@@ -7845,3 +7845,36 @@ Fixed the font size picker selector in `e2e/helpers/editor-page.ts` for the Font
 - `npx playwright test e2e/tests/fonts.spec.ts --grep "Font Size"` - 9 tests pass ✓
 
 ---
+
+### Test Infrastructure: Fix text color picker selector
+
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Fixed the text color picker selector in `e2e/helpers/editor-page.ts` for the ColorPicker component.
+
+**Issue:**
+
+- Tests used `.text-color-picker` class selector which doesn't exist
+- Actual component uses `.docx-color-picker-text` class
+- Tests also used `.color-picker-hex-input` for custom input, but component uses `aria-label="Custom hex color"`
+
+**Fix:**
+
+- Updated `setTextColor()` selector from `.text-color-picker` to `.docx-color-picker-text`
+- Added wait for `.docx-color-picker-dropdown` to be visible
+- Implemented color matching by parsing hex to RGB and finding matching button style
+- Falls back to custom hex input using `aria-label="Custom hex color"` selector
+
+**Test Results:**
+
+- 20 color tests pass (core text color and highlight operations working)
+- 11 failures are functional issues (partial selection, formatting combinations, empty document) - not selector issues
+
+**Verified:**
+
+- bun run typecheck: ✓
+- bun build exits 0: ✓
+- `npx playwright test --grep "text color to red"` - test passes ✓
+
+---

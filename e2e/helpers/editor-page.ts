@@ -420,13 +420,50 @@ export class EditorPage {
    * Set text color
    */
   async setTextColor(color: string): Promise<void> {
-    const colorPicker = this.toolbar.locator('.text-color-picker');
+    // ColorPicker component uses .docx-color-picker-text class
+    const colorPicker = this.toolbar.locator('.docx-color-picker-text');
     await colorPicker.click();
-    // Select color from palette or input hex
-    const hexInput = this.page.locator('.color-picker-hex-input');
-    if (await hexInput.isVisible()) {
-      await hexInput.fill(color);
-      await hexInput.press('Enter');
+
+    // Wait for dropdown to be visible
+    await this.page.waitForSelector('.docx-color-picker-dropdown', {
+      state: 'visible',
+      timeout: 5000,
+    });
+
+    // Normalize color (remove # if present)
+    const hexColor = color.replace(/^#/, '').toUpperCase();
+
+    // First, try to find a matching color button in the grid
+    const colorButton = this.page.locator(`.docx-color-grid button[aria-selected="false"]`).filter({
+      has: this.page.locator(`[style*="background-color: rgb"]`),
+    });
+
+    // Try to click a color by looking at the color grid buttons
+    // The colors are stored with backgroundColor style like "background-color: rgb(...)"
+    // Convert hex to RGB for matching
+    const r = parseInt(hexColor.slice(0, 2), 16);
+    const g = parseInt(hexColor.slice(2, 4), 16);
+    const b = parseInt(hexColor.slice(4, 6), 16);
+
+    // Find button with matching color or use custom input
+    const buttons = await this.page.locator('.docx-color-grid button').all();
+    let found = false;
+    for (const button of buttons) {
+      const style = await button.getAttribute('style');
+      if (style && style.includes(`rgb(${r}, ${g}, ${b})`)) {
+        await button.click();
+        found = true;
+        break;
+      }
+    }
+
+    // If not found in grid, use custom hex input
+    if (!found) {
+      const hexInput = this.page.locator('[aria-label="Custom hex color"]');
+      if (await hexInput.isVisible()) {
+        await hexInput.fill(hexColor);
+        await hexInput.press('Enter');
+      }
     }
   }
 
@@ -434,10 +471,33 @@ export class EditorPage {
    * Set highlight color
    */
   async setHighlightColor(color: string): Promise<void> {
-    const highlightPicker = this.toolbar.locator('.highlight-color-picker');
+    // ColorPicker component uses .docx-color-picker-highlight class
+    const highlightPicker = this.toolbar.locator('.docx-color-picker-highlight');
     await highlightPicker.click();
-    // Select color from palette
-    await this.page.locator(`[data-color="${color}"]`).click();
+
+    // Wait for dropdown to be visible
+    await this.page.waitForSelector('.docx-color-picker-dropdown', {
+      state: 'visible',
+      timeout: 5000,
+    });
+
+    // Highlight colors have aria-label with the color name (capitalized)
+    // e.g., "Yellow", "Cyan", "Magenta", "Green", "Blue", "Red"
+    const capitalizedColor = color.charAt(0).toUpperCase() + color.slice(1).toLowerCase();
+
+    // Find the button with matching aria-label in the color grid
+    const colorButton = this.page.locator(
+      `.docx-color-grid button[aria-label="${capitalizedColor}"]`
+    );
+    if (await colorButton.isVisible()) {
+      await colorButton.click();
+    } else {
+      // Fallback: try the exact color name as provided
+      const fallbackButton = this.page.locator(`.docx-color-grid button[aria-label="${color}"]`);
+      if (await fallbackButton.isVisible()) {
+        await fallbackButton.click();
+      }
+    }
   }
 
   // ============================================================================
