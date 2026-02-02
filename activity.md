@@ -6598,3 +6598,51 @@ Implemented word-level double-click selection for the editor.
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-152: Add paragraph-level triple-click selection
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Implemented paragraph-level triple-click selection for the editor.
+
+**Updated Files:**
+
+1. **`src/components/Editor.tsx`:**
+   - Imported `selectParagraphAtCursor` from text selection utilities
+   - Added click counting refs for triple-click detection:
+     - `clickCountRef` - Tracks click count
+     - `clickTimerRef` - Timer to reset click count after timeout
+     - `lastClickTargetRef` - Tracks last click target for same-element detection
+     - `MULTI_CLICK_TIMEOUT = 500ms` - Timeout for click sequence
+   - Added `handleClick` callback that:
+     - Tracks click count for the same target element
+     - Resets count when clicking different elements
+     - Resets count after 500ms timeout
+     - On triple-click (count >= 3), calls `selectParagraphAtCursor()`
+     - Respects modifier keys and editable state
+   - Added `onClick={handleClick}` to main container div
+
+2. **Uses existing `selectParagraphAtCursor()` from `src/utils/textSelection.ts`:**
+   - Finds nearest element with `[data-paragraph-index]` attribute
+   - Selects all content within that paragraph element
+   - Uses browser's native `selection.addRange()` API
+
+**How Triple-Click Works:**
+1. First click: `clickCountRef.current = 1`
+2. Second click (within 500ms, same target): `clickCountRef.current = 2`
+3. Third click (within 500ms, same target): `clickCountRef.current = 3`, triggers paragraph selection
+4. After selection, counter resets to allow new sequence
+5. Clicking a different element or waiting > 500ms resets the counter
+
+**Features:**
+- Triple-clicking in a paragraph selects the entire paragraph
+- Works with the existing paragraph element structure using `data-paragraph-index`
+- Respects modifier keys (Ctrl/Meta/Alt/Shift do not trigger selection)
+- Only activates when editor is in editable mode
+- Compatible with double-click word selection (counts build up)
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

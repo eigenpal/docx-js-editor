@@ -41,7 +41,7 @@ import { getDefaultSectionProperties } from '../docx/sectionParser';
 import { twipsToPixels, formatPx } from '../utils/units';
 import { SELECTION_DATA_ATTRIBUTES } from '../hooks/useSelection';
 import { calculatePages, type PageLayoutResult, type Page as PageData, type PageContent } from '../layout/pageLayout';
-import { selectWordAtCursor } from '../utils/textSelection';
+import { selectWordAtCursor, selectParagraphAtCursor } from '../utils/textSelection';
 
 // ============================================================================
 // TYPES
@@ -340,6 +340,12 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
   const containerRef = useRef<HTMLDivElement>(null);
   const paragraphRefs = useRef<Map<number, HTMLParagraphElement>>(new Map());
   const lastPageChangeRef = useRef<{ current: number; total: number } | null>(null);
+
+  // Triple-click detection state
+  const clickCountRef = useRef<number>(0);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastClickTargetRef = useRef<EventTarget | null>(null);
+  const MULTI_CLICK_TIMEOUT = 500; // ms
 
   // Document state
   const [doc, setDoc] = useState<Document>(initialDocument);
@@ -741,6 +747,54 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       setTimeout(() => {
         selectWordAtCursor();
       }, 0);
+    },
+    [editable]
+  );
+
+  /**
+   * Handle click to track click count for triple-click detection
+   * Triple-click selects the entire paragraph
+   */
+  const handleClick = useCallback(
+    (event: React.MouseEvent) => {
+      // Don't interfere with modifier keys
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
+        clickCountRef.current = 0;
+        return;
+      }
+
+      // Only handle clicks on editable content
+      if (!editable) {
+        return;
+      }
+
+      // Reset if clicking different target
+      if (event.target !== lastClickTargetRef.current) {
+        clickCountRef.current = 0;
+      }
+
+      clickCountRef.current++;
+      lastClickTargetRef.current = event.target;
+
+      // Reset timer
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+      }
+
+      clickTimerRef.current = setTimeout(() => {
+        clickCountRef.current = 0;
+        lastClickTargetRef.current = null;
+      }, MULTI_CLICK_TIMEOUT);
+
+      // Triple-click: select paragraph
+      if (clickCountRef.current >= 3) {
+        event.preventDefault();
+        setTimeout(() => {
+          selectParagraphAtCursor();
+        }, 0);
+        // Reset after triple-click to allow for new triple-click sequence
+        clickCountRef.current = 0;
+      }
     },
     [editable]
   );
@@ -1318,6 +1372,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       ref={containerRef}
       className={`docx-editor ${className || ''}`}
       style={{ ...EDITOR_CONTAINER_STYLE, ...style }}
+      onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       {...{ [SELECTION_DATA_ATTRIBUTES.EDITOR_ROOT]: 'true' }}
     >
