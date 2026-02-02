@@ -84,7 +84,7 @@
 - [x] US-171: Add loading states for operations - P2 - Spinner during save
 - [x] US-172: Add keyboard shortcut help dialog - P3 - Show all shortcuts
 - [x] US-173: Add zoom via Ctrl+scroll - P2 - Mousewheel zoom
-- [ ] US-174: Improve responsive toolbar - P3 - Overflow menu for narrow screens
+- [x] US-174: Improve responsive toolbar - P3 - Overflow menu for narrow screens
 
 ---
 
