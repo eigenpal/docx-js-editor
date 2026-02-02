@@ -7702,3 +7702,28 @@ Fixed the aria-label selectors in `e2e/helpers/editor-page.ts` for the bullet an
 - `npx playwright test --grep "create numbered list"` - lists.spec.ts passes ✓
 
 ---
+
+### Test Infrastructure: Fix indent button selectors
+
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Fixed the aria-label selectors in `e2e/helpers/editor-page.ts` for the indent/outdent buttons.
+
+**Issue:**
+
+- Tests used `[aria-label="Increase indent"]` and `[aria-label="Decrease indent"]` (lowercase "i" in "indent")
+- Actual component uses `title="Increase Indent"` and `title="Decrease Indent"` (uppercase "I" in "Indent")
+- Since the ListButton component sets `aria-label={title}`, the case mismatch caused selector failures
+
+**Fix:**
+
+- Updated `indent()` selector from `[aria-label="Increase indent"]` to `[aria-label="Increase Indent"]`
+- Updated `outdent()` selector from `[aria-label="Decrease indent"]` to `[aria-label="Decrease Indent"]`
+
+**Verified:**
+
+- bun run typecheck: ✓
+- bun build exits 0: ✓
+
+---

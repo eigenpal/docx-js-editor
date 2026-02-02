@@ -22,7 +22,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 - [x] **Fix list button selectors** - Update toggleBulletList/toggleNumberedList to match "Bullet List" / "Numbered List". Verify: `npx playwright test --grep "create bullet list" --timeout=30000`
 
-- [ ] **Fix indent button selectors** - Update indent/outdent to match "Increase Indent" / "Decrease Indent". Verify: `npx playwright test --grep "indent" --timeout=30000`
+- [x] **Fix indent button selectors** - Update indent/outdent to match "Increase Indent" / "Decrease Indent". Verify: `npx playwright test --grep "indent" --timeout=30000`
 
 - [ ] **Fix strikethrough button selector** - Verify strikethrough button testid/aria-label matches. Verify: `npx playwright test --grep "strikethrough" --timeout=30000`
 

@@ -487,14 +487,14 @@ export class EditorPage {
    * Indent paragraph/list item
    */
   async indent(): Promise<void> {
-    await this.toolbar.locator('[aria-label="Increase indent"]').click();
+    await this.toolbar.locator('[aria-label="Increase Indent"]').click();
   }
 
   /**
    * Outdent paragraph/list item
    */
   async outdent(): Promise<void> {
-    await this.toolbar.locator('[aria-label="Decrease indent"]').click();
+    await this.toolbar.locator('[aria-label="Decrease Indent"]').click();
   }
 
   // ============================================================================
