@@ -6018,3 +6018,35 @@ Verified that table row deletion functionality is fully wired and working.
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-133: Wire table column deletion
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Verified that table column deletion functionality is fully wired and working.
+
+**Already Implemented Components:**
+
+1. **`src/components/ui/TableToolbar.tsx`:**
+   - `DeleteColumnIcon` SVG icon (red accent)
+   - "Delete Column" button with disabled state when only one column remains
+   - `deleteColumn(table, columnIndex)` utility function:
+     - Handles gridSpan: reduces span by 1 or removes cell
+     - Updates columnWidths if present
+
+2. **`src/hooks/useTableSelection.ts`:**
+   - `handleAction()` handles 'deleteColumn' action (lines 343-354)
+   - Checks `columnCount > 1` before allowing deletion
+   - Adjusts selection if deleting the last column
+   - Updates document via `onChange` callback
+
+**Special Handling:**
+- Cells with gridSpan > 1: reduces gridSpan by 1 instead of removing
+- Cells with gridSpan = 1: removes the cell
+- Updates columnWidths array if present
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
