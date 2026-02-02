@@ -1,0 +1,19 @@
+# Progress Log
+
+## 2026-02-01: Fix backwards text rendering
+
+**Problem:** Text typed in the editor appeared reversed ("Hello" → "olleH").
+
+**Root Cause:** When users typed in a contentEditable span, the browser would insert characters at the cursor position, but when React re-rendered the component with the new text content, the cursor position was reset to the beginning of the element. Each subsequent keystroke was then inserted at position 0, resulting in reversed text.
+
+**Solution:** Added cursor position preservation in `src/components/edit/EditableRun.tsx`:
+1. Added `cursorPositionRef` to track cursor position before state updates
+2. In `handleInput` and `handleCompositionEnd`, save the current cursor offset before calling `onChange`
+3. Added `useLayoutEffect` to restore the cursor position after React re-renders
+
+**Files Modified:**
+- `src/components/edit/EditableRun.tsx` - Added cursor position save/restore logic
+
+**Verification:**
+- `npx playwright test --grep "apply bold via toolbar" --timeout=30000` - 2 tests passed
+- Manual testing confirmed text now displays correctly

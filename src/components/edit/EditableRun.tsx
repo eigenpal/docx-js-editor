@@ -11,7 +11,7 @@
  * - Handles text-only content (tabs, breaks, images handled by parent)
  */
 
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useCallback, useState, useLayoutEffect } from 'react';
 import type { CSSProperties, KeyboardEvent, FormEvent } from 'react';
 import type {
   Run as RunType,
@@ -196,6 +196,8 @@ export function EditableRun({
   const spanRef = useRef<HTMLSpanElement>(null);
   const [isComposing, setIsComposing] = useState(false);
   const lastTextRef = useRef<string>(getRunText(run));
+  // Track cursor position to restore after React re-renders
+  const cursorPositionRef = useRef<number | null>(null);
 
   // Get CSS styles from formatting
   const formattingStyle = textToStyle(run.formatting, theme);
@@ -207,6 +209,51 @@ export function EditableRun({
   useEffect(() => {
     lastTextRef.current = getRunText(run);
   }, [run]);
+
+  // Restore cursor position after React re-renders
+  useLayoutEffect(() => {
+    if (cursorPositionRef.current !== null && spanRef.current) {
+      const position = cursorPositionRef.current;
+      cursorPositionRef.current = null; // Clear after restoring
+
+      const selection = window.getSelection();
+      if (!selection) return;
+
+      // Find the text node to place cursor in
+      const walker = document.createTreeWalker(spanRef.current, NodeFilter.SHOW_TEXT, null);
+
+      let currentOffset = 0;
+      let node = walker.nextNode();
+
+      while (node) {
+        const nodeLength = node.textContent?.length || 0;
+
+        if (currentOffset + nodeLength >= position) {
+          // Found the right text node - place cursor here
+          const range = document.createRange();
+          const offsetInNode = position - currentOffset;
+          range.setStart(node, Math.min(offsetInNode, nodeLength));
+          range.collapse(true);
+
+          selection.removeAllRanges();
+          selection.addRange(range);
+          return;
+        }
+
+        currentOffset += nodeLength;
+        node = walker.nextNode();
+      }
+
+      // If position is beyond all text, place at end
+      if (spanRef.current.lastChild) {
+        const range = document.createRange();
+        range.selectNodeContents(spanRef.current);
+        range.collapse(false); // Collapse to end
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
+  });
 
   /**
    * Handle input events (text changes)
@@ -220,6 +267,24 @@ export function EditableRun({
 
       // Only trigger change if text actually changed
       if (newText !== lastTextRef.current) {
+        // Save cursor position before triggering state update
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          if (element.contains(range.startContainer)) {
+            // Calculate the absolute offset within the element
+            let offset = 0;
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+            let node = walker.nextNode();
+            while (node && node !== range.startContainer) {
+              offset += node.textContent?.length || 0;
+              node = walker.nextNode();
+            }
+            offset += range.startOffset;
+            cursorPositionRef.current = offset;
+          }
+        }
+
         lastTextRef.current = newText;
 
         if (onChange) {
@@ -250,6 +315,23 @@ export function EditableRun({
       const newText = element.textContent || '';
 
       if (newText !== lastTextRef.current) {
+        // Save cursor position before triggering state update
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          if (element.contains(range.startContainer)) {
+            let offset = 0;
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+            let node = walker.nextNode();
+            while (node && node !== range.startContainer) {
+              offset += node.textContent?.length || 0;
+              node = walker.nextNode();
+            }
+            offset += range.startOffset;
+            cursorPositionRef.current = offset;
+          }
+        }
+
         lastTextRef.current = newText;
 
         if (onChange) {

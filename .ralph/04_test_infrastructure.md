@@ -12,7 +12,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 ## PHASE 1: CRITICAL RENDERING BUG
 
-- [ ] **Fix backwards text rendering** - Text displays reversed in editor ("Italic text" → "txet cilatI"). Investigate ProseMirror/Editor rendering, CSS direction, or contenteditable setup. Verify: `npx playwright test --grep "apply bold via toolbar" --timeout=30000`
+- [x] **Fix backwards text rendering** - Text displays reversed in editor ("Italic text" → "txet cilatI"). Investigate ProseMirror/Editor rendering, CSS direction, or contenteditable setup. Verify: `npx playwright test --grep "apply bold via toolbar" --timeout=30000`
 
 ---
 
