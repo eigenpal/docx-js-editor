@@ -86,6 +86,18 @@ const TEMPLATE_VARIABLE_STYLE: CSSProperties = {
 };
 
 /**
+ * Base styles for contentEditable elements to ensure visible cursor/caret
+ */
+const EDITABLE_BASE_STYLE: CSSProperties = {
+  // Ensure cursor is always visible - black for light backgrounds
+  caretColor: '#000',
+  // Remove default focus outline for clean WYSIWYG appearance
+  outline: 'none',
+  // Minimum height to ensure cursor visibility in empty runs
+  minHeight: '1em',
+};
+
+/**
  * Get plain text from run content
  */
 function getRunText(run: RunType): string {
@@ -367,7 +379,7 @@ export function EditableRun({
         <span
           ref={spanRef}
           className={buildClassName(run.formatting, className, false)}
-          style={combinedStyle}
+          style={mergeStyles(EDITABLE_BASE_STYLE, combinedStyle)}
           contentEditable={true}
           suppressContentEditableWarning={true}
           data-run-index={runIndex}
@@ -417,7 +429,7 @@ export function EditableRun({
     <span
       ref={spanRef}
       className={finalClassName}
-      style={combinedStyle}
+      style={mergeStyles(EDITABLE_BASE_STYLE, combinedStyle)}
       contentEditable={true}
       suppressContentEditableWarning={true}
       spellCheck={true}

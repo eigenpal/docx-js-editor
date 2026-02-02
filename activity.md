@@ -4702,6 +4702,58 @@ Updated `src/index.ts` with comprehensive public API exports.
 
 ---
 
+### US-100: Fix Toolbar props mismatch in DocxEditor
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Fixed props mismatch between DocxEditor and Toolbar component.
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
+
+### US-101: Add visible cursor/caret styling
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added visible cursor/caret styling for contentEditable elements in the editor.
+
+**Changes:**
+
+1. **Created `src/styles/editor.css`:**
+   - Added `caret-color: #000` for all contentEditable elements
+   - Selection highlighting with blue tint
+   - Focus states without disruptive borders
+   - Support for dark backgrounds (white caret)
+   - Cursor styling for paragraph containers
+
+2. **Updated `src/components/edit/EditableRun.tsx`:**
+   - Added `EDITABLE_BASE_STYLE` constant with inline caret-color styling
+   - Applied to all editable spans (empty runs, text runs)
+   - Ensures cursor is visible even without CSS import
+
+3. **Updated `src/components/edit/EditableParagraph.tsx`:**
+   - Added `EDITABLE_PARAGRAPH_STYLE` constant
+   - Applied cursor:text to paragraphs for better UX
+   - Ensures paragraphs have clickable area
+
+4. **Created `src/styles/index.ts`:**
+   - Export path for CSS styles
+   - Documentation for importing styles
+
+**CSS Classes Added:**
+- `docx-run-editable` - Base class with caret styling
+- `docx-paragraph-editable` - Paragraph cursor styling
+- `docx-run-highlighted` - Dark caret for yellow background
+- `docx-run-dark-bg` - White caret for dark backgrounds
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
+
 ### US-91: Demo page
 **Date:** 2026-02-01
 **Status:** Complete ✅

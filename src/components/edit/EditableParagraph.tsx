@@ -444,6 +444,16 @@ const EMPTY_PARAGRAPH_STYLE: CSSProperties = {
   minHeight: '1em',
 };
 
+/**
+ * Base style for editable paragraphs to ensure cursor visibility
+ */
+const EDITABLE_PARAGRAPH_STYLE: CSSProperties = {
+  // Show text cursor when hovering over paragraph
+  cursor: 'text',
+  // Ensure paragraph has clickable area
+  minHeight: '1em',
+};
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -665,7 +675,7 @@ export function EditableParagraph({
       <p
         ref={paragraphRef}
         className={buildClassNames(paragraph, className)}
-        style={mergeStyles(combinedStyle, EMPTY_PARAGRAPH_STYLE)}
+        style={mergeStyles(EDITABLE_PARAGRAPH_STYLE, combinedStyle, EMPTY_PARAGRAPH_STYLE)}
         id={paragraph.paraId}
         data-text-id={paragraph.textId}
         {...{ [SELECTION_DATA_ATTRIBUTES.PARAGRAPH_INDEX]: paragraphIndex }}
@@ -787,7 +797,7 @@ export function EditableParagraph({
     <p
       ref={paragraphRef}
       className={buildClassNames(paragraph, className)}
-      style={combinedStyle}
+      style={mergeStyles(EDITABLE_PARAGRAPH_STYLE, combinedStyle)}
       id={paragraph.paraId}
       data-text-id={paragraph.textId}
       {...{ [SELECTION_DATA_ATTRIBUTES.PARAGRAPH_INDEX]: paragraphIndex }}

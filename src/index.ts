@@ -12,6 +12,12 @@
  * - DocumentAgent API for programmatic editing
  * - Template variable substitution
  * - AI-powered context menu
+ *
+ * CSS Styles:
+ * For optimal cursor visibility and selection highlighting, import the editor styles:
+ * ```
+ * import '@eigenpal/docx-editor/styles/editor.css';
+ * ```
  */
 
 // ============================================================================
