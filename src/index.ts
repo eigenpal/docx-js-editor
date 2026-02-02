@@ -82,6 +82,19 @@ export { AIEditor, type AIEditorProps, type AIEditorRef, type AIRequestHandler, 
 export { DocumentViewer, type DocumentViewerProps, scrollToPage, getVisiblePages, calculateFitWidthZoom, calculateFitPageZoom } from './components/DocumentViewer';
 export { ContextMenu, type ContextMenuProps, useContextMenu, getActionShortcut, isActionAvailable, getDefaultActions, getAllActions } from './components/ContextMenu';
 export { ResponsePreview, type ResponsePreviewProps, useResponsePreview, type ResponsePreviewState, createMockResponse, createErrorResponse } from './components/ResponsePreview';
+export {
+  TextContextMenu,
+  type TextContextMenuProps,
+  type TextContextAction,
+  type TextContextMenuItem,
+  type UseTextContextMenuOptions,
+  type UseTextContextMenuReturn,
+  useTextContextMenu,
+  getTextActionLabel,
+  getTextActionShortcut,
+  getDefaultTextContextMenuItems,
+  isTextActionAvailable,
+} from './components/TextContextMenu';
 
 // ============================================================================
 // ERROR HANDLING
