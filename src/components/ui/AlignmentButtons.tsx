@@ -10,6 +10,7 @@
 import React, { useState, useCallback } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { ParagraphAlignment } from '../../types/document';
+import { MaterialSymbol } from './MaterialSymbol';
 
 // ============================================================================
 // TYPES
@@ -76,78 +77,52 @@ export interface AlignmentButtonProps {
 const CONTAINER_STYLE: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '2px',
-  borderRadius: '4px',
-  border: '1px solid #e0e0e0',
-  padding: '2px',
-  backgroundColor: '#fff',
+  gap: '4px',
 };
 
 const BUTTON_STYLE: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '28px',
-  height: '28px',
+  width: '32px',
+  height: '32px',
   padding: '4px',
   border: 'none',
-  borderRadius: '3px',
+  borderRadius: '4px',
   backgroundColor: 'transparent',
   cursor: 'pointer',
-  transition: 'background-color 0.15s, color 0.15s',
-  color: '#444',
+  transition: 'background-color 0.1s',
+  color: '#5f6368',
 };
 
 const BUTTON_HOVER_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  backgroundColor: '#f0f0f0',
+  backgroundColor: 'rgba(0, 0, 0, 0.06)',
 };
 
 const BUTTON_ACTIVE_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  backgroundColor: '#e3f2fd',
-  color: '#0066cc',
+  backgroundColor: '#e8f0fe',
+  color: '#1967d2',
 };
 
 const BUTTON_DISABLED_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  cursor: 'not-allowed',
-  opacity: 0.5,
+  cursor: 'default',
+  opacity: 0.38,
 };
 
 const COMPACT_BUTTON_STYLE: CSSProperties = {
-  width: '24px',
-  height: '24px',
+  width: '28px',
+  height: '28px',
   padding: '2px',
 };
 
 // ============================================================================
-// ICONS
+// ICON SIZE CONSTANT
 // ============================================================================
 
-const AlignLeftIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M2 3h12v1H2V3zm0 3h8v1H2V6zm0 3h12v1H2V9zm0 3h8v1H2v-1z" />
-  </svg>
-);
-
-const AlignCenterIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M2 3h12v1H2V3zm2 3h8v1H4V6zm-2 3h12v1H2V9zm2 3h8v1H4v-1z" />
-  </svg>
-);
-
-const AlignRightIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M2 3h12v1H2V3zm4 3h8v1H6V6zM2 9h12v1H2V9zm4 3h8v1H6v-1z" />
-  </svg>
-);
-
-const AlignJustifyIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M2 3h12v1H2V3zm0 3h12v1H2V6zm0 3h12v1H2V9zm0 3h12v1H2v-1z" />
-  </svg>
-);
+const ICON_SIZE = 20;
 
 // ============================================================================
 // ALIGNMENT OPTIONS
@@ -157,25 +132,25 @@ const ALIGNMENT_OPTIONS: AlignmentOption[] = [
   {
     value: 'left',
     label: 'Align Left',
-    icon: <AlignLeftIcon />,
+    icon: <MaterialSymbol name="format_align_left" size={ICON_SIZE} />,
     shortcut: 'Ctrl+L',
   },
   {
     value: 'center',
     label: 'Center',
-    icon: <AlignCenterIcon />,
+    icon: <MaterialSymbol name="format_align_center" size={ICON_SIZE} />,
     shortcut: 'Ctrl+E',
   },
   {
     value: 'right',
     label: 'Align Right',
-    icon: <AlignRightIcon />,
+    icon: <MaterialSymbol name="format_align_right" size={ICON_SIZE} />,
     shortcut: 'Ctrl+R',
   },
   {
     value: 'both',
     label: 'Justify',
-    icon: <AlignJustifyIcon />,
+    icon: <MaterialSymbol name="format_align_justify" size={ICON_SIZE} />,
     shortcut: 'Ctrl+J',
   },
 ];
@@ -323,7 +298,7 @@ export function getAlignmentLabel(value: ParagraphAlignment): string {
  */
 export function getAlignmentIcon(value: ParagraphAlignment): ReactNode {
   const option = ALIGNMENT_OPTIONS.find((opt) => opt.value === value);
-  return option?.icon || <AlignLeftIcon />;
+  return option?.icon || <MaterialSymbol name="format_align_left" size={ICON_SIZE} />;
 }
 
 /**
@@ -415,6 +390,3 @@ export function handleAlignmentShortcut(
 // ============================================================================
 
 export default AlignmentButtons;
-
-// Also export individual icons for use elsewhere
-export { AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon };

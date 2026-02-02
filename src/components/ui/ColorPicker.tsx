@@ -159,33 +159,32 @@ const BUTTON_STYLE: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '32px',
+  width: '40px',
   height: '32px',
-  padding: '4px',
-  border: '1px solid #ccc',
+  padding: '2px 6px',
+  border: 'none',
   borderRadius: '4px',
-  backgroundColor: '#fff',
+  backgroundColor: 'transparent',
   cursor: 'pointer',
-  transition: 'border-color 0.15s, background-color 0.15s',
+  transition: 'background-color 0.1s',
+  color: '#5f6368',
 };
 
 const BUTTON_HOVER_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  borderColor: '#999',
-  backgroundColor: '#f5f5f5',
+  backgroundColor: 'rgba(0, 0, 0, 0.06)',
 };
 
 const BUTTON_ACTIVE_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  borderColor: '#0066cc',
-  backgroundColor: '#e3f2fd',
+  backgroundColor: '#e8f0fe',
+  color: '#1967d2',
 };
 
 const BUTTON_DISABLED_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  backgroundColor: '#f5f5f5',
-  cursor: 'not-allowed',
-  opacity: 0.6,
+  cursor: 'default',
+  opacity: 0.38,
 };
 
 const COLOR_INDICATOR_STYLE: CSSProperties = {
@@ -193,13 +192,14 @@ const COLOR_INDICATOR_STYLE: CSSProperties = {
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '2px',
+  gap: '0',
 };
 
 const COLOR_BAR_STYLE: CSSProperties = {
-  width: '18px',
+  width: '14px',
   height: '3px',
-  borderRadius: '1px',
+  borderRadius: '0',
+  marginTop: '-2px',
 };
 
 const DROPDOWN_STYLE: CSSProperties = {
@@ -299,26 +299,16 @@ const APPLY_BUTTON_STYLE: CSSProperties = {
 };
 
 // ============================================================================
-// ICONS
+// ICONS (using Material Symbols)
 // ============================================================================
 
-const TextColorIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M3.5 12L6.5 4h3l3 8h-2l-.5-1.5H6L5.5 12h-2zm3-3.5h3L8.25 5h-.5L6.5 8.5z" />
-  </svg>
-);
+import { MaterialSymbol } from './MaterialSymbol';
 
-const HighlightIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M11.5 2.5l2 2-6 6-3 1 1-3 6-6zm-7.5 9.5h8v1h-8v-1z" />
-  </svg>
-);
+const TextColorIcon = () => <MaterialSymbol name="format_color_text" size={18} />;
 
-const ChevronDownIcon = () => (
-  <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
-    <path d="M1 2.5l3 3 3-3H1z" />
-  </svg>
-);
+const HighlightIcon = () => <MaterialSymbol name="ink_highlighter" size={18} />;
+
+const ChevronDownIcon = () => <MaterialSymbol name="arrow_drop_down" size={14} />;
 
 // ============================================================================
 // COLOR GRID COMPONENT

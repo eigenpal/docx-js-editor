@@ -19,6 +19,7 @@ import { AlignmentButtons } from './ui/AlignmentButtons';
 import { ListButtons, type ListState, createDefaultListState } from './ui/ListButtons';
 import { LineSpacingPicker } from './ui/LineSpacingPicker';
 import { StylePicker } from './ui/StylePicker';
+import { MaterialSymbol } from './ui/MaterialSymbol';
 
 // ============================================================================
 // TYPES
@@ -129,6 +130,10 @@ export interface ToolbarProps {
   documentStyles?: Style[];
   /** Theme for the style picker */
   theme?: Theme | null;
+  /** Callback for print action */
+  onPrint?: () => void;
+  /** Whether to show print button (default: true) */
+  showPrintButton?: boolean;
 }
 
 /**
@@ -171,8 +176,8 @@ const TOOLBAR_STYLE: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '4px',
-  padding: '8px 12px',
-  backgroundColor: '#f8f9fa',
+  padding: '8px 16px',
+  backgroundColor: 'transparent',
   borderBottom: '1px solid #e0e0e0',
   flexWrap: 'wrap',
   minHeight: '44px',
@@ -182,9 +187,10 @@ const TOOLBAR_STYLE: CSSProperties = {
 const TOOLBAR_GROUP_STYLE: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '2px',
+  gap: '4px',
   padding: '0 8px',
   borderRight: '1px solid #e0e0e0',
+  marginRight: '4px',
 };
 
 const TOOLBAR_BUTTON_STYLE: CSSProperties = {
@@ -194,30 +200,30 @@ const TOOLBAR_BUTTON_STYLE: CSSProperties = {
   width: '32px',
   height: '32px',
   padding: '0',
-  border: '1px solid transparent',
+  border: 'none',
   borderRadius: '4px',
   backgroundColor: 'transparent',
   cursor: 'pointer',
   fontSize: '14px',
   fontWeight: 'normal',
-  color: '#333',
-  transition: 'background-color 0.15s, border-color 0.15s',
+  color: '#5f6368',
+  transition: 'background-color 0.1s',
 };
 
 const TOOLBAR_BUTTON_ACTIVE_STYLE: CSSProperties = {
   ...TOOLBAR_BUTTON_STYLE,
-  backgroundColor: '#e3e8ed',
-  borderColor: '#c0c8d0',
+  backgroundColor: '#e8f0fe',
+  color: '#1967d2',
 };
 
 const TOOLBAR_BUTTON_DISABLED_STYLE: CSSProperties = {
   ...TOOLBAR_BUTTON_STYLE,
-  opacity: 0.5,
-  cursor: 'not-allowed',
+  opacity: 0.38,
+  cursor: 'default',
 };
 
 const TOOLBAR_BUTTON_HOVER_STYLE: CSSProperties = {
-  backgroundColor: '#e9ecef',
+  backgroundColor: 'rgba(0, 0, 0, 0.06)',
 };
 
 // ============================================================================
@@ -246,6 +252,15 @@ export function ToolbarButton({
         ? { ...TOOLBAR_BUTTON_STYLE, ...TOOLBAR_BUTTON_HOVER_STYLE }
         : TOOLBAR_BUTTON_STYLE;
 
+  // Generate testid from ariaLabel or title
+  const testId =
+    ariaLabel?.toLowerCase().replace(/\s+/g, '-') ||
+    title
+      ?.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/\([^)]*\)/g, '')
+      .trim();
+
   return (
     <button
       type="button"
@@ -258,6 +273,7 @@ export function ToolbarButton({
       disabled={disabled}
       aria-pressed={active}
       aria-label={ariaLabel || title}
+      data-testid={testId ? `toolbar-${testId}` : undefined}
     >
       {children}
     </button>
@@ -299,74 +315,10 @@ export function ToolbarSeparator() {
 }
 
 // ============================================================================
-// ICONS (Simple SVG icons)
+// ICON SIZE CONSTANT
 // ============================================================================
 
-const BoldIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M4 2h4.5a3 3 0 0 1 2.17 5.04A3.5 3.5 0 0 1 8.5 14H4V2zm2 5h2.5a1 1 0 0 0 0-2H6v2zm0 2v3h2.5a1.5 1.5 0 0 0 0-3H6z" />
-  </svg>
-);
-
-const ItalicIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M6 2h6v2h-2l-3 8h2v2H3v-2h2l3-8H6V2z" />
-  </svg>
-);
-
-const UnderlineIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M4 2v6a4 4 0 0 0 8 0V2h-2v6a2 2 0 0 1-4 0V2H4zm-1 12h10v-2H3v2z" />
-  </svg>
-);
-
-const StrikethroughIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M2 7h12v2H2V7z" />
-    <path d="M8 3c-2.2 0-3.5 1.2-3.5 2.5 0 .4.1.8.3 1.1h2.1c-.2-.2-.4-.5-.4-.9 0-.6.6-1.2 1.5-1.2.9 0 1.5.5 1.5 1.2 0 .4-.2.8-.5 1h2.1c.3-.4.4-.8.4-1.2C11.5 4.1 10.2 3 8 3zm0 10c2.2 0 3.5-1.2 3.5-2.5 0-.4-.1-.8-.3-1.1H9.1c.2.2.4.5.4.9 0 .6-.6 1.2-1.5 1.2-.9 0-1.5-.5-1.5-1.2 0-.4.2-.8.5-1H4.9c-.3.4-.4.8-.4 1.2C4.5 11.9 5.8 13 8 13z" />
-  </svg>
-);
-
-const SuperscriptIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M2.5 14L6 8.5 2.5 3h2.7l2.3 3.5L9.8 3h2.7L9 8.5l3.5 5.5h-2.7L7.5 10.5 5.2 14H2.5z" />
-    <path
-      d="M12 2h2v1h-2v1h3V1h-3V0h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-3V2z"
-      transform="scale(0.8) translate(4, 0)"
-    />
-  </svg>
-);
-
-const SubscriptIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M2.5 12L6 6.5 2.5 1h2.7l2.3 3.5L9.8 1h2.7L9 6.5l3.5 5.5h-2.7L7.5 8.5 5.2 12H2.5z" />
-    <path
-      d="M12 11h2v1h-2v1h3v-3h-3v-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-3v-2z"
-      transform="scale(0.8) translate(4, 4)"
-    />
-  </svg>
-);
-
-const UndoIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 1 0-.908-.418A6 6 0 1 0 8 2v1z" />
-    <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L4.23 3.308a.25.25 0 0 0 0 .384l3.36 2.966A.25.25 0 0 0 8 6.466V4.466z" />
-  </svg>
-);
-
-const RedoIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 1 1 .908-.418A6 6 0 1 1 8 2v1z" />
-    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l3.36 2.966a.25.25 0 0 1 0 .384l-3.36 2.966A.25.25 0 0 1 8 6.466V4.466z" />
-  </svg>
-);
-
-const ClearFormattingIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M3.5 3l2.5 4-2.5 4h2l1.5-2.5 1.5 2.5h2l-2.5-4 2.5-4h-2L7 5.5 5.5 3h-2z" />
-    <path d="M12 11l2 2m0-2l-2 2" stroke="currentColor" strokeWidth="1.5" fill="none" />
-  </svg>
-);
+const ICON_SIZE = 20;
 
 // ============================================================================
 // MAIN COMPONENT
@@ -398,6 +350,8 @@ export function Toolbar({
   showStylePicker = true,
   documentStyles,
   theme,
+  onPrint,
+  showPrintButton = true,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -631,8 +585,9 @@ export function Toolbar({
       style={{ ...TOOLBAR_STYLE, ...style }}
       role="toolbar"
       aria-label="Formatting toolbar"
+      data-testid="toolbar"
     >
-      {/* Undo/Redo Group */}
+      {/* Undo/Redo/Print Group */}
       <ToolbarGroup label="History">
         <ToolbarButton
           onClick={handleUndo}
@@ -640,7 +595,7 @@ export function Toolbar({
           title="Undo (Ctrl+Z)"
           ariaLabel="Undo"
         >
-          <UndoIcon />
+          <MaterialSymbol name="undo" size={ICON_SIZE} />
         </ToolbarButton>
         <ToolbarButton
           onClick={handleRedo}
@@ -648,8 +603,18 @@ export function Toolbar({
           title="Redo (Ctrl+Y)"
           ariaLabel="Redo"
         >
-          <RedoIcon />
+          <MaterialSymbol name="redo" size={ICON_SIZE} />
         </ToolbarButton>
+        {showPrintButton && (
+          <ToolbarButton
+            onClick={onPrint}
+            disabled={disabled || !onPrint}
+            title="Print (Ctrl+P)"
+            ariaLabel="Print"
+          >
+            <MaterialSymbol name="print" size={ICON_SIZE} />
+          </ToolbarButton>
+        )}
       </ToolbarGroup>
 
       {/* Style Picker */}
@@ -706,7 +671,7 @@ export function Toolbar({
           title="Bold (Ctrl+B)"
           ariaLabel="Bold"
         >
-          <BoldIcon />
+          <MaterialSymbol name="format_bold" size={ICON_SIZE} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => handleFormat('italic')}
@@ -715,7 +680,7 @@ export function Toolbar({
           title="Italic (Ctrl+I)"
           ariaLabel="Italic"
         >
-          <ItalicIcon />
+          <MaterialSymbol name="format_italic" size={ICON_SIZE} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => handleFormat('underline')}
@@ -724,7 +689,7 @@ export function Toolbar({
           title="Underline (Ctrl+U)"
           ariaLabel="Underline"
         >
-          <UnderlineIcon />
+          <MaterialSymbol name="format_underlined" size={ICON_SIZE} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => handleFormat('strikethrough')}
@@ -733,7 +698,7 @@ export function Toolbar({
           title="Strikethrough"
           ariaLabel="Strikethrough"
         >
-          <StrikethroughIcon />
+          <MaterialSymbol name="strikethrough_s" size={ICON_SIZE} />
         </ToolbarButton>
         {showTextColorPicker && (
           <TextColorPicker
@@ -762,7 +727,7 @@ export function Toolbar({
           title="Superscript (Ctrl+Shift+=)"
           ariaLabel="Superscript"
         >
-          <SuperscriptIcon />
+          <MaterialSymbol name="superscript" size={ICON_SIZE} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => handleFormat('subscript')}
@@ -771,7 +736,7 @@ export function Toolbar({
           title="Subscript (Ctrl+=)"
           ariaLabel="Subscript"
         >
-          <SubscriptIcon />
+          <MaterialSymbol name="subscript" size={ICON_SIZE} />
         </ToolbarButton>
       </ToolbarGroup>
 
@@ -822,7 +787,7 @@ export function Toolbar({
         title="Clear formatting"
         ariaLabel="Clear formatting"
       >
-        <ClearFormattingIcon />
+        <MaterialSymbol name="format_clear" size={ICON_SIZE} />
       </ToolbarButton>
 
       {/* Custom toolbar items */}
