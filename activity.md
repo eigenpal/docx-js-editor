@@ -5640,3 +5640,68 @@ Implemented footer rendering on each page, displaying document footers from the 
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-124: Add page number display
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added a floating page number indicator that shows "Page X of Y" and tracks the currently visible page as the user scrolls.
+
+**Implementation:**
+
+1. **Created `src/components/ui/PageNumberIndicator.tsx`:**
+   - `PageNumberIndicator` component with floating display
+   - Position options: bottom-left, bottom-center, bottom-right, top-left, top-center, top-right
+   - Variant styles: default, minimal, badge, pill
+   - ARIA accessibility with role="status" and aria-live="polite"
+   - Optional click handler for navigation
+
+2. **Updated `src/components/Editor.tsx`:**
+   - Added `onPageChange` prop callback for page change events
+   - Added scroll event listener to track visible page
+   - Added `scrollToPage(pageNumber)` ref method
+   - Added `getCurrentPage()` and `getTotalPages()` ref methods
+   - Uses `lastPageChangeRef` to avoid duplicate notifications
+
+3. **Updated `src/components/DocxEditor.tsx`:**
+   - Added `showPageNumbers` prop (default: true)
+   - Added `pageNumberPosition` prop (default: 'bottom-center')
+   - Added `pageNumberVariant` prop (default: 'default')
+   - Added `currentPage` and `totalPages` to EditorState
+   - Added `handlePageChange` callback to track page changes
+   - Renders `PageNumberIndicator` when enabled
+   - Added `getCurrentPage`, `getTotalPages`, `scrollToPage` to ref
+
+4. **Updated `src/index.ts`:**
+   - Exported `PageNumberIndicator` component and types
+   - Exported utility functions: `formatPageOrdinal`, `createPageFormat`, `getPageProgress`, etc.
+
+**PageNumberIndicator Features:**
+- Shows "Page X of Y" as floating overlay
+- Tracks current page based on scroll position
+- Updates in real-time as user scrolls
+- Multiple style variants for different UIs
+- Keyboard and click accessible
+
+**Utility Functions:**
+- `formatPageOrdinal(page)` - Format as "1st", "2nd", "3rd", etc.
+- `createPageFormat(template)` - Create custom format function
+- `getPageProgress(current, total)` - Calculate % progress
+- `calculateVisiblePage(scrollTop, pageHeights, gap)` - Determine visible page
+- `calculateScrollToPage(pageNumber, pageHeights, containerHeight, gap)` - Calculate scroll position
+
+**Props Added to DocxEditorProps:**
+- `showPageNumbers?: boolean` - Show page number indicator (default: true)
+- `pageNumberPosition?: PageIndicatorPosition` - Position of indicator
+- `pageNumberVariant?: PageIndicatorVariant` - Style variant
+
+**Ref Methods Added:**
+- `getCurrentPage(): number` - Get current page (1-indexed)
+- `getTotalPages(): number` - Get total page count
+- `scrollToPage(pageNumber: number): void` - Scroll to specific page
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

@@ -104,6 +104,8 @@ export interface EditorProps {
   onTableCellClick?: (tableIndex: number, rowIndex: number, columnIndex: number) => void;
   /** Check if a table cell is selected */
   isTableCellSelected?: (tableIndex: number, rowIndex: number, columnIndex: number) => boolean;
+  /** Callback when page layout changes (current page, total pages) */
+  onPageChange?: (currentPage: number, totalPages: number) => void;
 }
 
 /**
@@ -122,6 +124,12 @@ export interface EditorRef {
   focusParagraph: (index: number, atEnd?: boolean) => void;
   /** Get paragraph element by index */
   getParagraphElement: (index: number) => HTMLElement | null;
+  /** Scroll to a specific page (1-indexed) */
+  scrollToPage: (pageNumber: number) => void;
+  /** Get current page number (1-indexed) */
+  getCurrentPage: () => number;
+  /** Get total page count */
+  getTotalPages: () => number;
 }
 
 // ============================================================================
@@ -324,11 +332,13 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     renderTextBox,
     onTableCellClick,
     isTableCellSelected,
+    onPageChange,
   },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const paragraphRefs = useRef<Map<number, HTMLParagraphElement>>(new Map());
+  const lastPageChangeRef = useRef<{ current: number; total: number } | null>(null);
 
   // Document state
   const [doc, setDoc] = useState<Document>(initialDocument);
@@ -442,6 +452,57 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       return null;
     }
   }, [doc, theme, enablePagination, headersForLayout, footersForLayout]);
+
+  // Notify page changes on layout calculation and scroll
+  useEffect(() => {
+    const totalPages = pageLayout?.totalPages || 1;
+
+    // Notify initial page info
+    if (onPageChange) {
+      const last = lastPageChangeRef.current;
+      if (!last || last.total !== totalPages) {
+        lastPageChangeRef.current = { current: 1, total: totalPages };
+        onPageChange(1, totalPages);
+      }
+    }
+
+    // Set up scroll handler to track current page
+    const container = containerRef.current;
+    if (!container || !pageLayout || !onPageChange) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const pageGapPx = pageGap;
+
+      // Calculate which page is currently visible based on scroll position
+      let accumulatedHeight = 0;
+      let currentPage = 1;
+
+      for (let i = 0; i < pageLayout.pages.length; i++) {
+        const page = pageLayout.pages[i];
+        const pageHeight = page.heightPx * zoom;
+        const pageMiddle = accumulatedHeight + pageHeight / 2;
+
+        if (scrollTop < pageMiddle) {
+          currentPage = i + 1;
+          break;
+        }
+
+        accumulatedHeight += pageHeight + pageGapPx;
+        currentPage = i + 1;
+      }
+
+      // Only notify if page changed
+      const last = lastPageChangeRef.current;
+      if (!last || last.current !== currentPage || last.total !== totalPages) {
+        lastPageChangeRef.current = { current: currentPage, total: totalPages };
+        onPageChange(currentPage, totalPages);
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [pageLayout, zoom, pageGap, onPageChange]);
 
   /**
    * Update document and notify parent
@@ -701,8 +762,25 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
         }
       },
       getParagraphElement: (index: number) => paragraphRefs.current.get(index) || null,
+      scrollToPage: (pageNumber: number) => {
+        if (!containerRef.current || !pageLayout) return;
+        if (pageNumber < 1 || pageNumber > pageLayout.pages.length) return;
+
+        // Calculate scroll position for the target page
+        let scrollTop = 0;
+        for (let i = 0; i < pageNumber - 1; i++) {
+          scrollTop += pageLayout.pages[i].heightPx * zoom + pageGap;
+        }
+
+        containerRef.current.scrollTo({
+          top: scrollTop,
+          behavior: 'smooth',
+        });
+      },
+      getCurrentPage: () => lastPageChangeRef.current?.current || 1,
+      getTotalPages: () => pageLayout?.totalPages || 1,
     }),
-    [doc, focusedParagraphIndex, paragraphCount]
+    [doc, focusedParagraphIndex, paragraphCount, pageLayout, zoom, pageGap]
   );
 
   /**
