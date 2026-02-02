@@ -408,25 +408,27 @@ export async function loadFontWithMapping(fontFamily: string): Promise<boolean> 
   const trimmed = fontFamily.trim();
   const googleFont = getGoogleFontEquivalent(trimmed);
 
-  // Load the Google Font
-  const loaded = await loadFont(googleFont);
-
-  // If loaded and there's a mapping, create CSS alias so original name works
-  if (loaded && googleFont !== trimmed) {
-    createFontAlias(trimmed, googleFont);
-    loadedFonts.add(trimmed); // Also mark original name as loaded
+  // If there's a mapping, fetch the CSS and create alias with original name
+  // This avoids loading the font twice (once for Google name, once for alias)
+  if (googleFont !== trimmed) {
+    await createFontAlias(trimmed, googleFont);
+    loadedFonts.add(trimmed);
+    loadedFonts.add(googleFont);
+    return true;
   }
 
-  return loaded;
+  // No mapping needed, load directly
+  return loadFont(googleFont);
 }
 
 /**
- * Create a CSS font-family alias so the original font name uses the loaded font
+ * Create a CSS font-family alias by fetching the Google Fonts CSS and
+ * rewriting it to use the original font name.
  *
  * @param originalName - The original font name (e.g., "Garamond")
  * @param googleFontName - The Google Font name (e.g., "EB Garamond")
  */
-function createFontAlias(originalName: string, googleFontName: string): void {
+async function createFontAlias(originalName: string, googleFontName: string): Promise<void> {
   // Create a style element with @font-face that aliases the original name
   const styleId = `font-alias-${originalName.toLowerCase().replace(/\s+/g, '-')}`;
 
@@ -435,40 +437,42 @@ function createFontAlias(originalName: string, googleFontName: string): void {
     return;
   }
 
-  const style = document.createElement('style');
-  style.id = styleId;
+  try {
+    // Fetch the Google Fonts CSS to get the actual font URLs
+    const url = getGoogleFontsUrl(googleFontName, [400, 700], ['normal', 'italic']);
+    const response = await fetch(url);
 
-  // Use local() to reference the already-loaded Google Font
-  // This makes "Garamond" resolve to the loaded "EB Garamond" font
-  style.textContent = `
-    @font-face {
-      font-family: "${originalName}";
-      src: local("${googleFontName}"), local("${googleFontName} Regular");
-      font-weight: 400;
-      font-style: normal;
+    if (!response.ok) {
+      console.warn(`Failed to fetch Google Fonts CSS for "${googleFontName}"`);
+      return;
     }
-    @font-face {
-      font-family: "${originalName}";
-      src: local("${googleFontName}"), local("${googleFontName} Bold");
-      font-weight: 700;
-      font-style: normal;
-    }
-    @font-face {
-      font-family: "${originalName}";
-      src: local("${googleFontName} Italic"), local("${googleFontName}");
-      font-weight: 400;
-      font-style: italic;
-    }
-    @font-face {
-      font-family: "${originalName}";
-      src: local("${googleFontName} Bold Italic"), local("${googleFontName}");
-      font-weight: 700;
-      font-style: italic;
-    }
-  `;
 
-  document.head.appendChild(style);
-  console.log(`Created font alias: "${originalName}" → "${googleFontName}"`);
+    const css = await response.text();
+
+    // Replace the Google Font name with the original name in all @font-face rules
+    // The CSS contains: font-family: 'EB Garamond';
+    // We want: font-family: 'Garamond';
+    const aliasedCss = css.replace(
+      new RegExp(`font-family:\\s*['"]?${escapeRegExp(googleFontName)}['"]?`, 'gi'),
+      `font-family: "${originalName}"`
+    );
+
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = aliasedCss;
+
+    document.head.appendChild(style);
+    console.log(`Created font alias: "${originalName}" → "${googleFontName}"`);
+  } catch (error) {
+    console.warn(`Failed to create font alias for "${originalName}":`, error);
+  }
+}
+
+/**
+ * Escape special regex characters in a string
+ */
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
