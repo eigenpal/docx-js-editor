@@ -5988,3 +5988,33 @@ Verified that table column insertion functionality is fully wired and working.
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-132: Wire table row deletion
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Verified that table row deletion functionality is fully wired and working.
+
+**Already Implemented Components:**
+
+1. **`src/components/ui/TableToolbar.tsx`:**
+   - `DeleteRowIcon` SVG icon (red accent)
+   - "Delete Row" button with disabled state when only one row remains
+   - `deleteRow(table, rowIndex)` utility function - filters out the row
+
+2. **`src/hooks/useTableSelection.ts`:**
+   - `handleAction()` handles 'deleteRow' action (lines 333-340)
+   - Checks `table.rows.length > 1` before allowing deletion
+   - Adjusts selection if deleting the last row
+   - Updates document via `onChange` callback
+
+**Safety Features:**
+- Button is disabled when only one row exists
+- Selection adjusts to stay within valid range after deletion
+- Deleting last row adjusts to new last row index
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
