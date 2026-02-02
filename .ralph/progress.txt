@@ -278,3 +278,13 @@
 [2026-02-02 14:16] NOTES: Exported table-related types from schema/index.ts
 [2026-02-02 14:16] STATUS: done
 [2026-02-02 14:16] NOTES: Task 5 complete - Typecheck passes
+
+[2026-02-02 14:16] TASK: Convert tables in toProseDoc
+[2026-02-02 14:16] STATUS: starting
+[2026-02-02 14:16] NOTES: Handle block.type === 'table' in conversion
+[2026-02-02 14:18] STATUS: editing
+[2026-02-02 14:18] NOTES: Added convertTable, convertTableRow, convertTableCell functions
+[2026-02-02 14:18] NOTES: Handles cell formatting: colspan, rowspan, width, verticalAlign, backgroundColor
+[2026-02-02 14:18] NOTES: Supports nested tables and header rows
+[2026-02-02 14:18] STATUS: done
+[2026-02-02 14:18] NOTES: Task 6 complete - Typecheck passes

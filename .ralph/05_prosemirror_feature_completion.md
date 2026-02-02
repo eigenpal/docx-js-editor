@@ -61,7 +61,7 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
   - Reference: SuperDoc table nodes
   - **Verify**: `bun run typecheck` passes
 
-- [ ] **Task 6: Convert tables in toProseDoc**
+- [x] **Task 6: Convert tables in toProseDoc**
   - Handle `block.type === 'table'` in conversion
   - Convert rows and cells with their formatting
   - Preserve cell spans (colspan, rowspan)

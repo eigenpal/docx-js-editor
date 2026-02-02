@@ -24,8 +24,12 @@ import type {
   Hyperlink,
   Image,
   StyleDefinitions,
+  Table,
+  TableRow,
+  TableCell,
 } from '../../types/document';
 import { createStyleResolver, type StyleResolver } from '../styles';
+import type { TableAttrs, TableRowAttrs, TableCellAttrs } from '../schema/nodes';
 
 /**
  * Options for document conversion
@@ -52,8 +56,10 @@ export function toProseDoc(document: Document, options?: ToProseDocOptions): PMN
     if (block.type === 'paragraph') {
       const pmParagraph = convertParagraph(block, styleResolver);
       nodes.push(pmParagraph);
+    } else if (block.type === 'table') {
+      const pmTable = convertTable(block, styleResolver);
+      nodes.push(pmTable);
     }
-    // Tables are not yet supported in PM - skip for now
   }
 
   // Ensure we have at least one paragraph
@@ -140,6 +146,92 @@ function paragraphFormattingToAttrs(
   }
 
   return attrs;
+}
+
+// ============================================================================
+// TABLE CONVERSION
+// ============================================================================
+
+/**
+ * Convert a Table to a ProseMirror table node
+ */
+function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode {
+  const attrs: TableAttrs = {
+    styleId: table.formatting?.styleId,
+    width: table.formatting?.width?.value,
+    widthType: table.formatting?.width?.type,
+    justification: table.formatting?.justification,
+  };
+
+  const rows = table.rows.map((row, rowIndex) =>
+    convertTableRow(row, styleResolver, rowIndex === 0 && !!table.formatting?.look?.firstRow)
+  );
+
+  return schema.node('table', attrs, rows);
+}
+
+/**
+ * Convert a TableRow to a ProseMirror table row node
+ */
+function convertTableRow(
+  row: TableRow,
+  styleResolver: StyleResolver | null,
+  isHeaderRow: boolean
+): PMNode {
+  const attrs: TableRowAttrs = {
+    height: row.formatting?.height?.value,
+    heightRule: row.formatting?.heightRule,
+    isHeader: isHeaderRow || row.formatting?.header,
+  };
+
+  const cells = row.cells.map((cell) => convertTableCell(cell, styleResolver, isHeaderRow));
+
+  return schema.node('tableRow', attrs, cells);
+}
+
+/**
+ * Convert a TableCell to a ProseMirror table cell node
+ */
+function convertTableCell(
+  cell: TableCell,
+  styleResolver: StyleResolver | null,
+  isHeader: boolean
+): PMNode {
+  const formatting = cell.formatting;
+
+  // Handle vertical merge - skip 'continue' cells, they're merged into 'restart'
+  // For now, we just render them as regular cells since proper vMerge requires
+  // tracking state across rows. A future enhancement could handle this properly.
+  const rowspan = 1; // Would need to calculate from vMerge tracking
+
+  const attrs: TableCellAttrs = {
+    colspan: formatting?.gridSpan ?? 1,
+    rowspan: rowspan,
+    width: formatting?.width?.value,
+    widthType: formatting?.width?.type,
+    verticalAlign: formatting?.verticalAlign,
+    backgroundColor: formatting?.shading?.fill?.rgb,
+  };
+
+  // Convert cell content (paragraphs and nested tables)
+  const contentNodes: PMNode[] = [];
+  for (const content of cell.content) {
+    if (content.type === 'paragraph') {
+      contentNodes.push(convertParagraph(content, styleResolver));
+    } else if (content.type === 'table') {
+      // Nested tables - recursively convert
+      contentNodes.push(convertTable(content, styleResolver));
+    }
+  }
+
+  // Ensure cell has at least one paragraph
+  if (contentNodes.length === 0) {
+    contentNodes.push(schema.node('paragraph', {}, []));
+  }
+
+  // Use tableHeader for header cells, tableCell otherwise
+  const nodeType = isHeader ? 'tableHeader' : 'tableCell';
+  return schema.node(nodeType, attrs, contentNodes);
 }
 
 /**
