@@ -58,3 +58,20 @@ export type {
   UseAutoSaveReturn,
   SavedDocumentData,
 } from './useAutoSave';
+
+export {
+  useWheelZoom,
+  getZoomPresets,
+  findNearestZoomPreset,
+  getNextZoomPreset,
+  getPreviousZoomPreset,
+  formatZoom,
+  parseZoom,
+  isZoomPreset,
+  clampZoom,
+  ZOOM_PRESETS,
+} from './useWheelZoom';
+export type {
+  UseWheelZoomOptions,
+  UseWheelZoomReturn,
+} from './useWheelZoom';

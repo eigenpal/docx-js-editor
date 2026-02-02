@@ -434,6 +434,21 @@ export {
   type SavedDocumentData,
 } from './hooks/useAutoSave';
 
+export {
+  useWheelZoom,
+  getZoomPresets,
+  findNearestZoomPreset,
+  getNextZoomPreset,
+  getPreviousZoomPreset,
+  formatZoom,
+  parseZoom,
+  isZoomPreset,
+  clampZoom,
+  ZOOM_PRESETS,
+  type UseWheelZoomOptions,
+  type UseWheelZoomReturn,
+} from './hooks/useWheelZoom';
+
 // ============================================================================
 // UTILITIES
 // ============================================================================
