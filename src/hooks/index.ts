@@ -32,3 +32,14 @@ export type {
   UseSelectionHighlightReturn,
   SelectionOverlayProps,
 } from './useSelectionHighlight';
+
+export {
+  useClipboard,
+  createSelectionFromDOM,
+  getSelectionRuns,
+} from './useClipboard';
+export type {
+  ClipboardSelection,
+  UseClipboardOptions,
+  UseClipboardReturn,
+} from './useClipboard';

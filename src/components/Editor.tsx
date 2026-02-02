@@ -24,6 +24,7 @@ import type {
   TextBox as TextBoxType,
   HeaderFooter,
   HeaderFooterType,
+  Run,
 } from '../types/document';
 import {
   EditableParagraph,
@@ -42,6 +43,12 @@ import { twipsToPixels, formatPx } from '../utils/units';
 import { SELECTION_DATA_ATTRIBUTES } from '../hooks/useSelection';
 import { calculatePages, type PageLayoutResult, type Page as PageData, type PageContent } from '../layout/pageLayout';
 import { selectWordAtCursor, selectParagraphAtCursor } from '../utils/textSelection';
+import {
+  useClipboard,
+  createSelectionFromDOM,
+  type ClipboardSelection,
+} from '../hooks/useClipboard';
+import type { ParsedClipboardContent } from '../utils/clipboard';
 
 // ============================================================================
 // TYPES
@@ -107,6 +114,12 @@ export interface EditorProps {
   isTableCellSelected?: (tableIndex: number, rowIndex: number, columnIndex: number) => boolean;
   /** Callback when page layout changes (current page, total pages) */
   onPageChange?: (currentPage: number, totalPages: number) => void;
+  /** Callback when content is copied */
+  onCopy?: (selection: ClipboardSelection) => void;
+  /** Callback when content is cut */
+  onCut?: (selection: ClipboardSelection) => void;
+  /** Callback when content is pasted */
+  onPaste?: (content: ParsedClipboardContent, asPlainText: boolean) => void;
 }
 
 /**
@@ -334,6 +347,9 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     onTableCellClick,
     isTableCellSelected,
     onPageChange,
+    onCopy,
+    onCut,
+    onPaste,
   },
   ref
 ) {
@@ -365,6 +381,82 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
   const paragraphCount = useMemo(() => {
     return doc.package?.body ? countParagraphs(doc.package.body) : 0;
   }, [doc.package?.body]);
+
+  // Clipboard handlers
+  const handleClipboardCopy = useCallback((selection: ClipboardSelection) => {
+    onCopy?.(selection);
+  }, [onCopy]);
+
+  const handleClipboardCut = useCallback((selection: ClipboardSelection) => {
+    if (!doc.package?.body) return;
+    onCut?.(selection);
+
+    // Delete the selected content
+    const domSelection = window.getSelection();
+    if (domSelection && !domSelection.isCollapsed) {
+      // Let the browser handle the deletion via the native cut event
+      document.execCommand('delete');
+    }
+  }, [doc.package?.body, onCut]);
+
+  const handleClipboardPaste = useCallback((content: ParsedClipboardContent, asPlainText: boolean) => {
+    onPaste?.(content, asPlainText);
+
+    // Insert pasted content at cursor position
+    if (content.runs.length > 0) {
+      // Get current selection
+      const domSelection = window.getSelection();
+      if (!domSelection) return;
+
+      // Delete current selection if any
+      if (!domSelection.isCollapsed) {
+        document.execCommand('delete');
+      }
+
+      // Insert the pasted content
+      // For plain text paste or when we have runs, insert text
+      const textToInsert = asPlainText
+        ? content.plainText
+        : content.runs.map(run =>
+            run.content
+              .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
+              .map(c => c.text)
+              .join('')
+          ).join('');
+
+      if (textToInsert) {
+        document.execCommand('insertText', false, textToInsert);
+      }
+    }
+  }, [onPaste]);
+
+  const { handleCopy, handleCut, handlePaste } = useClipboard({
+    onCopy: handleClipboardCopy,
+    onCut: handleClipboardCut,
+    onPaste: handleClipboardPaste,
+    editable,
+    cleanWordFormatting: true,
+  });
+
+  // Register clipboard event listeners
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const copyHandler = (e: Event) => handleCopy(e as ClipboardEvent);
+    const cutHandler = (e: Event) => handleCut(e as ClipboardEvent);
+    const pasteHandler = (e: Event) => handlePaste(e as ClipboardEvent);
+
+    container.addEventListener('copy', copyHandler);
+    container.addEventListener('cut', cutHandler);
+    container.addEventListener('paste', pasteHandler);
+
+    return () => {
+      container.removeEventListener('copy', copyHandler);
+      container.removeEventListener('cut', cutHandler);
+      container.removeEventListener('paste', pasteHandler);
+    };
+  }, [handleCopy, handleCut, handlePaste]);
 
   // Build headers map for layout engine from document package
   const headersForLayout = useMemo(() => {
