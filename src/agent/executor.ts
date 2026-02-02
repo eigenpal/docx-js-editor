@@ -961,12 +961,12 @@ function executeApplyVariables(doc: Document, command: ApplyVariablesCommand): D
   const newDoc = cloneDocument(doc);
   const body = newDoc.package.document;
 
-  // Replace {{variable}} patterns in all text content
+  // Replace {variable} patterns in all text content
   function replaceVariablesInRun(run: Run): void {
     for (const content of run.content) {
       if (content.type === 'text') {
         for (const [name, value] of Object.entries(command.values)) {
-          const pattern = new RegExp(`\\{\\{${name}\\}\\}`, 'g');
+          const pattern = new RegExp(`\\{${name}\\}`, 'g');
           content.text = content.text.replace(pattern, value);
         }
       }

@@ -31,7 +31,28 @@ export type TableAction =
   | 'deleteColumn'
   | 'mergeCells'
   | 'splitCell'
-  | 'deleteTable';
+  | 'deleteTable'
+  | 'borderAll'
+  | 'borderOutside'
+  | 'borderInside'
+  | 'borderNone'
+  | 'borderTop'
+  | 'borderBottom'
+  | 'borderLeft'
+  | 'borderRight';
+
+/**
+ * Border style preset
+ */
+export type BorderPreset =
+  | 'all'
+  | 'outside'
+  | 'inside'
+  | 'none'
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right';
 
 /**
  * Selection within a table
@@ -1189,6 +1210,14 @@ export function getActionLabel(action: TableAction): string {
     mergeCells: 'Merge Cells',
     splitCell: 'Split Cell',
     deleteTable: 'Delete Table',
+    borderAll: 'All Borders',
+    borderOutside: 'Outside Borders',
+    borderInside: 'Inside Borders',
+    borderNone: 'No Borders',
+    borderTop: 'Top Border',
+    borderBottom: 'Bottom Border',
+    borderLeft: 'Left Border',
+    borderRight: 'Right Border',
   };
   return labels[action];
 }

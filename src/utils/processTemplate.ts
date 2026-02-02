@@ -2,7 +2,7 @@
  * Template Processing Utility
  *
  * Uses docxtemplater to substitute template variables in DOCX documents:
- * - Processes {{variable_name}} patterns
+ * - Processes {variable_name} patterns (docxtemplater default syntax)
  * - Preserves all formatting (fonts, styles, colors, tables)
  * - Error handling with useful messages
  */
@@ -122,11 +122,11 @@ export function processTemplateDetailed(
 
         // Default: keep the tag as-is
         unreplacedVariables.push(varName);
-        return `{{${varName}}}`;
+        return `{${varName}}`;
       },
-      // Custom delimiters if specified
+      // Custom delimiters if specified (docxtemplater uses single braces by default)
       delimiters: delimiters
-        ? { start: delimiters.start || '{{', end: delimiters.end || '}}' }
+        ? { start: delimiters.start || '{', end: delimiters.end || '}' }
         : undefined,
     });
 
@@ -478,7 +478,7 @@ export function processTemplateAdvanced(
       paragraphLoop: true,
       linebreaks,
       delimiters: delimiters
-        ? { start: delimiters.start || '{{', end: delimiters.end || '}}' }
+        ? { start: delimiters.start || '{', end: delimiters.end || '}' }
         : undefined,
     });
 

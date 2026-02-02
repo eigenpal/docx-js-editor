@@ -111,7 +111,8 @@ bun dev   # run the dev server
 ```
 
 The app will have:
+
 - A DOCX file loader (input + drag-and-drop)
-- A template variable panel (define `{{name}}` → `value` pairs)
+- A template variable panel (define `{name}` → `value` pairs)
 - A SuperDoc WYSIWYG viewer — fonts, styles, colors, tables, headers all preserved
 - Live re-render after template substitution, with full formatting fidelity surviving the round-trip
