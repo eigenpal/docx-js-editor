@@ -2,6 +2,7 @@
  * Formatting Toolbar Component
  *
  * A toolbar with formatting controls for the DOCX editor:
+ * - Font family picker
  * - Bold (Ctrl+B), Italic (Ctrl+I), Underline (Ctrl+U), Strikethrough
  * - Superscript, Subscript buttons
  * - Shows active state for current selection formatting
@@ -11,6 +12,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { TextFormatting } from '../types/document';
+import { FontPicker } from './ui/FontPicker';
 
 // ============================================================================
 // TYPES
@@ -52,7 +54,8 @@ export type FormattingAction =
   | 'strikethrough'
   | 'superscript'
   | 'subscript'
-  | 'clearFormatting';
+  | 'clearFormatting'
+  | { type: 'fontFamily'; value: string };
 
 /**
  * Props for the Toolbar component
@@ -82,6 +85,8 @@ export interface ToolbarProps {
   editorRef?: React.RefObject<HTMLElement>;
   /** Custom toolbar items to render */
   children?: ReactNode;
+  /** Whether to show font family picker (default: true) */
+  showFontPicker?: boolean;
 }
 
 /**
@@ -335,6 +340,7 @@ export function Toolbar({
   enableShortcuts = true,
   editorRef,
   children,
+  showFontPicker = true,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -367,6 +373,18 @@ export function Toolbar({
       onRedo();
     }
   }, [disabled, canRedo, onRedo]);
+
+  /**
+   * Handle font family change
+   */
+  const handleFontFamilyChange = useCallback(
+    (fontFamily: string) => {
+      if (!disabled && onFormat) {
+        onFormat({ type: 'fontFamily', value: fontFamily });
+      }
+    },
+    [disabled, onFormat]
+  );
 
   /**
    * Keyboard shortcuts handler
@@ -451,6 +469,19 @@ export function Toolbar({
           <RedoIcon />
         </ToolbarButton>
       </ToolbarGroup>
+
+      {/* Font Family Picker */}
+      {showFontPicker && (
+        <ToolbarGroup label="Font">
+          <FontPicker
+            value={currentFormatting.fontFamily}
+            onChange={handleFontFamilyChange}
+            disabled={disabled}
+            width={140}
+            placeholder="Font"
+          />
+        </ToolbarGroup>
+      )}
 
       {/* Text Formatting Group */}
       <ToolbarGroup label="Text formatting">
@@ -566,6 +597,20 @@ export function applyFormattingAction(
 ): TextFormatting {
   const newFormatting = { ...currentFormatting };
 
+  // Handle object-type actions (fontFamily, etc.)
+  if (typeof action === 'object') {
+    switch (action.type) {
+      case 'fontFamily':
+        newFormatting.fontFamily = {
+          ...currentFormatting.fontFamily,
+          ascii: action.value,
+          hAnsi: action.value,
+        };
+        return newFormatting;
+    }
+  }
+
+  // Handle string-type actions
   switch (action) {
     case 'bold':
       newFormatting.bold = !currentFormatting.bold;

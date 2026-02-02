@@ -108,7 +108,7 @@ export {
 // ============================================================================
 
 export { ZoomControl, type ZoomControlProps } from './components/ui/ZoomControl';
-export { FontPicker, type FontPickerProps, useFontSearch, type FontInfo } from './components/ui/FontPicker';
+export { FontPicker, type FontPickerProps, type FontOption } from './components/ui/FontPicker';
 export { FontSizePicker, type FontSizePickerProps } from './components/ui/FontSizePicker';
 export { ColorPicker, type ColorPickerProps, type ColorPreset } from './components/ui/ColorPicker';
 export { StylePicker, type StylePickerProps, type StyleOption } from './components/ui/StylePicker';

@@ -4960,3 +4960,45 @@ Connected the useDocumentHistory hook to the Editor state, enabling full undo/re
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-110: Add Font Family picker to toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added the FontPicker component to the Toolbar for font family selection.
+
+**Implementation:**
+
+1. **Updated `src/components/Toolbar.tsx`:**
+   - Imported `FontPicker` component from `./ui/FontPicker`
+   - Added `showFontPicker` prop (default: true)
+   - Extended `FormattingAction` type to support `{ type: 'fontFamily'; value: string }`
+   - Added `handleFontFamilyChange` callback
+   - Added FontPicker to toolbar between Undo/Redo and Text Formatting groups
+   - Updated `applyFormattingAction` to handle fontFamily action
+
+2. **FontPicker Integration:**
+   - Displays current font family from selection formatting
+   - Dropdown with fonts grouped by category (sans-serif, serif, monospace)
+   - Shows fonts in their own typeface for preview
+   - Keyboard navigation support (Arrow keys, Enter, Escape)
+   - Width: 140px, placeholder: "Font"
+
+3. **Formatting Flow:**
+   - User selects font from dropdown → `handleFontFamilyChange(fontFamily)` called
+   - Calls `onFormat({ type: 'fontFamily', value: fontFamily })`
+   - DocxEditor's `handleFormat` passes action to `applyFormattingAction`
+   - Creates new `TextFormatting` with `fontFamily.ascii` and `fontFamily.hAnsi` set
+   - Document updated via `executeCommand` with `formatText` command
+
+4. **Fixed export in `src/index.ts`:**
+   - Changed `FontPicker` export to use correct types (`FontOption` instead of non-existent `useFontSearch` and `FontInfo`)
+
+**Props Added to Toolbar:**
+- `showFontPicker?: boolean` - Whether to show font family picker (default: true)
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

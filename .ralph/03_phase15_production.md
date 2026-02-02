@@ -22,7 +22,7 @@
 
 ## Category 2: Essential Toolbar Features
 
-- [ ] US-110: Add Font Family picker to toolbar - P1 - Dropdown for font selection
+- [x] US-110: Add Font Family picker to toolbar - P1 - Dropdown for font selection
 - [ ] US-111: Add Font Size picker to toolbar - P1 - Dropdown for font sizes
 - [ ] US-112: Add Text Color picker to toolbar - P1 - Color picker for text
 - [ ] US-113: Add Highlight Color picker to toolbar - P1 - Background color picker
