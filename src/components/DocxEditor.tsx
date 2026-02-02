@@ -27,6 +27,7 @@ import { parseDocx } from '../docx/parser';
 import { onFontsLoaded, isLoading as isFontsLoading } from '../utils/fontLoader';
 import { executeCommand } from '../agent/executor';
 import { useTableSelection } from '../hooks/useTableSelection';
+import { useDocumentHistory } from '../hooks/useHistory';
 
 // ============================================================================
 // TYPES
@@ -108,7 +109,6 @@ export interface DocxEditorRef {
  * Editor internal state
  */
 interface EditorState {
-  document: Document | null;
   isLoading: boolean;
   parseError: string | null;
   zoom: number;
@@ -116,10 +116,6 @@ interface EditorState {
   isApplyingVariables: boolean;
   /** Current selection formatting for toolbar */
   selectionFormatting: SelectionFormatting;
-  /** Can undo history */
-  canUndo: boolean;
-  /** Can redo history */
-  canRedo: boolean;
 }
 
 // ============================================================================
@@ -157,15 +153,19 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
 ) {
   // State
   const [state, setState] = useState<EditorState>({
-    document: initialDocument || null,
     isLoading: !!documentBuffer,
     parseError: null,
     zoom: initialZoom,
     variableValues: {},
     isApplyingVariables: false,
     selectionFormatting: {},
-    canUndo: false,
-    canRedo: false,
+  });
+
+  // History hook for undo/redo - start with null document
+  const history = useDocumentHistory<Document | null>(initialDocument || null, {
+    maxEntries: 100,
+    groupingInterval: 500,
+    enableKeyboardShortcuts: true,
   });
 
   // Refs
@@ -176,7 +176,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   useEffect(() => {
     if (!documentBuffer) {
       if (initialDocument) {
-        setState((prev) => ({ ...prev, document: initialDocument, isLoading: false }));
+        history.reset(initialDocument);
+        setState((prev) => ({ ...prev, isLoading: false }));
       }
       return;
     }
@@ -186,9 +187,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     const parseDocument = async () => {
       try {
         const doc = await parseDocx(documentBuffer);
+        // Reset history with parsed document (clears undo/redo stacks)
+        history.reset(doc);
         setState((prev) => ({
           ...prev,
-          document: doc,
           isLoading: false,
           parseError: null,
         }));
@@ -210,23 +212,23 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     };
 
     parseDocument();
-  }, [documentBuffer, initialDocument, onError]);
+  }, [documentBuffer, initialDocument, onError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update document when initialDocument changes
   useEffect(() => {
     if (initialDocument && !documentBuffer) {
-      setState((prev) => ({ ...prev, document: initialDocument }));
+      history.reset(initialDocument);
     }
-  }, [initialDocument, documentBuffer]);
+  }, [initialDocument, documentBuffer]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Create/update agent when document changes
   useEffect(() => {
-    if (state.document) {
-      agentRef.current = new DocumentAgent(state.document);
+    if (history.state) {
+      agentRef.current = new DocumentAgent(history.state);
     } else {
       agentRef.current = null;
     }
-  }, [state.document]);
+  }, [history.state]);
 
   // Listen for font loading
   useEffect(() => {
@@ -267,15 +269,15 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   // Handle document change
   const handleDocumentChange = useCallback(
     (newDocument: Document) => {
-      setState((prev) => ({ ...prev, document: newDocument }));
+      history.push(newDocument);
       onChange?.(newDocument);
     },
-    [onChange]
+    [onChange, history]
   );
 
   // Table selection hook
   const tableSelection = useTableSelection({
-    document: state.document,
+    document: history.state,
     onChange: handleDocumentChange,
     onSelectionChange: (context) => {
       // Could notify parent of table selection changes
@@ -293,7 +295,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   // Handle formatting action from toolbar
   const handleFormat = useCallback(
     (action: FormattingAction) => {
-      if (!editorRef.current || !state.document) return;
+      if (!editorRef.current || !history.state) return;
 
       // Get current selection context
       const selectionContext = editorRef.current.getSelectionContext();
@@ -306,7 +308,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       const newFormatting = applyFormattingAction(currentFormatting, action);
 
       // Apply formatting to the selection using executeCommand
-      const newDoc = executeCommand(state.document, {
+      const newDoc = executeCommand(history.state, {
         type: 'formatText',
         range,
         formatting: newFormatting,
@@ -320,20 +322,24 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         selectionFormatting: getSelectionFormatting(newFormatting),
       }));
     },
-    [state.document, handleDocumentChange]
+    [history.state, handleDocumentChange]
   );
 
   // Handle undo action
   const handleUndo = useCallback(() => {
-    // TODO: Implement history/undo stack in US-104
-    console.log('Undo requested - will be implemented in US-104');
-  }, []);
+    const previousState = history.undo();
+    if (previousState) {
+      onChange?.(previousState);
+    }
+  }, [history, onChange]);
 
   // Handle redo action
   const handleRedo = useCallback(() => {
-    // TODO: Implement history/redo stack in US-104
-    console.log('Redo requested - will be implemented in US-104');
-  }, []);
+    const nextState = history.redo();
+    if (nextState) {
+      onChange?.(nextState);
+    }
+  }, [history, onChange]);
 
   // Handle variable values change
   const handleVariableValuesChange = useCallback((values: Record<string, string>) => {
@@ -391,7 +397,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     ref,
     () => ({
       getAgent: () => agentRef.current,
-      getDocument: () => state.document,
+      getDocument: () => history.state,
       getEditorRef: () => editorRef.current,
       save: handleSave,
       setZoom: (zoom: number) => setState((prev) => ({ ...prev, zoom })),
@@ -402,14 +408,14 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         await editorRef.current?.triggerAIAction(action, customPrompt);
       },
     }),
-    [state.document, state.zoom, handleSave]
+    [history.state, state.zoom, handleSave]
   );
 
   // Get detected variables from document
   const detectedVariables = useMemo(() => {
-    if (!state.document) return [];
-    return extractVariableNames(state.document);
-  }, [state.document]);
+    if (!history.state) return [];
+    return extractVariableNames(history.state);
+  }, [history.state]);
 
   // Container styles
   const containerStyle: CSSProperties = {
@@ -469,7 +475,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   }
 
   // Render placeholder when no document
-  if (!state.document) {
+  if (!history.state) {
     return (
       <div className={`docx-editor docx-editor-empty ${className}`} style={containerStyle}>
         {placeholder || <DefaultPlaceholder />}
@@ -489,8 +495,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 onFormat={handleFormat}
                 onUndo={handleUndo}
                 onRedo={handleRedo}
-                canUndo={state.canUndo}
-                canRedo={state.canRedo}
+                canUndo={history.canUndo}
+                canRedo={history.canRedo}
                 disabled={readOnly}
               >
                 {toolbarExtra}
@@ -514,7 +520,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
             <div style={editorContainerStyle}>
               <AIEditor
                 ref={editorRef}
-                document={state.document}
+                document={history.state}
                 onChange={handleDocumentChange}
                 onAgentRequest={onAgentRequest}
                 editable={!readOnly}

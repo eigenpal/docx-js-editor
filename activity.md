@@ -4907,3 +4907,56 @@ Connected the TableToolbar to table cell selection, showing the toolbar when cli
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-104: Fix undo/redo history connection
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Connected the useDocumentHistory hook to the Editor state, enabling full undo/redo functionality with keyboard shortcuts.
+
+**Implementation:**
+
+1. **Updated `src/components/DocxEditor.tsx`:**
+   - Imported `useDocumentHistory` hook from `../hooks/useHistory`
+   - Replaced manual document state with `history.state`
+   - Document changes now go through `history.push()` for tracking
+   - `handleUndo` calls `history.undo()` and notifies onChange
+   - `handleRedo` calls `history.redo()` and notifies onChange
+   - Toolbar receives `history.canUndo` and `history.canRedo` props
+   - New documents reset history via `history.reset(doc)`
+
+2. **Updated `src/hooks/index.ts`:**
+   - Fixed exports to match actual types in useHistory.ts
+   - Added exports: `useAutoHistory`, `useDocumentHistory`, `HistoryManager`
+   - Added type exports: `HistoryEntry`, `UseHistoryOptions`, `UseHistoryReturn`
+
+**Features:**
+- Undo (Ctrl+Z / Cmd+Z) - reverts to previous document state
+- Redo (Ctrl+Y / Cmd+Shift+Z) - restores undone state
+- Grouping interval (500ms) - rapid changes grouped as single undo step
+- Max 100 history entries - prevents memory bloat
+- Keyboard shortcuts handled by useHistory hook
+- Toolbar buttons properly enabled/disabled based on history state
+
+**History Hook Capabilities:**
+- `push(state)` - Add new state to history
+- `undo()` - Return to previous state
+- `redo()` - Restore next state
+- `reset(state)` - Reset history with new initial state
+- `clear()` - Clear all history
+- `canUndo` / `canRedo` - Boolean flags for UI
+- `undoCount` / `redoCount` - Stack sizes
+
+**State Flow:**
+1. User makes edit → `handleDocumentChange(newDoc)` called
+2. `history.push(newDoc)` adds to undo stack, clears redo stack
+3. User presses Ctrl+Z → `handleUndo()` called
+4. `history.undo()` pops from undo stack, pushes current to redo stack
+5. Previous document state rendered in editor
+6. `onChange?.(previousState)` notifies parent
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

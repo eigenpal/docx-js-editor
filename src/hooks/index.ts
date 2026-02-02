@@ -12,11 +12,11 @@ export type {
   UseSelectionOptions,
 } from './useSelection';
 
-export { useHistory } from './useHistory';
+export { useHistory, useAutoHistory, useDocumentHistory, HistoryManager } from './useHistory';
 export type {
-  HistoryState,
-  HistoryAction,
+  HistoryEntry,
   UseHistoryOptions,
+  UseHistoryReturn,
 } from './useHistory';
 
 export { useTableSelection, TABLE_DATA_ATTRIBUTES } from './useTableSelection';
