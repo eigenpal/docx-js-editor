@@ -5705,3 +5705,67 @@ Added a floating page number indicator that shows "Page X of Y" and tracks the c
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-125: Implement scroll-to-page navigation
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Implemented interactive page navigation with jump-to-page functionality, previous/next buttons, and a page input popover.
+
+**Implementation:**
+
+1. **Created `src/components/ui/PageNavigator.tsx`:**
+   - `PageNavigator` component with previous/next buttons
+   - Clickable page display that opens input popover
+   - `PageInputPopover` for entering specific page number
+   - Quick navigation buttons (First, Last)
+   - Keyboard navigation support (← → Home End)
+   - Position and variant options matching PageNumberIndicator
+   - Full ARIA accessibility
+
+2. **Updated `src/components/DocxEditor.tsx`:**
+   - Added import for `PageNavigator` and its types
+   - Added `enablePageNavigation` prop (default: true)
+   - Added `handlePageNavigate` callback that calls `scrollToPage`
+   - Conditionally renders `PageNavigator` or `PageNumberIndicator`
+   - PageNavigator used when `enablePageNavigation` is true
+   - PageNumberIndicator used as fallback when false
+
+3. **Updated `src/index.ts`:**
+   - Exported `PageNavigator` component and types
+   - Exported utility functions: `parsePageInput`, `isValidPageNumber`, `clampPageNumber`, etc.
+
+**PageNavigator Features:**
+- Previous/Next page buttons with hover states
+- "Page X of Y" display, clickable to show input popover
+- Page input popover with:
+  - Number input with validation
+  - Arrow key increment/decrement
+  - Enter to navigate
+  - "First" and "Last" quick buttons
+  - Error messages for invalid input
+- Keyboard navigation when focused:
+  - ← or PageUp: Previous page
+  - → or PageDown: Next page
+  - Home: First page
+  - End: Last page
+- Smooth scrolling to target page
+- Variant styles: default, compact, minimal
+- Position options matching PageNumberIndicator
+
+**Utility Functions:**
+- `parsePageInput(input)` - Parse page number from string
+- `isValidPageNumber(page, totalPages)` - Validate page number
+- `clampPageNumber(page, totalPages)` - Clamp to valid range
+- `getNavigationShortcuts()` - Get keyboard shortcut info
+- `formatPageRange(start, end, total)` - Format page range
+- `calculateProgress(current, total)` - Calculate progress %
+
+**Props Added to DocxEditorProps:**
+- `enablePageNavigation?: boolean` - Use interactive navigator (default: true)
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

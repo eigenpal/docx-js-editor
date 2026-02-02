@@ -23,6 +23,7 @@ import { ErrorBoundary, ErrorProvider, useErrorNotifications } from './ErrorBoun
 import { ZoomControl } from './ui/ZoomControl';
 import { TableToolbar, type TableContext, type TableAction } from './ui/TableToolbar';
 import { PageNumberIndicator, type PageIndicatorPosition, type PageIndicatorVariant } from './ui/PageNumberIndicator';
+import { PageNavigator, type PageNavigatorPosition, type PageNavigatorVariant } from './ui/PageNavigator';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import { parseDocx } from '../docx/parser';
 import { onFontsLoaded, isLoading as isFontsLoading } from '../utils/fontLoader';
@@ -64,10 +65,12 @@ export interface DocxEditorProps {
   showZoomControl?: boolean;
   /** Whether to show page number indicator (default: true) */
   showPageNumbers?: boolean;
+  /** Whether to enable interactive page navigation (default: true) */
+  enablePageNavigation?: boolean;
   /** Position of page number indicator (default: 'bottom-center') */
-  pageNumberPosition?: PageIndicatorPosition;
+  pageNumberPosition?: PageIndicatorPosition | PageNavigatorPosition;
   /** Variant of page number indicator (default: 'default') */
-  pageNumberVariant?: PageIndicatorVariant;
+  pageNumberVariant?: PageIndicatorVariant | PageNavigatorVariant;
   /** Whether to show page margin guides/boundaries (default: false) */
   showMarginGuides?: boolean;
   /** Color for margin guides (default: '#c0c0c0') */
@@ -161,6 +164,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     showVariablePanel = true,
     showZoomControl = true,
     showPageNumbers = true,
+    enablePageNavigation = true,
     pageNumberPosition = 'bottom-center',
     pageNumberVariant = 'default',
     showMarginGuides = false,
@@ -625,6 +629,11 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     setState((prev) => ({ ...prev, currentPage, totalPages }));
   }, []);
 
+  // Handle page navigation (from PageNavigator)
+  const handlePageNavigate = useCallback((pageNumber: number) => {
+    editorRef.current?.scrollToPage(pageNumber);
+  }, []);
+
   // Handle save
   const handleSave = useCallback(async (): Promise<ArrayBuffer | null> => {
     if (!agentRef.current) return null;
@@ -794,15 +803,26 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 onPageChange={handlePageChange}
               />
 
-              {/* Page number indicator */}
+              {/* Page navigation / indicator */}
               {showPageNumbers && state.totalPages > 0 && (
-                <PageNumberIndicator
-                  currentPage={state.currentPage}
-                  totalPages={state.totalPages}
-                  position={pageNumberPosition}
-                  variant={pageNumberVariant}
-                  floating
-                />
+                enablePageNavigation ? (
+                  <PageNavigator
+                    currentPage={state.currentPage}
+                    totalPages={state.totalPages}
+                    onNavigate={handlePageNavigate}
+                    position={pageNumberPosition as PageNavigatorPosition}
+                    variant={pageNumberVariant as PageNavigatorVariant}
+                    floating
+                  />
+                ) : (
+                  <PageNumberIndicator
+                    currentPage={state.currentPage}
+                    totalPages={state.totalPages}
+                    position={pageNumberPosition as PageIndicatorPosition}
+                    variant={pageNumberVariant as PageIndicatorVariant}
+                    floating
+                  />
+                )
               )}
 
               {/* Zoom control */}

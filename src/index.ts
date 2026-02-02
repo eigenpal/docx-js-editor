@@ -121,6 +121,18 @@ export {
   calculateVisiblePage,
   calculateScrollToPage,
 } from './components/ui/PageNumberIndicator';
+export {
+  PageNavigator,
+  type PageNavigatorProps,
+  type PageNavigatorPosition,
+  type PageNavigatorVariant,
+  parsePageInput,
+  isValidPageNumber,
+  clampPageNumber,
+  getNavigationShortcuts,
+  formatPageRange,
+  calculateProgress,
+} from './components/ui/PageNavigator';
 export { FontPicker, type FontPickerProps, type FontOption } from './components/ui/FontPicker';
 export { FontSizePicker, type FontSizePickerProps } from './components/ui/FontSizePicker';
 export { LineSpacingPicker, type LineSpacingPickerProps, type LineSpacingOption } from './components/ui/LineSpacingPicker';
