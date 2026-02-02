@@ -18,6 +18,7 @@ import { baseKeymap, toggleMark } from 'prosemirror-commands';
 import { schema } from './schema';
 import { toProseDoc, createEmptyDoc } from './conversion';
 import { fromProseDoc } from './conversion/fromProseDoc';
+import { createListKeymap } from './plugins/keymap';
 import type { Document, Theme, TextFormatting, ParagraphFormatting } from '../types/document';
 import type { SelectionContext } from '../types/agentApi';
 
@@ -120,6 +121,7 @@ function createEditorState(document: Document | null, _readOnly: boolean): Edito
 
   const plugins = [
     history(),
+    createListKeymap(), // Tab handling for lists, tables, and regular text
     keymap({
       'Mod-z': undo,
       'Mod-y': redo,

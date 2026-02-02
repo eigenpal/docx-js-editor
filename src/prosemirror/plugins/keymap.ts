@@ -186,11 +186,32 @@ export function decreaseListIndent(): Command {
 }
 
 /**
+ * Command to insert a tab character at cursor position
+ */
+export function insertTab(): Command {
+  return (state, dispatch) => {
+    const { schema } = state;
+    const tabType = schema.nodes.tab;
+
+    if (!tabType) {
+      return false;
+    }
+
+    if (dispatch) {
+      const tr = state.tr.replaceSelectionWith(tabType.create());
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  };
+}
+
+/**
  * Create keymap with list-aware Tab handling
+ * Tab priority: table navigation > list indent > insert tab character
  */
 export function createListKeymap() {
   return keymap({
-    Tab: chainCommands(goToNextCell(), increaseListIndent()),
+    Tab: chainCommands(goToNextCell(), increaseListIndent(), insertTab()),
     'Shift-Tab': chainCommands(goToPrevCell(), decreaseListIndent()),
     'Shift-Enter': () => false, // Let base keymap handle this
   });

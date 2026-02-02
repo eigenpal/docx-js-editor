@@ -400,12 +400,39 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       }
 
       // Update toolbar formatting from ProseMirror selection
+      const { textFormatting, paragraphFormatting } = selectionState;
+
+      // Extract font family (prefer ascii, fall back to hAnsi)
+      const fontFamily = textFormatting.fontFamily?.ascii || textFormatting.fontFamily?.hAnsi;
+
+      // Extract text color as hex string
+      const textColor = textFormatting.color?.rgb ? `#${textFormatting.color.rgb}` : undefined;
+
+      // Build list state from numPr
+      const numPr = paragraphFormatting.numPr;
+      const listState = numPr
+        ? {
+            type: (numPr.numId === 1 ? 'bullet' : 'numbered') as 'bullet' | 'numbered',
+            level: numPr.ilvl ?? 0,
+            isInList: true,
+            numId: numPr.numId,
+          }
+        : undefined;
+
       const formatting: SelectionFormatting = {
-        bold: selectionState.textFormatting.bold,
-        italic: selectionState.textFormatting.italic,
-        underline: !!selectionState.textFormatting.underline,
-        strike: selectionState.textFormatting.strike,
-        alignment: selectionState.paragraphFormatting.alignment,
+        bold: textFormatting.bold,
+        italic: textFormatting.italic,
+        underline: !!textFormatting.underline,
+        strike: textFormatting.strike,
+        superscript: textFormatting.vertAlign === 'superscript',
+        subscript: textFormatting.vertAlign === 'subscript',
+        fontFamily,
+        fontSize: textFormatting.fontSize,
+        color: textColor,
+        highlight: textFormatting.highlight,
+        alignment: paragraphFormatting.alignment,
+        lineSpacing: paragraphFormatting.lineSpacing,
+        listState,
         styleId: selectionState.styleId ?? undefined,
       };
       setState((prev) => ({

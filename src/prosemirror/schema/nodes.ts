@@ -307,12 +307,13 @@ export const tab: NodeSpec = {
     },
   ],
   toDOM() {
-    // Render as a span with fixed minimum width (0.5 inch = 48px default tab stop)
+    // Render as a span with minimum width for visual tab spacing
+    // Using 16px as a reasonable default that matches typical Word tab appearance
     return [
       'span',
       {
         class: 'docx-tab',
-        style: 'display: inline-block; min-width: 48px; white-space: pre;',
+        style: 'display: inline-block; min-width: 16px; white-space: pre;',
       },
       '\t',
     ];
