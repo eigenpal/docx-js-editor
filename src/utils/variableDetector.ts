@@ -1,7 +1,7 @@
 /**
  * Variable Detector Utility
  *
- * Scans a DOCX document for template variables in the format {{variable_name}}.
+ * Scans a DOCX document for template variables in the format {variable_name}.
  * Returns a unique, sorted list of variable names found in the document.
  */
 
@@ -97,8 +97,8 @@ export function detectVariablesDetailed(doc: Document): VariableDetectionResult 
   };
 
   // Scan main body
-  if (doc.package?.body) {
-    const bodyVars = detectVariablesInBody(doc.package.body);
+  if (doc.package?.document) {
+    const bodyVars = detectVariablesInBody(doc.package.document);
     bodyVars.forEach((v) => {
       occurrences.push({ name: v, location: 'body' });
     });
@@ -106,8 +106,8 @@ export function detectVariablesDetailed(doc: Document): VariableDetectionResult 
   }
 
   // Scan headers and footers
-  if (doc.package?.body?.sections) {
-    doc.package.body.sections.forEach((section, sectionIndex) => {
+  if (doc.package?.document?.sections) {
+    doc.package.document.sections.forEach((section, sectionIndex) => {
       // Headers
       if (section.properties.headerReferences) {
         section.properties.headerReferences.forEach((headerRef) => {
@@ -405,19 +405,19 @@ export function detectVariablesInTextBox(textBox: TextBox): string[] {
 
 /**
  * Regular expression for matching template variables
- * Matches {{variable_name}} where variable_name can contain:
+ * Matches {variable_name} where variable_name can contain:
  * - Letters (a-z, A-Z)
  * - Numbers (0-9)
  * - Underscores (_)
  * - Hyphens (-)
  * - Dots (.)
  */
-const VARIABLE_PATTERN = /\{\{([a-zA-Z_][a-zA-Z0-9_\-\.]*)\}\}/g;
+const VARIABLE_PATTERN = /\{([a-zA-Z_][a-zA-Z0-9_\-\.]*)\}/g;
 
 /**
  * Alternative pattern allowing any content between braces
  */
-const VARIABLE_PATTERN_RELAXED = /\{\{(.+?)\}\}/g;
+const VARIABLE_PATTERN_RELAXED = /\{(.+?)\}/g;
 
 /**
  * Extract variable names from text
@@ -528,14 +528,14 @@ export function sanitizeVariableName(name: string): string {
  * Format a variable name with braces
  */
 export function formatVariable(name: string): string {
-  return `{{${name}}}`;
+  return `{${name}}`;
 }
 
 /**
  * Parse a variable string to get the name
  */
 export function parseVariable(variable: string): string | null {
-  const match = variable.match(/^\{\{(.+?)\}\}$/);
+  const match = variable.match(/^\{(.+?)\}$/);
   return match ? match[1] : null;
 }
 

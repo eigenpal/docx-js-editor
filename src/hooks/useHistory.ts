@@ -371,8 +371,8 @@ export function useDocumentHistory<T extends { package?: { body?: unknown } }>(
 ): UseHistoryReturn<T> {
   // Compare only the body content for detecting changes
   const isEqual = useCallback((a: T, b: T): boolean => {
-    const bodyA = JSON.stringify(a.package?.body);
-    const bodyB = JSON.stringify(b.package?.body);
+    const bodyA = JSON.stringify(a.package?.document);
+    const bodyB = JSON.stringify(b.package?.document);
     return bodyA === bodyB;
   }, []);
 
