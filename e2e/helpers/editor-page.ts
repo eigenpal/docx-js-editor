@@ -228,9 +228,9 @@ export class EditorPage {
   async selectAll(): Promise<void> {
     await this.page.evaluate(() => {
       const contentArea =
+        document.querySelector('.ProseMirror') ||
         document.querySelector('.docx-editor-pages') ||
-        document.querySelector('.docx-ai-editor') ||
-        document.querySelector('[data-testid="docx-editor"]');
+        document.querySelector('.docx-ai-editor');
       if (!contentArea) return;
 
       // Walk all text nodes to find first and last with actual content
@@ -264,14 +264,57 @@ export class EditorPage {
    * Select specific text by searching for it in the document
    */
   async selectText(searchText: string): Promise<boolean> {
-    const result = await this.page.evaluate((text) => {
-      // Search only within the editor PAGES area (not toolbar which contains icon text like "format_bold")
-      // The content is in .docx-editor-pages or .docx-ai-editor
+    // First, get the bounding rect of the text we want to select
+    const textInfo = await this.page.evaluate((text) => {
+      // Search only within the editor content area (not toolbar which contains icon text like "format_bold")
+      // ProseMirror uses .ProseMirror, legacy editors use .docx-editor-pages or .docx-ai-editor
       const contentArea =
+        document.querySelector('.ProseMirror') ||
         document.querySelector('.docx-editor-pages') ||
-        document.querySelector('.docx-ai-editor') ||
-        document.querySelector('[data-testid="docx-editor"]');
-      if (!contentArea) return false;
+        document.querySelector('.docx-ai-editor');
+      if (!contentArea) return null;
+
+      const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
+
+      let node: Text | null;
+      while ((node = walker.nextNode() as Text | null)) {
+        const index = node.textContent?.indexOf(text) ?? -1;
+        if (index !== -1) {
+          const range = document.createRange();
+          range.setStart(node, index);
+          range.setEnd(node, index + text.length);
+
+          // Get the bounding rect to use for clicking
+          const rect = range.getBoundingClientRect();
+
+          const selection = window.getSelection();
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+
+          return {
+            found: true,
+            x: rect.x + rect.width / 2,
+            y: rect.y + rect.height / 2,
+          };
+        }
+      }
+      return null;
+    }, searchText);
+
+    if (!textInfo) return false;
+
+    // Focus the editor by clicking, then re-select
+    // This ensures ProseMirror is focused and will sync selections
+    const pm = this.page.locator('.ProseMirror');
+    await pm.focus();
+
+    // Re-apply the selection after focus
+    await this.page.evaluate((text) => {
+      const contentArea =
+        document.querySelector('.ProseMirror') ||
+        document.querySelector('.docx-editor-pages') ||
+        document.querySelector('.docx-ai-editor');
+      if (!contentArea) return;
 
       const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, null);
 
@@ -286,17 +329,14 @@ export class EditorPage {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
-          return true;
+          return;
         }
       }
-      return false;
     }, searchText);
 
-    // Small wait after selection to ensure it's registered
-    if (result) {
-      await this.page.waitForTimeout(50);
-    }
-    return result;
+    // Wait for ProseMirror to sync
+    await this.page.waitForTimeout(100);
+    return true;
   }
 
   /**
@@ -305,7 +345,22 @@ export class EditorPage {
   async selectRange(paragraphIndex: number, startOffset: number, endOffset: number): Promise<void> {
     await this.page.evaluate(
       ({ pIndex, start, end }) => {
-        const paragraph = document.querySelector(`[data-paragraph-index="${pIndex}"]`);
+        // Try ProseMirror structure first, then fall back to legacy
+        const contentArea =
+          document.querySelector('.ProseMirror') ||
+          document.querySelector('.docx-editor-pages') ||
+          document.querySelector('.docx-ai-editor');
+        if (!contentArea) return;
+
+        // Find paragraph by index
+        let paragraph: Element | null = document.querySelector(
+          `[data-paragraph-index="${pIndex}"]`
+        );
+        if (!paragraph) {
+          // Fall back to finding p elements by position
+          const paragraphs = contentArea.querySelectorAll('p');
+          paragraph = paragraphs[pIndex] || null;
+        }
         if (!paragraph) return;
 
         const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT, null);
@@ -342,10 +397,21 @@ export class EditorPage {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+
+          // Focus the content area to trigger ProseMirror's selection sync
+          if (contentArea instanceof HTMLElement) {
+            contentArea.focus();
+          }
+
+          // Dispatch selectionchange event to notify ProseMirror
+          document.dispatchEvent(new Event('selectionchange'));
         }
       },
       { pIndex: paragraphIndex, start: startOffset, end: endOffset }
     );
+
+    // Wait for ProseMirror to sync
+    await this.page.waitForTimeout(100);
   }
 
   /**

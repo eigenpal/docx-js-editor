@@ -3,9 +3,8 @@
  *
  * Main component integrating all editor features:
  * - Toolbar for formatting
- * - Editor for content editing
+ * - ProseMirror-based editor for content editing
  * - VariablePanel for template variables
- * - Context menu for AI actions
  * - Zoom control
  * - Error boundary
  * - Loading states
@@ -22,16 +21,8 @@ import React, {
 } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { Document, Theme } from '../types/document';
-import type { AIAction, SelectionContext } from '../types/agentApi';
 
-import {
-  Toolbar,
-  type SelectionFormatting,
-  type FormattingAction,
-  getSelectionFormatting,
-  applyFormattingAction,
-} from './Toolbar';
-import { AIEditor, type AIEditorRef, type AIRequestHandler } from './AIEditor';
+import { Toolbar, type SelectionFormatting, type FormattingAction } from './Toolbar';
 import { VariablePanel } from './VariablePanel';
 import { ErrorBoundary, ErrorProvider } from './ErrorBoundary';
 import { TableToolbar, type TableContext, type TableAction } from './ui/TableToolbar';
@@ -63,6 +54,29 @@ import { executeCommand } from '../agent/executor';
 import { useTableSelection } from '../hooks/useTableSelection';
 import { useDocumentHistory } from '../hooks/useHistory';
 
+// ProseMirror editor
+import {
+  ProseMirrorEditor,
+  type ProseMirrorEditorRef,
+  type SelectionState,
+  toggleBold,
+  toggleItalic,
+  toggleUnderline,
+  toggleStrike,
+  setTextColor,
+  setHighlight,
+  setFontSize,
+  setFontFamily,
+  setAlignment,
+  toggleBulletList,
+  toggleNumberedList,
+  increaseIndent,
+  decreaseIndent,
+  increaseListLevel,
+  decreaseListLevel,
+  clearFormatting,
+} from '../prosemirror';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -77,12 +91,10 @@ export interface DocxEditorProps {
   document?: Document | null;
   /** Callback when document is saved */
   onSave?: (buffer: ArrayBuffer) => void;
-  /** Handler for AI requests */
-  onAgentRequest?: AIRequestHandler;
   /** Callback when document changes */
   onChange?: (document: Document) => void;
   /** Callback when selection changes */
-  onSelectionChange?: (context: SelectionContext | null) => void;
+  onSelectionChange?: (state: SelectionState | null) => void;
   /** Callback on error */
   onError?: (error: Error) => void;
   /** Callback when fonts are loaded */
@@ -151,8 +163,8 @@ export interface DocxEditorRef {
   getAgent: () => DocumentAgent | null;
   /** Get the current document */
   getDocument: () => Document | null;
-  /** Get the editor ref */
-  getEditorRef: () => AIEditorRef | null;
+  /** Get the ProseMirror editor ref */
+  getEditorRef: () => ProseMirrorEditorRef | null;
   /** Save the document to buffer */
   save: () => Promise<ArrayBuffer | null>;
   /** Set zoom level */
@@ -161,10 +173,6 @@ export interface DocxEditorRef {
   getZoom: () => number;
   /** Focus the editor */
   focus: () => void;
-  /** Get current selection context */
-  getSelectionContext: () => SelectionContext | null;
-  /** Trigger an AI action */
-  triggerAIAction: (action: AIAction, customPrompt?: string) => Promise<void>;
   /** Get current page number */
   getCurrentPage: () => number;
   /** Get total page count */
@@ -208,7 +216,6 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     documentBuffer,
     document: initialDocument,
     onSave,
-    onAgentRequest,
     onChange,
     onSelectionChange,
     onError,
@@ -221,8 +228,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     enablePageNavigation = true,
     pageNumberPosition = 'bottom-center',
     pageNumberVariant = 'default',
-    showMarginGuides = false,
-    marginGuideColor,
+    showMarginGuides: _showMarginGuides = false,
+    marginGuideColor: _marginGuideColor,
     showRuler = false,
     rulerUnit = 'inch',
     initialZoom = 1.0,
@@ -237,9 +244,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     showPrintButton = true,
     printOptions,
     onPrint,
-    onCopy,
-    onCut,
-    onPaste,
+    onCopy: _onCopy,
+    onCut: _onCut,
+    onPaste: _onPaste,
   },
   ref
 ) {
@@ -264,7 +271,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   });
 
   // Refs
-  const editorRef = useRef<AIEditorRef>(null);
+  const editorRef = useRef<ProseMirrorEditorRef>(null);
   const agentRef = useRef<DocumentAgent | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -337,37 +344,6 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     return cleanup;
   }, [onFontsLoadedCallback]);
 
-  // Listen for selection changes to update toolbar formatting
-  useEffect(() => {
-    const handleSelectionChangeEvent = () => {
-      if (!editorRef.current) return;
-
-      const context = editorRef.current.getSelectionContext();
-      if (context && context.formatting) {
-        setState((prev) => ({
-          ...prev,
-          selectionFormatting: getSelectionFormatting(
-            context.formatting,
-            context.paragraphFormatting
-          ),
-        }));
-      } else {
-        setState((prev) => ({
-          ...prev,
-          selectionFormatting: {},
-        }));
-      }
-      onSelectionChange?.(context);
-    };
-
-    // Listen for selection changes
-    document.addEventListener('selectionchange', handleSelectionChangeEvent);
-
-    return () => {
-      document.removeEventListener('selectionchange', handleSelectionChangeEvent);
-    };
-  }, [onSelectionChange]);
-
   // Keyboard shortcuts for Find/Replace (Ctrl+F, Ctrl+H)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -407,6 +383,36 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     [onChange, history]
   );
 
+  // Handle selection changes from ProseMirror
+  const handleSelectionChange = useCallback(
+    (selectionState: SelectionState | null) => {
+      if (!selectionState) {
+        setState((prev) => ({
+          ...prev,
+          selectionFormatting: {},
+        }));
+        return;
+      }
+
+      // Update toolbar formatting from ProseMirror selection
+      const formatting: SelectionFormatting = {
+        bold: selectionState.textFormatting.bold,
+        italic: selectionState.textFormatting.italic,
+        underline: !!selectionState.textFormatting.underline,
+        strike: selectionState.textFormatting.strike,
+        alignment: selectionState.paragraphFormatting.alignment,
+      };
+      setState((prev) => ({
+        ...prev,
+        selectionFormatting: formatting,
+      }));
+
+      // Notify parent
+      onSelectionChange?.(selectionState);
+    },
+    [onSelectionChange]
+  );
+
   // Table selection hook
   const tableSelection = useTableSelection({
     document: history.state,
@@ -425,286 +431,76 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   );
 
   // Handle formatting action from toolbar
-  const handleFormat = useCallback(
-    (action: FormattingAction) => {
-      if (!editorRef.current || !history.state) return;
+  const handleFormat = useCallback((action: FormattingAction) => {
+    const view = editorRef.current?.getView();
+    if (!view) return;
 
-      // Get current selection context
-      const selectionContext = editorRef.current.getSelectionContext();
-      if (!selectionContext || !selectionContext.range) return;
-
-      const { range } = selectionContext;
-
-      // Handle applyStyle action (paragraph-level - applies a named style)
-      if (typeof action === 'object' && action.type === 'applyStyle') {
-        // Apply style using applyStyle command
-        const newDoc = executeCommand(history.state, {
-          type: 'applyStyle',
-          paragraphIndex: range.start.paragraphIndex,
-          styleId: action.value,
-        });
-
-        handleDocumentChange(newDoc);
-
-        // Update selection formatting state
-        setState((prev) => ({
-          ...prev,
-          selectionFormatting: {
-            ...prev.selectionFormatting,
-            styleId: action.value,
-          },
-        }));
-        return;
-      }
-
-      // Handle alignment action (paragraph-level formatting)
-      if (typeof action === 'object' && action.type === 'alignment') {
-        // Apply paragraph formatting using formatParagraph command
-        const newDoc = executeCommand(history.state, {
-          type: 'formatParagraph',
-          paragraphIndex: range.start.paragraphIndex,
-          formatting: { alignment: action.value },
-        });
-
-        handleDocumentChange(newDoc);
-
-        // Update selection formatting state
-        setState((prev) => ({
-          ...prev,
-          selectionFormatting: {
-            ...prev.selectionFormatting,
-            alignment: action.value,
-          },
-        }));
-        return;
-      }
-
-      // Handle line spacing action (paragraph-level formatting)
-      if (typeof action === 'object' && action.type === 'lineSpacing') {
-        // Apply paragraph formatting using formatParagraph command
-        // lineSpacing in OOXML uses 'auto' lineRule by default, value is in twips (240 = single)
-        const newDoc = executeCommand(history.state, {
-          type: 'formatParagraph',
-          paragraphIndex: range.start.paragraphIndex,
-          formatting: {
-            lineSpacing: action.value,
-            lineSpacingRule: 'auto',
-          },
-        });
-
-        handleDocumentChange(newDoc);
-
-        // Update selection formatting state
-        setState((prev) => ({
-          ...prev,
-          selectionFormatting: {
-            ...prev.selectionFormatting,
-            lineSpacing: action.value,
-          },
-        }));
-        return;
-      }
-
-      // Handle bullet list action (paragraph-level)
-      if (action === 'bulletList') {
-        const currentListState = state.selectionFormatting.listState;
-        const isCurrentlyBulletList = currentListState?.type === 'bullet';
-
-        // Toggle bullet list: if already bullet list, remove it; otherwise set it
-        const newNumPr = isCurrentlyBulletList
-          ? undefined // Remove list
-          : { numId: 1, ilvl: 0 }; // Set to bullet list (numId 1 is typically bullets)
-
-        const newDoc = executeCommand(history.state, {
-          type: 'formatParagraph',
-          paragraphIndex: range.start.paragraphIndex,
-          formatting: { numPr: newNumPr },
-        });
-
-        handleDocumentChange(newDoc);
-
-        // Update selection formatting state
-        setState((prev) => ({
-          ...prev,
-          selectionFormatting: {
-            ...prev.selectionFormatting,
-            listState: newNumPr
-              ? { type: 'bullet', level: 0, isInList: true, numId: 1 }
-              : { type: 'none', level: 0, isInList: false },
-          },
-        }));
-        return;
-      }
-
-      // Handle numbered list action (paragraph-level)
-      if (action === 'numberedList') {
-        const currentListState = state.selectionFormatting.listState;
-        const isCurrentlyNumberedList = currentListState?.type === 'numbered';
-
-        // Toggle numbered list: if already numbered list, remove it; otherwise set it
-        const newNumPr = isCurrentlyNumberedList
-          ? undefined // Remove list
-          : { numId: 2, ilvl: 0 }; // Set to numbered list (numId 2 is typically numbered)
-
-        const newDoc = executeCommand(history.state, {
-          type: 'formatParagraph',
-          paragraphIndex: range.start.paragraphIndex,
-          formatting: { numPr: newNumPr },
-        });
-
-        handleDocumentChange(newDoc);
-
-        // Update selection formatting state
-        setState((prev) => ({
-          ...prev,
-          selectionFormatting: {
-            ...prev.selectionFormatting,
-            listState: newNumPr
-              ? { type: 'numbered', level: 0, isInList: true, numId: 2 }
-              : { type: 'none', level: 0, isInList: false },
-          },
-        }));
-        return;
-      }
-
-      // Handle indent action (increase list level or paragraph indent)
-      if (action === 'indent') {
-        const currentListState = state.selectionFormatting.listState;
-        const isInList = currentListState?.isInList;
-
-        if (isInList && currentListState) {
-          // For list items: increase the ilvl (max 8)
-          const newLevel = Math.min((currentListState.level || 0) + 1, 8);
-          const newNumPr = { numId: currentListState.numId || 1, ilvl: newLevel };
-
-          const newDoc = executeCommand(history.state, {
-            type: 'formatParagraph',
-            paragraphIndex: range.start.paragraphIndex,
-            formatting: { numPr: newNumPr },
-          });
-
-          handleDocumentChange(newDoc);
-
-          // Update selection formatting state
-          setState((prev) => ({
-            ...prev,
-            selectionFormatting: {
-              ...prev.selectionFormatting,
-              listState: {
-                ...currentListState,
-                level: newLevel,
-              },
-            },
-          }));
-        } else {
-          // For regular paragraphs: increase left indent by 720 twips (0.5 inch)
-          const currentIndent = selectionContext.paragraphFormatting?.indentLeft || 0;
-          const newIndent = currentIndent + 720;
-
-          const newDoc = executeCommand(history.state, {
-            type: 'formatParagraph',
-            paragraphIndex: range.start.paragraphIndex,
-            formatting: { indentLeft: newIndent },
-          });
-
-          handleDocumentChange(newDoc);
-        }
-        return;
-      }
-
-      // Handle outdent action (decrease list level or paragraph indent)
-      if (action === 'outdent') {
-        const currentListState = state.selectionFormatting.listState;
-        const isInList = currentListState?.isInList;
-
-        if (isInList && currentListState) {
-          // For list items: decrease the ilvl (min 0)
-          const newLevel = Math.max((currentListState.level || 0) - 1, 0);
-          const newNumPr = { numId: currentListState.numId || 1, ilvl: newLevel };
-
-          const newDoc = executeCommand(history.state, {
-            type: 'formatParagraph',
-            paragraphIndex: range.start.paragraphIndex,
-            formatting: { numPr: newNumPr },
-          });
-
-          handleDocumentChange(newDoc);
-
-          // Update selection formatting state
-          setState((prev) => ({
-            ...prev,
-            selectionFormatting: {
-              ...prev.selectionFormatting,
-              listState: {
-                ...currentListState,
-                level: newLevel,
-              },
-            },
-          }));
-        } else {
-          // For regular paragraphs: decrease left indent by 720 twips (0.5 inch), minimum 0
-          const currentIndent = selectionContext.paragraphFormatting?.indentLeft || 0;
-          const newIndent = Math.max(currentIndent - 720, 0);
-
-          const newDoc = executeCommand(history.state, {
-            type: 'formatParagraph',
-            paragraphIndex: range.start.paragraphIndex,
-            formatting: { indentLeft: newIndent },
-          });
-
-          handleDocumentChange(newDoc);
-        }
-        return;
-      }
-
-      // Get the current formatting and apply the action
-      const currentFormatting = selectionContext.formatting || {};
-      const newFormatting = applyFormattingAction(currentFormatting, action);
-
-      // Apply formatting to the selection using executeCommand
-      const newDoc = executeCommand(history.state, {
-        type: 'formatText',
-        range,
-        formatting: newFormatting,
-      });
-
-      handleDocumentChange(newDoc);
-
-      // Restore the selection after the document change causes a re-render
-      // This ensures subsequent formatting commands can find the selection
-      editorRef.current?.restoreSelection(
-        range.start.paragraphIndex,
-        range.start.offset,
-        range.end.offset
-      );
-
-      // Update selection formatting state
-      setState((prev) => ({
-        ...prev,
-        selectionFormatting: getSelectionFormatting(
-          newFormatting,
-          selectionContext.paragraphFormatting
-        ),
-      }));
-    },
-    [history.state, handleDocumentChange, state.selectionFormatting.listState]
-  );
-
-  // Handle undo action
-  const handleUndo = useCallback(() => {
-    const previousState = history.undo();
-    if (previousState) {
-      onChange?.(previousState);
+    // Handle simple toggle actions
+    if (action === 'bold') {
+      toggleBold(view.state, view.dispatch);
+      return;
     }
-  }, [history, onChange]);
-
-  // Handle redo action
-  const handleRedo = useCallback(() => {
-    const nextState = history.redo();
-    if (nextState) {
-      onChange?.(nextState);
+    if (action === 'italic') {
+      toggleItalic(view.state, view.dispatch);
+      return;
     }
-  }, [history, onChange]);
+    if (action === 'underline') {
+      toggleUnderline(view.state, view.dispatch);
+      return;
+    }
+    if (action === 'strikethrough') {
+      toggleStrike(view.state, view.dispatch);
+      return;
+    }
+    if (action === 'bulletList') {
+      toggleBulletList(view.state, view.dispatch);
+      return;
+    }
+    if (action === 'numberedList') {
+      toggleNumberedList(view.state, view.dispatch);
+      return;
+    }
+    if (action === 'indent') {
+      // Try list indent first, then paragraph indent
+      if (!increaseListLevel(view.state, view.dispatch)) {
+        increaseIndent()(view.state, view.dispatch);
+      }
+      return;
+    }
+    if (action === 'outdent') {
+      // Try list outdent first, then paragraph outdent
+      if (!decreaseListLevel(view.state, view.dispatch)) {
+        decreaseIndent()(view.state, view.dispatch);
+      }
+      return;
+    }
+    if (action === 'clearFormatting') {
+      clearFormatting(view.state, view.dispatch);
+      return;
+    }
+
+    // Handle object-based actions
+    if (typeof action === 'object') {
+      switch (action.type) {
+        case 'alignment':
+          setAlignment(action.value)(view.state, view.dispatch);
+          break;
+        case 'textColor':
+          // action.value can be a string like "#FF0000" or a color name
+          setTextColor({ rgb: action.value.replace('#', '') })(view.state, view.dispatch);
+          break;
+        case 'highlightColor':
+          setHighlight(action.value)(view.state, view.dispatch);
+          break;
+        case 'fontSize':
+          setFontSize(action.value)(view.state, view.dispatch);
+          break;
+        case 'fontFamily':
+          setFontFamily(action.value)(view.state, view.dispatch);
+          break;
+      }
+    }
+  }, []);
 
   // Handle variable values change
   const handleVariableValuesChange = useCallback((values: Record<string, string>) => {
@@ -735,14 +531,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     setState((prev) => ({ ...prev, zoom }));
   }, []);
 
-  // Handle page change from editor
-  const handlePageChange = useCallback((currentPage: number, totalPages: number) => {
-    setState((prev) => ({ ...prev, currentPage, totalPages }));
-  }, []);
-
   // Handle page navigation (from PageNavigator)
-  const handlePageNavigate = useCallback((pageNumber: number) => {
-    editorRef.current?.scrollToPage(pageNumber);
+  // TODO: Implement page navigation in ProseMirror
+  const handlePageNavigate = useCallback((_pageNumber: number) => {
+    // Page navigation not yet implemented for ProseMirror
   }, []);
 
   // Handle save
@@ -955,14 +747,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       setZoom: (zoom: number) => setState((prev) => ({ ...prev, zoom })),
       getZoom: () => state.zoom,
       focus: () => editorRef.current?.focus(),
-      getSelectionContext: () => editorRef.current?.getSelectionContext() || null,
-      triggerAIAction: async (action: AIAction, customPrompt?: string) => {
-        await editorRef.current?.triggerAIAction(action, customPrompt);
-      },
       getCurrentPage: () => state.currentPage,
       getTotalPages: () => state.totalPages,
-      scrollToPage: (pageNumber: number) => {
-        editorRef.current?.scrollToPage(pageNumber);
+      scrollToPage: (_pageNumber: number) => {
+        // TODO: Implement page navigation in ProseMirror
       },
       openPrintPreview: handleOpenPrintPreview,
       print: handleDirectPrint,
@@ -1072,10 +860,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               <Toolbar
                 currentFormatting={state.selectionFormatting}
                 onFormat={handleFormat}
-                onUndo={handleUndo}
-                onRedo={handleRedo}
-                canUndo={history.canUndo}
-                canRedo={history.canRedo}
+                onUndo={() => editorRef.current?.undo()}
+                onRedo={() => editorRef.current?.redo()}
+                canUndo={true}
+                canRedo={true}
                 disabled={readOnly}
                 documentStyles={history.state?.package.styles?.styles}
                 theme={history.state?.package.theme || theme}
@@ -1127,21 +915,12 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               )}
 
               <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
-                <AIEditor
+                <ProseMirrorEditor
                   ref={editorRef}
                   document={history.state}
                   onChange={handleDocumentChange}
-                  onAgentRequest={onAgentRequest}
-                  editable={!readOnly}
-                  zoom={state.zoom}
-                  showMarginGuides={showMarginGuides}
-                  marginGuideColor={marginGuideColor}
-                  onTableCellClick={tableSelection.handleCellClick}
-                  isTableCellSelected={tableSelection.isCellSelected}
-                  onPageChange={handlePageChange}
-                  onCopy={onCopy}
-                  onCut={onCut}
-                  onPaste={onPaste}
+                  onSelectionChange={handleSelectionChange}
+                  readOnly={readOnly}
                 />
 
                 {/* Page navigation / indicator */}

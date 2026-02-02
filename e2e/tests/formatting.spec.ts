@@ -289,12 +289,16 @@ test.describe('Formatting with Selection', () => {
   });
 
   test('cursor position preserved after formatting', async ({ page }) => {
+    // Test that formatting preserves the selection, and you can type after pressing right arrow
     await editor.typeText('Hello');
     await editor.selectText('Hello');
     await editor.applyBold();
+    // Press right arrow to move cursor to end of selection
+    await page.keyboard.press('ArrowRight');
     await editor.typeText(' World');
 
     await assertions.assertDocumentContainsText(page, 'Hello World');
+    await assertions.assertTextIsBold(page, 'Hello');
   });
 });
 
