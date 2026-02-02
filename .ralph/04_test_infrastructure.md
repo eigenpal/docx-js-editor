@@ -50,7 +50,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 - [x] **Fix bold formatting application** - Fixed getSelectionRange() in AIEditor.tsx to properly handle Element nodes when calculating offsets. The fix handles cases where selection.anchorNode/focusNode is an Element (e.g., after triple-click) instead of a Text node. Verify: `npx playwright test --grep "apply bold via toolbar" --timeout=30000`
 
-- [ ] **Fix italic formatting application** - Verify: `npx playwright test --grep "apply italic via toolbar" --timeout=30000`
+- [x] **Fix italic formatting application** - Fixed selection restoration after formatting changes by using requestAnimationFrame + setTimeout to ensure DOM has re-rendered before restoring selection. This allows combined formatting (bold + italic) to work correctly. Verify: `npx playwright test --grep "apply italic via toolbar" --timeout=30000`
 
 - [ ] **Fix underline formatting application** - Verify: `npx playwright test --grep "apply underline" --timeout=30000`
 

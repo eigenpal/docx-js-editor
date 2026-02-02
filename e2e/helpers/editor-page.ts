@@ -340,6 +340,9 @@ export class EditorPage {
    */
   async applyBold(): Promise<void> {
     await this.boldButton.click();
+    // Wait for selection to be restored after the DOM re-renders
+    // Uses requestAnimationFrame + setTimeout internally, so we need enough time
+    await this.page.waitForTimeout(100);
   }
 
   /**
@@ -355,6 +358,9 @@ export class EditorPage {
    */
   async applyItalic(): Promise<void> {
     await this.italicButton.click();
+    // Wait for selection to be restored after the DOM re-renders
+    // Uses requestAnimationFrame + setTimeout internally, so we need enough time
+    await this.page.waitForTimeout(100);
   }
 
   /**
@@ -370,6 +376,9 @@ export class EditorPage {
    */
   async applyUnderline(): Promise<void> {
     await this.underlineButton.click();
+    // Wait for selection to be restored after the DOM re-renders
+    // Uses requestAnimationFrame + setTimeout internally, so we need enough time
+    await this.page.waitForTimeout(100);
   }
 
   /**
@@ -385,6 +394,9 @@ export class EditorPage {
    */
   async applyStrikethrough(): Promise<void> {
     await this.strikethroughButton.click();
+    // Wait for selection to be restored after the DOM re-renders
+    // Uses requestAnimationFrame + setTimeout internally, so we need enough time
+    await this.page.waitForTimeout(100);
   }
 
   /**

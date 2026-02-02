@@ -209,6 +209,11 @@ export function ToolbarButton({
       .replace(/\([^)]*\)/g, '')
       .trim();
 
+  // Prevent mousedown from stealing focus from the editor selection
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+  };
+
   const button = (
     <Button
       variant="ghost"
@@ -219,6 +224,7 @@ export function ToolbarButton({
         disabled && 'opacity-30 cursor-not-allowed',
         className
       )}
+      onMouseDown={handleMouseDown}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       aria-pressed={active}

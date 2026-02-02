@@ -670,6 +670,14 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
 
       handleDocumentChange(newDoc);
 
+      // Restore the selection after the document change causes a re-render
+      // This ensures subsequent formatting commands can find the selection
+      editorRef.current?.restoreSelection(
+        range.start.paragraphIndex,
+        range.start.offset,
+        range.end.offset
+      );
+
       // Update selection formatting state
       setState((prev) => ({
         ...prev,

@@ -143,6 +143,8 @@ export interface EditorRef {
   getCurrentPage: () => number;
   /** Get total page count */
   getTotalPages: () => number;
+  /** Restore selection using document coordinates */
+  restoreSelection: (paragraphIndex: number, startOffset: number, endOffset: number) => void;
 }
 
 // ============================================================================
@@ -946,6 +948,54 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       },
       getCurrentPage: () => lastPageChangeRef.current?.current || 1,
       getTotalPages: () => pageLayout?.totalPages || 1,
+      restoreSelection: (paragraphIndex: number, startOffset: number, endOffset: number) => {
+        // Use requestAnimationFrame followed by setTimeout to ensure React has rendered
+        // requestAnimationFrame waits for the browser's next paint, and setTimeout(0) after
+        // that ensures we're in a new macrotask after the paint
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const paragraph = paragraphRefs.current.get(paragraphIndex);
+            if (!paragraph) return;
+
+            // Find text nodes and create selection
+            const walker = window.document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT, null);
+
+            let currentOffset = 0;
+            let startNode: Node | null = null;
+            let startNodeOffset = 0;
+            let endNode: Node | null = null;
+            let endNodeOffset = 0;
+
+            let node: Text | null;
+            while ((node = walker.nextNode() as Text | null)) {
+              const nodeLength = node.textContent?.length ?? 0;
+
+              if (!startNode && currentOffset + nodeLength >= startOffset) {
+                startNode = node;
+                startNodeOffset = startOffset - currentOffset;
+              }
+
+              if (!endNode && currentOffset + nodeLength >= endOffset) {
+                endNode = node;
+                endNodeOffset = endOffset - currentOffset;
+                break;
+              }
+
+              currentOffset += nodeLength;
+            }
+
+            if (startNode && endNode) {
+              const range = window.document.createRange();
+              range.setStart(startNode, startNodeOffset);
+              range.setEnd(endNode, endNodeOffset);
+
+              const selection = window.getSelection();
+              selection?.removeAllRanges();
+              selection?.addRange(range);
+            }
+          }, 0);
+        });
+      },
     }),
     [doc, focusedParagraphIndex, paragraphCount, pageLayout, zoom, pageGap]
   );
