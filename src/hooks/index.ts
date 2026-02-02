@@ -43,3 +43,18 @@ export type {
   UseClipboardOptions,
   UseClipboardReturn,
 } from './useClipboard';
+
+export {
+  useAutoSave,
+  formatLastSaveTime,
+  getAutoSaveStatusLabel,
+  getAutoSaveStorageSize,
+  formatStorageSize,
+  isAutoSaveSupported,
+} from './useAutoSave';
+export type {
+  AutoSaveStatus,
+  UseAutoSaveOptions,
+  UseAutoSaveReturn,
+  SavedDocumentData,
+} from './useAutoSave';

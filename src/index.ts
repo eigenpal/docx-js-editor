@@ -378,6 +378,19 @@ export {
   type UseTableSelectionOptions,
 } from './hooks/useTableSelection';
 
+export {
+  useAutoSave,
+  formatLastSaveTime,
+  getAutoSaveStatusLabel,
+  getAutoSaveStorageSize,
+  formatStorageSize,
+  isAutoSaveSupported,
+  type AutoSaveStatus,
+  type UseAutoSaveOptions,
+  type UseAutoSaveReturn,
+  type SavedDocumentData,
+} from './hooks/useAutoSave';
+
 // ============================================================================
 // UTILITIES
 // ============================================================================
