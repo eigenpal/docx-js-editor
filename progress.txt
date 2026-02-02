@@ -66,3 +66,35 @@ Example of the bug:
 **Verification:**
 - `npx playwright test --grep "apply bold via toolbar" --timeout=30000` - 2 tests passed
 - formatting.spec.ts shows 13 passed (up from previous runs where bold tests failed)
+
+---
+
+## 2026-02-01: Fix italic formatting and combined formatting (bold + italic)
+
+**Problem:** Clicking bold button would apply bold to text, but clicking italic immediately after would not apply italic. Combined formatting tests like "bold + italic" were failing.
+
+**Root Cause:** When applying formatting (e.g., bold), the document state changes and React re-renders the component tree. This replaces the DOM nodes, but the browser's Selection object still references the OLD nodes that no longer exist in the document. When the italic button is clicked, `getSelectionRange()` finds no valid selection because the selection's anchor/focus nodes are orphaned.
+
+**Solution:** Implemented selection restoration using document coordinates:
+
+1. Added `onMouseDown` handler to `ToolbarButton` with `e.preventDefault()` to prevent toolbar buttons from stealing focus from the editor
+2. Added `restoreSelection(paragraphIndex, startOffset, endOffset)` method to `EditorRef` interface
+3. In `Editor.tsx`, implemented `restoreSelection` using:
+   - `requestAnimationFrame()` to wait for browser paint
+   - `setTimeout(0)` after RAF to ensure we're in a new macrotask after React render
+   - TreeWalker to find text nodes and calculate correct DOM offsets
+   - Range/Selection API to recreate the selection
+4. In `DocxEditor.tsx`, call `restoreSelection` after `handleDocumentChange` to restore the selection after formatting changes
+5. Increased test wait times in `editor-page.ts` from 50ms to 100ms to account for async selection restore
+
+**Key Insight:** The timing of when to restore the selection is critical. `setTimeout(0)` alone isn't enough because React may batch state updates. Using `requestAnimationFrame + setTimeout(0)` ensures we wait for both the browser paint and React's render cycle to complete.
+
+**Files Modified:**
+- `src/components/Editor.tsx` - Added restoreSelection method to EditorRef
+- `src/components/DocxEditor.tsx` - Call restoreSelection after format changes
+- `src/components/Toolbar.tsx` - Added onMouseDown preventDefault to ToolbarButton
+- `e2e/helpers/editor-page.ts` - Increased wait times to 100ms
+
+**Verification:**
+- `npx playwright test --grep "apply italic via toolbar" --timeout=30000` - 2 tests passed
+- `npx playwright test --grep "bold + italic" --timeout=30000` - 4 tests passed (combined formatting now works)

@@ -52,7 +52,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 - [x] **Fix italic formatting application** - Fixed selection restoration after formatting changes by using requestAnimationFrame + setTimeout to ensure DOM has re-rendered before restoring selection. This allows combined formatting (bold + italic) to work correctly. Verify: `npx playwright test --grep "apply italic via toolbar" --timeout=30000`
 
-- [ ] **Fix underline formatting application** - Verify: `npx playwright test --grep "apply underline" --timeout=30000`
+- [x] **Fix underline formatting application** - All 4 underline tests pass (toolbar button and Ctrl+U). Verify: `npx playwright test --grep "apply underline" --timeout=30000`
 
 - [ ] **Fix strikethrough formatting application** - Verify: `npx playwright test --grep "strikethrough" --timeout=30000`
 
