@@ -135,3 +135,75 @@
   5. Added clipboard permissions to playwright.config.ts
 [2026-02-02 11:55] TASK: Verify full test suite stability
 [2026-02-02 11:55] STATUS: starting
+
+[2026-02-02 12:00] === PROSEMIRROR MIGRATION STARTED ===
+[2026-02-02 12:00] TASK: Create ProseMirror schema (nodes.ts, marks.ts, index.ts)
+[2026-02-02 12:00] STATUS: starting
+[2026-02-02 12:00] NOTES: Created directory structure at src/prosemirror/
+[2026-02-02 12:01] STATUS: researching-superdoc
+[2026-02-02 12:01] NOTES: Searched SuperDoc for schema/marks - found pm-adapter/src/marks/application.ts
+[2026-02-02 12:02] NOTES: SuperDoc approach: Uses mark types: bold, italic, underline, strike, highlight, textStyle (color, fontSize, fontFamily), link
+[2026-02-02 12:02] NOTES: Key insight: textStyle mark combines color, fontFamily, fontSize, letterSpacing
+[2026-02-02 12:02] NOTES: normalizeBooleanMarkValue handles ST_OnOff values (0, false, none → false)
+[2026-02-02 12:03] STATUS: editing
+[2026-02-02 12:03] NOTES: Creating schema files based on SuperDoc concepts but with fresh implementation
+[2026-02-02 12:05] NOTES: Created src/prosemirror/schema/nodes.ts - doc, paragraph, hardBreak, image, text
+[2026-02-02 12:06] NOTES: Created src/prosemirror/schema/marks.ts - bold, italic, underline, strike, textColor, highlight, fontSize, fontFamily, superscript, subscript, hyperlink
+[2026-02-02 12:07] NOTES: Created src/prosemirror/schema/index.ts - combines nodes and marks into schema
+[2026-02-02 12:07] STATUS: testing
+[2026-02-02 12:07] NOTES: Typecheck passes - schema compiles correctly
+[2026-02-02 12:07] STATUS: done
+
+[2026-02-02 12:08] TASK: Implement toProseDoc.ts conversion
+[2026-02-02 12:08] STATUS: starting
+[2026-02-02 12:08] STATUS: researching-superdoc
+[2026-02-02 12:08] NOTES: Searching SuperDoc for document to PM conversion patterns
+[2026-02-02 12:09] NOTES: Found pm-adapter/src/internal.ts - uses node handler dispatch pattern
+[2026-02-02 12:09] NOTES: Key insight: Process doc.content nodes, map node types to handlers
+[2026-02-02 12:10] STATUS: editing
+[2026-02-02 12:10] NOTES: Creating toProseDoc.ts - converts our Document type to PM doc
+[2026-02-02 12:12] NOTES: Created toProseDoc.ts with convertParagraph, convertRun, textFormattingToMarks
+[2026-02-02 12:13] NOTES: Created fromProseDoc.ts with extractParagraphs, marksToTextFormatting, run coalescing
+[2026-02-02 12:14] STATUS: testing
+[2026-02-02 12:14] NOTES: Fixed type errors - asciiTheme cast, removed unused import
+[2026-02-02 12:14] NOTES: Typecheck passes
+[2026-02-02 12:14] STATUS: done
+
+[2026-02-02 12:15] TASK: Create ProseMirrorEditor.tsx React wrapper
+[2026-02-02 12:15] STATUS: starting
+[2026-02-02 12:15] STATUS: researching-superdoc
+[2026-02-02 12:15] NOTES: Checking SuperDoc for EditorView mounting patterns
+[2026-02-02 12:16] NOTES: Found ProseMirrorRenderer.ts - uses class with attach/destroy pattern
+[2026-02-02 12:17] NOTES: Read DocxEditor.tsx - uses handleFormat with executeCommand for Document changes
+[2026-02-02 12:18] STATUS: editing
+[2026-02-02 12:18] NOTES: Creating ProseMirrorEditor.tsx as React wrapper
+[2026-02-02 12:20] NOTES: Created ProseMirrorEditor.tsx with:
+  - EditorView mount/unmount lifecycle
+  - Document <-> PM state sync
+  - Selection state extraction for toolbar
+  - Ref methods: undo, redo, toggleBold/Italic/Underline, getSelectionContext
+[2026-02-02 12:22] STATUS: testing
+[2026-02-02 12:22] NOTES: Fixed type errors - unused imports, SelectionContext properties
+[2026-02-02 12:22] NOTES: Typecheck passes
+[2026-02-02 12:22] STATUS: done
+
+[2026-02-02 12:23] TASK: Implement keymap and selection tracker plugins
+[2026-02-02 12:23] STATUS: starting
+[2026-02-02 12:23] STATUS: editing
+[2026-02-02 12:23] NOTES: Creating plugins for keyboard shortcuts and selection tracking
+[2026-02-02 12:25] NOTES: Created keymap.ts - Ctrl+B/I/U, Enter, Backspace, Tab for lists
+[2026-02-02 12:26] NOTES: Created selectionTracker.ts - emits SelectionContext on selection change
+[2026-02-02 12:26] STATUS: testing
+[2026-02-02 12:26] NOTES: Typecheck passes
+[2026-02-02 12:26] STATUS: done
+
+[2026-02-02 12:27] TASK: Implement formatting commands (bold, italic, colors, fonts)
+[2026-02-02 12:27] STATUS: starting
+[2026-02-02 12:27] STATUS: editing
+[2026-02-02 12:27] NOTES: Creating commands for text formatting marks
+[2026-02-02 12:29] NOTES: Created formatting.ts - toggleBold/Italic/Underline, setTextColor, setFontSize, etc.
+[2026-02-02 12:30] NOTES: Created paragraph.ts - setAlignment, toggleBulletList, increaseIndent, etc.
+[2026-02-02 12:31] STATUS: testing
+[2026-02-02 12:31] NOTES: Fixed type errors - removed unused imports, added MarkAttrs helper
+[2026-02-02 12:31] NOTES: Typecheck passes
+[2026-02-02 12:31] STATUS: done
