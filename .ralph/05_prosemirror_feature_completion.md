@@ -48,7 +48,7 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
   - Update paragraph attrs with style's alignment, spacing, indentation
   - **Verify**: Select text, change to Heading 1, text should become larger
 
-- [ ] **Task 4: Sync style picker with current paragraph**
+- [x] **Task 4: Sync style picker with current paragraph**
   - Extract styleId from current paragraph in selection state
   - Update toolbar to show current style
   - **Verify**: Click in Heading 1 paragraph, toolbar shows "Heading 1"

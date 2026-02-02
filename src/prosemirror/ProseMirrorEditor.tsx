@@ -41,6 +41,8 @@ export interface SelectionState {
   textFormatting: TextFormatting;
   /** Current paragraph formatting */
   paragraphFormatting: ParagraphFormatting;
+  /** Current paragraph style ID (e.g., 'Heading1', 'Normal') */
+  styleId: string | null;
   /** Start paragraph index */
   startParagraphIndex: number;
   /** End paragraph index */
@@ -213,8 +215,9 @@ function extractSelectionState(state: EditorState): SelectionState | null {
     }
   }
 
-  // Get paragraph formatting from current paragraph
+  // Get paragraph formatting and styleId from current paragraph
   const paragraphFormatting: ParagraphFormatting = {};
+  let styleId: string | null = null;
   const paragraph = $from.parent;
   if (paragraph.type.name === 'paragraph') {
     if (paragraph.attrs.alignment) {
@@ -230,6 +233,9 @@ function extractSelectionState(state: EditorState): SelectionState | null {
     if (paragraph.attrs.indentLeft) {
       paragraphFormatting.indentLeft = paragraph.attrs.indentLeft;
     }
+    if (paragraph.attrs.styleId) {
+      styleId = paragraph.attrs.styleId;
+    }
   }
 
   return {
@@ -237,6 +243,7 @@ function extractSelectionState(state: EditorState): SelectionState | null {
     isMultiParagraph: startParagraphIndex !== endParagraphIndex,
     textFormatting,
     paragraphFormatting,
+    styleId,
     startParagraphIndex,
     endParagraphIndex,
   };

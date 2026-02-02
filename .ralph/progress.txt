@@ -255,3 +255,13 @@
 [2026-02-02 14:14] NOTES: Updated DocxEditor to resolve style before applying via toolbar
 [2026-02-02 14:14] STATUS: done
 [2026-02-02 14:14] NOTES: Task 3 complete - Typecheck passes
+
+[2026-02-02 14:14] TASK: Sync style picker with current paragraph
+[2026-02-02 14:14] STATUS: starting
+[2026-02-02 14:14] NOTES: Extract styleId from current paragraph in selection state
+[2026-02-02 14:15] STATUS: editing
+[2026-02-02 14:15] NOTES: Added styleId to SelectionState interface
+[2026-02-02 14:15] NOTES: Updated extractSelectionState to include current paragraph's styleId
+[2026-02-02 14:15] NOTES: Updated DocxEditor to pass styleId to toolbar SelectionFormatting
+[2026-02-02 14:15] STATUS: done
+[2026-02-02 14:15] NOTES: Task 4 complete - Style picker now syncs with current paragraph

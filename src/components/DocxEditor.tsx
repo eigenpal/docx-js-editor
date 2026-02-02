@@ -404,6 +404,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         underline: !!selectionState.textFormatting.underline,
         strike: selectionState.textFormatting.strike,
         alignment: selectionState.paragraphFormatting.alignment,
+        styleId: selectionState.styleId ?? undefined,
       };
       setState((prev) => ({
         ...prev,
