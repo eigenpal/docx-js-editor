@@ -25,3 +25,10 @@ export type {
   UseTableSelectionReturn,
   UseTableSelectionOptions,
 } from './useTableSelection';
+
+export { useSelectionHighlight, generateOverlayElements } from './useSelectionHighlight';
+export type {
+  UseSelectionHighlightOptions,
+  UseSelectionHighlightReturn,
+  SelectionOverlayProps,
+} from './useSelectionHighlight';

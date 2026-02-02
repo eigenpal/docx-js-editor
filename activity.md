@@ -6465,3 +6465,71 @@ Created `src/components/dialogs/InsertSymbolDialog.tsx` for inserting special ch
 - bun build exits 0: ✓
 
 ---
+
+### US-150: Improve text selection highlighting
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Implemented comprehensive text selection highlighting across multiple runs with consistent visual feedback.
+
+**Created Files:**
+
+1. **`src/utils/selectionHighlight.ts`:**
+   - Selection highlight utilities for visual feedback across runs
+   - `getSelectionRects()` - Get rectangles from DOM selection
+   - `mergeAdjacentRects()` - Merge overlapping rectangles
+   - `getMergedSelectionRects()` - Combined function
+   - `getHighlightRectStyle()` - Generate CSS for highlight rect
+   - `generateSelectionCSS()` - Generate selection pseudo-element CSS
+   - `injectSelectionStyles()` / `removeSelectionStyles()` - Dynamic CSS injection
+   - Selection state helpers: `hasActiveSelection()`, `getSelectedText()`, `isSelectionWithin()`
+   - Programmatic selection: `highlightTextRange()`, `selectRange()`, `clearSelection()`
+   - Direction helpers: `isSelectionBackwards()`, `normalizeSelectionDirection()`
+   - Constants: `DEFAULT_SELECTION_STYLE`, `HIGH_CONTRAST_SELECTION_STYLE`
+
+2. **`src/hooks/useSelectionHighlight.ts`:**
+   - React hook for managing selection highlighting
+   - Tracks selection state with debouncing for performance
+   - Optional overlay rectangle support for custom highlights
+   - Callback support for selection change events
+   - Auto-injects selection CSS on mount
+   - `generateOverlayElements()` helper for rendering overlays
+
+**Updated Files:**
+
+1. **`src/styles/editor.css`:**
+   - Enhanced `::selection` and `::-moz-selection` rules with `!important`
+   - Consistent selection color across all element types:
+     - `.docx-run-editable`, `.docx-run`, `[contenteditable="true"]`
+     - `.docx-paragraph`, `.docx-paragraph-editable`
+     - `.docx-hyperlink`
+   - Special handling for highlighted text (darker selection)
+   - Special handling for dark background text (lighter selection)
+   - Added Find/Replace highlight classes: `.docx-find-highlight`, `.docx-find-highlight-current`
+   - Added AI preview highlight: `.docx-ai-selection-preview`
+   - Added selection overlay container styles
+
+2. **`src/hooks/index.ts`:**
+   - Exported `useSelectionHighlight`, `generateOverlayElements`
+   - Exported types: `UseSelectionHighlightOptions`, `UseSelectionHighlightReturn`, `SelectionOverlayProps`
+
+3. **`src/index.ts`:**
+   - Exported all selection highlight utilities and hook
+   - Exported types: `HighlightRect`, `SelectionHighlightConfig`, `SelectionRange`
+
+**Key Features:**
+- Consistent blue selection highlight (rgba(26, 115, 232, 0.3)) across all runs
+- Uses `!important` to override inline styles from formatting
+- Maintains text color (`color: inherit`) for readability
+- Darker selection for yellow-highlighted text (better contrast)
+- Lighter selection for dark background text
+- Find/replace highlighting support (yellow for matches, orange for current)
+- AI action preview highlighting (purple dashed underline)
+- Debounced updates for performance
+- Overlay rectangle support for programmatic highlighting
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

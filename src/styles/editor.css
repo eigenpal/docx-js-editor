@@ -69,18 +69,171 @@
  * SELECTION HIGHLIGHTING
  * ============================================================================ */
 
-/* Selection styling for better visibility */
+/*
+ * Selection highlighting CSS ensures consistent visual feedback when selecting
+ * text across multiple runs (spans) with different formatting.
+ *
+ * Key considerations:
+ * - Use !important to override inline styles from formatting
+ * - Ensure selection is visible against various backgrounds
+ * - Maintain text color (inherit) for readability
+ * - Use rgba for semi-transparent highlight that shows text clearly
+ */
+
+/* Base selection styling for all editable elements */
 .docx-run-editable::selection,
-.docx-run-editable *::selection {
-  background-color: rgba(26, 115, 232, 0.3);
-  color: inherit;
+.docx-run-editable *::selection,
+.docx-run::selection,
+.docx-run *::selection,
+[contenteditable="true"]::selection,
+[contenteditable="true"] *::selection {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+  color: inherit !important;
 }
 
 /* Firefox selection */
 .docx-run-editable::-moz-selection,
-.docx-run-editable *::-moz-selection {
+.docx-run-editable *::-moz-selection,
+.docx-run::-moz-selection,
+.docx-run *::-moz-selection,
+[contenteditable="true"]::-moz-selection,
+[contenteditable="true"] *::-moz-selection {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+  color: inherit !important;
+}
+
+/* Selection in paragraphs - ensure runs within get consistent styling */
+.docx-paragraph::selection,
+.docx-paragraph *::selection,
+.docx-paragraph-editable::selection,
+.docx-paragraph-editable *::selection {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+  color: inherit !important;
+}
+
+.docx-paragraph::-moz-selection,
+.docx-paragraph *::-moz-selection,
+.docx-paragraph-editable::-moz-selection,
+.docx-paragraph-editable *::-moz-selection {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+  color: inherit !important;
+}
+
+/* Selection in hyperlinks */
+.docx-hyperlink::selection,
+.docx-hyperlink *::selection {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+  color: inherit !important;
+}
+
+.docx-hyperlink::-moz-selection,
+.docx-hyperlink *::-moz-selection {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+  color: inherit !important;
+}
+
+/* Selection on highlighted text - use darker selection for visibility */
+.docx-run-highlighted::selection,
+.docx-run-highlighted *::selection {
+  background-color: rgba(26, 115, 232, 0.5) !important;
+  color: inherit !important;
+}
+
+.docx-run-highlighted::-moz-selection,
+.docx-run-highlighted *::-moz-selection {
+  background-color: rgba(26, 115, 232, 0.5) !important;
+  color: inherit !important;
+}
+
+/* Selection on dark background text - lighter selection */
+.docx-run-dark-bg::selection,
+.docx-run-dark-bg *::selection {
+  background-color: rgba(100, 181, 246, 0.5) !important;
+  color: inherit !important;
+}
+
+.docx-run-dark-bg::-moz-selection,
+.docx-run-dark-bg *::-moz-selection {
+  background-color: rgba(100, 181, 246, 0.5) !important;
+  color: inherit !important;
+}
+
+/* Selection on bold text - ensure same style */
+.docx-run-bold::selection,
+.docx-run-bold *::selection {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+  color: inherit !important;
+}
+
+.docx-run-bold::-moz-selection,
+.docx-run-bold *::-moz-selection {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+  color: inherit !important;
+}
+
+/* Selection on italic text - ensure same style */
+.docx-run-italic::selection,
+.docx-run-italic *::selection {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+  color: inherit !important;
+}
+
+.docx-run-italic::-moz-selection,
+.docx-run-italic *::-moz-selection {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+  color: inherit !important;
+}
+
+/* ============================================================================
+ * FIND & REPLACE HIGHLIGHTING
+ * ============================================================================ */
+
+/* Find/replace match highlighting */
+.docx-find-highlight {
+  background-color: rgba(255, 235, 59, 0.5) !important;
+  border-radius: 2px;
+}
+
+/* Current find/replace match */
+.docx-find-highlight-current {
+  background-color: rgba(255, 152, 0, 0.6) !important;
+  border-radius: 2px;
+  outline: 2px solid rgba(255, 152, 0, 0.8);
+}
+
+/* ============================================================================
+ * AI ACTION PREVIEW HIGHLIGHTING
+ * ============================================================================ */
+
+/* Text selected for AI action */
+.docx-ai-selection-preview {
+  background-color: rgba(156, 39, 176, 0.2);
+  border-bottom: 2px dashed rgba(156, 39, 176, 0.6);
+}
+
+/* ============================================================================
+ * SELECTION OVERLAY (for programmatic highlighting)
+ * ============================================================================ */
+
+/* Container for selection overlay rectangles */
+.docx-selection-overlay-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Individual selection overlay rectangle */
+.docx-selection-overlay-rect {
+  position: absolute;
   background-color: rgba(26, 115, 232, 0.3);
-  color: inherit;
+  pointer-events: none;
+  user-select: none;
+  mix-blend-mode: multiply;
 }
 
 /* ============================================================================
