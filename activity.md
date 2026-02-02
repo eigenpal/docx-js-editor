@@ -5084,3 +5084,51 @@ Added the TextColorPicker component to the Toolbar for text color selection.
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-113: Add Highlight Color picker to toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added the HighlightColorPicker component to the Toolbar for text highlight/background color selection.
+
+**Implementation:**
+
+1. **Updated `src/components/Toolbar.tsx`:**
+   - Imported `HighlightColorPicker` component from `./ui/ColorPicker`
+   - Added `showHighlightColorPicker` prop (default: true)
+   - Extended `FormattingAction` type to support `{ type: 'highlightColor'; value: string }`
+   - Added `handleHighlightColorChange` callback
+   - Added HighlightColorPicker to the Text Formatting group after TextColorPicker
+   - Updated `applyFormattingAction` to handle highlightColor action
+
+2. **HighlightColorPicker Integration:**
+   - Displays current highlight color from selection formatting
+   - Dropdown grid with 16 standard Word highlight colors
+   - "No Color" option to remove highlight
+   - Uses existing ColorPicker component with type="highlight"
+   - Marker icon for visual distinction from text color
+
+3. **Hex to Name Mapping:**
+   - OOXML uses named colors for highlights (yellow, green, cyan, etc.)
+   - Added `HIGHLIGHT_HEX_TO_NAME` mapping for 16 standard colors
+   - `mapHexToHighlightName()` converts hex values from picker to OOXML names
+
+4. **Formatting Flow:**
+   - User clicks color from grid → `handleHighlightColorChange(color)` called
+   - Calls `onFormat({ type: 'highlightColor', value: color })`
+   - `applyFormattingAction` maps hex to name and sets `newFormatting.highlight`
+   - Document updated via `executeCommand` with `formatText` command
+
+**Props Added to Toolbar:**
+- `showHighlightColorPicker?: boolean` - Whether to show highlight color picker (default: true)
+
+**Highlight Color Names Supported:**
+- yellow, green, cyan, magenta, blue, red
+- darkBlue, darkCyan, darkGreen, darkMagenta, darkRed, darkYellow
+- darkGray, lightGray, black, white
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

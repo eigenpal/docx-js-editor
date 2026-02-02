@@ -14,7 +14,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { TextFormatting } from '../types/document';
 import { FontPicker } from './ui/FontPicker';
 import { FontSizePicker, halfPointsToPoints, pointsToHalfPoints } from './ui/FontSizePicker';
-import { TextColorPicker } from './ui/ColorPicker';
+import { TextColorPicker, HighlightColorPicker } from './ui/ColorPicker';
 
 // ============================================================================
 // TYPES
@@ -59,7 +59,8 @@ export type FormattingAction =
   | 'clearFormatting'
   | { type: 'fontFamily'; value: string }
   | { type: 'fontSize'; value: number }
-  | { type: 'textColor'; value: string };
+  | { type: 'textColor'; value: string }
+  | { type: 'highlightColor'; value: string };
 
 /**
  * Props for the Toolbar component
@@ -95,6 +96,8 @@ export interface ToolbarProps {
   showFontSizePicker?: boolean;
   /** Whether to show text color picker (default: true) */
   showTextColorPicker?: boolean;
+  /** Whether to show highlight color picker (default: true) */
+  showHighlightColorPicker?: boolean;
 }
 
 /**
@@ -351,6 +354,7 @@ export function Toolbar({
   showFontPicker = true,
   showFontSizePicker = true,
   showTextColorPicker = true,
+  showHighlightColorPicker = true,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -415,6 +419,18 @@ export function Toolbar({
     (color: string) => {
       if (!disabled && onFormat) {
         onFormat({ type: 'textColor', value: color });
+      }
+    },
+    [disabled, onFormat]
+  );
+
+  /**
+   * Handle highlight color change
+   */
+  const handleHighlightColorChange = useCallback(
+    (color: string) => {
+      if (!disabled && onFormat) {
+        onFormat({ type: 'highlightColor', value: color });
       }
     },
     [disabled, onFormat]
@@ -576,6 +592,14 @@ export function Toolbar({
             title="Font Color"
           />
         )}
+        {showHighlightColorPicker && (
+          <HighlightColorPicker
+            value={currentFormatting.highlight}
+            onChange={handleHighlightColorChange}
+            disabled={disabled}
+            title="Text Highlight Color"
+          />
+        )}
       </ToolbarGroup>
 
       {/* Superscript/Subscript Group */}
@@ -619,6 +643,34 @@ export function Toolbar({
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
+
+/**
+ * Map hex color to OOXML highlight color name
+ * OOXML uses named colors for highlights (yellow, green, cyan, etc.)
+ */
+const HIGHLIGHT_HEX_TO_NAME: Record<string, string> = {
+  'FFFF00': 'yellow',
+  '00FF00': 'green',
+  '00FFFF': 'cyan',
+  'FF00FF': 'magenta',
+  '0000FF': 'blue',
+  'FF0000': 'red',
+  '00008B': 'darkBlue',
+  '008080': 'darkCyan',
+  '008000': 'darkGreen',
+  '800080': 'darkMagenta',
+  '8B0000': 'darkRed',
+  '808000': 'darkYellow',
+  '808080': 'darkGray',
+  'C0C0C0': 'lightGray',
+  '000000': 'black',
+  'FFFFFF': 'white',
+};
+
+function mapHexToHighlightName(hex: string): string | null {
+  const normalized = hex.replace(/^#/, '').toUpperCase();
+  return HIGHLIGHT_HEX_TO_NAME[normalized] || null;
+}
 
 /**
  * Extract formatting state from TextFormatting object
@@ -671,6 +723,16 @@ export function applyFormattingAction(
         newFormatting.color = {
           rgb: action.value.replace(/^#/, '').toUpperCase(),
         };
+        return newFormatting;
+      case 'highlightColor':
+        // Set highlight color - empty string means "no highlight"
+        if (action.value === '' || action.value === 'none') {
+          newFormatting.highlight = 'none';
+        } else {
+          // Highlight color is stored as a name in OOXML (yellow, green, etc.)
+          // But we receive hex values from the picker, so map them
+          newFormatting.highlight = mapHexToHighlightName(action.value) || 'yellow';
+        }
         return newFormatting;
     }
   }

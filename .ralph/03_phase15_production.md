@@ -25,7 +25,7 @@
 - [x] US-110: Add Font Family picker to toolbar - P1 - Dropdown for font selection
 - [x] US-111: Add Font Size picker to toolbar - P1 - Dropdown for font sizes
 - [x] US-112: Add Text Color picker to toolbar - P1 - Color picker for text
-- [ ] US-113: Add Highlight Color picker to toolbar - P1 - Background color picker
+- [x] US-113: Add Highlight Color picker to toolbar - P1 - Background color picker
 - [ ] US-114: Add Text Alignment buttons to toolbar - P1 - Left/center/right/justify
 - [ ] US-115: Add Bullet List button to toolbar - P1 - Toggle bullet lists
 - [ ] US-116: Add Numbered List button to toolbar - P1 - Toggle numbered lists
