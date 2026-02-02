@@ -38,3 +38,31 @@
 **Verification:**
 - `npx playwright test --grep "apply bold via toolbar" --timeout=30000` - 2 tests passed
 - Manual testing confirmed text now displays correctly
+
+---
+
+## 2026-02-01: Fix bold formatting application
+
+**Problem:** Clicking the bold button didn't apply font-weight: bold to selected text. The toolbar button state would change (showing pressed), but the actual text styling was not updated.
+
+**Root Cause:** The `getSelectionRange()` function in `src/components/AIEditor.tsx` was incorrectly calculating character offsets when the selection's anchor/focus node was an Element (not a Text node). This happens with triple-click selections where the browser may set the anchor/focus to the SPAN element with child-index offsets instead of text-node character offsets.
+
+Example of the bug:
+- Selection: "Toggle bold" (11 chars, offset 0-11 in text)
+- `selection.anchorNode` = SPAN element, `selection.anchorOffset` = 0 (first child)
+- `selection.focusNode` = SPAN element, `selection.focusOffset` = 1 (after first child)
+- The old code added the text length (11) to these offsets, producing range 11-12
+- This range was PAST the end of the text, so `executeCommand` did nothing
+
+**Solution:** Updated `calculateOffset()` in `src/components/AIEditor.tsx` to handle Element nodes:
+1. Detect when node.nodeType === Node.ELEMENT_NODE
+2. When offset=0, find the first text node and use offset 0
+3. When offset >= childNodes.length, find the last text node and use its length
+4. For mid-position offsets, sum character lengths of preceding children
+
+**Files Modified:**
+- `src/components/AIEditor.tsx` - Fixed calculateOffset() to handle Element node selections
+
+**Verification:**
+- `npx playwright test --grep "apply bold via toolbar" --timeout=30000` - 2 tests passed
+- formatting.spec.ts shows 13 passed (up from previous runs where bold tests failed)

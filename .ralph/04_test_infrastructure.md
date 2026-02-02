@@ -48,7 +48,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 ## PHASE 4: FUNCTIONAL FIXES - Text Formatting
 
-- [ ] **Fix bold formatting application** - Clicking bold doesn't apply fontWeight >= 700. Trace applyFormattingAction('bold') to ProseMirror. Verify: `npx playwright test --grep "apply bold via toolbar" --timeout=30000`
+- [x] **Fix bold formatting application** - Fixed getSelectionRange() in AIEditor.tsx to properly handle Element nodes when calculating offsets. The fix handles cases where selection.anchorNode/focusNode is an Element (e.g., after triple-click) instead of a Text node. Verify: `npx playwright test --grep "apply bold via toolbar" --timeout=30000`
 
 - [ ] **Fix italic formatting application** - Verify: `npx playwright test --grep "apply italic via toolbar" --timeout=30000`
 

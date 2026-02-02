@@ -132,20 +132,66 @@ function getSelectionRange(
 
   // Calculate offsets within paragraphs
   const calculateOffset = (paraElement: Element, node: Node, offset: number): number => {
+    // If the node is an Element (not a Text node), the offset refers to child indices
+    // We need to convert this to a character offset
+    let targetNode = node;
+    let targetOffset = offset;
+
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      // The offset is a child index, convert to text position
+      const element = node as Element;
+      const childNodes = element.childNodes;
+
+      if (offset === 0) {
+        // At the start of the element - find the first text node
+        const walker = window.document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+        const firstText = walker.nextNode();
+        if (firstText) {
+          targetNode = firstText;
+          targetOffset = 0;
+        } else {
+          return 0; // No text in element
+        }
+      } else if (offset >= childNodes.length) {
+        // At the end of the element - find the last text node
+        const walker = window.document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+        let lastText: Node | null = null;
+        let node: Node | null;
+        while ((node = walker.nextNode())) {
+          lastText = node;
+        }
+        if (lastText) {
+          targetNode = lastText;
+          targetOffset = (lastText as Text).length;
+        } else {
+          return 0; // No text in element
+        }
+      } else {
+        // Point to a specific child - find text position up to that child
+        let charCount = 0;
+        for (let i = 0; i < offset; i++) {
+          const child = childNodes[i];
+          charCount += child.textContent?.length || 0;
+        }
+        return charCount;
+      }
+    }
+
     const treeWalker = window.document.createTreeWalker(paraElement, NodeFilter.SHOW_TEXT, null);
 
     let charOffset = 0;
     let currentNode = treeWalker.nextNode();
 
     while (currentNode) {
-      if (currentNode === node) {
-        return charOffset + offset;
+      if (currentNode === targetNode) {
+        return charOffset + targetOffset;
       }
       charOffset += (currentNode as Text).length;
       currentNode = treeWalker.nextNode();
     }
 
-    return charOffset + offset;
+    // Node not found - return total length + offset (shouldn't happen normally)
+    return charOffset;
   };
 
   const anchorOffset = calculateOffset(anchorInfo.element, anchorNode, selection.anchorOffset);
