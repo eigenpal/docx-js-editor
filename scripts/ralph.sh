@@ -41,9 +41,11 @@ $(cat CLAUDE.md)
 $(cat PROMPT.md | grep -v '^@')
 "
 
-  result=$(claude --dangerously-skip-permissions -p "$FULL_PROMPT" --output-format text 2>&1) || true
+  # Run Claude with real-time output, also capture to file for exit check
+  OUTPUT_FILE="$RALPH_DIR/last_output.txt"
+  claude --dangerously-skip-permissions -p "$FULL_PROMPT" --output-format text 2>&1 | tee "$OUTPUT_FILE" || true
 
-  echo "$result"
+  result=$(cat "$OUTPUT_FILE")
 
   # Check for exit signal
   if [[ "$result" == *'"exit_signal": true'* ]] || [[ "$result" == *"<promise>COMPLETE</promise>"* ]]; then
