@@ -387,6 +387,96 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         return;
       }
 
+      // Handle indent action (increase list level or paragraph indent)
+      if (action === 'indent') {
+        const currentListState = state.selectionFormatting.listState;
+        const isInList = currentListState?.isInList;
+
+        if (isInList && currentListState) {
+          // For list items: increase the ilvl (max 8)
+          const newLevel = Math.min((currentListState.level || 0) + 1, 8);
+          const newNumPr = { numId: currentListState.numId || 1, ilvl: newLevel };
+
+          const newDoc = executeCommand(history.state, {
+            type: 'formatParagraph',
+            paragraphIndex: range.start.paragraphIndex,
+            formatting: { numPr: newNumPr },
+          });
+
+          handleDocumentChange(newDoc);
+
+          // Update selection formatting state
+          setState((prev) => ({
+            ...prev,
+            selectionFormatting: {
+              ...prev.selectionFormatting,
+              listState: {
+                ...currentListState,
+                level: newLevel,
+              },
+            },
+          }));
+        } else {
+          // For regular paragraphs: increase left indent by 720 twips (0.5 inch)
+          const currentIndent = selectionContext.paragraphFormatting?.indentLeft || 0;
+          const newIndent = currentIndent + 720;
+
+          const newDoc = executeCommand(history.state, {
+            type: 'formatParagraph',
+            paragraphIndex: range.start.paragraphIndex,
+            formatting: { indentLeft: newIndent },
+          });
+
+          handleDocumentChange(newDoc);
+        }
+        return;
+      }
+
+      // Handle outdent action (decrease list level or paragraph indent)
+      if (action === 'outdent') {
+        const currentListState = state.selectionFormatting.listState;
+        const isInList = currentListState?.isInList;
+
+        if (isInList && currentListState) {
+          // For list items: decrease the ilvl (min 0)
+          const newLevel = Math.max((currentListState.level || 0) - 1, 0);
+          const newNumPr = { numId: currentListState.numId || 1, ilvl: newLevel };
+
+          const newDoc = executeCommand(history.state, {
+            type: 'formatParagraph',
+            paragraphIndex: range.start.paragraphIndex,
+            formatting: { numPr: newNumPr },
+          });
+
+          handleDocumentChange(newDoc);
+
+          // Update selection formatting state
+          setState((prev) => ({
+            ...prev,
+            selectionFormatting: {
+              ...prev.selectionFormatting,
+              listState: {
+                ...currentListState,
+                level: newLevel,
+              },
+            },
+          }));
+        } else {
+          // For regular paragraphs: decrease left indent by 720 twips (0.5 inch), minimum 0
+          const currentIndent = selectionContext.paragraphFormatting?.indentLeft || 0;
+          const newIndent = Math.max(currentIndent - 720, 0);
+
+          const newDoc = executeCommand(history.state, {
+            type: 'formatParagraph',
+            paragraphIndex: range.start.paragraphIndex,
+            formatting: { indentLeft: newIndent },
+          });
+
+          handleDocumentChange(newDoc);
+        }
+        return;
+      }
+
       // Get the current formatting and apply the action
       const currentFormatting = selectionContext.formatting || {};
       const newFormatting = applyFormattingAction(currentFormatting, action);

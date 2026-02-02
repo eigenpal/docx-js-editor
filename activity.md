@@ -5282,3 +5282,45 @@ The Numbered List button was already fully implemented as part of the ListButton
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-117: Add Indent/Outdent buttons to toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added Indent and Outdent buttons to the Toolbar for increasing/decreasing paragraph indentation and list levels.
+
+**Implementation:**
+
+1. **Updated `src/components/Toolbar.tsx`:**
+   - Extended `FormattingAction` type to support `'indent'` and `'outdent'` string actions
+   - Added `handleIndent` and `handleOutdent` callbacks that call `onFormat('indent')` / `onFormat('outdent')`
+   - Changed `showIndentButtons={false}` to `showIndentButtons={true}` in ListButtons
+   - Added `onIndent={handleIndent}` and `onOutdent={handleOutdent}` props to ListButtons
+
+2. **Updated `src/components/DocxEditor.tsx`:**
+   - Added handler for `'indent'` action in `handleFormat`:
+     - For list items: increases `ilvl` by 1 (max 8) in `numPr`
+     - For regular paragraphs: increases `indentLeft` by 720 twips (0.5 inch)
+   - Added handler for `'outdent'` action in `handleFormat`:
+     - For list items: decreases `ilvl` by 1 (min 0) in `numPr`
+     - For regular paragraphs: decreases `indentLeft` by 720 twips (min 0)
+   - Updates selection formatting state after indent/outdent operations
+
+**Features:**
+- Indent button (right arrow icon) increases paragraph/list indent
+- Outdent button (left arrow icon) decreases paragraph/list indent
+- For list items: modifies the `ilvl` property (0-8 range, Word multi-level list levels)
+- For regular paragraphs: modifies `indentLeft` in 720 twip (0.5 inch) increments
+- Outdent is disabled when list level is 0 (via ListButtons component logic)
+- Uses existing icons from ListButtons component (IndentIcon, OutdentIcon)
+
+**Indent Behavior:**
+- List items: `numPr.ilvl` is incremented/decremented (0-8)
+- Regular paragraphs: `indentLeft` is modified in 720 twip steps (0.5 inch = standard Word indent)
+- Tab key could be wired for indent in future (already handled in ListButtons.handleListShortcut)
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

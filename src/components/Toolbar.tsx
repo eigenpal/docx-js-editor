@@ -65,6 +65,8 @@ export type FormattingAction =
   | 'clearFormatting'
   | 'bulletList'
   | 'numberedList'
+  | 'indent'
+  | 'outdent'
   | { type: 'fontFamily'; value: string }
   | { type: 'fontSize'; value: number }
   | { type: 'textColor'; value: string }
@@ -482,6 +484,24 @@ export function Toolbar({
   }, [disabled, onFormat]);
 
   /**
+   * Handle indent (increase paragraph indent or list level)
+   */
+  const handleIndent = useCallback(() => {
+    if (!disabled && onFormat) {
+      onFormat('indent');
+    }
+  }, [disabled, onFormat]);
+
+  /**
+   * Handle outdent (decrease paragraph indent or list level)
+   */
+  const handleOutdent = useCallback(() => {
+    if (!disabled && onFormat) {
+      onFormat('outdent');
+    }
+  }, [disabled, onFormat]);
+
+  /**
    * Keyboard shortcuts handler
    */
   useEffect(() => {
@@ -705,8 +725,10 @@ export function Toolbar({
             listState={currentFormatting.listState || createDefaultListState()}
             onBulletList={handleBulletList}
             onNumberedList={handleNumberedList}
+            onIndent={handleIndent}
+            onOutdent={handleOutdent}
             disabled={disabled}
-            showIndentButtons={false}
+            showIndentButtons={true}
             compact
           />
         </ToolbarGroup>
