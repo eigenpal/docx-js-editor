@@ -5909,3 +5909,47 @@ Added print preview functionality with a modal view and print button in the tool
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-130: Wire table row insertion
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Verified that table row insertion functionality is fully wired and working.
+
+**Already Implemented Components:**
+
+1. **`src/components/ui/TableToolbar.tsx`:**
+   - `AddRowAboveIcon` and `AddRowBelowIcon` SVG icons
+   - Buttons for "Insert Row Above" and "Insert Row Below"
+   - `addRow(table, atIndex, position)` utility function - creates new rows based on template
+
+2. **`src/hooks/useTableSelection.ts`:**
+   - `handleAction()` handles 'addRowAbove' and 'addRowBelow' actions (lines 312-321)
+   - Adjusts selection after adding row above (moves selection down)
+   - Updates document via `onChange` callback
+
+3. **`src/components/DocxEditor.tsx`:**
+   - `useTableSelection` hook integration (lines 335-341)
+   - `handleTableAction` callback connects TableToolbar to hook (lines 344-348)
+   - `TableToolbar` renders when a table cell is selected (lines 835-842)
+
+4. **`src/components/render/DocTable.tsx`:**
+   - `onCellClick` prop for cell selection (lines 344-351)
+   - `isCellSelected` prop for selected state styling (lines 278-279, 354-360)
+   - Data attributes for row/column tracking (lines 369-371)
+
+**Full Flow:**
+1. User clicks a table cell → `onCellClick` triggers in DocTable
+2. `useTableSelection.handleCellClick` updates selection state and creates TableContext
+3. TableToolbar appears with row/column editing buttons
+4. User clicks "Insert Row Above" or "Insert Row Below"
+5. `handleTableAction` calls `tableSelection.handleAction(action)`
+6. `useTableSelection.handleAction` calls `addRow()` utility function
+7. Updated document is passed to `onChange` callback
+8. Selection is updated to maintain cursor position
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
