@@ -17,3 +17,5 @@
 [2026-02-02 09:09] STATUS: testing
 [2026-02-02 09:09] NOTES: 11/15 cursor-paragraph-ops tests pass. Main cursor-only functionality working: bullet list, numbered list, indent list, outdent list, toggle list, align center, align right, justify, indent paragraph. Remaining failures are separate issues (keyboard shortcuts, multi-paragraph)
 [2026-02-02 09:09] STATUS: done
+[2026-02-02 09:10] TASK: Fix alignment with cursor only
+[2026-02-02 09:10] STATUS: investigating

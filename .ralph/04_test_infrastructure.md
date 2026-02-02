@@ -98,7 +98,7 @@ if (!selection || selection.isCollapsed) return null; // ← Fails on cursor-onl
 
 - [x] **Fix getSelectionRange for cursor-only** - Modified `getSelectionRange()` in AIEditor.tsx to handle collapsed selections (cursor-only). Removed early return for isCollapsed, and now returns a valid range with same start/end position and `collapsed: true` flag. Also fixed test selectors to use `p[data-paragraph-index="0"]` instead of `[data-paragraph-index="0"]`. 11/15 cursor-paragraph-ops tests now pass. Verify: `npx playwright test tests/cursor-paragraph-ops.spec.ts --grep "cursor only" --timeout=30000`
 
-- [ ] **Fix alignment with cursor only** - After getSelectionRange fix, alignment should work. Verify: `npx playwright test --grep "align center with cursor only" --timeout=30000`
+- [x] **Fix alignment with cursor only** - Alignment with cursor-only (no selection) works. Test passes. The getSelectionRange fix from the previous task enabled this functionality. Verify: `npx playwright test --grep "align center with cursor only" --timeout=30000`
 
 - [ ] **Fix bullet list with cursor only** - After getSelectionRange fix, lists should work. Verify: `npx playwright test --grep "bullet list applies with cursor only" --timeout=30000`
 
