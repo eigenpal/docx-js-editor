@@ -26,7 +26,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 - [x] **Fix strikethrough button selector** - Verify strikethrough button testid/aria-label matches. Verify: `npx playwright test --grep "strikethrough" --timeout=30000`
 
-- [ ] **Fix clear formatting button selector** - Verify clear formatting button testid matches. Verify: `npx playwright test --grep "clear formatting" --timeout=30000`
+- [x] **Fix clear formatting button selector** - Verify clear formatting button testid matches. Verify: `npx playwright test --grep "clear formatting" --timeout=30000`
 
 ---
 

@@ -7748,3 +7748,37 @@ Verified that the strikethrough button selector is correctly configured and test
 - `npx playwright test --grep "strikethrough"` - 2 tests pass ✓
 
 ---
+
+### Test Infrastructure: Verify clear formatting button selector
+
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Verified that the clear formatting button selector is correctly configured.
+
+**Analysis:**
+
+- Toolbar.tsx: Button uses `ariaLabel="Clear formatting"` and `title="Clear formatting"`
+- ToolbarButton component generates testid via: `ariaLabel.toLowerCase().replace(/\s+/g, '-')` = `"clear-formatting"`
+- Full testid becomes: `toolbar-clear-formatting`
+- Test helper uses `[data-testid="toolbar-clear-formatting"]` which matches
+
+**Verification Test:**
+
+- Created and ran a test to verify the button exists with the expected testid
+- Button was successfully found with `data-testid="toolbar-clear-formatting"`
+- Button has `aria-label="Clear formatting"`
+
+**Test Results:**
+
+- Selector works correctly - tests find and click the button
+- Tests fail due to **functional issue** (clearFormatting action doesn't remove formatting)
+- This is NOT a selector issue - it's a functional issue for Phase 4
+
+**Verified:**
+
+- bun run typecheck: ✓
+- bun build exits 0: ✓
+- Selector verification test passes ✓
+
+---
