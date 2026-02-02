@@ -5432,3 +5432,53 @@ Wired the StylePicker component to the Toolbar and DocxEditor, allowing users to
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-120: Implement page break rendering
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Implemented page break rendering in the Editor component, allowing documents to be rendered across multiple pages with proper pagination.
+
+**Implementation:**
+
+1. **Updated `src/components/Editor.tsx`:**
+   - Added import for `calculatePages`, `PageLayoutResult`, `Page as PageData`, `PageContent` from `../layout/pageLayout`
+   - Added `enablePagination` prop (default: true) to toggle multi-page rendering
+   - Added `pageLayout` memoized calculation using the page layout engine
+   - Refactored rendering to use `renderBlock`, `renderPageContent`, `renderAllContent`, `renderSinglePage`, and `renderPaginatedPages` functions
+   - Each page is rendered with correct dimensions, margins, and shadow based on section properties
+   - Page numbers are displayed below each page when `showPageNumbers` is enabled
+
+2. **Page Layout Integration:**
+   - Uses existing `calculatePages()` from `pageLayout.ts` to distribute content across pages
+   - Handles explicit page breaks (`pageBreakBefore` formatting) - already supported by the layout engine
+   - Natural page breaks occur when content overflows the page height
+   - Content area respects page margins from section properties
+
+3. **Rendering Flow:**
+   - When `enablePagination` is true and layout calculation succeeds:
+     - Renders multiple pages stacked vertically with `pageGap` spacing
+     - Each page shows its content positioned within margins
+     - Page numbers shown as "Page X of Y" below each page
+   - Falls back to single-page rendering when:
+     - `enablePagination` is false
+     - Layout calculation fails
+     - No pages generated
+
+4. **Features:**
+   - Multi-page rendering with proper dimensions (respects page size from section properties)
+   - Page margins visualization (content area positioned within margins)
+   - Page shadows for visual separation
+   - Page number indicators
+   - Visual page separators via gap between pages
+   - Zoom support (applies to page dimensions)
+   - Compatible with custom `renderPage` prop
+
+**Props Added to EditorProps:**
+- `enablePagination?: boolean` - Whether to enable pagination (default: true)
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

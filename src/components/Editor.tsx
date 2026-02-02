@@ -15,6 +15,7 @@ import type {
   Document,
   DocumentBody,
   Paragraph as ParagraphType,
+  Table as TableType,
   Theme,
   SectionProperties,
   BlockContent,
@@ -36,6 +37,7 @@ import { DocTable } from './render/DocTable';
 import { getDefaultSectionProperties } from '../docx/sectionParser';
 import { twipsToPixels, formatPx } from '../utils/units';
 import { SELECTION_DATA_ATTRIBUTES } from '../hooks/useSelection';
+import { calculatePages, type PageLayoutResult, type Page as PageData, type PageContent } from '../layout/pageLayout';
 
 // ============================================================================
 // TYPES
@@ -81,6 +83,8 @@ export interface EditorProps {
   showPageShadows?: boolean;
   /** Whether to show page numbers */
   showPageNumbers?: boolean;
+  /** Whether to enable pagination (default: true) - renders content across multiple pages */
+  enablePagination?: boolean;
   /** Custom page renderer */
   renderPage?: (content: ReactNode, pageIndex: number, sectionProps: SectionProperties) => ReactNode;
   /** Custom image renderer */
@@ -304,6 +308,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     pageGap = 20,
     showPageShadows = true,
     showPageNumbers = false,
+    enablePagination = true,
     renderPage,
     renderImage,
     renderShape,
@@ -334,6 +339,18 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
   const paragraphCount = useMemo(() => {
     return doc.package?.body ? countParagraphs(doc.package.body) : 0;
   }, [doc.package?.body]);
+
+  // Calculate page layout when pagination is enabled
+  const pageLayout = useMemo<PageLayoutResult | null>(() => {
+    if (!enablePagination || !doc) return null;
+
+    try {
+      return calculatePages(doc, { theme });
+    } catch (error) {
+      console.error('Error calculating page layout:', error);
+      return null;
+    }
+  }, [doc, theme, enablePagination]);
 
   /**
    * Update document and notify parent
@@ -597,30 +614,18 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
     [doc, focusedParagraphIndex, paragraphCount]
   );
 
-  // Render document content
-  const renderContent = () => {
-    if (!doc.package?.body) {
-      return (
-        <div className="docx-editor-empty">
-          No document loaded
-        </div>
-      );
-    }
-
-    const content: ReactNode[] = [];
-    let paragraphIndex = 0;
-
-    for (let blockIndex = 0; blockIndex < doc.package.body.content.length; blockIndex++) {
-      const block = doc.package.body.content[blockIndex];
-
+  /**
+   * Render a single block (paragraph or table) with its index
+   */
+  const renderBlock = useCallback(
+    (block: BlockContent, blockIndex: number, globalParagraphIndex: number) => {
       if (block.type === 'paragraph') {
-        const currentIndex = paragraphIndex;
-        content.push(
+        return (
           <EditableParagraph
             key={`para-${blockIndex}`}
-            ref={(el) => setParagraphRef(el as HTMLParagraphElement, currentIndex)}
+            ref={(el) => setParagraphRef(el as HTMLParagraphElement, globalParagraphIndex)}
             paragraph={block}
-            paragraphIndex={currentIndex}
+            paragraphIndex={globalParagraphIndex}
             theme={theme}
             editable={editable}
             onChange={handleParagraphChange}
@@ -637,17 +642,18 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
             renderTextBox={renderTextBox}
           />
         );
-        paragraphIndex++;
       } else if (block.type === 'table') {
         // Get the table index for this table
         let currentTableIndex = 0;
-        for (let i = 0; i < blockIndex; i++) {
-          if (doc.package.body.content[i].type === 'table') {
-            currentTableIndex++;
+        if (doc.package?.body?.content) {
+          for (let i = 0; i < blockIndex; i++) {
+            if (doc.package.body.content[i].type === 'table') {
+              currentTableIndex++;
+            }
           }
         }
 
-        content.push(
+        return (
           <DocTable
             key={`table-${blockIndex}`}
             table={block}
@@ -658,25 +664,213 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
           />
         );
       }
+      return null;
+    },
+    [
+      theme, editable, handleParagraphChange, handleParagraphSplit,
+      handleMergeWithPrevious, handleMergeWithNext, handleCursorChange,
+      handleParagraphFocus, handleParagraphBlur, handleNavigateUp,
+      handleNavigateDown, renderImage, renderShape, renderTextBox,
+      onTableCellClick, isTableCellSelected, setParagraphRef, doc.package?.body?.content
+    ]
+  );
+
+  /**
+   * Render content for a single page (used with pagination)
+   */
+  const renderPageContent = useCallback(
+    (page: PageData) => {
+      if (!doc.package?.body) return null;
+
+      return page.content.map((pageContent, contentIndex) => {
+        const block = pageContent.block;
+
+        // Calculate global paragraph index
+        let globalParagraphIndex = 0;
+        if (doc.package?.body?.content) {
+          for (let i = 0; i < pageContent.blockIndex; i++) {
+            if (doc.package.body.content[i].type === 'paragraph') {
+              globalParagraphIndex++;
+            }
+          }
+        }
+
+        // Create a unique key that includes continuation info
+        const continuationKey = pageContent.isContinuation ? '-cont' : '';
+        const key = `page-${page.pageNumber}-block-${pageContent.blockIndex}${continuationKey}`;
+
+        return (
+          <div
+            key={key}
+            className="docx-page-block"
+            style={{
+              // Position absolutely within the page content area
+              marginBottom: contentIndex < page.content.length - 1 ? '0' : undefined,
+            }}
+          >
+            {renderBlock(block, pageContent.blockIndex, globalParagraphIndex)}
+          </div>
+        );
+      });
+    },
+    [doc.package?.body, renderBlock]
+  );
+
+  /**
+   * Render all content without pagination (single page mode)
+   */
+  const renderAllContent = useCallback(() => {
+    if (!doc.package?.body) {
+      return (
+        <div className="docx-editor-empty">
+          No document loaded
+        </div>
+      );
+    }
+
+    const content: ReactNode[] = [];
+    let paragraphIndex = 0;
+
+    for (let blockIndex = 0; blockIndex < doc.package.body.content.length; blockIndex++) {
+      const block = doc.package.body.content[blockIndex];
+
+      if (block.type === 'paragraph') {
+        content.push(renderBlock(block, blockIndex, paragraphIndex));
+        paragraphIndex++;
+      } else if (block.type === 'table') {
+        content.push(renderBlock(block, blockIndex, paragraphIndex));
+      }
     }
 
     return content;
+  }, [doc.package?.body, renderBlock]);
+
+  /**
+   * Render a single page with its content
+   */
+  const renderSinglePage = useCallback(
+    (page: PageData, totalPages: number) => {
+      const pageWidthPx = page.widthPx * zoom;
+      const pageHeightPx = page.heightPx * zoom;
+      const marginTop = twipsToPixels(page.sectionProps.pageMargins?.top ?? 1440) * zoom;
+      const marginBottom = twipsToPixels(page.sectionProps.pageMargins?.bottom ?? 1440) * zoom;
+      const marginLeft = twipsToPixels(page.sectionProps.pageMargins?.left ?? 1440) * zoom;
+      const marginRight = twipsToPixels(page.sectionProps.pageMargins?.right ?? 1440) * zoom;
+
+      const pageStyle: CSSProperties = {
+        width: formatPx(pageWidthPx),
+        height: formatPx(pageHeightPx),
+        backgroundColor: '#ffffff',
+        boxShadow: showPageShadows ? '0 2px 10px rgba(0, 0, 0, 0.2)' : 'none',
+        position: 'relative',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+      };
+
+      const contentAreaStyle: CSSProperties = {
+        position: 'absolute',
+        top: formatPx(marginTop),
+        left: formatPx(marginLeft),
+        right: formatPx(marginRight),
+        bottom: formatPx(marginBottom),
+        overflow: 'hidden',
+      };
+
+      const pageContent = renderPageContent(page);
+
+      // Use custom page renderer if provided
+      if (renderPage) {
+        return renderPage(pageContent, page.pageNumber - 1, page.sectionProps);
+      }
+
+      return (
+        <div
+          key={`page-${page.pageNumber}`}
+          className={`docx-editor-page ${page.isFirstPageOfSection ? 'docx-page-first-of-section' : ''}`}
+          style={pageStyle}
+          data-page-number={page.pageNumber}
+        >
+          {/* Content area */}
+          <div className="docx-page-content-area" style={contentAreaStyle}>
+            {pageContent}
+          </div>
+        </div>
+      );
+    },
+    [zoom, showPageShadows, renderPageContent, renderPage]
+  );
+
+  /**
+   * Render all pages with pagination
+   */
+  const renderPaginatedPages = () => {
+    if (!pageLayout || pageLayout.pages.length === 0) {
+      // Fall back to single page rendering if no layout
+      return (
+        <div
+          className="docx-editor-page"
+          style={getPageStyle(sectionProps, zoom, showPageShadows)}
+        >
+          {renderAllContent()}
+        </div>
+      );
+    }
+
+    return pageLayout.pages.map((page) => (
+      <div
+        key={`page-wrapper-${page.pageNumber}`}
+        className="docx-editor-page-wrapper"
+        style={{ position: 'relative' }}
+      >
+        {renderSinglePage(page, pageLayout.totalPages)}
+        {showPageNumbers && (
+          <div
+            className="docx-editor-page-number"
+            style={{
+              textAlign: 'center',
+              marginTop: '10px',
+              marginBottom: pageGap > 20 ? '0' : `${pageGap}px`,
+              color: '#666',
+              fontSize: '12px',
+            }}
+          >
+            Page {page.pageNumber} of {pageLayout.totalPages}
+          </div>
+        )}
+      </div>
+    ));
   };
 
-  // Page content
-  const pageContent = renderContent();
+  // Determine what to render based on pagination setting
+  const renderedPages = useMemo(() => {
+    if (enablePagination && pageLayout && pageLayout.pages.length > 0) {
+      return renderPaginatedPages();
+    }
 
-  // Wrap in page if custom renderer provided
-  const renderedPage = renderPage
-    ? renderPage(pageContent, 0, sectionProps)
-    : (
-      <div
-        className="docx-editor-page"
-        style={getPageStyle(sectionProps, zoom, showPageShadows)}
-      >
-        {pageContent}
-      </div>
+    // Single page fallback
+    const pageContent = renderAllContent();
+    const renderedPage = renderPage
+      ? renderPage(pageContent, 0, sectionProps)
+      : (
+        <div
+          className="docx-editor-page"
+          style={getPageStyle(sectionProps, zoom, showPageShadows)}
+        >
+          {pageContent}
+        </div>
+      );
+
+    return (
+      <>
+        {renderedPage}
+        {showPageNumbers && (
+          <div className="docx-editor-page-number" style={{ textAlign: 'center', marginTop: '10px', color: '#666' }}>
+            Page 1
+          </div>
+        )}
+      </>
     );
+  }, [enablePagination, pageLayout, renderAllContent, renderPage, sectionProps, zoom, showPageShadows, showPageNumbers, pageGap]);
 
   return (
     <div
@@ -692,12 +886,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
           gap: `${pageGap}px`,
         }}
       >
-        {renderedPage}
-        {showPageNumbers && (
-          <div className="docx-editor-page-number" style={{ textAlign: 'center', marginTop: '10px', color: '#666' }}>
-            Page 1
-          </div>
-        )}
+        {renderedPages}
       </div>
     </div>
   );
