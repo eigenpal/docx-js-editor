@@ -195,6 +195,19 @@ export {
   BORDER_POSITIONS,
   DEFAULT_BORDER_CONFIG,
 } from './components/ui/TableBorderPicker';
+export {
+  CellBackgroundPicker,
+  type CellBackgroundPickerProps,
+  type CellColorOption,
+  getDefaultCellColors,
+  createCellColorOption,
+  isDefaultCellColor,
+  getCellColorName,
+  createShadingFromColor,
+  getColorFromShading,
+  getContrastingTextColor,
+  DEFAULT_CELL_COLORS,
+} from './components/ui/CellBackgroundPicker';
 
 // ============================================================================
 // DIALOGS

@@ -6136,3 +6136,57 @@ Created `src/components/ui/TableBorderPicker.tsx` with comprehensive border styl
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-136: Add cell background color UI
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/ui/CellBackgroundPicker.tsx` with cell shading color picker.
+
+**Main Component:**
+- `CellBackgroundPicker` - UI for changing table cell background/shading color
+
+**Features:**
+- 36-color grid organized by color family (grays, blues, greens, yellows, reds, purples)
+- "No Fill" option to remove background
+- Custom color input via native color picker
+- Compact mode for toolbar integration
+- Current color indicator in button
+
+**Types:**
+- `CellColorOption` - Color option with hex and name
+- `CellBackgroundPickerProps` - Component props
+
+**Icons:**
+- `CellFillIcon` - Paint bucket icon for button
+- `NoFillIcon` - Diagonal line through cell for "No Fill"
+
+**Utility Functions:**
+- `getDefaultCellColors()` - Get default color palette
+- `createCellColorOption(hex, name?)` - Create color option
+- `isDefaultCellColor(hex)` - Check if in default palette
+- `getCellColorName(hex)` - Get color name from hex
+- `createShadingFromColor(color)` - Create OOXML ShadingProperties
+- `getColorFromShading(shading)` - Extract color from ShadingProperties
+- `hexToRgbValues(hex)` - Parse hex to RGB values
+- `getContrastingTextColor(bgHex)` - Get black/white text for contrast
+
+**Constants:**
+- `DEFAULT_CELL_COLORS` - 36 colors in 6 rows
+
+**Props:**
+- `value` - Current background color (hex)
+- `onChange` - Callback when color selected
+- `colors` - Custom color options
+- `disabled` - Disable picker
+- `showNoFill` - Show "No Fill" option (default: true)
+- `showCustomColor` - Show custom color input (default: true)
+- `compact` - Compact mode for toolbar
+
+**Exports Added to `src/index.ts`:**
+- Component, props, types, and all utility functions
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
