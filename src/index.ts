@@ -215,6 +215,17 @@ export {
 
 export { FindReplaceDialog, type FindReplaceDialogProps, type FindReplaceOptions, useFindReplace } from './components/dialogs/FindReplaceDialog';
 export { HyperlinkDialog, type HyperlinkDialogProps, type HyperlinkData, useHyperlinkDialog } from './components/dialogs/HyperlinkDialog';
+export {
+  InsertTableDialog,
+  type InsertTableDialogProps,
+  type TableConfig,
+  useInsertTableDialog,
+  createDefaultTableConfig,
+  isValidTableConfig,
+  clampTableConfig,
+  formatTableDimensions,
+  getTablePresets,
+} from './components/dialogs/InsertTableDialog';
 
 // ============================================================================
 // TYPES
