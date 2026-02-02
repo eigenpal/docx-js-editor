@@ -445,28 +445,28 @@ export class EditorPage {
    * Align text left
    */
   async alignLeft(): Promise<void> {
-    await this.toolbar.locator('[aria-label="Align left"]').click();
+    await this.toolbar.locator('[aria-label="Align Left (Ctrl+L)"]').click();
   }
 
   /**
    * Align text center
    */
   async alignCenter(): Promise<void> {
-    await this.toolbar.locator('[aria-label="Align center"]').click();
+    await this.toolbar.locator('[aria-label="Center (Ctrl+E)"]').click();
   }
 
   /**
    * Align text right
    */
   async alignRight(): Promise<void> {
-    await this.toolbar.locator('[aria-label="Align right"]').click();
+    await this.toolbar.locator('[aria-label="Align Right (Ctrl+R)"]').click();
   }
 
   /**
    * Justify text
    */
   async alignJustify(): Promise<void> {
-    await this.toolbar.locator('[aria-label="Justify"]').click();
+    await this.toolbar.locator('[aria-label="Justify (Ctrl+J)"]').click();
   }
 
   /**
