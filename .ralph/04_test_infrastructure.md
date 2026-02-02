@@ -20,7 +20,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 - [x] **Fix alignment button selectors** - Update `e2e/helpers/editor-page.ts` alignLeft/Center/Right/Justify to use actual aria-labels like "Align Left (Ctrl+L)". Verify: `npx playwright test --grep "align text left" --timeout=30000`
 
-- [ ] **Fix list button selectors** - Update toggleBulletList/toggleNumberedList to match "Bullet List" / "Numbered List". Verify: `npx playwright test --grep "create bullet list" --timeout=30000`
+- [x] **Fix list button selectors** - Update toggleBulletList/toggleNumberedList to match "Bullet List" / "Numbered List". Verify: `npx playwright test --grep "create bullet list" --timeout=30000`
 
 - [ ] **Fix indent button selectors** - Update indent/outdent to match "Increase Indent" / "Decrease Indent". Verify: `npx playwright test --grep "indent" --timeout=30000`
 

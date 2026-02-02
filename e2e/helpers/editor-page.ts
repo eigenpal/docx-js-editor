@@ -473,14 +473,14 @@ export class EditorPage {
    * Toggle bullet list
    */
   async toggleBulletList(): Promise<void> {
-    await this.toolbar.locator('[aria-label="Bullet list"]').click();
+    await this.toolbar.locator('[aria-label="Bullet List"]').click();
   }
 
   /**
    * Toggle numbered list
    */
   async toggleNumberedList(): Promise<void> {
-    await this.toolbar.locator('[aria-label="Numbered list"]').click();
+    await this.toolbar.locator('[aria-label="Numbered List"]').click();
   }
 
   /**
