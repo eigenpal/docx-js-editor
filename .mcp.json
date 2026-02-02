@@ -7,7 +7,7 @@
         "@playwright/mcp@latest",
         "--headless",
         "--output-dir",
-        "."
+        "screenshots"
       ]
     }
   }
