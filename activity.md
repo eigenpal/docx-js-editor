@@ -6708,3 +6708,82 @@ Wired the Find & Replace dialog to the editor with keyboard shortcuts (Ctrl+F fo
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-154: Improve keyboard navigation
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Implemented comprehensive keyboard navigation for the editor including Ctrl+Arrow for word navigation, Home/End for line navigation, and Ctrl+Home/End for document navigation.
+
+**Created Files:**
+
+1. **`src/utils/keyboardNavigation.ts`:**
+   - Comprehensive keyboard navigation utilities
+   
+   **Word Boundary Detection:**
+   - `isWordCharacter(char)` - Check if character is a word character (letters, digits, underscore)
+   - `isWhitespace(char)` - Check if character is whitespace
+   - `isPunctuation(char)` - Check if character is punctuation
+   - `findWordStart(text, position)` - Find start of current/previous word
+   - `findWordEnd(text, position)` - Find end of current/next word
+   - `findNextWordStart(text, position)` - For Ctrl+Right navigation
+   - `findPreviousWordStart(text, position)` - For Ctrl+Left navigation
+
+   **Line Boundary Detection:**
+   - `findVisualLineStart(container, offset)` - Visual line start using bounding rectangles
+   - `findVisualLineEnd(container, offset)` - Visual line end using bounding rectangles
+
+   **DOM Selection Utilities:**
+   - `getSelectionInfo()` - Get current selection details
+   - `setSelectionPosition(node, offset)` - Set caret position
+   - `extendSelectionTo(node, offset)` - Extend selection (for Shift+navigation)
+   - `moveByWord(direction, extend)` - Move cursor by word
+   - `moveToLineEdge(edge, extend)` - Move to line start/end
+
+   **Keyboard Event Handling:**
+   - `parseNavigationAction(event)` - Parse keyboard event into navigation action
+   - `handleNavigationKey(event, options)` - Handle navigation keypress
+   - `isNavigationKey(event)` - Check if event is a navigation key
+
+   **Navigation Shortcuts:**
+   - `NAVIGATION_SHORTCUTS` - Constant with all shortcuts
+   - `matchesShortcut(event, shortcut)` - Match event against shortcut
+   - `describeShortcut(shortcut)` - Human-readable shortcut description
+   - `getNavigationShortcutDescriptions()` - List all shortcuts with descriptions
+
+**Updated Files:**
+
+2. **`src/components/edit/EditableParagraph.tsx`:**
+   - Added import for keyboard navigation utilities
+   - Added `onNavigateToDocumentStart` and `onNavigateToDocumentEnd` props
+   - Updated `handleRunKeyDown` to:
+     - Check for navigation keys using `isNavigationKey()`
+     - Handle document-level navigation (Ctrl+Home/End) via callbacks
+     - Handle word and line navigation via `handleNavigationKey()`
+
+3. **`src/components/Editor.tsx`:**
+   - Added `handleNavigateToDocumentStart` callback - focuses first paragraph
+   - Added `handleNavigateToDocumentEnd` callback - focuses last paragraph
+   - Passed new callbacks to EditableParagraph component
+
+4. **`src/index.ts`:**
+   - Exported all keyboard navigation utilities and types
+
+**Keyboard Shortcuts Implemented:**
+- `Ctrl+Left/Right` - Move cursor by word
+- `Ctrl+Shift+Left/Right` - Select by word
+- `Home/End` - Move to line start/end
+- `Shift+Home/End` - Select to line start/end
+- `Ctrl+Home/End` - Move to document start/end
+- `Ctrl+Shift+Home/End` - Select to document start/end
+
+**Navigation Action Types:**
+- `NavigationDirection`: 'left' | 'right' | 'up' | 'down'
+- `NavigationUnit`: 'character' | 'word' | 'line' | 'paragraph' | 'document'
+- `NavigationAction`: { direction, unit, extend }
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

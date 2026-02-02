@@ -27,6 +27,7 @@ import { paragraphToStyle, textToStyle, mergeStyles } from '../../utils/formatTo
 import { twipsToPixels, formatPx } from '../../utils/units';
 import { SELECTION_DATA_ATTRIBUTES } from '../../hooks/useSelection';
 import { EditableRun, getEditableRunText, createTextRun, splitRunAtOffset, mergeRuns } from './EditableRun';
+import { handleNavigationKey, isNavigationKey, parseNavigationAction } from '../../utils/keyboardNavigation';
 import { Tab } from '../render/Tab';
 import { Hyperlink } from '../render/Hyperlink';
 import { Field } from '../render/Field';
@@ -108,6 +109,10 @@ export interface EditableParagraphProps {
   onNavigateUp?: (paragraphIndex: number) => void;
   /** Callback when down arrow at last line */
   onNavigateDown?: (paragraphIndex: number) => void;
+  /** Callback when Ctrl+Home to go to document start */
+  onNavigateToDocumentStart?: () => void;
+  /** Callback when Ctrl+End to go to document end */
+  onNavigateToDocumentEnd?: () => void;
   /** Callback when a bookmark link is clicked */
   onBookmarkClick?: (bookmarkName: string) => void;
   /** Whether to disable links */
@@ -480,6 +485,8 @@ export function EditableParagraph({
   onBlur,
   onNavigateUp,
   onNavigateDown,
+  onNavigateToDocumentStart,
+  onNavigateToDocumentEnd,
   onBookmarkClick,
   disableLinks = false,
   renderImage,
@@ -544,6 +551,31 @@ export function EditableParagraph({
       const currentPosition = getCursorPositionFromDOM(paragraphRef.current!);
       if (currentPosition) {
         setCursorPosition(currentPosition);
+      }
+
+      // Handle keyboard navigation (Ctrl+Arrow, Home/End)
+      if (isNavigationKey(event.nativeEvent)) {
+        const action = parseNavigationAction(event.nativeEvent);
+
+        // Document-level navigation (Ctrl+Home/End)
+        if (action && action.unit === 'document') {
+          if (action.direction === 'left' && onNavigateToDocumentStart) {
+            event.preventDefault();
+            onNavigateToDocumentStart();
+            return;
+          }
+          if (action.direction === 'right' && onNavigateToDocumentEnd) {
+            event.preventDefault();
+            onNavigateToDocumentEnd();
+            return;
+          }
+        }
+
+        // Word and line navigation - let handleNavigationKey handle it
+        if (action && (action.unit === 'word' || action.unit === 'line')) {
+          handleNavigationKey(event.nativeEvent);
+          return;
+        }
       }
 
       // Enter key - split paragraph
@@ -615,6 +647,8 @@ export function EditableParagraph({
       onMergeWithNext,
       onNavigateUp,
       onNavigateDown,
+      onNavigateToDocumentStart,
+      onNavigateToDocumentEnd,
     ]
   );
 

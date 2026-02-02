@@ -431,3 +431,41 @@ export {
   createTripleClickParagraphSelector,
   type WordSelectionResult,
 } from './utils/textSelection';
+
+// Keyboard navigation
+export {
+  // Types
+  type NavigationDirection,
+  type NavigationUnit,
+  type NavigationAction,
+  type KeyboardShortcut,
+  // Word boundary detection
+  isWordCharacter as isWordChar,
+  isWhitespace as isWhitespaceChar,
+  isPunctuation,
+  findWordStart,
+  findWordEnd,
+  findNextWordStart,
+  findPreviousWordStart,
+  // Line boundary detection
+  findVisualLineStart,
+  findVisualLineEnd,
+  // DOM selection utilities
+  getSelectionInfo,
+  setSelectionPosition,
+  extendSelectionTo,
+  moveByWord,
+  moveToLineEdge,
+  // Keyboard event handling
+  parseNavigationAction,
+  handleNavigationKey,
+  isNavigationKey,
+  // Selection word expansion
+  expandSelectionToWord,
+  getWordAtCursor,
+  // Keyboard shortcut utilities
+  matchesShortcut,
+  NAVIGATION_SHORTCUTS,
+  describeShortcut,
+  getNavigationShortcutDescriptions,
+} from './utils/keyboardNavigation';

@@ -726,6 +726,30 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
   );
 
   /**
+   * Handle Ctrl+Home - navigate to document start
+   */
+  const handleNavigateToDocumentStart = useCallback(() => {
+    if (paragraphCount > 0) {
+      const firstParaElement = paragraphRefs.current.get(0);
+      if (firstParaElement) {
+        focusParagraphStart(firstParaElement);
+      }
+    }
+  }, [paragraphCount]);
+
+  /**
+   * Handle Ctrl+End - navigate to document end
+   */
+  const handleNavigateToDocumentEnd = useCallback(() => {
+    if (paragraphCount > 0) {
+      const lastParaElement = paragraphRefs.current.get(paragraphCount - 1);
+      if (lastParaElement) {
+        focusParagraphEnd(lastParaElement);
+      }
+    }
+  }, [paragraphCount]);
+
+  /**
    * Handle double-click to select word
    * Uses native browser selection APIs for reliable word selection
    */
@@ -887,6 +911,8 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
             onBlur={handleParagraphBlur}
             onNavigateUp={handleNavigateUp}
             onNavigateDown={handleNavigateDown}
+            onNavigateToDocumentStart={handleNavigateToDocumentStart}
+            onNavigateToDocumentEnd={handleNavigateToDocumentEnd}
             renderImage={renderImage}
             renderShape={renderShape}
             renderTextBox={renderTextBox}
@@ -920,7 +946,8 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       theme, editable, handleParagraphChange, handleParagraphSplit,
       handleMergeWithPrevious, handleMergeWithNext, handleCursorChange,
       handleParagraphFocus, handleParagraphBlur, handleNavigateUp,
-      handleNavigateDown, renderImage, renderShape, renderTextBox,
+      handleNavigateDown, handleNavigateToDocumentStart, handleNavigateToDocumentEnd,
+      renderImage, renderShape, renderTextBox,
       onTableCellClick, isTableCellSelected, setParagraphRef, doc.package?.body?.content
     ]
   );
