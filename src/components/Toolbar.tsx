@@ -14,6 +14,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { TextFormatting } from '../types/document';
 import { FontPicker } from './ui/FontPicker';
 import { FontSizePicker, halfPointsToPoints, pointsToHalfPoints } from './ui/FontSizePicker';
+import { TextColorPicker } from './ui/ColorPicker';
 
 // ============================================================================
 // TYPES
@@ -57,7 +58,8 @@ export type FormattingAction =
   | 'subscript'
   | 'clearFormatting'
   | { type: 'fontFamily'; value: string }
-  | { type: 'fontSize'; value: number };
+  | { type: 'fontSize'; value: number }
+  | { type: 'textColor'; value: string };
 
 /**
  * Props for the Toolbar component
@@ -91,6 +93,8 @@ export interface ToolbarProps {
   showFontPicker?: boolean;
   /** Whether to show font size picker (default: true) */
   showFontSizePicker?: boolean;
+  /** Whether to show text color picker (default: true) */
+  showTextColorPicker?: boolean;
 }
 
 /**
@@ -346,6 +350,7 @@ export function Toolbar({
   children,
   showFontPicker = true,
   showFontSizePicker = true,
+  showTextColorPicker = true,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -398,6 +403,18 @@ export function Toolbar({
     (sizeInPoints: number) => {
       if (!disabled && onFormat) {
         onFormat({ type: 'fontSize', value: sizeInPoints });
+      }
+    },
+    [disabled, onFormat]
+  );
+
+  /**
+   * Handle text color change
+   */
+  const handleTextColorChange = useCallback(
+    (color: string) => {
+      if (!disabled && onFormat) {
+        onFormat({ type: 'textColor', value: color });
       }
     },
     [disabled, onFormat]
@@ -551,6 +568,14 @@ export function Toolbar({
         >
           <StrikethroughIcon />
         </ToolbarButton>
+        {showTextColorPicker && (
+          <TextColorPicker
+            value={currentFormatting.color?.replace(/^#/, '')}
+            onChange={handleTextColorChange}
+            disabled={disabled}
+            title="Font Color"
+          />
+        )}
       </ToolbarGroup>
 
       {/* Superscript/Subscript Group */}
@@ -627,7 +652,7 @@ export function applyFormattingAction(
 ): TextFormatting {
   const newFormatting = { ...currentFormatting };
 
-  // Handle object-type actions (fontFamily, fontSize, etc.)
+  // Handle object-type actions (fontFamily, fontSize, textColor, etc.)
   if (typeof action === 'object') {
     switch (action.type) {
       case 'fontFamily':
@@ -640,6 +665,12 @@ export function applyFormattingAction(
       case 'fontSize':
         // Convert points to half-points for OOXML
         newFormatting.fontSize = pointsToHalfPoints(action.value);
+        return newFormatting;
+      case 'textColor':
+        // Set text color as RGB value (without #)
+        newFormatting.color = {
+          rgb: action.value.replace(/^#/, '').toUpperCase(),
+        };
         return newFormatting;
     }
   }

@@ -5046,3 +5046,41 @@ Added the FontSizePicker component to the Toolbar for font size selection.
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-112: Add Text Color picker to toolbar
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added the TextColorPicker component to the Toolbar for text color selection.
+
+**Implementation:**
+
+1. **Updated `src/components/Toolbar.tsx`:**
+   - Imported `TextColorPicker` component from `./ui/ColorPicker`
+   - Added `showTextColorPicker` prop (default: true)
+   - Extended `FormattingAction` type to support `{ type: 'textColor'; value: string }`
+   - Added `handleTextColorChange` callback
+   - Added TextColorPicker to the Text Formatting group after Strikethrough button
+   - Updated `applyFormattingAction` to handle textColor action
+
+2. **TextColorPicker Integration:**
+   - Displays current text color from selection formatting via color indicator bar
+   - Dropdown grid with 30 colors in 3 rows (dark, standard, tints)
+   - Custom hex color input for custom colors
+   - Default color is black (#000000)
+   - Uses existing ColorPicker component with type="text"
+
+3. **Formatting Flow:**
+   - User clicks color from grid or enters custom hex → `handleTextColorChange(color)` called
+   - Calls `onFormat({ type: 'textColor', value: color })`
+   - `applyFormattingAction` creates `color: { rgb: 'HEXVALUE' }` in TextFormatting
+   - Document updated via `executeCommand` with `formatText` command
+
+**Props Added to Toolbar:**
+- `showTextColorPicker?: boolean` - Whether to show text color picker (default: true)
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---
