@@ -244,3 +244,14 @@
 [2026-02-02 14:13] NOTES: Style-based paragraph properties now merged with inline formatting (inline takes priority)
 [2026-02-02 14:13] STATUS: testing
 [2026-02-02 14:13] NOTES: Typecheck passes, unit tests pass
+[2026-02-02 14:13] STATUS: done
+[2026-02-02 14:13] NOTES: Task 2 complete - Committed style rendering
+
+[2026-02-02 14:13] TASK: Apply styles when changing via toolbar
+[2026-02-02 14:13] STATUS: starting
+[2026-02-02 14:13] NOTES: Need to update applyStyle command to also apply style's formatting attrs
+[2026-02-02 14:14] STATUS: editing
+[2026-02-02 14:14] NOTES: Updated applyStyle command to accept resolved style properties
+[2026-02-02 14:14] NOTES: Updated DocxEditor to resolve style before applying via toolbar
+[2026-02-02 14:14] STATUS: done
+[2026-02-02 14:14] NOTES: Task 3 complete - Typecheck passes

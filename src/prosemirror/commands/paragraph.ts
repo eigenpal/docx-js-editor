@@ -419,12 +419,66 @@ export function getListInfo(state: EditorState): { numId: number; ilvl: number }
 // PARAGRAPH STYLES
 // ============================================================================
 
+import type { ParagraphFormatting, TextFormatting } from '../../types/document';
+
+/**
+ * Resolved style properties to apply along with styleId
+ */
+export interface ResolvedStyleAttrs {
+  /** Paragraph formatting from resolved style */
+  paragraphFormatting?: ParagraphFormatting;
+  /** Run/text formatting from resolved style */
+  runFormatting?: TextFormatting;
+}
+
 /**
  * Apply a paragraph style by ID (e.g., 'Heading1', 'Normal', 'Title')
+ *
+ * When resolvedAttrs is provided, also applies the style's formatting properties
+ * to the paragraph (alignment, spacing, indentation).
+ *
  * @param styleId - The style ID to apply
+ * @param resolvedAttrs - Optional resolved style properties to apply
  */
-export function applyStyle(styleId: string): Command {
-  return setParagraphAttr('styleId', styleId);
+export function applyStyle(styleId: string, resolvedAttrs?: ResolvedStyleAttrs): Command {
+  return (state, dispatch) => {
+    const { $from, $to } = state.selection;
+
+    if (!dispatch) return true;
+
+    let tr = state.tr;
+    const seen = new Set<number>();
+
+    state.doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
+      if (node.type.name === 'paragraph' && !seen.has(pos)) {
+        seen.add(pos);
+
+        // Build new attrs starting with styleId
+        const newAttrs: Record<string, unknown> = {
+          ...node.attrs,
+          styleId,
+        };
+
+        // Apply resolved paragraph formatting if provided
+        if (resolvedAttrs?.paragraphFormatting) {
+          const ppr = resolvedAttrs.paragraphFormatting;
+          if (ppr.alignment !== undefined) newAttrs.alignment = ppr.alignment;
+          if (ppr.spaceBefore !== undefined) newAttrs.spaceBefore = ppr.spaceBefore;
+          if (ppr.spaceAfter !== undefined) newAttrs.spaceAfter = ppr.spaceAfter;
+          if (ppr.lineSpacing !== undefined) newAttrs.lineSpacing = ppr.lineSpacing;
+          if (ppr.lineSpacingRule !== undefined) newAttrs.lineSpacingRule = ppr.lineSpacingRule;
+          if (ppr.indentLeft !== undefined) newAttrs.indentLeft = ppr.indentLeft;
+          if (ppr.indentRight !== undefined) newAttrs.indentRight = ppr.indentRight;
+          if (ppr.indentFirstLine !== undefined) newAttrs.indentFirstLine = ppr.indentFirstLine;
+        }
+
+        tr = tr.setNodeMarkup(pos, undefined, newAttrs);
+      }
+    });
+
+    dispatch(tr.scrollIntoView());
+    return true;
+  };
 }
 
 /**

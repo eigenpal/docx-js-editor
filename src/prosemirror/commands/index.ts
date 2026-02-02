@@ -55,3 +55,4 @@ export {
   clearStyle,
   getStyleId,
 } from './paragraph';
+export type { ResolvedStyleAttrs } from './paragraph';

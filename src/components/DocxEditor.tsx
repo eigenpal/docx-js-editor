@@ -77,6 +77,7 @@ import {
   decreaseListLevel,
   clearFormatting,
   applyStyle,
+  createStyleResolver,
 } from '../prosemirror';
 
 // ============================================================================
@@ -503,9 +504,24 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         case 'lineSpacing':
           setLineSpacing(action.value)(view.state, view.dispatch);
           break;
-        case 'applyStyle':
-          applyStyle(action.value)(view.state, view.dispatch);
+        case 'applyStyle': {
+          // Resolve style to get its formatting properties
+          const styleResolver = history.state?.package.styles
+            ? createStyleResolver(history.state.package.styles)
+            : null;
+
+          if (styleResolver) {
+            const resolved = styleResolver.resolveParagraphStyle(action.value);
+            applyStyle(action.value, {
+              paragraphFormatting: resolved.paragraphFormatting,
+              runFormatting: resolved.runFormatting,
+            })(view.state, view.dispatch);
+          } else {
+            // No styles available, just set the styleId
+            applyStyle(action.value)(view.state, view.dispatch);
+          }
           break;
+        }
       }
     }
   }, []);

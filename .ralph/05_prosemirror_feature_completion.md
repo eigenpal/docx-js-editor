@@ -43,7 +43,7 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
   - When `styleId` is set, apply the style's formatting
   - **Verify**: Load styled-content.docx, headings should be larger/bolder
 
-- [ ] **Task 3: Apply styles when changing via toolbar**
+- [x] **Task 3: Apply styles when changing via toolbar**
   - When `applyStyle` command runs, also apply the style's formatting attrs
   - Update paragraph attrs with style's alignment, spacing, indentation
   - **Verify**: Select text, change to Heading 1, text should become larger
