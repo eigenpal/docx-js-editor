@@ -1,0 +1,214 @@
+{
+  "name": "Paragraph Style Tests",
+  "description": "Tests for paragraph styles like Headings, Normal, Title, etc.",
+  "scenarios": [
+    {
+      "name": "Apply Normal style",
+      "tags": ["style", "normal", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Normal paragraph text" } },
+        { "action": "setParagraphStyle", "args": { "style": "Normal" } }
+      ],
+      "assertions": [{ "type": "paragraphStyle", "expected": "Normal" }]
+    },
+    {
+      "name": "Apply Heading 1 style",
+      "tags": ["style", "heading", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Main Heading" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } }
+      ],
+      "assertions": [{ "type": "paragraphStyle", "expected": "Heading 1" }]
+    },
+    {
+      "name": "Apply Heading 2 style",
+      "tags": ["style", "heading", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Sub Heading" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 2" } }
+      ],
+      "assertions": [{ "type": "paragraphStyle", "expected": "Heading 2" }]
+    },
+    {
+      "name": "Apply Heading 3 style",
+      "tags": ["style", "heading"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Section Heading" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 3" } }
+      ],
+      "assertions": [{ "type": "paragraphStyle", "expected": "Heading 3" }]
+    },
+    {
+      "name": "Apply Title style",
+      "tags": ["style", "title"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Document Title" } },
+        { "action": "setParagraphStyle", "args": { "style": "Title" } }
+      ],
+      "assertions": [{ "type": "paragraphStyle", "expected": "Title" }]
+    },
+    {
+      "name": "Apply Subtitle style",
+      "tags": ["style", "subtitle"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Document Subtitle" } },
+        { "action": "setParagraphStyle", "args": { "style": "Subtitle" } }
+      ],
+      "assertions": [{ "type": "paragraphStyle", "expected": "Subtitle" }]
+    },
+    {
+      "name": "Change from Normal to Heading 1",
+      "tags": ["style", "change"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Promote to heading" } },
+        { "action": "setParagraphStyle", "args": { "style": "Normal" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } }
+      ],
+      "assertions": [{ "type": "paragraphStyle", "expected": "Heading 1" }]
+    },
+    {
+      "name": "Change from Heading 1 to Normal",
+      "tags": ["style", "change"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Demote to normal" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } },
+        { "action": "setParagraphStyle", "args": { "style": "Normal" } }
+      ],
+      "assertions": [{ "type": "paragraphStyle", "expected": "Normal" }]
+    },
+    {
+      "name": "Change from Heading 1 to Heading 2",
+      "tags": ["style", "change", "heading"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Demote heading level" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 2" } }
+      ],
+      "assertions": [{ "type": "paragraphStyle", "expected": "Heading 2" }]
+    },
+    {
+      "name": "Multiple headings in document",
+      "tags": ["style", "multiple", "heading"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Chapter One" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Introduction" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 2" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "This is the body text." } },
+        { "action": "setParagraphStyle", "args": { "style": "Normal" } }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Chapter One" },
+        { "type": "containsText", "expected": "Introduction" },
+        { "type": "containsText", "expected": "This is the body text." }
+      ]
+    },
+    {
+      "name": "Style with additional bold",
+      "tags": ["style", "formatting"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Heading with extra bold" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } },
+        { "action": "selectText", "args": { "text": "extra" } },
+        { "action": "applyBold" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Heading with extra bold" }]
+    },
+    {
+      "name": "Style with additional italic",
+      "tags": ["style", "formatting"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Normal with italic word" } },
+        { "action": "setParagraphStyle", "args": { "style": "Normal" } },
+        { "action": "selectText", "args": { "text": "italic" } },
+        { "action": "applyItalic" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Normal with italic word" }]
+    },
+    {
+      "name": "Style with color override",
+      "tags": ["style", "formatting", "color"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Colored heading" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#FF0000" } }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Colored heading" }]
+    },
+    {
+      "name": "Style with alignment",
+      "tags": ["style", "alignment"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Centered Heading" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } },
+        { "action": "alignCenter" }
+      ],
+      "assertions": [
+        { "type": "paragraphStyle", "expected": "Heading 1" },
+        { "type": "alignment", "expected": "center" }
+      ]
+    },
+    {
+      "name": "Undo style change",
+      "tags": ["style", "undo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Undo style test" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } },
+        { "action": "undo" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Undo style test" }]
+    },
+    {
+      "name": "Redo style change",
+      "tags": ["style", "redo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Redo style test" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } },
+        { "action": "undo" },
+        { "action": "redo" }
+      ],
+      "assertions": [{ "type": "paragraphStyle", "expected": "Heading 1" }]
+    },
+    {
+      "name": "Document structure with styles",
+      "tags": ["style", "document", "structure"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Annual Report" } },
+        { "action": "setParagraphStyle", "args": { "style": "Title" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Fiscal Year 2024" } },
+        { "action": "setParagraphStyle", "args": { "style": "Subtitle" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Executive Summary" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } },
+        { "action": "pressEnter" },
+        {
+          "action": "typeText",
+          "args": { "text": "This document provides an overview of our financial performance." }
+        },
+        { "action": "setParagraphStyle", "args": { "style": "Normal" } }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Annual Report" },
+        { "type": "containsText", "expected": "Fiscal Year 2024" },
+        { "type": "containsText", "expected": "Executive Summary" }
+      ]
+    },
+    {
+      "name": "Style preserves text content",
+      "tags": ["style", "content"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Important content that should not change" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 1" } },
+        { "action": "setParagraphStyle", "args": { "style": "Heading 2" } },
+        { "action": "setParagraphStyle", "args": { "style": "Normal" } }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Important content that should not change" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,285 @@
+{
+  "name": "List Tests",
+  "description": "Tests for bullet lists, numbered lists, and indentation",
+  "scenarios": [
+    {
+      "name": "Create bullet list",
+      "tags": ["list", "bullet", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First item" } },
+        { "action": "toggleBulletList" }
+      ],
+      "assertions": [{ "type": "isBulletList", "expected": true }]
+    },
+    {
+      "name": "Create numbered list",
+      "tags": ["list", "numbered", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First item" } },
+        { "action": "toggleNumberedList" }
+      ],
+      "assertions": [{ "type": "isNumberedList", "expected": true }]
+    },
+    {
+      "name": "Multiple bullet items",
+      "tags": ["list", "bullet", "multiple"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Item one" } },
+        { "action": "toggleBulletList" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Item two" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Item three" } }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Item one" },
+        { "type": "containsText", "expected": "Item two" },
+        { "type": "containsText", "expected": "Item three" }
+      ]
+    },
+    {
+      "name": "Multiple numbered items",
+      "tags": ["list", "numbered", "multiple"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First" } },
+        { "action": "toggleNumberedList" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Second" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Third" } }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "First" },
+        { "type": "containsText", "expected": "Second" },
+        { "type": "containsText", "expected": "Third" }
+      ]
+    },
+    {
+      "name": "Toggle bullet list off",
+      "tags": ["list", "bullet", "toggle"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "List item" } },
+        { "action": "toggleBulletList" },
+        { "action": "toggleBulletList" }
+      ],
+      "assertions": [{ "type": "isBulletList", "expected": false }]
+    },
+    {
+      "name": "Toggle numbered list off",
+      "tags": ["list", "numbered", "toggle"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "List item" } },
+        { "action": "toggleNumberedList" },
+        { "action": "toggleNumberedList" }
+      ],
+      "assertions": [{ "type": "isNumberedList", "expected": false }]
+    },
+    {
+      "name": "Convert bullet to numbered",
+      "tags": ["list", "convert"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "List item" } },
+        { "action": "toggleBulletList" },
+        { "action": "toggleNumberedList" }
+      ],
+      "assertions": [{ "type": "isNumberedList", "expected": true }]
+    },
+    {
+      "name": "Convert numbered to bullet",
+      "tags": ["list", "convert"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "List item" } },
+        { "action": "toggleNumberedList" },
+        { "action": "toggleBulletList" }
+      ],
+      "assertions": [{ "type": "isBulletList", "expected": true }]
+    },
+    {
+      "name": "Indent list item",
+      "tags": ["list", "indent", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Parent item" } },
+        { "action": "toggleBulletList" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Child item" } },
+        { "action": "indent" }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Parent item" },
+        { "type": "containsText", "expected": "Child item" }
+      ]
+    },
+    {
+      "name": "Outdent list item",
+      "tags": ["list", "outdent", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Parent item" } },
+        { "action": "toggleBulletList" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Child item" } },
+        { "action": "indent" },
+        { "action": "outdent" }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Parent item" },
+        { "type": "containsText", "expected": "Child item" }
+      ]
+    },
+    {
+      "name": "Nested bullet list",
+      "tags": ["list", "bullet", "nested"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Level 1" } },
+        { "action": "toggleBulletList" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Level 2" } },
+        { "action": "indent" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Level 3" } },
+        { "action": "indent" }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Level 1" },
+        { "type": "containsText", "expected": "Level 2" },
+        { "type": "containsText", "expected": "Level 3" }
+      ]
+    },
+    {
+      "name": "Nested numbered list",
+      "tags": ["list", "numbered", "nested"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First" } },
+        { "action": "toggleNumberedList" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "First-A" } },
+        { "action": "indent" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "First-B" } }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "First" },
+        { "type": "containsText", "expected": "First-A" },
+        { "type": "containsText", "expected": "First-B" }
+      ]
+    },
+    {
+      "name": "Bold text in list",
+      "tags": ["list", "formatting"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Bold item" } },
+        { "action": "selectAll" },
+        { "action": "applyBold" },
+        { "action": "toggleBulletList" }
+      ],
+      "assertions": [
+        { "type": "isBold", "expected": true },
+        { "type": "isBulletList", "expected": true }
+      ]
+    },
+    {
+      "name": "Italic text in list",
+      "tags": ["list", "formatting"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Italic item" } },
+        { "action": "selectAll" },
+        { "action": "applyItalic" },
+        { "action": "toggleBulletList" }
+      ],
+      "assertions": [
+        { "type": "isItalic", "expected": true },
+        { "type": "isBulletList", "expected": true }
+      ]
+    },
+    {
+      "name": "Colored text in list",
+      "tags": ["list", "formatting", "color"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Colored item" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#FF0000" } },
+        { "action": "toggleBulletList" }
+      ],
+      "assertions": [{ "type": "isBulletList", "expected": true }]
+    },
+    {
+      "name": "Exit list with double Enter",
+      "tags": ["list", "exit"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "List item" } },
+        { "action": "toggleBulletList" },
+        { "action": "pressEnter" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Normal text" } }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "List item" },
+        { "type": "containsText", "expected": "Normal text" }
+      ]
+    },
+    {
+      "name": "Undo bullet list",
+      "tags": ["list", "undo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "List item" } },
+        { "action": "toggleBulletList" },
+        { "action": "undo" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "List item" }]
+    },
+    {
+      "name": "Undo numbered list",
+      "tags": ["list", "undo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "List item" } },
+        { "action": "toggleNumberedList" },
+        { "action": "undo" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "List item" }]
+    },
+    {
+      "name": "Convert paragraph to list",
+      "tags": ["list", "convert"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First line" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Second line" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Third line" } },
+        { "action": "selectAll" },
+        { "action": "toggleBulletList" }
+      ],
+      "assertions": [{ "type": "isBulletList", "expected": true }]
+    },
+    {
+      "name": "Tab key indents list",
+      "tags": ["list", "indent", "keyboard"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Item" } },
+        { "action": "toggleBulletList" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Sub-item" } },
+        { "action": "pressTab" }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Item" },
+        { "type": "containsText", "expected": "Sub-item" }
+      ]
+    },
+    {
+      "name": "Shift+Tab outdents list",
+      "tags": ["list", "outdent", "keyboard"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Item" } },
+        { "action": "toggleBulletList" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Sub-item" } },
+        { "action": "pressTab" },
+        { "action": "pressShiftTab" }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Item" },
+        { "type": "containsText", "expected": "Sub-item" }
+      ]
+    }
+  ]
+}

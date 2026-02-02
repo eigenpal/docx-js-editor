@@ -1,0 +1,213 @@
+{
+  "name": "Font Tests",
+  "description": "Tests for font family and font size functionality",
+  "scenarios": [
+    {
+      "name": "Change font to Arial",
+      "tags": ["font", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Arial font test" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Arial" } }
+      ],
+      "assertions": [{ "type": "fontFamily", "expected": "Arial" }]
+    },
+    {
+      "name": "Change font to Times New Roman",
+      "tags": ["font", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Times font test" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Times New Roman" } }
+      ],
+      "assertions": [{ "type": "fontFamily", "expected": "Times New Roman" }]
+    },
+    {
+      "name": "Change font to Georgia",
+      "tags": ["font"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Georgia font test" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Georgia" } }
+      ],
+      "assertions": [{ "type": "fontFamily", "expected": "Georgia" }]
+    },
+    {
+      "name": "Change font to Verdana",
+      "tags": ["font"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Verdana font test" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Verdana" } }
+      ],
+      "assertions": [{ "type": "fontFamily", "expected": "Verdana" }]
+    },
+    {
+      "name": "Change font to Courier New",
+      "tags": ["font"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Courier font test" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Courier New" } }
+      ],
+      "assertions": [{ "type": "fontFamily", "expected": "Courier New" }]
+    },
+    {
+      "name": "Font change on partial selection",
+      "tags": ["font", "selection"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Hello World" } },
+        { "action": "selectText", "args": { "text": "World" } },
+        { "action": "setFontFamily", "args": { "fontFamily": "Arial" } }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Hello World" }]
+    },
+    {
+      "name": "Set font size to 12pt",
+      "tags": ["font", "size", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Size test" } },
+        { "action": "selectAll" },
+        { "action": "setFontSize", "args": { "size": 12 } }
+      ],
+      "assertions": [{ "type": "fontSize", "expected": "12" }]
+    },
+    {
+      "name": "Set font size to 14pt",
+      "tags": ["font", "size"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Size test" } },
+        { "action": "selectAll" },
+        { "action": "setFontSize", "args": { "size": 14 } }
+      ],
+      "assertions": [{ "type": "fontSize", "expected": "14" }]
+    },
+    {
+      "name": "Set font size to 18pt",
+      "tags": ["font", "size"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Size test" } },
+        { "action": "selectAll" },
+        { "action": "setFontSize", "args": { "size": 18 } }
+      ],
+      "assertions": [{ "type": "fontSize", "expected": "18" }]
+    },
+    {
+      "name": "Set font size to 24pt",
+      "tags": ["font", "size"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Large text" } },
+        { "action": "selectAll" },
+        { "action": "setFontSize", "args": { "size": 24 } }
+      ],
+      "assertions": [{ "type": "fontSize", "expected": "24" }]
+    },
+    {
+      "name": "Set font size to 36pt",
+      "tags": ["font", "size"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Very large text" } },
+        { "action": "selectAll" },
+        { "action": "setFontSize", "args": { "size": 36 } }
+      ],
+      "assertions": [{ "type": "fontSize", "expected": "36" }]
+    },
+    {
+      "name": "Set minimum font size 8pt",
+      "tags": ["font", "size", "boundary"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Tiny text" } },
+        { "action": "selectAll" },
+        { "action": "setFontSize", "args": { "size": 8 } }
+      ],
+      "assertions": [{ "type": "fontSize", "expected": "8" }]
+    },
+    {
+      "name": "Set large font size 72pt",
+      "tags": ["font", "size", "boundary"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Huge text" } },
+        { "action": "selectAll" },
+        { "action": "setFontSize", "args": { "size": 72 } }
+      ],
+      "assertions": [{ "type": "fontSize", "expected": "72" }]
+    },
+    {
+      "name": "Font size on partial selection",
+      "tags": ["font", "size", "selection"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Hello World" } },
+        { "action": "selectText", "args": { "text": "World" } },
+        { "action": "setFontSize", "args": { "size": 20 } }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Hello World" }]
+    },
+    {
+      "name": "Combined font family and size",
+      "tags": ["font", "combined"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Combined test" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Georgia" } },
+        { "action": "setFontSize", "args": { "size": 16 } }
+      ],
+      "assertions": [
+        { "type": "fontFamily", "expected": "Georgia" },
+        { "type": "fontSize", "expected": "16" }
+      ]
+    },
+    {
+      "name": "Font with bold formatting",
+      "tags": ["font", "combined"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Bold font test" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Arial" } },
+        { "action": "applyBold" }
+      ],
+      "assertions": [
+        { "type": "fontFamily", "expected": "Arial" },
+        { "type": "isBold", "expected": true }
+      ]
+    },
+    {
+      "name": "Multiple font families in document",
+      "tags": ["font", "multiple"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First line" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Arial" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Second line" } },
+        { "action": "selectText", "args": { "text": "Second line" } },
+        { "action": "setFontFamily", "args": { "fontFamily": "Times New Roman" } }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "First line" },
+        { "type": "containsText", "expected": "Second line" }
+      ]
+    },
+    {
+      "name": "Undo font family change",
+      "tags": ["font", "undo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Undo test" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Georgia" } },
+        { "action": "undo" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Undo test" }]
+    },
+    {
+      "name": "Undo font size change",
+      "tags": ["font", "size", "undo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Undo size test" } },
+        { "action": "selectAll" },
+        { "action": "setFontSize", "args": { "size": 48 } },
+        { "action": "undo" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Undo size test" }]
+    }
+  ]
+}

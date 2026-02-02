@@ -1,0 +1,187 @@
+{
+  "name": "Line Spacing Tests",
+  "description": "Tests for line spacing functionality",
+  "scenarios": [
+    {
+      "name": "Set single line spacing",
+      "tags": ["spacing", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First line of text" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Second line of text" } },
+        { "action": "selectAll" },
+        { "action": "setLineSpacing", "args": { "spacing": "1.0" } }
+      ],
+      "assertions": [{ "type": "lineSpacing", "expected": "1.0" }]
+    },
+    {
+      "name": "Set 1.5 line spacing",
+      "tags": ["spacing", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First line of text" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Second line of text" } },
+        { "action": "selectAll" },
+        { "action": "setLineSpacing", "args": { "spacing": "1.5" } }
+      ],
+      "assertions": [{ "type": "lineSpacing", "expected": "1.5" }]
+    },
+    {
+      "name": "Set double line spacing",
+      "tags": ["spacing", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First line of text" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Second line of text" } },
+        { "action": "selectAll" },
+        { "action": "setLineSpacing", "args": { "spacing": "2.0" } }
+      ],
+      "assertions": [{ "type": "lineSpacing", "expected": "2.0" }]
+    },
+    {
+      "name": "Change from single to double spacing",
+      "tags": ["spacing", "change"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Line one" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Line two" } },
+        { "action": "selectAll" },
+        { "action": "setLineSpacing", "args": { "spacing": "1.0" } },
+        { "action": "setLineSpacing", "args": { "spacing": "2.0" } }
+      ],
+      "assertions": [{ "type": "lineSpacing", "expected": "2.0" }]
+    },
+    {
+      "name": "Change from double to 1.5 spacing",
+      "tags": ["spacing", "change"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Line one" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Line two" } },
+        { "action": "selectAll" },
+        { "action": "setLineSpacing", "args": { "spacing": "2.0" } },
+        { "action": "setLineSpacing", "args": { "spacing": "1.5" } }
+      ],
+      "assertions": [{ "type": "lineSpacing", "expected": "1.5" }]
+    },
+    {
+      "name": "Line spacing on single paragraph",
+      "tags": ["spacing", "single"],
+      "steps": [
+        {
+          "action": "typeText",
+          "args": {
+            "text": "This is a single paragraph with multiple sentences. It should have line spacing applied when the text wraps to the next line within the same paragraph."
+          }
+        },
+        { "action": "selectAll" },
+        { "action": "setLineSpacing", "args": { "spacing": "2.0" } }
+      ],
+      "assertions": [{ "type": "lineSpacing", "expected": "2.0" }]
+    },
+    {
+      "name": "Line spacing on multiple paragraphs",
+      "tags": ["spacing", "multiple"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First paragraph" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Second paragraph" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Third paragraph" } },
+        { "action": "selectAll" },
+        { "action": "setLineSpacing", "args": { "spacing": "1.5" } }
+      ],
+      "assertions": [{ "type": "lineSpacing", "expected": "1.5" }]
+    },
+    {
+      "name": "Different spacing per paragraph",
+      "tags": ["spacing", "mixed"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Single spaced paragraph" } },
+        { "action": "setLineSpacing", "args": { "spacing": "1.0" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Double spaced paragraph" } },
+        { "action": "setLineSpacing", "args": { "spacing": "2.0" } }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Single spaced paragraph" },
+        { "type": "containsText", "expected": "Double spaced paragraph" }
+      ]
+    },
+    {
+      "name": "Line spacing with bold text",
+      "tags": ["spacing", "formatting"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Bold text with spacing" } },
+        { "action": "selectAll" },
+        { "action": "applyBold" },
+        { "action": "setLineSpacing", "args": { "spacing": "1.5" } }
+      ],
+      "assertions": [
+        { "type": "isBold", "expected": true },
+        { "type": "lineSpacing", "expected": "1.5" }
+      ]
+    },
+    {
+      "name": "Line spacing with font size change",
+      "tags": ["spacing", "font"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Large text with spacing" } },
+        { "action": "selectAll" },
+        { "action": "setFontSize", "args": { "size": 24 } },
+        { "action": "setLineSpacing", "args": { "spacing": "2.0" } }
+      ],
+      "assertions": [{ "type": "lineSpacing", "expected": "2.0" }]
+    },
+    {
+      "name": "Line spacing with alignment",
+      "tags": ["spacing", "alignment"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Centered text with spacing" } },
+        { "action": "selectAll" },
+        { "action": "alignCenter" },
+        { "action": "setLineSpacing", "args": { "spacing": "1.5" } }
+      ],
+      "assertions": [
+        { "type": "alignment", "expected": "center" },
+        { "type": "lineSpacing", "expected": "1.5" }
+      ]
+    },
+    {
+      "name": "Line spacing in list",
+      "tags": ["spacing", "list"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "List item one" } },
+        { "action": "toggleBulletList" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "List item two" } },
+        { "action": "selectAll" },
+        { "action": "setLineSpacing", "args": { "spacing": "2.0" } }
+      ],
+      "assertions": [{ "type": "lineSpacing", "expected": "2.0" }]
+    },
+    {
+      "name": "Undo line spacing change",
+      "tags": ["spacing", "undo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Undo spacing test" } },
+        { "action": "selectAll" },
+        { "action": "setLineSpacing", "args": { "spacing": "2.0" } },
+        { "action": "undo" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Undo spacing test" }]
+    },
+    {
+      "name": "Redo line spacing change",
+      "tags": ["spacing", "redo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Redo spacing test" } },
+        { "action": "selectAll" },
+        { "action": "setLineSpacing", "args": { "spacing": "2.0" } },
+        { "action": "undo" },
+        { "action": "redo" }
+      ],
+      "assertions": [{ "type": "lineSpacing", "expected": "2.0" }]
+    }
+  ]
+}

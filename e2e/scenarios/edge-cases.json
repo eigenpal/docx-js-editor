@@ -1,0 +1,317 @@
+{
+  "description": "Edge case and bug-finding scenarios for the DOCX editor",
+  "defaultCategory": "edge-cases",
+  "defaultTags": ["edge-case", "bug-finding"],
+  "scenarios": [
+    {
+      "name": "Rapid typing doesn't lose characters",
+      "description": "Fast typing should not lose any characters",
+      "tags": ["race-condition", "performance"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeTextSlowly", "args": { "text": "abcdefghij", "delay": 20 } },
+        { "assert": "expectDocumentContains", "args": { "text": "abcdefghij" } }
+      ]
+    },
+    {
+      "name": "Quick format toggle doesn't corrupt",
+      "description": "Rapidly toggling formatting should not corrupt document",
+      "tags": ["race-condition"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test text" } },
+        { "action": "selectAll" },
+        { "action": "applyBold" },
+        { "action": "applyBold" },
+        { "action": "applyBold" },
+        { "action": "applyItalic" },
+        { "action": "applyItalic" },
+        { "action": "applyItalic" },
+        { "assert": "expectDocumentContains", "args": { "text": "Test text" } }
+      ]
+    },
+    {
+      "name": "Fast undo/redo sequence",
+      "description": "Rapidly undoing and redoing should not cause issues",
+      "tags": ["race-condition"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Original" } },
+        { "action": "undo" },
+        { "action": "redo" },
+        { "action": "undo" },
+        { "action": "redo" },
+        { "action": "undo" },
+        { "action": "redo" },
+        { "action": "undo" },
+        { "action": "redo" },
+        { "assert": "expectDocumentContains", "args": { "text": "Original" } }
+      ]
+    },
+    {
+      "name": "Empty document operations",
+      "description": "Operations on empty document should not crash",
+      "tags": ["boundary"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "selectAll" },
+        { "action": "applyBold" },
+        { "action": "applyItalic" },
+        { "action": "pressBackspace" },
+        { "action": "pressDelete" },
+        { "assert": "expectReady" }
+      ]
+    },
+    {
+      "name": "Single character document",
+      "description": "Operations on single character should work correctly",
+      "tags": ["boundary"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "X" } },
+        { "action": "selectAll" },
+        { "action": "applyBold" },
+        { "assert": "expectTextBold", "args": { "text": "X" } },
+        { "action": "pressBackspace" },
+        { "assert": "expectDocumentNotContains", "args": { "text": "X" } }
+      ]
+    },
+    {
+      "name": "Document with only whitespace",
+      "description": "Document with only whitespace should be handled",
+      "tags": ["boundary"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "   " } },
+        { "action": "selectAll" },
+        { "action": "applyBold" },
+        { "assert": "expectReady" }
+      ]
+    },
+    {
+      "name": "Format with collapsed cursor",
+      "description": "Formatting with collapsed cursor should set format for next typed text",
+      "tags": ["selection"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "clearSelection" },
+        { "action": "applyBold" },
+        { "action": "typeText", "args": { "text": "Bold" } },
+        { "action": "applyBold" },
+        { "action": "typeText", "args": { "text": " Normal" } },
+        { "assert": "expectTextBold", "args": { "text": "Bold" } }
+      ]
+    },
+    {
+      "name": "Click outside editor then back",
+      "description": "Focus should be restored correctly after clicking outside",
+      "tags": ["focus"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Before" } },
+        { "action": "blur" },
+        { "action": "wait", "args": { "milliseconds": 500 } },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": " After" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Before" } },
+        { "assert": "expectDocumentContains", "args": { "text": "After" } }
+      ]
+    },
+    {
+      "name": "Tab key in regular text",
+      "description": "Tab key in regular text should insert tab character",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Before" } },
+        { "action": "pressTab" },
+        { "action": "typeText", "args": { "text": "After" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Before" } },
+        { "assert": "expectDocumentContains", "args": { "text": "After" } }
+      ]
+    },
+    {
+      "name": "Consecutive backspaces",
+      "description": "Multiple backspaces should work correctly",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "ABCDE" } },
+        { "action": "pressBackspace" },
+        { "action": "pressBackspace" },
+        { "action": "pressBackspace" },
+        { "assert": "expectDocumentContains", "args": { "text": "AB" } },
+        { "assert": "expectDocumentNotContains", "args": { "text": "CDE" } }
+      ]
+    },
+    {
+      "name": "Consecutive deletes",
+      "description": "Multiple delete keys should work correctly",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "ABCDE" } },
+        { "action": "pressKey", "args": { "key": "Home" } },
+        { "action": "pressDelete" },
+        { "action": "pressDelete" },
+        { "action": "pressDelete" },
+        { "assert": "expectDocumentContains", "args": { "text": "DE" } },
+        { "assert": "expectDocumentNotContains", "args": { "text": "ABC" } }
+      ]
+    },
+    {
+      "name": "Formatting partially selected text",
+      "description": "Formatting only part of formatted text should work",
+      "tags": ["selection"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "ABCDE" } },
+        {
+          "action": "selectRange",
+          "args": { "paragraphIndex": 0, "startOffset": 1, "endOffset": 4 }
+        },
+        { "action": "applyBold" },
+        { "assert": "expectTextBold", "args": { "text": "BCD" } }
+      ]
+    },
+    {
+      "name": "Newlines at document start",
+      "description": "Multiple newlines at start should create empty paragraphs",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "pressEnter" },
+        { "action": "pressEnter" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "After newlines" } },
+        { "assert": "expectDocumentContains", "args": { "text": "After newlines" } }
+      ]
+    },
+    {
+      "name": "Escape key behavior",
+      "description": "Escape key should close dialogs, not affect document",
+      "tags": ["focus"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test" } },
+        { "action": "pressKey", "args": { "key": "Escape" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Test" } }
+      ]
+    },
+    {
+      "name": "Selection spanning formatted regions",
+      "description": "Selection across differently formatted text should handle correctly",
+      "tags": ["selection"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Normal" } },
+        { "action": "applyBold" },
+        { "action": "typeText", "args": { "text": "Bold" } },
+        { "action": "applyBold" },
+        { "action": "typeText", "args": { "text": "Normal" } },
+        { "action": "selectAll" },
+        { "action": "applyItalic" },
+        { "assert": "expectTextItalic", "args": { "text": "Normal" } }
+      ]
+    },
+    {
+      "name": "Typing special Unicode characters",
+      "description": "Special characters like emojis should be handled",
+      "tags": ["unicode"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        {
+          "action": "typeText",
+          "args": { "text": "Test with special chars: \u00e9\u00e8\u00ea\u00eb" }
+        },
+        { "assert": "expectDocumentContains", "args": { "text": "\u00e9\u00e8\u00ea\u00eb" } }
+      ]
+    },
+    {
+      "name": "Cursor position after formatting",
+      "description": "Cursor should be in correct position after applying formatting",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello" } },
+        { "action": "selectText", "args": { "text": "Hello" } },
+        { "action": "applyBold" },
+        { "action": "typeText", "args": { "text": " World" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Hello World" } }
+      ]
+    },
+    {
+      "name": "State consistency after multiple operations",
+      "description": "Document state should be consistent after many operations",
+      "tags": ["state"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Start" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Middle" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "End" } },
+        { "action": "selectText", "args": { "text": "Middle" } },
+        { "action": "applyBold" },
+        { "action": "undo" },
+        { "action": "redo" },
+        { "action": "selectAll" },
+        { "action": "applyItalic" },
+        { "assert": "expectDocumentContains", "args": { "text": "Start" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Middle" } },
+        { "assert": "expectDocumentContains", "args": { "text": "End" } }
+      ]
+    },
+    {
+      "name": "Very long paragraph performance",
+      "description": "Very long paragraph should not cause performance issues",
+      "tags": ["performance"],
+      "timeout": 60000,
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        {
+          "action": "typeText",
+          "args": {
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+          }
+        },
+        { "action": "selectAll" },
+        { "action": "applyBold" },
+        { "assert": "expectReady" }
+      ]
+    }
+  ]
+}

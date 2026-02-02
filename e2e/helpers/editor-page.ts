@@ -1,0 +1,946 @@
+/**
+ * Page Object Model for the DOCX Editor
+ *
+ * Encapsulates all editor interactions for Playwright tests.
+ * Provides methods for navigation, text editing, formatting, tables, and assertions.
+ */
+
+import { Page, Locator, expect } from '@playwright/test';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/**
+ * Formatting options for text
+ */
+export interface FormattingOptions {
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strikethrough?: boolean;
+  fontFamily?: string;
+  fontSize?: number;
+  textColor?: string;
+  highlightColor?: string;
+}
+
+/**
+ * Table cell reference
+ */
+export interface CellRef {
+  tableIndex: number;
+  row: number;
+  col: number;
+}
+
+/**
+ * Selection range in the editor
+ */
+export interface SelectionRange {
+  startParagraph: number;
+  startOffset: number;
+  endParagraph: number;
+  endOffset: number;
+}
+
+/**
+ * EditorPage - Main Page Object Model for DOCX Editor testing
+ */
+export class EditorPage {
+  readonly page: Page;
+
+  // Main locators
+  readonly editor: Locator;
+  readonly toolbar: Locator;
+  readonly variablePanel: Locator;
+  readonly zoomControl: Locator;
+
+  // Toolbar button locators
+  readonly boldButton: Locator;
+  readonly italicButton: Locator;
+  readonly underlineButton: Locator;
+  readonly strikethroughButton: Locator;
+  readonly undoButton: Locator;
+  readonly redoButton: Locator;
+  readonly clearFormattingButton: Locator;
+
+  // Dialog locators
+  readonly findReplaceDialog: Locator;
+  readonly insertTableDialog: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+
+    // Main component locators
+    this.editor = page.locator('[data-testid="docx-editor"]');
+    this.toolbar = page.locator('[data-testid="toolbar"]');
+    this.variablePanel = page.locator('.variable-panel');
+    this.zoomControl = page.locator('.zoom-control');
+
+    // Toolbar buttons
+    this.boldButton = page.locator('[data-testid="toolbar-bold"]');
+    this.italicButton = page.locator('[data-testid="toolbar-italic"]');
+    this.underlineButton = page.locator('[data-testid="toolbar-underline"]');
+    this.strikethroughButton = page.locator('[data-testid="toolbar-strikethrough"]');
+    this.undoButton = page.locator('[data-testid="toolbar-undo"]');
+    this.redoButton = page.locator('[data-testid="toolbar-redo"]');
+    this.clearFormattingButton = page.locator('[data-testid="toolbar-clear-formatting"]');
+
+    // Dialogs
+    this.findReplaceDialog = page.locator('[data-testid="find-replace-dialog"]');
+    this.insertTableDialog = page.locator('[data-testid="insert-table-dialog"]');
+  }
+
+  // ============================================================================
+  // NAVIGATION
+  // ============================================================================
+
+  /**
+   * Navigate to the editor page
+   */
+  async goto(): Promise<void> {
+    await this.page.goto('/');
+  }
+
+  /**
+   * Wait for the editor to be ready
+   */
+  async waitForReady(): Promise<void> {
+    await this.page.waitForSelector('[data-testid="docx-editor"]', { timeout: 10000 });
+    // Wait for fonts to load
+    await this.page.waitForFunction(() => document.fonts.ready);
+    // Wait for any loading states to complete
+    await this.page.waitForTimeout(500);
+  }
+
+  /**
+   * Load a DOCX file via file input
+   */
+  async loadDocxFile(filePath: string): Promise<void> {
+    const absolutePath = path.isAbsolute(filePath)
+      ? filePath
+      : path.join(__dirname, '..', filePath);
+
+    // Find file input and upload
+    const fileInput = this.page.locator('input[type="file"]');
+    await fileInput.setInputFiles(absolutePath);
+
+    // Wait for document to load
+    await this.waitForReady();
+  }
+
+  // ============================================================================
+  // TEXT EDITING
+  // ============================================================================
+
+  /**
+   * Get the first editable content area
+   */
+  getContentArea(): Locator {
+    return this.page.locator('[contenteditable="true"]').first();
+  }
+
+  /**
+   * Get a specific paragraph by index (0-based)
+   */
+  getParagraph(index: number): Locator {
+    return this.page.locator(`[data-paragraph-index="${index}"]`);
+  }
+
+  /**
+   * Focus on a specific paragraph
+   */
+  async focusParagraph(index: number): Promise<void> {
+    const paragraph = this.getParagraph(index);
+    await paragraph.click();
+  }
+
+  /**
+   * Type text at the current cursor position
+   */
+  async typeText(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  /**
+   * Type text slowly (character by character)
+   */
+  async typeTextSlowly(text: string, delay: number = 50): Promise<void> {
+    for (const char of text) {
+      await this.page.keyboard.type(char);
+      await this.page.waitForTimeout(delay);
+    }
+  }
+
+  /**
+   * Press Enter to create a new paragraph
+   */
+  async pressEnter(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  /**
+   * Press Shift+Enter for soft line break
+   */
+  async pressShiftEnter(): Promise<void> {
+    await this.page.keyboard.press('Shift+Enter');
+  }
+
+  /**
+   * Press Backspace
+   */
+  async pressBackspace(): Promise<void> {
+    await this.page.keyboard.press('Backspace');
+  }
+
+  /**
+   * Press Delete
+   */
+  async pressDelete(): Promise<void> {
+    await this.page.keyboard.press('Delete');
+  }
+
+  /**
+   * Press Tab
+   */
+  async pressTab(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  /**
+   * Press Shift+Tab
+   */
+  async pressShiftTab(): Promise<void> {
+    await this.page.keyboard.press('Shift+Tab');
+  }
+
+  /**
+   * Select all text (Ctrl+A / Cmd+A)
+   */
+  async selectAll(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+a`);
+  }
+
+  /**
+   * Select specific text by searching for it in the document
+   */
+  async selectText(searchText: string): Promise<boolean> {
+    return await this.page.evaluate((text) => {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+
+      let node: Text | null;
+      while ((node = walker.nextNode() as Text | null)) {
+        const index = node.textContent?.indexOf(text) ?? -1;
+        if (index !== -1) {
+          const range = document.createRange();
+          range.setStart(node, index);
+          range.setEnd(node, index + text.length);
+
+          const selection = window.getSelection();
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+          return true;
+        }
+      }
+      return false;
+    }, searchText);
+  }
+
+  /**
+   * Select text by character range within a paragraph
+   */
+  async selectRange(paragraphIndex: number, startOffset: number, endOffset: number): Promise<void> {
+    await this.page.evaluate(
+      ({ pIndex, start, end }) => {
+        const paragraph = document.querySelector(`[data-paragraph-index="${pIndex}"]`);
+        if (!paragraph) return;
+
+        const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT, null);
+
+        let currentOffset = 0;
+        let startNode: Node | null = null;
+        let startNodeOffset = 0;
+        let endNode: Node | null = null;
+        let endNodeOffset = 0;
+
+        let node: Text | null;
+        while ((node = walker.nextNode() as Text | null)) {
+          const nodeLength = node.textContent?.length ?? 0;
+
+          if (!startNode && currentOffset + nodeLength >= start) {
+            startNode = node;
+            startNodeOffset = start - currentOffset;
+          }
+
+          if (!endNode && currentOffset + nodeLength >= end) {
+            endNode = node;
+            endNodeOffset = end - currentOffset;
+            break;
+          }
+
+          currentOffset += nodeLength;
+        }
+
+        if (startNode && endNode) {
+          const range = document.createRange();
+          range.setStart(startNode, startNodeOffset);
+          range.setEnd(endNode, endNodeOffset);
+
+          const selection = window.getSelection();
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        }
+      },
+      { pIndex: paragraphIndex, start: startOffset, end: endOffset }
+    );
+  }
+
+  /**
+   * Get the current selection text
+   */
+  async getSelectedText(): Promise<string> {
+    return await this.page.evaluate(() => {
+      return window.getSelection()?.toString() ?? '';
+    });
+  }
+
+  /**
+   * Copy selected text (Ctrl+C / Cmd+C)
+   */
+  async copy(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+c`);
+  }
+
+  /**
+   * Cut selected text (Ctrl+X / Cmd+X)
+   */
+  async cut(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+x`);
+  }
+
+  /**
+   * Paste from clipboard (Ctrl+V / Cmd+V)
+   */
+  async paste(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+v`);
+  }
+
+  // ============================================================================
+  // FORMATTING
+  // ============================================================================
+
+  /**
+   * Apply bold formatting via toolbar
+   */
+  async applyBold(): Promise<void> {
+    await this.boldButton.click();
+  }
+
+  /**
+   * Apply bold formatting via keyboard shortcut
+   */
+  async applyBoldShortcut(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+b`);
+  }
+
+  /**
+   * Apply italic formatting via toolbar
+   */
+  async applyItalic(): Promise<void> {
+    await this.italicButton.click();
+  }
+
+  /**
+   * Apply italic formatting via keyboard shortcut
+   */
+  async applyItalicShortcut(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+i`);
+  }
+
+  /**
+   * Apply underline formatting via toolbar
+   */
+  async applyUnderline(): Promise<void> {
+    await this.underlineButton.click();
+  }
+
+  /**
+   * Apply underline formatting via keyboard shortcut
+   */
+  async applyUnderlineShortcut(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+u`);
+  }
+
+  /**
+   * Apply strikethrough formatting via toolbar
+   */
+  async applyStrikethrough(): Promise<void> {
+    await this.strikethroughButton.click();
+  }
+
+  /**
+   * Clear all formatting
+   */
+  async clearFormatting(): Promise<void> {
+    await this.clearFormattingButton.click();
+  }
+
+  /**
+   * Set font family
+   */
+  async setFontFamily(fontFamily: string): Promise<void> {
+    // Click on font picker and select font
+    const fontPicker = this.toolbar.locator('.font-picker');
+    await fontPicker.click();
+    await this.page.locator(`text="${fontFamily}"`).click();
+  }
+
+  /**
+   * Set font size
+   */
+  async setFontSize(size: number): Promise<void> {
+    const fontSizePicker = this.toolbar.locator('.font-size-picker input');
+    await fontSizePicker.fill(size.toString());
+    await fontSizePicker.press('Enter');
+  }
+
+  /**
+   * Set text color
+   */
+  async setTextColor(color: string): Promise<void> {
+    const colorPicker = this.toolbar.locator('.text-color-picker');
+    await colorPicker.click();
+    // Select color from palette or input hex
+    const hexInput = this.page.locator('.color-picker-hex-input');
+    if (await hexInput.isVisible()) {
+      await hexInput.fill(color);
+      await hexInput.press('Enter');
+    }
+  }
+
+  /**
+   * Set highlight color
+   */
+  async setHighlightColor(color: string): Promise<void> {
+    const highlightPicker = this.toolbar.locator('.highlight-color-picker');
+    await highlightPicker.click();
+    // Select color from palette
+    await this.page.locator(`[data-color="${color}"]`).click();
+  }
+
+  // ============================================================================
+  // ALIGNMENT & LISTS
+  // ============================================================================
+
+  /**
+   * Align text left
+   */
+  async alignLeft(): Promise<void> {
+    await this.toolbar.locator('[aria-label="Align left"]').click();
+  }
+
+  /**
+   * Align text center
+   */
+  async alignCenter(): Promise<void> {
+    await this.toolbar.locator('[aria-label="Align center"]').click();
+  }
+
+  /**
+   * Align text right
+   */
+  async alignRight(): Promise<void> {
+    await this.toolbar.locator('[aria-label="Align right"]').click();
+  }
+
+  /**
+   * Justify text
+   */
+  async alignJustify(): Promise<void> {
+    await this.toolbar.locator('[aria-label="Justify"]').click();
+  }
+
+  /**
+   * Toggle bullet list
+   */
+  async toggleBulletList(): Promise<void> {
+    await this.toolbar.locator('[aria-label="Bullet list"]').click();
+  }
+
+  /**
+   * Toggle numbered list
+   */
+  async toggleNumberedList(): Promise<void> {
+    await this.toolbar.locator('[aria-label="Numbered list"]').click();
+  }
+
+  /**
+   * Indent paragraph/list item
+   */
+  async indent(): Promise<void> {
+    await this.toolbar.locator('[aria-label="Increase indent"]').click();
+  }
+
+  /**
+   * Outdent paragraph/list item
+   */
+  async outdent(): Promise<void> {
+    await this.toolbar.locator('[aria-label="Decrease indent"]').click();
+  }
+
+  // ============================================================================
+  // LINE SPACING
+  // ============================================================================
+
+  /**
+   * Set line spacing
+   */
+  async setLineSpacing(spacing: string): Promise<void> {
+    // Click on line spacing dropdown
+    const lineSpacingButton = this.toolbar.locator('[aria-label="Line spacing"]');
+    await lineSpacingButton.click();
+    // Select spacing value from dropdown
+    await this.page.locator(`[data-line-spacing="${spacing}"]`).click();
+  }
+
+  /**
+   * Set single line spacing
+   */
+  async setLineSpacingSingle(): Promise<void> {
+    await this.setLineSpacing('1.0');
+  }
+
+  /**
+   * Set 1.5 line spacing
+   */
+  async setLineSpacing15(): Promise<void> {
+    await this.setLineSpacing('1.5');
+  }
+
+  /**
+   * Set double line spacing
+   */
+  async setLineSpacingDouble(): Promise<void> {
+    await this.setLineSpacing('2.0');
+  }
+
+  // ============================================================================
+  // PARAGRAPH STYLES
+  // ============================================================================
+
+  /**
+   * Set paragraph style
+   */
+  async setParagraphStyle(style: string): Promise<void> {
+    // Click on style picker dropdown
+    const stylePicker = this.toolbar.locator('[data-testid="toolbar-styles"]');
+    await stylePicker.click();
+    // Select style from dropdown
+    await this.page.locator(`[data-style="${style}"]`).click();
+  }
+
+  /**
+   * Apply Normal style
+   */
+  async applyNormalStyle(): Promise<void> {
+    await this.setParagraphStyle('Normal');
+  }
+
+  /**
+   * Apply Heading 1 style
+   */
+  async applyHeading1(): Promise<void> {
+    await this.setParagraphStyle('Heading 1');
+  }
+
+  /**
+   * Apply Heading 2 style
+   */
+  async applyHeading2(): Promise<void> {
+    await this.setParagraphStyle('Heading 2');
+  }
+
+  /**
+   * Apply Heading 3 style
+   */
+  async applyHeading3(): Promise<void> {
+    await this.setParagraphStyle('Heading 3');
+  }
+
+  /**
+   * Apply Title style
+   */
+  async applyTitleStyle(): Promise<void> {
+    await this.setParagraphStyle('Title');
+  }
+
+  /**
+   * Apply Subtitle style
+   */
+  async applySubtitleStyle(): Promise<void> {
+    await this.setParagraphStyle('Subtitle');
+  }
+
+  // ============================================================================
+  // UNDO / REDO
+  // ============================================================================
+
+  /**
+   * Undo via toolbar
+   */
+  async undo(): Promise<void> {
+    await this.undoButton.click();
+  }
+
+  /**
+   * Undo via keyboard shortcut
+   */
+  async undoShortcut(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+z`);
+  }
+
+  /**
+   * Redo via toolbar
+   */
+  async redo(): Promise<void> {
+    await this.redoButton.click();
+  }
+
+  /**
+   * Redo via keyboard shortcut (Ctrl+Y or Ctrl+Shift+Z)
+   */
+  async redoShortcut(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+y`);
+  }
+
+  /**
+   * Check if undo is available
+   */
+  async isUndoAvailable(): Promise<boolean> {
+    return !(await this.undoButton.isDisabled());
+  }
+
+  /**
+   * Check if redo is available
+   */
+  async isRedoAvailable(): Promise<boolean> {
+    return !(await this.redoButton.isDisabled());
+  }
+
+  // ============================================================================
+  // TABLES
+  // ============================================================================
+
+  /**
+   * Insert a table with specified dimensions
+   */
+  async insertTable(rows: number, cols: number): Promise<void> {
+    // Open insert table dialog (usually via menu or button)
+    await this.page.locator('[aria-label="Insert table"]').click();
+
+    // Wait for dialog
+    await this.insertTableDialog.waitFor();
+
+    // Fill in dimensions
+    await this.page.locator('[data-testid="table-rows-input"]').fill(rows.toString());
+    await this.page.locator('[data-testid="table-cols-input"]').fill(cols.toString());
+
+    // Click insert
+    await this.page.locator('[data-testid="table-insert-button"]').click();
+
+    // Wait for dialog to close
+    await this.insertTableDialog.waitFor({ state: 'hidden' });
+  }
+
+  /**
+   * Click on a specific table cell
+   */
+  async clickTableCell(tableIndex: number, row: number, col: number): Promise<void> {
+    const table = this.page.locator('table').nth(tableIndex);
+    const cell = table.locator('tr').nth(row).locator('td, th').nth(col);
+    await cell.click();
+  }
+
+  /**
+   * Get table cell content
+   */
+  async getTableCellContent(tableIndex: number, row: number, col: number): Promise<string> {
+    const table = this.page.locator('table').nth(tableIndex);
+    const cell = table.locator('tr').nth(row).locator('td, th').nth(col);
+    return (await cell.textContent()) ?? '';
+  }
+
+  /**
+   * Count tables in the document
+   */
+  async getTableCount(): Promise<number> {
+    return await this.page.locator('table').count();
+  }
+
+  /**
+   * Get table dimensions (rows x cols)
+   */
+  async getTableDimensions(tableIndex: number): Promise<{ rows: number; cols: number }> {
+    const table = this.page.locator('table').nth(tableIndex);
+    const rows = await table.locator('tr').count();
+    const cols = await table.locator('tr').first().locator('td, th').count();
+    return { rows, cols };
+  }
+
+  // ============================================================================
+  // FIND & REPLACE
+  // ============================================================================
+
+  /**
+   * Open find dialog (Ctrl+F / Cmd+F)
+   */
+  async openFind(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+f`);
+    await this.findReplaceDialog.waitFor();
+  }
+
+  /**
+   * Open find & replace dialog (Ctrl+H / Cmd+H)
+   */
+  async openFindReplace(): Promise<void> {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+h`);
+    await this.findReplaceDialog.waitFor();
+  }
+
+  /**
+   * Perform find operation
+   */
+  async find(searchText: string): Promise<void> {
+    await this.page.locator('[data-testid="find-input"]').fill(searchText);
+    await this.page.locator('[data-testid="find-input"]').press('Enter');
+  }
+
+  /**
+   * Find next match
+   */
+  async findNext(): Promise<void> {
+    await this.page.locator('[aria-label="Find next"]').click();
+  }
+
+  /**
+   * Find previous match
+   */
+  async findPrevious(): Promise<void> {
+    await this.page.locator('[aria-label="Find previous"]').click();
+  }
+
+  /**
+   * Replace current match
+   */
+  async replace(replaceText: string): Promise<void> {
+    await this.page.locator('[data-testid="replace-input"]').fill(replaceText);
+    await this.page.locator('[data-testid="replace-button"]').click();
+  }
+
+  /**
+   * Replace all matches
+   */
+  async replaceAll(searchText: string, replaceText: string): Promise<void> {
+    await this.page.locator('[data-testid="find-input"]').fill(searchText);
+    await this.page.locator('[data-testid="replace-input"]').fill(replaceText);
+    await this.page.locator('[data-testid="replace-all-button"]').click();
+  }
+
+  /**
+   * Close find/replace dialog
+   */
+  async closeFindReplace(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+    await this.findReplaceDialog.waitFor({ state: 'hidden' });
+  }
+
+  // ============================================================================
+  // ZOOM
+  // ============================================================================
+
+  /**
+   * Set zoom level
+   */
+  async setZoom(level: number): Promise<void> {
+    const zoomInput = this.page.locator('.zoom-control input');
+    await zoomInput.fill(level.toString());
+    await zoomInput.press('Enter');
+  }
+
+  /**
+   * Zoom in
+   */
+  async zoomIn(): Promise<void> {
+    await this.page.locator('.zoom-control [aria-label="Zoom in"]').click();
+  }
+
+  /**
+   * Zoom out
+   */
+  async zoomOut(): Promise<void> {
+    await this.page.locator('.zoom-control [aria-label="Zoom out"]').click();
+  }
+
+  // ============================================================================
+  // ASSERTIONS
+  // ============================================================================
+
+  /**
+   * Assert the editor is visible and ready
+   */
+  async expectReady(): Promise<void> {
+    await expect(this.editor).toBeVisible();
+  }
+
+  /**
+   * Assert document has specific paragraph count
+   */
+  async expectParagraphCount(count: number): Promise<void> {
+    const paragraphs = this.page.locator('[data-paragraph-index]');
+    await expect(paragraphs).toHaveCount(count);
+  }
+
+  /**
+   * Assert paragraph contains text
+   */
+  async expectParagraphText(index: number, expectedText: string): Promise<void> {
+    const paragraph = this.getParagraph(index);
+    await expect(paragraph).toContainText(expectedText);
+  }
+
+  /**
+   * Assert text is bold (has bold styling)
+   */
+  async expectTextBold(text: string): Promise<boolean> {
+    return await this.page.evaluate((searchText) => {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+
+      let node: Text | null;
+      while ((node = walker.nextNode() as Text | null)) {
+        if (node.textContent?.includes(searchText)) {
+          let element = node.parentElement;
+          while (element) {
+            const style = window.getComputedStyle(element);
+            if (style.fontWeight === 'bold' || parseInt(style.fontWeight) >= 700) {
+              return true;
+            }
+            if (element.tagName === 'STRONG' || element.tagName === 'B') {
+              return true;
+            }
+            element = element.parentElement;
+          }
+        }
+      }
+      return false;
+    }, text);
+  }
+
+  /**
+   * Assert text is italic (has italic styling)
+   */
+  async expectTextItalic(text: string): Promise<boolean> {
+    return await this.page.evaluate((searchText) => {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+
+      let node: Text | null;
+      while ((node = walker.nextNode() as Text | null)) {
+        if (node.textContent?.includes(searchText)) {
+          let element = node.parentElement;
+          while (element) {
+            const style = window.getComputedStyle(element);
+            if (style.fontStyle === 'italic') {
+              return true;
+            }
+            if (element.tagName === 'EM' || element.tagName === 'I') {
+              return true;
+            }
+            element = element.parentElement;
+          }
+        }
+      }
+      return false;
+    }, text);
+  }
+
+  /**
+   * Assert toolbar button is active
+   */
+  async expectToolbarButtonActive(buttonName: string): Promise<void> {
+    const button = this.toolbar.locator(`[data-testid="toolbar-${buttonName}"]`);
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+  }
+
+  /**
+   * Assert toolbar button is not active
+   */
+  async expectToolbarButtonInactive(buttonName: string): Promise<void> {
+    const button = this.toolbar.locator(`[data-testid="toolbar-${buttonName}"]`);
+    await expect(button).toHaveAttribute('aria-pressed', 'false');
+  }
+
+  /**
+   * Get the document text content
+   */
+  async getDocumentText(): Promise<string> {
+    const contentArea = this.getContentArea();
+    return (await contentArea.textContent()) ?? '';
+  }
+
+  /**
+   * Assert document contains text
+   */
+  async expectDocumentContains(text: string): Promise<void> {
+    const contentArea = this.getContentArea();
+    await expect(contentArea).toContainText(text);
+  }
+
+  /**
+   * Assert document does not contain text
+   */
+  async expectDocumentNotContains(text: string): Promise<void> {
+    const contentArea = this.getContentArea();
+    await expect(contentArea).not.toContainText(text);
+  }
+
+  /**
+   * Take a screenshot for visual comparison
+   */
+  async takeScreenshot(name: string): Promise<void> {
+    await this.page.screenshot({ path: `screenshots/${name}.png`, fullPage: true });
+  }
+
+  /**
+   * Wait for any animations to complete
+   */
+  async waitForAnimations(): Promise<void> {
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Focus the editor content area
+   */
+  async focus(): Promise<void> {
+    const contentArea = this.getContentArea();
+    await contentArea.focus();
+  }
+
+  /**
+   * Blur the editor (click outside)
+   */
+  async blur(): Promise<void> {
+    await this.page.click('body', { position: { x: 0, y: 0 } });
+  }
+}

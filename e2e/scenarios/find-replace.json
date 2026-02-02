@@ -1,0 +1,204 @@
+{
+  "description": "Find and Replace scenarios for the DOCX editor",
+  "defaultCategory": "find-replace",
+  "defaultTags": ["core", "find-replace"],
+  "scenarios": [
+    {
+      "name": "Find existing text",
+      "description": "Find text that exists in the document",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello World" } },
+        { "action": "openFind" },
+        { "action": "find", "args": { "searchText": "World" } },
+        { "assert": "expectDocumentContains", "args": { "text": "World" } }
+      ]
+    },
+    {
+      "name": "Find non-existing text",
+      "description": "Search for text that doesn't exist should show no results",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello World" } },
+        { "action": "openFind" },
+        { "action": "find", "args": { "searchText": "NotFound" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Hello World" } }
+      ]
+    },
+    {
+      "name": "Find next occurrence",
+      "description": "Navigate to next occurrence of search text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test one Test two Test three" } },
+        { "action": "openFind" },
+        { "action": "find", "args": { "searchText": "Test" } },
+        { "action": "findNext" },
+        { "assert": "expectDocumentContains", "args": { "text": "Test" } }
+      ]
+    },
+    {
+      "name": "Find previous occurrence",
+      "description": "Navigate to previous occurrence of search text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test one Test two Test three" } },
+        { "action": "openFind" },
+        { "action": "find", "args": { "searchText": "Test" } },
+        { "action": "findNext" },
+        { "action": "findPrevious" },
+        { "assert": "expectDocumentContains", "args": { "text": "Test" } }
+      ]
+    },
+    {
+      "name": "Replace single occurrence",
+      "description": "Replace the current match with new text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "old text here" } },
+        { "action": "openFindReplace" },
+        { "action": "find", "args": { "searchText": "old" } },
+        { "action": "replace", "args": { "replaceText": "new" } },
+        { "action": "closeFindReplace" },
+        { "assert": "expectDocumentContains", "args": { "text": "new text here" } }
+      ]
+    },
+    {
+      "name": "Replace all occurrences",
+      "description": "Replace all matches with new text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "cat cat cat dog" } },
+        { "action": "openFindReplace" },
+        { "action": "replaceAll", "args": { "searchText": "cat", "replaceText": "bird" } },
+        { "action": "closeFindReplace" },
+        { "assert": "expectDocumentContains", "args": { "text": "bird bird bird dog" } }
+      ]
+    },
+    {
+      "name": "Replace with empty string",
+      "description": "Replace text with empty string (delete)",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Remove this text" } },
+        { "action": "openFindReplace" },
+        { "action": "replaceAll", "args": { "searchText": " this", "replaceText": "" } },
+        { "action": "closeFindReplace" },
+        { "assert": "expectDocumentContains", "args": { "text": "Remove text" } }
+      ]
+    },
+    {
+      "name": "Close find dialog with Escape",
+      "description": "Pressing Escape should close the find dialog",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test text" } },
+        { "action": "openFind" },
+        { "action": "closeFindReplace" },
+        { "assert": "expectDocumentContains", "args": { "text": "Test text" } }
+      ]
+    },
+    {
+      "name": "Find case sensitive",
+      "description": "Case sensitive search should only find exact matches",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test TEST test" } },
+        { "action": "openFind" },
+        { "action": "find", "args": { "searchText": "Test" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Test" } }
+      ]
+    },
+    {
+      "name": "Find and replace preserves document",
+      "description": "Find/replace should not corrupt the document",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello wonderful world" } },
+        { "action": "openFindReplace" },
+        { "action": "find", "args": { "searchText": "wonderful" } },
+        { "action": "replace", "args": { "replaceText": "amazing" } },
+        { "action": "closeFindReplace" },
+        { "assert": "expectDocumentContains", "args": { "text": "Hello" } },
+        { "assert": "expectDocumentContains", "args": { "text": "amazing" } },
+        { "assert": "expectDocumentContains", "args": { "text": "world" } }
+      ]
+    },
+    {
+      "name": "Undo after replace",
+      "description": "Undo should revert a replace operation",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "original text" } },
+        { "action": "openFindReplace" },
+        { "action": "replaceAll", "args": { "searchText": "original", "replaceText": "changed" } },
+        { "action": "closeFindReplace" },
+        { "assert": "expectDocumentContains", "args": { "text": "changed text" } },
+        { "action": "undo" },
+        { "assert": "expectDocumentContains", "args": { "text": "original text" } }
+      ]
+    },
+    {
+      "name": "Find special characters",
+      "description": "Find text with special characters",
+      "tags": ["special"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello (world) [test]" } },
+        { "action": "openFind" },
+        { "action": "find", "args": { "searchText": "(world)" } },
+        { "assert": "expectDocumentContains", "args": { "text": "(world)" } }
+      ]
+    },
+    {
+      "name": "Find at beginning of document",
+      "description": "Find text at the start of document",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "First word and more" } },
+        { "action": "openFind" },
+        { "action": "find", "args": { "searchText": "First" } },
+        { "assert": "expectDocumentContains", "args": { "text": "First" } }
+      ]
+    },
+    {
+      "name": "Find at end of document",
+      "description": "Find text at the end of document",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Some text and last" } },
+        { "action": "openFind" },
+        { "action": "find", "args": { "searchText": "last" } },
+        { "assert": "expectDocumentContains", "args": { "text": "last" } }
+      ]
+    }
+  ]
+}

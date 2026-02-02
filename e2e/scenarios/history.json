@@ -1,0 +1,213 @@
+{
+  "description": "Undo/Redo history scenarios for the DOCX editor",
+  "defaultCategory": "history",
+  "defaultTags": ["core", "undo-redo"],
+  "scenarios": [
+    {
+      "name": "Undo typing",
+      "description": "Undo should revert typed text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Hello" } },
+        { "action": "undo" },
+        { "assert": "expectDocumentNotContains", "args": { "text": "Hello" } }
+      ]
+    },
+    {
+      "name": "Redo typing",
+      "description": "Redo should restore undone text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello" } },
+        { "action": "undo" },
+        { "assert": "expectDocumentNotContains", "args": { "text": "Hello" } },
+        { "action": "redo" },
+        { "assert": "expectDocumentContains", "args": { "text": "Hello" } }
+      ]
+    },
+    {
+      "name": "Undo formatting",
+      "description": "Undo should revert formatting changes",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Bold text" } },
+        { "action": "selectText", "args": { "text": "Bold" } },
+        { "action": "applyBold" },
+        { "assert": "expectTextBold", "args": { "text": "Bold" } },
+        { "action": "undo" },
+        { "assert": "expectTextNotBold", "args": { "text": "Bold" } }
+      ]
+    },
+    {
+      "name": "Multiple undos in sequence",
+      "description": "Multiple undos should work sequentially",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "One" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Two" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Three" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Three" } },
+        { "action": "undo" },
+        { "assert": "expectDocumentNotContains", "args": { "text": "Three" } },
+        { "action": "undo" },
+        { "action": "undo" },
+        { "assert": "expectDocumentNotContains", "args": { "text": "Two" } }
+      ]
+    },
+    {
+      "name": "Undo Ctrl+Z shortcut",
+      "description": "Ctrl+Z keyboard shortcut should undo",
+      "tags": ["shortcut"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Shortcut test" } },
+        { "action": "undoShortcut" },
+        { "assert": "expectDocumentNotContains", "args": { "text": "Shortcut test" } }
+      ]
+    },
+    {
+      "name": "Redo Ctrl+Y shortcut",
+      "description": "Ctrl+Y keyboard shortcut should redo",
+      "tags": ["shortcut"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Shortcut test" } },
+        { "action": "undoShortcut" },
+        { "action": "redoShortcut" },
+        { "assert": "expectDocumentContains", "args": { "text": "Shortcut test" } }
+      ]
+    },
+    {
+      "name": "New action clears redo stack",
+      "description": "Performing a new action after undo should clear redo stack",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Original" } },
+        { "action": "undo" },
+        { "action": "typeText", "args": { "text": "New text" } },
+        { "action": "redo" },
+        { "assert": "expectDocumentNotContains", "args": { "text": "Original" } },
+        { "assert": "expectDocumentContains", "args": { "text": "New text" } }
+      ]
+    },
+    {
+      "name": "Undo at empty history does nothing",
+      "description": "Undo when there's nothing to undo should not crash",
+      "tags": ["edge-case"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "undo" },
+        { "action": "undo" },
+        { "action": "undo" },
+        { "assert": "expectReady" }
+      ]
+    },
+    {
+      "name": "Redo at empty history does nothing",
+      "description": "Redo when there's nothing to redo should not crash",
+      "tags": ["edge-case"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "redo" },
+        { "action": "redo" },
+        { "action": "redo" },
+        { "assert": "expectReady" }
+      ]
+    },
+    {
+      "name": "Undo button disabled when no history",
+      "description": "Undo button should be disabled when there's nothing to undo",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "assert": "expectUndoNotAvailable" }
+      ]
+    },
+    {
+      "name": "Redo button disabled when no history",
+      "description": "Redo button should be disabled when there's nothing to redo",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "assert": "expectRedoNotAvailable" }
+      ]
+    },
+    {
+      "name": "Undo button enabled after action",
+      "description": "Undo button should be enabled after performing an action",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test" } },
+        { "assert": "expectUndoAvailable" }
+      ]
+    },
+    {
+      "name": "Redo button enabled after undo",
+      "description": "Redo button should be enabled after performing an undo",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test" } },
+        { "action": "undo" },
+        { "assert": "expectRedoAvailable" }
+      ]
+    },
+    {
+      "name": "Fast undo/redo sequence",
+      "description": "Rapidly pressing undo/redo should not cause issues",
+      "tags": ["edge-case", "performance"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test" } },
+        { "action": "undo" },
+        { "action": "redo" },
+        { "action": "undo" },
+        { "action": "redo" },
+        { "action": "undo" },
+        { "action": "redo" },
+        { "assert": "expectDocumentContains", "args": { "text": "Test" } }
+      ]
+    },
+    {
+      "name": "Undo delete operation",
+      "description": "Undo should restore deleted text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Delete me" } },
+        { "action": "selectAll" },
+        { "action": "pressBackspace" },
+        { "assert": "expectDocumentNotContains", "args": { "text": "Delete me" } },
+        { "action": "undo" },
+        { "assert": "expectDocumentContains", "args": { "text": "Delete me" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,285 @@
+{
+  "description": "Text editing scenarios for the DOCX editor",
+  "defaultCategory": "text-editing",
+  "defaultTags": ["core", "text"],
+  "scenarios": [
+    {
+      "name": "Type single character",
+      "description": "Basic test: type a single character",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "a" } },
+        { "assert": "expectDocumentContains", "args": { "text": "a" } }
+      ]
+    },
+    {
+      "name": "Type a sentence",
+      "description": "Type a complete sentence",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello world." } },
+        { "assert": "expectDocumentContains", "args": { "text": "Hello world." } }
+      ]
+    },
+    {
+      "name": "Type special characters",
+      "description": "Type various special characters",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "!@#$%^&*()_+-=[]{}|;':\",./<>?" } },
+        { "assert": "expectDocumentContains", "args": { "text": "!@#$%^&*()" } }
+      ]
+    },
+    {
+      "name": "Type unicode characters",
+      "description": "Type unicode characters including emojis",
+      "tags": ["unicode"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Unicode test: äöü ñ 日本語 中文 한국어" } },
+        { "assert": "expectDocumentContains", "args": { "text": "日本語" } }
+      ]
+    },
+    {
+      "name": "Press Enter creates new paragraph",
+      "description": "Pressing Enter should create a new paragraph",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "First paragraph" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Second paragraph" } },
+        { "assert": "expectDocumentContains", "args": { "text": "First paragraph" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Second paragraph" } }
+      ]
+    },
+    {
+      "name": "Press Shift+Enter creates soft break",
+      "description": "Pressing Shift+Enter should create a soft line break within the same paragraph",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Line 1" } },
+        { "action": "pressShiftEnter" },
+        { "action": "typeText", "args": { "text": "Line 2" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Line 1" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Line 2" } }
+      ]
+    },
+    {
+      "name": "Multiple Enter presses",
+      "description": "Multiple Enter presses should create multiple paragraphs",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Para 1" } },
+        { "action": "pressEnter" },
+        { "action": "pressEnter" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Para 2" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Para 1" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Para 2" } }
+      ]
+    },
+    {
+      "name": "Backspace deletes character",
+      "description": "Backspace should delete the character before the cursor",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello" } },
+        { "action": "pressBackspace" },
+        { "assert": "expectDocumentContains", "args": { "text": "Hell" } },
+        { "assert": "expectDocumentNotContains", "args": { "text": "Hello" } }
+      ]
+    },
+    {
+      "name": "Delete key removes character",
+      "description": "Delete key should remove the character after the cursor",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello" } },
+        { "action": "pressKey", "args": { "key": "Home" } },
+        { "action": "pressDelete" },
+        { "assert": "expectDocumentContains", "args": { "text": "ello" } }
+      ]
+    },
+    {
+      "name": "Backspace deletes selected text",
+      "description": "Backspace with selection should delete the selected text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello World" } },
+        { "action": "selectText", "args": { "text": "World" } },
+        { "action": "pressBackspace" },
+        { "assert": "expectDocumentContains", "args": { "text": "Hello " } },
+        { "assert": "expectDocumentNotContains", "args": { "text": "World" } }
+      ]
+    },
+    {
+      "name": "Select all with Ctrl+A",
+      "description": "Ctrl+A should select all text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test text" } },
+        { "action": "selectAll" },
+        { "assert": "expectSelectedText", "args": { "text": "Test text" } }
+      ]
+    },
+    {
+      "name": "Select specific text",
+      "description": "Select a specific word in the document",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "The quick brown fox" } },
+        { "action": "selectText", "args": { "text": "quick" } },
+        { "assert": "expectSelectedText", "args": { "text": "quick" } }
+      ]
+    },
+    {
+      "name": "Copy and paste text",
+      "description": "Copy selected text and paste it",
+      "tags": ["clipboard"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Copy me" } },
+        { "action": "selectAll" },
+        { "action": "copy" },
+        { "action": "pressKey", "args": { "key": "End" } },
+        { "action": "typeText", "args": { "text": " - " } },
+        { "action": "paste" },
+        { "assert": "expectDocumentContains", "args": { "text": "Copy me - Copy me" } }
+      ]
+    },
+    {
+      "name": "Cut and paste text",
+      "description": "Cut selected text and paste it elsewhere",
+      "tags": ["clipboard"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "ABC" } },
+        { "action": "selectText", "args": { "text": "B" } },
+        { "action": "cut" },
+        { "action": "pressKey", "args": { "key": "End" } },
+        { "action": "paste" },
+        { "assert": "expectDocumentContains", "args": { "text": "ACB" } }
+      ]
+    },
+    {
+      "name": "Paste replaces selection",
+      "description": "Pasting with selection should replace the selected text",
+      "tags": ["clipboard"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "OLD" } },
+        { "action": "selectAll" },
+        { "action": "copy" },
+        { "action": "pressKey", "args": { "key": "End" } },
+        { "action": "typeText", "args": { "text": " NEW" } },
+        { "action": "selectText", "args": { "text": "NEW" } },
+        { "action": "paste" },
+        { "assert": "expectDocumentContains", "args": { "text": "OLD OLD" } }
+      ]
+    },
+    {
+      "name": "Type after selection replaces",
+      "description": "Typing with text selected should replace the selection",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Replace this" } },
+        { "action": "selectText", "args": { "text": "this" } },
+        { "action": "typeText", "args": { "text": "that" } },
+        { "assert": "expectDocumentContains", "args": { "text": "Replace that" } }
+      ]
+    },
+    {
+      "name": "Arrow key navigation",
+      "description": "Arrow keys should move the cursor",
+      "tags": ["navigation"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Test" } },
+        { "action": "pressKey", "args": { "key": "ArrowLeft" } },
+        { "action": "pressKey", "args": { "key": "ArrowLeft" } },
+        { "action": "typeText", "args": { "text": "X" } },
+        { "assert": "expectDocumentContains", "args": { "text": "TeXst" } }
+      ]
+    },
+    {
+      "name": "Home key moves to start",
+      "description": "Home key should move cursor to start of line",
+      "tags": ["navigation"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello" } },
+        { "action": "pressKey", "args": { "key": "Home" } },
+        { "action": "typeText", "args": { "text": "X" } },
+        { "assert": "expectDocumentContains", "args": { "text": "XHello" } }
+      ]
+    },
+    {
+      "name": "End key moves to end",
+      "description": "End key should move cursor to end of line",
+      "tags": ["navigation"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello" } },
+        { "action": "pressKey", "args": { "key": "Home" } },
+        { "action": "pressKey", "args": { "key": "End" } },
+        { "action": "typeText", "args": { "text": "X" } },
+        { "assert": "expectDocumentContains", "args": { "text": "HelloX" } }
+      ]
+    },
+    {
+      "name": "Very long text input",
+      "description": "Test handling of very long text input",
+      "tags": ["edge-case", "performance"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        {
+          "action": "typeText",
+          "args": {
+            "text": "This is a very long paragraph that contains many words and should test the editor's ability to handle longer text content without any issues or performance problems. The text continues on and on to ensure proper handling."
+          }
+        },
+        { "assert": "expectDocumentContains", "args": { "text": "This is a very long paragraph" } }
+      ]
+    }
+  ]
+}

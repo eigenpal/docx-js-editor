@@ -1,0 +1,333 @@
+{
+  "description": "Text formatting scenarios for the DOCX editor",
+  "defaultCategory": "formatting",
+  "defaultTags": ["core", "formatting"],
+  "scenarios": [
+    {
+      "name": "Apply bold via toolbar",
+      "description": "Apply bold formatting using the toolbar button",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Bold text" } },
+        { "action": "selectText", "args": { "text": "Bold" } },
+        { "action": "applyBold" },
+        { "assert": "expectTextBold", "args": { "text": "Bold" } }
+      ]
+    },
+    {
+      "name": "Apply bold via Ctrl+B",
+      "description": "Apply bold formatting using keyboard shortcut",
+      "tags": ["shortcut"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Bold shortcut" } },
+        { "action": "selectText", "args": { "text": "shortcut" } },
+        { "action": "applyBoldShortcut" },
+        { "assert": "expectTextBold", "args": { "text": "shortcut" } }
+      ]
+    },
+    {
+      "name": "Toggle bold off",
+      "description": "Toggle bold formatting off after applying it",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Toggle bold" } },
+        { "action": "selectText", "args": { "text": "bold" } },
+        { "action": "applyBold" },
+        { "assert": "expectTextBold", "args": { "text": "bold" } },
+        { "action": "applyBold" },
+        { "assert": "expectTextNotBold", "args": { "text": "bold" } }
+      ]
+    },
+    {
+      "name": "Bold partial word",
+      "description": "Apply bold to only part of a word",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Hello" } },
+        {
+          "action": "selectRange",
+          "args": { "paragraphIndex": 0, "startOffset": 0, "endOffset": 2 }
+        },
+        { "action": "applyBold" },
+        { "assert": "expectTextBold", "args": { "text": "He" } }
+      ]
+    },
+    {
+      "name": "Apply italic via toolbar",
+      "description": "Apply italic formatting using the toolbar button",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Italic text" } },
+        { "action": "selectText", "args": { "text": "Italic" } },
+        { "action": "applyItalic" },
+        { "assert": "expectTextItalic", "args": { "text": "Italic" } }
+      ]
+    },
+    {
+      "name": "Apply italic via Ctrl+I",
+      "description": "Apply italic formatting using keyboard shortcut",
+      "tags": ["shortcut"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Italic shortcut" } },
+        { "action": "selectText", "args": { "text": "shortcut" } },
+        { "action": "applyItalicShortcut" },
+        { "assert": "expectTextItalic", "args": { "text": "shortcut" } }
+      ]
+    },
+    {
+      "name": "Apply underline via toolbar",
+      "description": "Apply underline formatting using the toolbar button",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Underline text" } },
+        { "action": "selectText", "args": { "text": "Underline" } },
+        { "action": "applyUnderline" },
+        { "assert": "expectTextUnderlined", "args": { "text": "Underline" } }
+      ]
+    },
+    {
+      "name": "Apply underline via Ctrl+U",
+      "description": "Apply underline formatting using keyboard shortcut",
+      "tags": ["shortcut"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Underline shortcut" } },
+        { "action": "selectText", "args": { "text": "shortcut" } },
+        { "action": "applyUnderlineShortcut" },
+        { "assert": "expectTextUnderlined", "args": { "text": "shortcut" } }
+      ]
+    },
+    {
+      "name": "Apply strikethrough",
+      "description": "Apply strikethrough formatting using the toolbar button",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Strike text" } },
+        { "action": "selectText", "args": { "text": "Strike" } },
+        { "action": "applyStrikethrough" },
+        { "assert": "expectTextStrikethrough", "args": { "text": "Strike" } }
+      ]
+    },
+    {
+      "name": "Bold + Italic combined",
+      "description": "Apply both bold and italic to the same text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Combined formatting" } },
+        { "action": "selectText", "args": { "text": "Combined" } },
+        { "action": "applyBold" },
+        { "action": "applyItalic" },
+        { "assert": "expectTextBold", "args": { "text": "Combined" } },
+        { "assert": "expectTextItalic", "args": { "text": "Combined" } }
+      ]
+    },
+    {
+      "name": "Bold + Italic + Underline",
+      "description": "Apply bold, italic, and underline to the same text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Triple formatting" } },
+        { "action": "selectText", "args": { "text": "Triple" } },
+        { "action": "applyBold" },
+        { "action": "applyItalic" },
+        { "action": "applyUnderline" },
+        { "assert": "expectTextBold", "args": { "text": "Triple" } },
+        { "assert": "expectTextItalic", "args": { "text": "Triple" } },
+        { "assert": "expectTextUnderlined", "args": { "text": "Triple" } }
+      ]
+    },
+    {
+      "name": "Clear formatting button",
+      "description": "Clear all formatting from selected text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Formatted text" } },
+        { "action": "selectText", "args": { "text": "Formatted" } },
+        { "action": "applyBold" },
+        { "action": "applyItalic" },
+        { "assert": "expectTextBold", "args": { "text": "Formatted" } },
+        { "action": "clearFormatting" },
+        { "assert": "expectTextNotBold", "args": { "text": "Formatted" } }
+      ]
+    },
+    {
+      "name": "Align center",
+      "description": "Align paragraph to center",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Centered text" } },
+        { "action": "focusParagraph", "args": { "index": 0 } },
+        { "action": "alignCenter" },
+        { "assert": "expectParagraphAlignment", "args": { "index": 0, "alignment": "center" } }
+      ]
+    },
+    {
+      "name": "Align right",
+      "description": "Align paragraph to right",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Right aligned text" } },
+        { "action": "focusParagraph", "args": { "index": 0 } },
+        { "action": "alignRight" },
+        { "assert": "expectParagraphAlignment", "args": { "index": 0, "alignment": "right" } }
+      ]
+    },
+    {
+      "name": "Justify text",
+      "description": "Justify paragraph",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        {
+          "action": "typeText",
+          "args": {
+            "text": "This is justified text that should span the full width of the paragraph when justified."
+          }
+        },
+        { "action": "focusParagraph", "args": { "index": 0 } },
+        { "action": "alignJustify" },
+        { "assert": "expectParagraphAlignment", "args": { "index": 0, "alignment": "justify" } }
+      ]
+    },
+    {
+      "name": "Create bullet list",
+      "description": "Convert paragraph to bullet list",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "List item" } },
+        { "action": "focusParagraph", "args": { "index": 0 } },
+        { "action": "toggleBulletList" },
+        { "assert": "expectParagraphIsList", "args": { "index": 0, "listType": "bullet" } }
+      ]
+    },
+    {
+      "name": "Create numbered list",
+      "description": "Convert paragraph to numbered list",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Numbered item" } },
+        { "action": "focusParagraph", "args": { "index": 0 } },
+        { "action": "toggleNumberedList" },
+        { "assert": "expectParagraphIsList", "args": { "index": 0, "listType": "numbered" } }
+      ]
+    },
+    {
+      "name": "Remove list formatting",
+      "description": "Toggle list off to return to normal paragraph",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "List item" } },
+        { "action": "focusParagraph", "args": { "index": 0 } },
+        { "action": "toggleBulletList" },
+        { "assert": "expectParagraphIsList", "args": { "index": 0, "listType": "bullet" } },
+        { "action": "toggleBulletList" },
+        { "assert": "expectDocumentContains", "args": { "text": "List item" } }
+      ]
+    },
+    {
+      "name": "Indent list item",
+      "description": "Increase indent level of a list item",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Nested item" } },
+        { "action": "focusParagraph", "args": { "index": 0 } },
+        { "action": "toggleBulletList" },
+        { "action": "indent" },
+        { "assert": "expectDocumentContains", "args": { "text": "Nested item" } }
+      ]
+    },
+    {
+      "name": "Toolbar reflects bold state",
+      "description": "Bold button should show active state when cursor is in bold text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Bold text" } },
+        { "action": "selectText", "args": { "text": "Bold" } },
+        { "action": "applyBold" },
+        { "action": "selectText", "args": { "text": "Bold" } },
+        { "assert": "expectToolbarButtonActive", "args": { "buttonName": "bold" } }
+      ]
+    },
+    {
+      "name": "Toolbar reflects italic state",
+      "description": "Italic button should show active state when cursor is in italic text",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Italic text" } },
+        { "action": "selectText", "args": { "text": "Italic" } },
+        { "action": "applyItalic" },
+        { "action": "selectText", "args": { "text": "Italic" } },
+        { "assert": "expectToolbarButtonActive", "args": { "buttonName": "italic" } }
+      ]
+    },
+    {
+      "name": "Bold then type extends formatting",
+      "description": "After applying bold and typing, new text should also be bold",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "typeText", "args": { "text": "Start " } },
+        { "action": "applyBold" },
+        { "action": "typeText", "args": { "text": "bold" } },
+        { "assert": "expectTextBold", "args": { "text": "bold" } }
+      ]
+    },
+    {
+      "name": "Format with no selection",
+      "description": "Applying format with no selection should toggle for next typed text",
+      "tags": ["edge-case"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "applyBold" },
+        { "action": "typeText", "args": { "text": "Bold" } },
+        { "assert": "expectTextBold", "args": { "text": "Bold" } }
+      ]
+    }
+  ]
+}

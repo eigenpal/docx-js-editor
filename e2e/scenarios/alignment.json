@@ -1,0 +1,186 @@
+{
+  "name": "Alignment Tests",
+  "description": "Tests for text alignment functionality",
+  "scenarios": [
+    {
+      "name": "Align text left",
+      "tags": ["alignment", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Left aligned text" } },
+        { "action": "alignLeft" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "left" }]
+    },
+    {
+      "name": "Align text center",
+      "tags": ["alignment", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Centered text" } },
+        { "action": "alignCenter" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "center" }]
+    },
+    {
+      "name": "Align text right",
+      "tags": ["alignment", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Right aligned text" } },
+        { "action": "alignRight" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "right" }]
+    },
+    {
+      "name": "Justify text",
+      "tags": ["alignment", "core"],
+      "steps": [
+        {
+          "action": "typeText",
+          "args": {
+            "text": "This is a longer paragraph that should be justified to show how text stretches across the full width of the document when justify alignment is applied."
+          }
+        },
+        { "action": "alignJustify" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "justify" }]
+    },
+    {
+      "name": "Change alignment from left to center",
+      "tags": ["alignment", "toggle"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Toggle alignment" } },
+        { "action": "alignLeft" },
+        { "action": "alignCenter" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "center" }]
+    },
+    {
+      "name": "Change alignment from center to right",
+      "tags": ["alignment", "toggle"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Toggle alignment" } },
+        { "action": "alignCenter" },
+        { "action": "alignRight" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "right" }]
+    },
+    {
+      "name": "Change alignment from right to justify",
+      "tags": ["alignment", "toggle"],
+      "steps": [
+        {
+          "action": "typeText",
+          "args": {
+            "text": "This is a longer text to test justify alignment properly after switching from right alignment."
+          }
+        },
+        { "action": "alignRight" },
+        { "action": "alignJustify" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "justify" }]
+    },
+    {
+      "name": "Align multiple paragraphs",
+      "tags": ["alignment", "multiple"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "First paragraph" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Second paragraph" } },
+        { "action": "selectAll" },
+        { "action": "alignCenter" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "center" }]
+    },
+    {
+      "name": "Different alignments per paragraph",
+      "tags": ["alignment", "multiple"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Left paragraph" } },
+        { "action": "alignLeft" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Center paragraph" } },
+        { "action": "alignCenter" },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Right paragraph" } },
+        { "action": "alignRight" }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Left paragraph" },
+        { "type": "containsText", "expected": "Center paragraph" },
+        { "type": "containsText", "expected": "Right paragraph" }
+      ]
+    },
+    {
+      "name": "Alignment with formatting",
+      "tags": ["alignment", "combined"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Bold centered text" } },
+        { "action": "selectAll" },
+        { "action": "applyBold" },
+        { "action": "alignCenter" }
+      ],
+      "assertions": [
+        { "type": "alignment", "expected": "center" },
+        { "type": "isBold", "expected": true }
+      ]
+    },
+    {
+      "name": "Undo alignment change",
+      "tags": ["alignment", "undo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Undo alignment test" } },
+        { "action": "alignCenter" },
+        { "action": "undo" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Undo alignment test" }]
+    },
+    {
+      "name": "Redo alignment change",
+      "tags": ["alignment", "redo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Redo alignment test" } },
+        { "action": "alignCenter" },
+        { "action": "undo" },
+        { "action": "redo" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "center" }]
+    },
+    {
+      "name": "Center alignment with font change",
+      "tags": ["alignment", "font", "combined"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Styled centered text" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Georgia" } },
+        { "action": "alignCenter" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "center" }]
+    },
+    {
+      "name": "Right alignment with color",
+      "tags": ["alignment", "color", "combined"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Colored right text" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#FF0000" } },
+        { "action": "alignRight" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "right" }]
+    },
+    {
+      "name": "Justify with large font",
+      "tags": ["alignment", "font", "combined"],
+      "steps": [
+        {
+          "action": "typeText",
+          "args": {
+            "text": "This is a larger text that should be justified and displayed in a bigger font size to test combined formatting."
+          }
+        },
+        { "action": "selectAll" },
+        { "action": "setFontSize", "args": { "size": 18 } },
+        { "action": "alignJustify" }
+      ],
+      "assertions": [{ "type": "alignment", "expected": "justify" }]
+    }
+  ]
+}

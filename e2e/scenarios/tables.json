@@ -1,0 +1,260 @@
+{
+  "description": "Table operation scenarios for the DOCX editor",
+  "defaultCategory": "tables",
+  "defaultTags": ["core", "tables"],
+  "scenarios": [
+    {
+      "name": "Type in table cell",
+      "description": "Type text in a table cell",
+      "tags": ["basic"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 3, "cols": 3 } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 0, "col": 0 } },
+        { "action": "typeText", "args": { "text": "Cell content" } },
+        {
+          "assert": "expectTableCellText",
+          "args": { "tableIndex": 0, "row": 0, "col": 0, "text": "Cell content" }
+        }
+      ]
+    },
+    {
+      "name": "Tab moves to next cell",
+      "description": "Pressing Tab should move to the next table cell",
+      "tags": ["navigation"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 2, "cols": 2 } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 0, "col": 0 } },
+        { "action": "typeText", "args": { "text": "A" } },
+        { "action": "pressTab" },
+        { "action": "typeText", "args": { "text": "B" } },
+        {
+          "assert": "expectTableCellText",
+          "args": { "tableIndex": 0, "row": 0, "col": 0, "text": "A" }
+        },
+        {
+          "assert": "expectTableCellText",
+          "args": { "tableIndex": 0, "row": 0, "col": 1, "text": "B" }
+        }
+      ]
+    },
+    {
+      "name": "Shift+Tab moves to previous cell",
+      "description": "Pressing Shift+Tab should move to the previous table cell",
+      "tags": ["navigation"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 2, "cols": 2 } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 0, "col": 1 } },
+        { "action": "typeText", "args": { "text": "B" } },
+        { "action": "pressShiftTab" },
+        { "action": "typeText", "args": { "text": "A" } },
+        {
+          "assert": "expectTableCellText",
+          "args": { "tableIndex": 0, "row": 0, "col": 0, "text": "A" }
+        },
+        {
+          "assert": "expectTableCellText",
+          "args": { "tableIndex": 0, "row": 0, "col": 1, "text": "B" }
+        }
+      ]
+    },
+    {
+      "name": "Format text in table cell",
+      "description": "Apply formatting to text in a table cell",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 2, "cols": 2 } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 0, "col": 0 } },
+        { "action": "typeText", "args": { "text": "Bold cell" } },
+        { "action": "selectText", "args": { "text": "Bold" } },
+        { "action": "applyBold" },
+        { "assert": "expectTextBold", "args": { "text": "Bold" } }
+      ]
+    },
+    {
+      "name": "Multiple cells with content",
+      "description": "Fill multiple cells with different content",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 2, "cols": 2 } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 0, "col": 0 } },
+        { "action": "typeText", "args": { "text": "A1" } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 0, "col": 1 } },
+        { "action": "typeText", "args": { "text": "B1" } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 1, "col": 0 } },
+        { "action": "typeText", "args": { "text": "A2" } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 1, "col": 1 } },
+        { "action": "typeText", "args": { "text": "B2" } },
+        {
+          "assert": "expectTableCellText",
+          "args": { "tableIndex": 0, "row": 0, "col": 0, "text": "A1" }
+        },
+        {
+          "assert": "expectTableCellText",
+          "args": { "tableIndex": 0, "row": 0, "col": 1, "text": "B1" }
+        },
+        {
+          "assert": "expectTableCellText",
+          "args": { "tableIndex": 0, "row": 1, "col": 0, "text": "A2" }
+        },
+        {
+          "assert": "expectTableCellText",
+          "args": { "tableIndex": 0, "row": 1, "col": 1, "text": "B2" }
+        }
+      ]
+    },
+    {
+      "name": "Table count assertion",
+      "description": "Verify table count in document",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "assert": "expectTableCount", "args": { "count": 0 } },
+        { "action": "insertTable", "args": { "rows": 2, "cols": 2 } },
+        { "assert": "expectTableCount", "args": { "count": 1 } }
+      ]
+    },
+    {
+      "name": "Table dimensions assertion",
+      "description": "Verify table dimensions",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 4, "cols": 5 } },
+        { "assert": "expectTableDimensions", "args": { "tableIndex": 0, "rows": 4, "cols": 5 } }
+      ]
+    },
+    {
+      "name": "Small 1x1 table",
+      "description": "Insert minimal 1x1 table",
+      "tags": ["edge-case"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 1, "cols": 1 } },
+        { "assert": "expectTableCount", "args": { "count": 1 } },
+        { "assert": "expectTableDimensions", "args": { "tableIndex": 0, "rows": 1, "cols": 1 } }
+      ]
+    },
+    {
+      "name": "Larger table",
+      "description": "Insert a larger table",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 10, "cols": 5 } },
+        { "assert": "expectTableDimensions", "args": { "tableIndex": 0, "rows": 10, "cols": 5 } }
+      ]
+    },
+    {
+      "name": "Undo table insert",
+      "description": "Undo should remove inserted table",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 2, "cols": 2 } },
+        { "assert": "expectTableCount", "args": { "count": 1 } },
+        { "action": "undo" },
+        { "assert": "expectTableCount", "args": { "count": 0 } }
+      ]
+    },
+    {
+      "name": "Redo table insert",
+      "description": "Redo should restore removed table",
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 2, "cols": 2 } },
+        { "action": "undo" },
+        { "assert": "expectTableCount", "args": { "count": 0 } },
+        { "action": "redo" },
+        { "assert": "expectTableCount", "args": { "count": 1 } }
+      ]
+    },
+    {
+      "name": "Navigate with arrow keys",
+      "description": "Arrow keys should navigate between cells",
+      "tags": ["navigation"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 2, "cols": 2 } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 0, "col": 0 } },
+        { "action": "typeText", "args": { "text": "Start" } },
+        {
+          "assert": "expectTableCellText",
+          "args": { "tableIndex": 0, "row": 0, "col": 0, "text": "Start" }
+        }
+      ]
+    },
+    {
+      "name": "Tab at last cell creates new row",
+      "description": "Pressing Tab in the last cell should create a new row",
+      "tags": ["edge-case"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 1, "cols": 2 } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 0, "col": 1 } },
+        { "action": "typeText", "args": { "text": "Last" } },
+        { "action": "pressTab" },
+        { "assert": "expectTableDimensions", "args": { "tableIndex": 0, "rows": 2, "cols": 2 } }
+      ]
+    },
+    {
+      "name": "Backspace in empty cell",
+      "description": "Backspace in empty cell should not cause issues",
+      "tags": ["edge-case"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 2, "cols": 2 } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 0, "col": 0 } },
+        { "action": "pressBackspace" },
+        { "action": "pressBackspace" },
+        { "action": "pressBackspace" },
+        { "assert": "expectTableCount", "args": { "count": 1 } }
+      ]
+    },
+    {
+      "name": "Table with long content",
+      "description": "Table cell with long text content",
+      "tags": ["edge-case"],
+      "steps": [
+        { "action": "goto" },
+        { "action": "waitForReady" },
+        { "action": "focus" },
+        { "action": "insertTable", "args": { "rows": 2, "cols": 2 } },
+        { "action": "clickTableCell", "args": { "tableIndex": 0, "row": 0, "col": 0 } },
+        {
+          "action": "typeText",
+          "args": {
+            "text": "This is a very long text that should be contained within a single table cell and may wrap to multiple lines"
+          }
+        },
+        { "assert": "expectDocumentContains", "args": { "text": "This is a very long text" } }
+      ]
+    }
+  ]
+}

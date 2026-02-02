@@ -1,0 +1,194 @@
+{
+  "name": "Color Tests",
+  "description": "Tests for text color and highlight color functionality",
+  "scenarios": [
+    {
+      "name": "Set text color to red",
+      "tags": ["color", "text-color", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Red text" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#FF0000" } }
+      ],
+      "assertions": [{ "type": "textColor", "expected": "#FF0000" }]
+    },
+    {
+      "name": "Set text color to blue",
+      "tags": ["color", "text-color", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Blue text" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#0000FF" } }
+      ],
+      "assertions": [{ "type": "textColor", "expected": "#0000FF" }]
+    },
+    {
+      "name": "Set text color to green",
+      "tags": ["color", "text-color"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Green text" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#00FF00" } }
+      ],
+      "assertions": [{ "type": "textColor", "expected": "#00FF00" }]
+    },
+    {
+      "name": "Set text color to custom hex",
+      "tags": ["color", "text-color", "custom"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Custom color" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#FF5733" } }
+      ],
+      "assertions": [{ "type": "textColor", "expected": "#FF5733" }]
+    },
+    {
+      "name": "Set text color to black",
+      "tags": ["color", "text-color"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Black text" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#000000" } }
+      ],
+      "assertions": [{ "type": "textColor", "expected": "#000000" }]
+    },
+    {
+      "name": "Set text color on partial selection",
+      "tags": ["color", "text-color", "selection"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Hello World" } },
+        { "action": "selectText", "args": { "text": "World" } },
+        { "action": "setTextColor", "args": { "color": "#FF0000" } }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Hello World" }]
+    },
+    {
+      "name": "Set highlight color to yellow",
+      "tags": ["color", "highlight", "core"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Highlighted text" } },
+        { "action": "selectAll" },
+        { "action": "setHighlightColor", "args": { "color": "yellow" } }
+      ],
+      "assertions": [{ "type": "highlightColor", "expected": "yellow" }]
+    },
+    {
+      "name": "Set highlight color to cyan",
+      "tags": ["color", "highlight"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Cyan highlight" } },
+        { "action": "selectAll" },
+        { "action": "setHighlightColor", "args": { "color": "cyan" } }
+      ],
+      "assertions": [{ "type": "highlightColor", "expected": "cyan" }]
+    },
+    {
+      "name": "Set highlight color to magenta",
+      "tags": ["color", "highlight"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Magenta highlight" } },
+        { "action": "selectAll" },
+        { "action": "setHighlightColor", "args": { "color": "magenta" } }
+      ],
+      "assertions": [{ "type": "highlightColor", "expected": "magenta" }]
+    },
+    {
+      "name": "Set highlight color to green",
+      "tags": ["color", "highlight"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Green highlight" } },
+        { "action": "selectAll" },
+        { "action": "setHighlightColor", "args": { "color": "green" } }
+      ],
+      "assertions": [{ "type": "highlightColor", "expected": "green" }]
+    },
+    {
+      "name": "Highlight on partial selection",
+      "tags": ["color", "highlight", "selection"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Hello World" } },
+        { "action": "selectText", "args": { "text": "World" } },
+        { "action": "setHighlightColor", "args": { "color": "yellow" } }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Hello World" }]
+    },
+    {
+      "name": "Combined text color and highlight",
+      "tags": ["color", "combined"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Combined colors" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#0000FF" } },
+        { "action": "setHighlightColor", "args": { "color": "yellow" } }
+      ],
+      "assertions": [
+        { "type": "textColor", "expected": "#0000FF" },
+        { "type": "highlightColor", "expected": "yellow" }
+      ]
+    },
+    {
+      "name": "Text color with bold formatting",
+      "tags": ["color", "combined"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Bold red text" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#FF0000" } },
+        { "action": "applyBold" }
+      ],
+      "assertions": [
+        { "type": "textColor", "expected": "#FF0000" },
+        { "type": "isBold", "expected": true }
+      ]
+    },
+    {
+      "name": "Multiple colors in document",
+      "tags": ["color", "multiple"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Red text" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#FF0000" } },
+        { "action": "pressEnter" },
+        { "action": "typeText", "args": { "text": "Blue text" } },
+        { "action": "selectText", "args": { "text": "Blue text" } },
+        { "action": "setTextColor", "args": { "color": "#0000FF" } }
+      ],
+      "assertions": [
+        { "type": "containsText", "expected": "Red text" },
+        { "type": "containsText", "expected": "Blue text" }
+      ]
+    },
+    {
+      "name": "Undo text color change",
+      "tags": ["color", "undo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Undo color test" } },
+        { "action": "selectAll" },
+        { "action": "setTextColor", "args": { "color": "#FF0000" } },
+        { "action": "undo" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Undo color test" }]
+    },
+    {
+      "name": "Undo highlight change",
+      "tags": ["color", "highlight", "undo"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Undo highlight test" } },
+        { "action": "selectAll" },
+        { "action": "setHighlightColor", "args": { "color": "yellow" } },
+        { "action": "undo" }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Undo highlight test" }]
+    },
+    {
+      "name": "Color with different font",
+      "tags": ["color", "font", "combined"],
+      "steps": [
+        { "action": "typeText", "args": { "text": "Colored font test" } },
+        { "action": "selectAll" },
+        { "action": "setFontFamily", "args": { "fontFamily": "Georgia" } },
+        { "action": "setTextColor", "args": { "color": "#8B4513" } }
+      ],
+      "assertions": [{ "type": "containsText", "expected": "Colored font test" }]
+    }
+  ]
+}

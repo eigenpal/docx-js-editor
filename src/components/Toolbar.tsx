@@ -20,6 +20,9 @@ import { ListButtons, type ListState, createDefaultListState } from './ui/ListBu
 import { LineSpacingPicker } from './ui/LineSpacingPicker';
 import { StylePicker } from './ui/StylePicker';
 import { MaterialSymbol } from './ui/MaterialSymbol';
+import { Button } from './ui/Button';
+import { Tooltip } from './ui/Tooltip';
+import { cn } from '../lib/utils';
 
 // ============================================================================
 // TYPES
@@ -172,66 +175,14 @@ export interface ToolbarGroupProps {
 // STYLES
 // ============================================================================
 
-const TOOLBAR_STYLE: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '4px',
-  padding: '8px 16px',
-  backgroundColor: 'transparent',
-  borderBottom: '1px solid #e0e0e0',
-  flexWrap: 'wrap',
-  minHeight: '44px',
-  boxSizing: 'border-box',
-};
-
-const TOOLBAR_GROUP_STYLE: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '4px',
-  padding: '0 8px',
-  borderRight: '1px solid #e0e0e0',
-  marginRight: '4px',
-};
-
-const TOOLBAR_BUTTON_STYLE: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '32px',
-  height: '32px',
-  padding: '0',
-  border: 'none',
-  borderRadius: '4px',
-  backgroundColor: 'transparent',
-  cursor: 'pointer',
-  fontSize: '14px',
-  fontWeight: 'normal',
-  color: '#5f6368',
-  transition: 'background-color 0.1s',
-};
-
-const TOOLBAR_BUTTON_ACTIVE_STYLE: CSSProperties = {
-  ...TOOLBAR_BUTTON_STYLE,
-  backgroundColor: '#e8f0fe',
-  color: '#1967d2',
-};
-
-const TOOLBAR_BUTTON_DISABLED_STYLE: CSSProperties = {
-  ...TOOLBAR_BUTTON_STYLE,
-  opacity: 0.38,
-  cursor: 'default',
-};
-
-const TOOLBAR_BUTTON_HOVER_STYLE: CSSProperties = {
-  backgroundColor: 'rgba(0, 0, 0, 0.06)',
-};
+// Toolbar uses Tailwind classes now - see the component JSX for styling
 
 // ============================================================================
 // SUBCOMPONENTS
 // ============================================================================
 
 /**
- * Individual toolbar button
+ * Individual toolbar button with shadcn styling
  */
 export function ToolbarButton({
   active = false,
@@ -242,16 +193,6 @@ export function ToolbarButton({
   className,
   ariaLabel,
 }: ToolbarButtonProps) {
-  const [isHovered, setIsHovered] = React.useState(false);
-
-  const buttonStyle: CSSProperties = disabled
-    ? TOOLBAR_BUTTON_DISABLED_STYLE
-    : active
-      ? TOOLBAR_BUTTON_ACTIVE_STYLE
-      : isHovered
-        ? { ...TOOLBAR_BUTTON_STYLE, ...TOOLBAR_BUTTON_HOVER_STYLE }
-        : TOOLBAR_BUTTON_STYLE;
-
   // Generate testid from ariaLabel or title
   const testId =
     ariaLabel?.toLowerCase().replace(/\s+/g, '-') ||
@@ -261,33 +202,43 @@ export function ToolbarButton({
       .replace(/\([^)]*\)/g, '')
       .trim();
 
-  return (
-    <button
-      type="button"
-      className={`docx-toolbar-button ${active ? 'active' : ''} ${disabled ? 'disabled' : ''} ${className || ''}`}
-      style={buttonStyle}
-      title={title}
+  const button = (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      className={cn(
+        'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+        active && 'bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700',
+        disabled && 'opacity-40 cursor-not-allowed',
+        className
+      )}
       onClick={disabled ? undefined : onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       disabled={disabled}
       aria-pressed={active}
       aria-label={ariaLabel || title}
       data-testid={testId ? `toolbar-${testId}` : undefined}
     >
       {children}
-    </button>
+    </Button>
   );
+
+  if (title) {
+    return <Tooltip content={title}>{button}</Tooltip>;
+  }
+
+  return button;
 }
 
 /**
- * Toolbar button group with separator
+ * Toolbar button group with modern styling
  */
 export function ToolbarGroup({ label, children, className }: ToolbarGroupProps) {
   return (
     <div
-      className={`docx-toolbar-group ${className || ''}`}
-      style={TOOLBAR_GROUP_STYLE}
+      className={cn(
+        'flex items-center gap-0.5 px-1.5 border-r border-slate-200 mr-1.5 last:border-r-0 last:mr-0',
+        className
+      )}
       role="group"
       aria-label={label}
     >
@@ -300,18 +251,7 @@ export function ToolbarGroup({ label, children, className }: ToolbarGroupProps) 
  * Toolbar separator
  */
 export function ToolbarSeparator() {
-  return (
-    <div
-      className="docx-toolbar-separator"
-      style={{
-        width: '1px',
-        height: '24px',
-        backgroundColor: '#e0e0e0',
-        margin: '0 4px',
-      }}
-      role="separator"
-    />
-  );
+  return <div className="w-px h-6 bg-slate-200 mx-1.5" role="separator" />;
 }
 
 // ============================================================================
@@ -581,8 +521,12 @@ export function Toolbar({
   return (
     <div
       ref={toolbarRef}
-      className={`docx-toolbar ${className || ''}`}
-      style={{ ...TOOLBAR_STYLE, ...style }}
+      className={cn(
+        'flex items-center gap-1 px-3 py-2 bg-white border-b border-slate-200 flex-wrap min-h-[48px]',
+        'shadow-sm',
+        className
+      )}
+      style={style}
       role="toolbar"
       aria-label="Formatting toolbar"
       data-testid="toolbar"
