@@ -6241,3 +6241,57 @@ Created `src/components/dialogs/InsertTableDialog.tsx` with visual grid selector
 - bun build exits 0: ✓
 
 ---
+
+### US-141: Add Insert Image functionality
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/dialogs/InsertImageDialog.tsx` for inserting images into documents.
+
+**Main Component:**
+- `InsertImageDialog` - Modal dialog for uploading and inserting images
+
+**Features:**
+- File input for image selection
+- Drag and drop support with visual feedback
+- Image preview after selection
+- Width/height controls with aspect ratio lock
+- Alt text input for accessibility
+- File size validation (max 10MB)
+- Auto-scaling to fit within max dimensions
+
+**Types:**
+- `ImageData` - Image data with src, width, height, alt, fileName, mimeType
+- `InsertImageDialogProps` - Component props
+
+**Icons:**
+- `ImageIcon` - Placeholder icon for drop zone
+- `LockIcon` - Lock/unlock icon for aspect ratio toggle
+
+**Hook:**
+- `useInsertImageDialog()` - State management hook with `isOpen`, `open`, `close`, `toggle`
+
+**Utility Functions:**
+- `isValidImageFile(file)` - Check if file is valid image
+- `getSupportedImageExtensions()` - Get list of supported extensions
+- `getImageAcceptString()` - Get accept string for file input
+- `calculateFitDimensions(w, h, maxW, maxH)` - Scale to fit bounds
+- `dataUrlToBlob(dataUrl)` - Convert data URL to Blob
+- `getImageDimensions(src)` - Get image dimensions from URL
+- `formatFileSize(bytes)` - Format bytes for display
+
+**Props:**
+- `isOpen` - Dialog visibility
+- `onClose` - Close callback
+- `onInsert` - Insert callback with ImageData
+- `maxWidth` - Max width in pixels (default: 800)
+- `maxHeight` - Max height in pixels (default: 600)
+- `accept` - Accepted file types (default: image/*)
+
+**Exports Added to `src/index.ts`:**
+- Component, props, types, hook, and all utility functions
+
+**Verified:**
+- bun build exits 0: ✓
+
+---

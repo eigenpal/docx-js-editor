@@ -226,6 +226,19 @@ export {
   formatTableDimensions,
   getTablePresets,
 } from './components/dialogs/InsertTableDialog';
+export {
+  InsertImageDialog,
+  type InsertImageDialogProps,
+  type ImageData,
+  useInsertImageDialog,
+  isValidImageFile,
+  getSupportedImageExtensions,
+  getImageAcceptString,
+  calculateFitDimensions,
+  dataUrlToBlob,
+  getImageDimensions,
+  formatFileSize,
+} from './components/dialogs/InsertImageDialog';
 
 // ============================================================================
 // TYPES
