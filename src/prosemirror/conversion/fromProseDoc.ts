@@ -116,7 +116,9 @@ function paragraphAttrsToFormatting(attrs: ParagraphAttrs): ParagraphFormatting 
     attrs.indentRight ||
     attrs.indentFirstLine ||
     attrs.numPr ||
-    attrs.styleId;
+    attrs.styleId ||
+    attrs.borders ||
+    attrs.shading;
 
   if (!hasFormatting) {
     return undefined;
@@ -134,6 +136,8 @@ function paragraphAttrsToFormatting(attrs: ParagraphAttrs): ParagraphFormatting 
     hangingIndent: attrs.hangingIndent || undefined,
     numPr: attrs.numPr || undefined,
     styleId: attrs.styleId || undefined,
+    borders: attrs.borders || undefined,
+    shading: attrs.shading || undefined,
   };
 }
 

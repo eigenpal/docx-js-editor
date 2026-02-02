@@ -9,7 +9,12 @@
  */
 
 import type { NodeSpec } from 'prosemirror-model';
-import type { ParagraphAlignment, LineSpacingRule } from '../../types/document';
+import type {
+  ParagraphAlignment,
+  LineSpacingRule,
+  BorderSpec,
+  ShadingProperties,
+} from '../../types/document';
 import { paragraphToStyle } from '../../utils/formatToStyle';
 
 /**
@@ -43,6 +48,19 @@ export interface ParagraphAttrs {
 
   // Style reference
   styleId?: string;
+
+  // Borders
+  borders?: {
+    top?: BorderSpec;
+    bottom?: BorderSpec;
+    left?: BorderSpec;
+    right?: BorderSpec;
+    between?: BorderSpec;
+    bar?: BorderSpec;
+  };
+
+  // Background/Shading
+  shading?: ShadingProperties;
 }
 
 /**
@@ -71,6 +89,8 @@ function paragraphAttrsToDOMStyle(attrs: ParagraphAttrs): string {
     indentRight: attrs.indentRight,
     indentFirstLine: attrs.indentFirstLine,
     hangingIndent: attrs.hangingIndent,
+    borders: attrs.borders,
+    shading: attrs.shading,
   };
 
   const style = paragraphToStyle(formatting);
@@ -137,6 +157,12 @@ export const paragraph: NodeSpec = {
 
     // Style reference
     styleId: { default: null },
+
+    // Borders
+    borders: { default: null },
+
+    // Background/Shading
+    shading: { default: null },
   },
   parseDOM: [
     {

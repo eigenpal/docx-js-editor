@@ -127,6 +127,8 @@ function paragraphFormattingToAttrs(
     attrs.indentRight = formatting?.indentRight ?? stylePpr?.indentRight;
     attrs.indentFirstLine = formatting?.indentFirstLine ?? stylePpr?.indentFirstLine;
     attrs.hangingIndent = formatting?.hangingIndent ?? stylePpr?.hangingIndent;
+    attrs.borders = formatting?.borders ?? stylePpr?.borders;
+    attrs.shading = formatting?.shading ?? stylePpr?.shading;
 
     // If style defines numPr but inline doesn't, use style's numPr
     if (!formatting?.numPr && stylePpr?.numPr) {
@@ -143,6 +145,8 @@ function paragraphFormattingToAttrs(
     attrs.indentRight = formatting?.indentRight;
     attrs.indentFirstLine = formatting?.indentFirstLine;
     attrs.hangingIndent = formatting?.hangingIndent;
+    attrs.borders = formatting?.borders;
+    attrs.shading = formatting?.shading;
   }
 
   return attrs;
