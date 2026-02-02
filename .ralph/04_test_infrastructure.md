@@ -54,7 +54,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 - [x] **Fix underline formatting application** - All 4 underline tests pass (toolbar button and Ctrl+U). Verify: `npx playwright test --grep "apply underline" --timeout=30000`
 
-- [ ] **Fix strikethrough formatting application** - Verify: `npx playwright test --grep "strikethrough" --timeout=30000`
+- [x] **Fix strikethrough formatting application** - All 2 strikethrough tests pass (toolbar button and scenario). Verify: `npx playwright test --grep "strikethrough" --timeout=30000`
 
 - [ ] **Fix superscript formatting** - Verify: `npx playwright test --grep "superscript" --timeout=30000`
 
