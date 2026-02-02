@@ -234,6 +234,21 @@ export {
   getAllPositions as getAllIndicatorPositions,
   createChangeTracker,
 } from './components/ui/UnsavedIndicator';
+export {
+  LoadingIndicator,
+  type LoadingIndicatorProps,
+  type LoadingVariant,
+  type LoadingSize,
+  type UseLoadingOptions,
+  type UseLoadingReturn,
+  type LoadingOperation,
+  useLoading,
+  useLoadingOperations,
+  getLoadingVariantLabel,
+  getAllLoadingVariants,
+  getAllLoadingSizes,
+  delay,
+} from './components/ui/LoadingIndicator';
 
 // ============================================================================
 // DIALOGS
