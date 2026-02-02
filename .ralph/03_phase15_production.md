@@ -57,7 +57,7 @@
 ## Category 5: Insert Operations
 
 - [x] US-140: Add Insert Table dialog - P1 - Row/col selector for new tables
-- [ ] US-141: Add Insert Image functionality - P2 - Insert images from file
+- [x] US-141: Add Insert Image functionality - P2 - Insert images from file
 - [ ] US-142: Add Insert Hyperlink dialog - P2 - Insert/edit hyperlinks
 - [ ] US-143: Add Insert Page Break - P2 - Insert page break at cursor
 - [ ] US-144: Add Insert Horizontal Rule - P3 - Insert horizontal line
