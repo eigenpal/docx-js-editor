@@ -252,6 +252,8 @@ test.describe('Alignment Undo/Redo', () => {
 
   test('undo alignment change', async ({ page }) => {
     await editor.typeText('Undo alignment test');
+    // Wait for ProseMirror history group delay (default 500ms) to expire
+    await page.waitForTimeout(600);
     await editor.alignCenter();
     await editor.undo();
 
@@ -269,17 +271,22 @@ test.describe('Alignment Undo/Redo', () => {
 
   test('multiple undo alignment changes', async ({ page }) => {
     await editor.typeText('Multiple undo');
-    await editor.alignLeft();
+    // Wait for ProseMirror history group delay to expire
+    await page.waitForTimeout(600);
     await editor.alignCenter();
+    // Wait between alignment changes to create separate history entries
+    await page.waitForTimeout(600);
     await editor.alignRight();
-    await editor.undo();
-    await editor.undo();
+    await editor.undo(); // Undo align right
+    await editor.undo(); // Undo align center
 
     await assertions.assertDocumentContainsText(page, 'Multiple undo');
   });
 
   test('undo and redo sequence', async ({ page }) => {
     await editor.typeText('Sequence test');
+    // Wait for ProseMirror history group delay to expire
+    await page.waitForTimeout(600);
     await editor.alignCenter();
     await editor.undo();
     await editor.alignRight();

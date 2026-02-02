@@ -23,6 +23,7 @@ import type { SelectionContext } from '../types/agentApi';
 
 // Import ProseMirror CSS
 import 'prosemirror-view/style/prosemirror.css';
+import './editor.css';
 
 // ============================================================================
 // TYPES
@@ -155,9 +156,11 @@ function extractSelectionState(state: EditorState): SelectionState | null {
     }
   });
 
-  // Get current text formatting from marks at cursor
+  // Get current text formatting from marks at selection
   const textFormatting: TextFormatting = {};
-  const marks = state.storedMarks || (empty ? selection.$from.marks() : []);
+  // For empty selection (cursor), use stored marks or marks at cursor position
+  // For non-empty selection, check marks at the start of selection
+  const marks = state.storedMarks || selection.$from.marks();
 
   for (const mark of marks) {
     switch (mark.type.name) {
