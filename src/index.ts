@@ -469,3 +469,34 @@ export {
   describeShortcut,
   getNavigationShortcutDescriptions,
 } from './utils/keyboardNavigation';
+
+// Clipboard utilities
+export {
+  useClipboard,
+  createSelectionFromDOM,
+  getSelectionRuns,
+  type ClipboardSelection,
+  type UseClipboardOptions,
+  type UseClipboardReturn,
+} from './hooks/useClipboard';
+
+export {
+  copyRuns,
+  copyParagraphs,
+  readFromClipboard,
+  handlePasteEvent,
+  htmlToRuns,
+  cleanWordHtml,
+  isWordHtml,
+  isEditorHtml,
+  createClipboardHandlers,
+  runsToClipboardContent,
+  paragraphsToClipboardContent,
+  writeToClipboard,
+  parseClipboardHtml,
+  INTERNAL_CLIPBOARD_TYPE,
+  CLIPBOARD_TYPES,
+  type ClipboardContent,
+  type ParsedClipboardContent,
+  type ClipboardOptions,
+} from './utils/clipboard';

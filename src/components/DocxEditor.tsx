@@ -114,6 +114,12 @@ export interface DocxEditorProps {
   printOptions?: PrintOptions;
   /** Callback when print is triggered */
   onPrint?: () => void;
+  /** Callback when content is copied */
+  onCopy?: () => void;
+  /** Callback when content is cut */
+  onCut?: () => void;
+  /** Callback when content is pasted */
+  onPaste?: () => void;
 }
 
 /**
@@ -210,6 +216,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     showPrintButton = true,
     printOptions,
     onPrint,
+    onCopy,
+    onCut,
+    onPaste,
   },
   ref
 ) {
@@ -1081,6 +1090,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                   onTableCellClick={tableSelection.handleCellClick}
                   isTableCellSelected={tableSelection.isCellSelected}
                   onPageChange={handlePageChange}
+                  onCopy={onCopy}
+                  onCut={onCut}
+                  onPaste={onPaste}
                 />
 
                 {/* Page navigation / indicator */}
