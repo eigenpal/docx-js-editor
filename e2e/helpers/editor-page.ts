@@ -618,11 +618,11 @@ export class EditorPage {
    * Set paragraph style
    */
   async setParagraphStyle(style: string): Promise<void> {
-    // Click on style picker dropdown
-    const stylePicker = this.toolbar.locator('[data-testid="toolbar-styles"]');
+    // Click on style picker dropdown (uses Radix Select with aria-label)
+    const stylePicker = this.toolbar.locator('[aria-label="Select paragraph style"]');
     await stylePicker.click();
-    // Select style from dropdown
-    await this.page.locator(`[data-style="${style}"]`).click();
+    // Select style from dropdown using role="option" with exact text match
+    await this.page.getByRole('option', { name: style, exact: true }).click();
   }
 
   /**

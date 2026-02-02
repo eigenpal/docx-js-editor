@@ -42,7 +42,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 - [x] **Fix line spacing picker selector** - Tests use `[aria-label="Line spacing"]` and `[data-line-spacing="..."]`. Verify these match. Verify: `npx playwright test --grep "line spacing" --timeout=30000`
 
-- [ ] **Fix style picker selector** - Tests use `[data-testid="toolbar-styles"]` and `[data-style="..."]`. Verify these exist. Verify: `npx playwright test --grep "Heading 1" --timeout=30000`
+- [x] **Fix style picker selector** - Tests use `[data-testid="toolbar-styles"]` and `[data-style="..."]`. Verify these exist. Verify: `npx playwright test --grep "Heading 1" --timeout=30000`
 
 ---
 

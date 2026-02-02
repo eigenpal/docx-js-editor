@@ -7950,3 +7950,46 @@ Fixed the line spacing picker selector in `e2e/helpers/editor-page.ts` for the L
 - `npx playwright test --grep "spacing with single word"` - test passes ✓
 
 ---
+
+### Test Infrastructure: Fix style picker selector
+
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Fixed the style picker selector in `e2e/helpers/editor-page.ts` for the StylePicker component.
+
+**Issue:**
+
+- Tests used `[data-testid="toolbar-styles"]` selector for the style picker trigger
+- Tests used `[data-style="${style}"]` selector for style options
+- Actual component uses `aria-label="Select paragraph style"` on the SelectTrigger
+- Radix Select renders options with `role="option"` and displays the style name as text
+
+**Fix:**
+
+- Updated `setParagraphStyle()` method:
+  - Changed trigger selector from `[data-testid="toolbar-styles"]` to `[aria-label="Select paragraph style"]`
+  - Changed option selector from `[data-style="${style}"]` to `getByRole('option', { name: style, exact: true })`
+
+**Test Results:**
+
+- 24 of 32 paragraph-styles.spec.ts tests pass:
+  - ✓ apply Heading 1 style
+  - ✓ apply Heading 2 style
+  - ✓ apply Heading 3 style
+  - ✓ apply Normal style
+  - ✓ apply Title style
+  - ✓ apply Subtitle style
+  - ✓ change from Normal to Heading 1
+  - ✓ change from Heading 1 to Normal
+  - ✓ change from Heading 1 to Heading 2
+  - ✓ many more...
+- 8 failures are **functional issues** (Enter key not creating new paragraphs, undo not working) - not selector issues
+
+**Verified:**
+
+- bun run typecheck: ✓
+- bun build exits 0: ✓
+- `npx playwright test --grep "apply Heading 1 style" e2e/tests/paragraph-styles.spec.ts` - test passes ✓
+
+---
