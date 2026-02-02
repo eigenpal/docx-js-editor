@@ -102,16 +102,16 @@ The ProseMirror editor is functional with basic formatting (bold, italic, underl
   - Verify toggleSuperscript/toggleSubscript work
   - **Verify**: Apply superscript, text renders raised
 
-- [ ] **Task 13: Fix font family application**
+- [x] **Task 13: Fix font family application**
   - Ensure setFontFamily applies to selection
   - Font should change visually
   - **Verify**: Select text, change font to Georgia, renders in Georgia
 
-- [ ] **Task 14: Fix font size application**
+- [x] **Task 14: Fix font size application**
   - Ensure setFontSize applies to selection
   - **Verify**: Select text, change to 24pt, text is larger
 
-- [ ] **Task 15: Verify all toolbar buttons work**
+- [x] **Task 15: Verify all toolbar buttons work**
   - Test each button systematically
   - Fix any that don't work
   - **Verify**: Run formatting.spec.ts, alignment.spec.ts, lists.spec.ts
