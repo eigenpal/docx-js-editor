@@ -7,3 +7,13 @@
 [2024-02-02 00:00] NOTES: Added new test file cursor-paragraph-ops.spec.ts (11 failing tests)
 [2024-02-02 00:00] NOTES: Root cause identified in AIEditor.tsx:105 - getSelectionRange returns null when selection.isCollapsed
 
+[2026-02-02 09:06] TASK: Fix getSelectionRange for cursor-only
+[2026-02-02 09:06] STATUS: investigating
+[2026-02-02 09:06] NOTES: Reading AIEditor.tsx to understand current selection handling
+[2026-02-02 09:07] STATUS: implementing
+[2026-02-02 09:07] NOTES: Modified getSelectionRange() to handle collapsed selections (cursor-only). Removed the early return for isCollapsed and added collapsed flag to return value.
+[2026-02-02 09:08] STATUS: testing
+[2026-02-02 09:08] NOTES: Running typecheck and cursor-only tests to verify fix
+[2026-02-02 09:09] STATUS: testing
+[2026-02-02 09:09] NOTES: 11/15 cursor-paragraph-ops tests pass. Main cursor-only functionality working: bullet list, numbered list, indent list, outdent list, toggle list, align center, align right, justify, indent paragraph. Remaining failures are separate issues (keyboard shortcuts, multi-paragraph)
+[2026-02-02 09:09] STATUS: done
