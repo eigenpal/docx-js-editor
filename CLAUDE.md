@@ -52,6 +52,7 @@ This is a WYSIWYG editor. The output must look identical to the document in Micr
 
 ## Rules
 
+- **Screenshots:** Always save screenshots to the `screenshots/` folder (e.g., `screenshots/table-fixed.png`). Do NOT save screenshots in the project root to avoid polluting commits.
 - Work on exactly ONE task per iteration. Do not implement multiple tasks.
 - Do NOT modify other tasks in `.ralph/fix_plan.md`. Only check off the task you completed.
 - Do NOT delete or rewrite files from previous tasks unless the current task explicitly requires it.

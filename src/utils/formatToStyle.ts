@@ -471,10 +471,19 @@ export function resolveShadingFill(
 ): string {
   if (!shading) return '';
 
-  // Check fill first (background color)
+  // Clear or nil pattern means transparent - check this FIRST
+  if (shading.pattern === 'clear' || shading.pattern === 'nil') {
+    return '';
+  }
+
+  // Check fill (background color)
   if (shading.fill) {
     // 'auto' fill means transparent
     if (shading.fill.auto) {
+      return '';
+    }
+    // Check for 'auto' RGB value as well
+    if (shading.fill.rgb === 'auto' || shading.fill.rgb === 'FFFFFF') {
       return '';
     }
     return resolveShadingColor(shading.fill, theme);
@@ -483,11 +492,6 @@ export function resolveShadingFill(
   // Pattern with solid typically uses the color field
   if (shading.pattern === 'solid' && shading.color) {
     return resolveShadingColor(shading.color, theme);
-  }
-
-  // Clear pattern means transparent
-  if (shading.pattern === 'clear') {
-    return '';
   }
 
   // For percentage patterns, blend color and fill
