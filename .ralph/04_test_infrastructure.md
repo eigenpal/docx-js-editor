@@ -34,7 +34,7 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 - [x] **Fix font picker selector** - Tests use `.font-picker` but component uses `aria-label="Select font family"`. Update EditorPage.setFontFamily(). Verify: `npx playwright test --grep "font family" --timeout=30000`
 
-- [ ] **Fix font size picker selector** - Tests use `.font-size-picker input`. Find actual selector in FontSizePicker component. Verify: `npx playwright test --grep "font size" --timeout=30000`
+- [x] **Fix font size picker selector** - Tests use `.font-size-picker input`. Find actual selector in FontSizePicker component. Verify: `npx playwright test --grep "font size" --timeout=30000`
 
 - [ ] **Fix text color picker selector** - Tests use `.text-color-picker` but component uses `.docx-color-picker-text`. Update EditorPage.setTextColor(). Verify: `npx playwright test --grep "text color to red" --timeout=30000`
 

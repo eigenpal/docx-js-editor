@@ -7813,3 +7813,35 @@ Fixed the font picker selector in `e2e/helpers/editor-page.ts` for the FontPicke
 - `npx playwright test --grep "font family"` - 7 tests pass ✓
 
 ---
+
+### Test Infrastructure: Fix font size picker selector
+
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Fixed the font size picker selector in `e2e/helpers/editor-page.ts` for the FontSizePicker component.
+
+**Issue:**
+
+- Tests used `.font-size-picker input` selector which doesn't exist
+- Actual component uses Radix Select with `aria-label="Select font size"` on the trigger
+- Font size options are rendered as Radix SelectItem with `role="option"`
+- Initial fix using `:has-text()` matched multiple elements (e.g., "8" matched "8", "18", "28", "48")
+
+**Fix:**
+
+- Updated `setFontSize()` selector from `.font-size-picker input` to `[aria-label="Select font size"]`
+- Used `getByRole('option', { name: size.toString(), exact: true })` for exact text matching
+
+**Test Results:**
+
+- 9/11 Font Size tests pass (basic operations working)
+- 2 failures are functional issues (partial selection, empty document) - not selector issues
+
+**Verified:**
+
+- bun run typecheck: ✓
+- bun build exits 0: ✓
+- `npx playwright test e2e/tests/fonts.spec.ts --grep "Font Size"` - 9 tests pass ✓
+
+---

@@ -409,9 +409,11 @@ export class EditorPage {
    * Set font size
    */
   async setFontSize(size: number): Promise<void> {
-    const fontSizePicker = this.toolbar.locator('.font-size-picker input');
-    await fontSizePicker.fill(size.toString());
-    await fontSizePicker.press('Enter');
+    // Click on font size picker trigger (uses Radix Select with aria-label)
+    const fontSizePicker = this.toolbar.locator('[aria-label="Select font size"]');
+    await fontSizePicker.click();
+    // Wait for dropdown to open and select the size with exact text match
+    await this.page.getByRole('option', { name: size.toString(), exact: true }).click();
   }
 
   /**
