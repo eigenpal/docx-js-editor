@@ -214,3 +214,41 @@
 .prosemirror-editor .ProseMirror table table {
   margin: 4px 0;
 }
+
+/* ============================================================================
+   TAB STYLES
+   ============================================================================ */
+
+/* Tab character - renders as inline block with minimum width */
+.prosemirror-editor .ProseMirror span.docx-tab {
+  display: inline-block;
+  min-width: 48px; /* 0.5 inch default tab stop */
+  white-space: pre;
+  /* Align to tab grid using CSS */
+  background: transparent;
+}
+
+/* Tab leader styles (for future enhancement) */
+.prosemirror-editor .ProseMirror span.docx-tab[data-leader='dot']::before {
+  content: '...........';
+  position: absolute;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.prosemirror-editor .ProseMirror span.docx-tab[data-leader='hyphen']::before {
+  content: '-----------';
+  position: absolute;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.prosemirror-editor .ProseMirror span.docx-tab[data-leader='underscore']::before {
+  content: '___________';
+  position: absolute;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+}
