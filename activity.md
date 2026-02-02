@@ -6190,3 +6190,54 @@ Created `src/components/ui/CellBackgroundPicker.tsx` with cell shading color pic
 - bun build exits 0: ✓
 
 ---
+
+### US-140: Add Insert Table dialog
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Created `src/components/dialogs/InsertTableDialog.tsx` with visual grid selector for inserting tables.
+
+**Main Component:**
+- `InsertTableDialog` - Modal dialog for inserting new tables
+
+**Features:**
+- Visual grid selector (8x10 default) - hover to select dimensions
+- Grid cells highlight as you hover to show selected size
+- Real-time label shows selected dimensions (e.g., "3 x 4 Table")
+- Manual row/column number inputs
+- Configurable max grid size and max allowed dimensions
+- Keyboard support (Enter to insert, Escape to close)
+
+**Types:**
+- `TableConfig` - Row and column count configuration
+- `InsertTableDialogProps` - Component props
+
+**Icons:**
+- `TableIcon` - Table icon for dialog header
+
+**Hook:**
+- `useInsertTableDialog()` - State management hook with `isOpen`, `open`, `close`, `toggle`
+
+**Utility Functions:**
+- `createDefaultTableConfig(rows?, cols?)` - Create default config
+- `isValidTableConfig(config, maxRows?, maxCols?)` - Validate config
+- `clampTableConfig(config, maxRows?, maxCols?)` - Clamp to valid range
+- `formatTableDimensions(config)` - Format as "cols x rows"
+- `getTablePresets()` - Get common table size presets
+
+**Props:**
+- `isOpen` - Dialog visibility
+- `onClose` - Close callback
+- `onInsert` - Insert callback with TableConfig
+- `maxGridRows` - Max rows in grid selector (default: 8)
+- `maxGridColumns` - Max columns in grid selector (default: 10)
+- `maxRows` - Max allowed rows (default: 100)
+- `maxColumns` - Max allowed columns (default: 20)
+
+**Exports Added to `src/index.ts`:**
+- Component, props, types, hook, and all utility functions
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
