@@ -247,7 +247,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       if (context && context.formatting) {
         setState((prev) => ({
           ...prev,
-          selectionFormatting: getSelectionFormatting(context.formatting),
+          selectionFormatting: getSelectionFormatting(context.formatting, context.paragraphFormatting),
         }));
       } else {
         setState((prev) => ({
@@ -303,6 +303,28 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
 
       const { range } = selectionContext;
 
+      // Handle alignment action (paragraph-level formatting)
+      if (typeof action === 'object' && action.type === 'alignment') {
+        // Apply paragraph formatting using formatParagraph command
+        const newDoc = executeCommand(history.state, {
+          type: 'formatParagraph',
+          paragraphIndex: range.start.paragraphIndex,
+          formatting: { alignment: action.value },
+        });
+
+        handleDocumentChange(newDoc);
+
+        // Update selection formatting state
+        setState((prev) => ({
+          ...prev,
+          selectionFormatting: {
+            ...prev.selectionFormatting,
+            alignment: action.value,
+          },
+        }));
+        return;
+      }
+
       // Get the current formatting and apply the action
       const currentFormatting = selectionContext.formatting || {};
       const newFormatting = applyFormattingAction(currentFormatting, action);
@@ -319,7 +341,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       // Update selection formatting state
       setState((prev) => ({
         ...prev,
-        selectionFormatting: getSelectionFormatting(newFormatting),
+        selectionFormatting: getSelectionFormatting(newFormatting, selectionContext.paragraphFormatting),
       }));
     },
     [history.state, handleDocumentChange]

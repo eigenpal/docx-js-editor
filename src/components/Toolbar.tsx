@@ -11,10 +11,11 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import type { TextFormatting } from '../types/document';
+import type { TextFormatting, ParagraphAlignment } from '../types/document';
 import { FontPicker } from './ui/FontPicker';
 import { FontSizePicker, halfPointsToPoints, pointsToHalfPoints } from './ui/FontSizePicker';
 import { TextColorPicker, HighlightColorPicker } from './ui/ColorPicker';
+import { AlignmentButtons } from './ui/AlignmentButtons';
 
 // ============================================================================
 // TYPES
@@ -44,6 +45,8 @@ export interface SelectionFormatting {
   color?: string;
   /** Highlight color */
   highlight?: string;
+  /** Paragraph alignment */
+  alignment?: ParagraphAlignment;
 }
 
 /**
@@ -60,7 +63,8 @@ export type FormattingAction =
   | { type: 'fontFamily'; value: string }
   | { type: 'fontSize'; value: number }
   | { type: 'textColor'; value: string }
-  | { type: 'highlightColor'; value: string };
+  | { type: 'highlightColor'; value: string }
+  | { type: 'alignment'; value: ParagraphAlignment };
 
 /**
  * Props for the Toolbar component
@@ -98,6 +102,8 @@ export interface ToolbarProps {
   showTextColorPicker?: boolean;
   /** Whether to show highlight color picker (default: true) */
   showHighlightColorPicker?: boolean;
+  /** Whether to show alignment buttons (default: true) */
+  showAlignmentButtons?: boolean;
 }
 
 /**
@@ -355,6 +361,7 @@ export function Toolbar({
   showFontSizePicker = true,
   showTextColorPicker = true,
   showHighlightColorPicker = true,
+  showAlignmentButtons = true,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -437,6 +444,18 @@ export function Toolbar({
   );
 
   /**
+   * Handle alignment change
+   */
+  const handleAlignmentChange = useCallback(
+    (alignment: ParagraphAlignment) => {
+      if (!disabled && onFormat) {
+        onFormat({ type: 'alignment', value: alignment });
+      }
+    },
+    [disabled, onFormat]
+  );
+
+  /**
    * Keyboard shortcuts handler
    */
   useEffect(() => {
@@ -478,6 +497,23 @@ export function Toolbar({
               event.preventDefault();
               handleFormat('subscript');
             }
+            break;
+          // Alignment shortcuts
+          case 'l':
+            event.preventDefault();
+            handleAlignmentChange('left');
+            break;
+          case 'e':
+            event.preventDefault();
+            handleAlignmentChange('center');
+            break;
+          case 'r':
+            event.preventDefault();
+            handleAlignmentChange('right');
+            break;
+          case 'j':
+            event.preventDefault();
+            handleAlignmentChange('both');
             break;
           // Undo/Redo handled by useHistory hook
         }
@@ -624,6 +660,18 @@ export function Toolbar({
         </ToolbarButton>
       </ToolbarGroup>
 
+      {/* Alignment Group */}
+      {showAlignmentButtons && (
+        <ToolbarGroup label="Paragraph alignment">
+          <AlignmentButtons
+            value={currentFormatting.alignment || 'left'}
+            onChange={handleAlignmentChange}
+            disabled={disabled}
+            compact
+          />
+        </ToolbarGroup>
+      )}
+
       {/* Clear Formatting */}
       <ToolbarButton
         onClick={() => handleFormat('clearFormatting')}
@@ -673,26 +721,33 @@ function mapHexToHighlightName(hex: string): string | null {
 }
 
 /**
- * Extract formatting state from TextFormatting object
+ * Extract formatting state from TextFormatting and ParagraphFormatting objects
  */
-export function getSelectionFormatting(formatting?: TextFormatting): SelectionFormatting {
-  if (!formatting) {
-    return {};
+export function getSelectionFormatting(
+  formatting?: Partial<TextFormatting>,
+  paragraphFormatting?: Partial<import('../types/document').ParagraphFormatting>
+): SelectionFormatting {
+  const result: SelectionFormatting = {};
+
+  if (formatting) {
+    result.bold = formatting.bold;
+    result.italic = formatting.italic;
+    result.underline = formatting.underline?.style !== 'none' && formatting.underline?.style !== undefined;
+    result.strike = formatting.strike;
+    result.superscript = formatting.vertAlign === 'superscript';
+    result.subscript = formatting.vertAlign === 'subscript';
+    result.fontFamily = formatting.fontFamily?.ascii || formatting.fontFamily?.hAnsi;
+    result.fontSize = formatting.fontSize;
+    // Color would need theme resolution, simplified here
+    result.color = formatting.color?.rgb ? `#${formatting.color.rgb}` : undefined;
+    result.highlight = formatting.highlight !== 'none' ? formatting.highlight : undefined;
   }
 
-  return {
-    bold: formatting.bold,
-    italic: formatting.italic,
-    underline: formatting.underline?.style !== 'none' && formatting.underline?.style !== undefined,
-    strike: formatting.strike,
-    superscript: formatting.vertAlign === 'superscript',
-    subscript: formatting.vertAlign === 'subscript',
-    fontFamily: formatting.fontFamily?.ascii || formatting.fontFamily?.hAnsi,
-    fontSize: formatting.fontSize,
-    // Color would need theme resolution, simplified here
-    color: formatting.color?.rgb ? `#${formatting.color.rgb}` : undefined,
-    highlight: formatting.highlight !== 'none' ? formatting.highlight : undefined,
-  };
+  if (paragraphFormatting) {
+    result.alignment = paragraphFormatting.alignment;
+  }
+
+  return result;
 }
 
 /**
