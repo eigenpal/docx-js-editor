@@ -23,3 +23,7 @@
 [2026-02-02 09:11] STATUS: investigating
 [2026-02-02 09:12] STATUS: done
 [2026-02-02 09:12] NOTES: Test 'bullet list applies with cursor only (no selection)' passes.
+[2026-02-02 09:12] TASK: Fix indent paragraph with cursor only
+[2026-02-02 09:12] STATUS: investigating
+[2026-02-02 09:12] STATUS: done
+[2026-02-02 09:12] NOTES: Test 'indent paragraph with cursor only (no selection)' passes.
