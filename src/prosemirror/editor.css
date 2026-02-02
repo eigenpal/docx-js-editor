@@ -1,0 +1,146 @@
+/**
+ * ProseMirror Editor Styles
+ *
+ * Provides page-like layout similar to Word/Google Docs
+ */
+
+/* Editor container */
+.prosemirror-editor {
+  background: #e8e8e8;
+  padding: 20px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Editor content area (the actual editable content) */
+.prosemirror-editor .ProseMirror {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 72px 72px;
+  min-height: 11in;
+  width: 8.5in;
+  max-width: 100%;
+  outline: none;
+  /* Default font - will be overridden by inline styles from DOCX */
+  font-family: 'Calibri', 'Arial', sans-serif;
+  font-size: 11pt;
+  /* DO NOT set line-height here - it overrides inline paragraph styles */
+  /* line-height is set per-paragraph via inline styles from paragraphAttrsToDOMStyle */
+  color: #000;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Focus state */
+.prosemirror-editor .ProseMirror:focus {
+  outline: none;
+}
+
+/* Paragraphs - ensure they display as blocks with proper spacing */
+/* IMPORTANT: Do NOT set margin, line-height, or font here - use inline styles from DOCX */
+.prosemirror-editor .ProseMirror p {
+  display: block;
+  /* Default margin only when no inline style is set */
+  margin: 0;
+  padding: 0;
+  min-height: 1em;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  /* Default line height - can be overridden by inline styles */
+  line-height: normal;
+}
+
+/* Empty paragraph placeholder */
+.prosemirror-editor .ProseMirror p:empty::before {
+  content: '\00a0';
+}
+
+/* Inline spans for formatting - ensure they don't break layout */
+.prosemirror-editor .ProseMirror span {
+  display: inline;
+  white-space: pre-wrap;
+}
+
+/* List styles */
+.prosemirror-editor .ProseMirror .docx-list-bullet,
+.prosemirror-editor .ProseMirror .docx-list-numbered {
+  position: relative;
+  padding-left: 36px;
+}
+
+.prosemirror-editor .ProseMirror .docx-list-bullet::before {
+  content: '•';
+  position: absolute;
+  left: 12px;
+}
+
+.prosemirror-editor .ProseMirror .docx-list-numbered {
+  counter-increment: list-counter;
+}
+
+.prosemirror-editor .ProseMirror .docx-list-numbered::before {
+  content: counter(list-counter) '.';
+  position: absolute;
+  left: 12px;
+}
+
+/* Reset counter at level 0 */
+.prosemirror-editor .ProseMirror .docx-list-level-0:first-of-type {
+  counter-reset: list-counter;
+}
+
+/* Indent levels */
+.prosemirror-editor .ProseMirror .docx-list-level-1 {
+  margin-left: 0.5in;
+}
+.prosemirror-editor .ProseMirror .docx-list-level-2 {
+  margin-left: 1in;
+}
+.prosemirror-editor .ProseMirror .docx-list-level-3 {
+  margin-left: 1.5in;
+}
+.prosemirror-editor .ProseMirror .docx-list-level-4 {
+  margin-left: 2in;
+}
+.prosemirror-editor .ProseMirror .docx-list-level-5 {
+  margin-left: 2.5in;
+}
+
+/* Selection styling */
+.prosemirror-editor .ProseMirror ::selection {
+  background: rgba(66, 133, 244, 0.3);
+}
+
+/* Placeholder styling */
+.prosemirror-editor[data-placeholder]::before {
+  content: attr(data-placeholder);
+  color: #aaa;
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Image styling */
+.prosemirror-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Links */
+.prosemirror-editor .ProseMirror a {
+  color: #1a73e8;
+  text-decoration: underline;
+}
+
+.prosemirror-editor .ProseMirror a:hover {
+  color: #1557b0;
+}
+
+/* Horizontal rule */
+.prosemirror-editor .ProseMirror hr {
+  border: none;
+  border-top: 1px solid #000;
+  margin: 12pt 0;
+  height: 0;
+}

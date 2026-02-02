@@ -103,7 +103,7 @@ function getListClass(numPr?: ParagraphAttrs['numPr']): string {
  * Document node - top level container
  */
 export const doc: NodeSpec = {
-  content: 'paragraph+',
+  content: '(paragraph | horizontalRule)+',
 };
 
 /**
@@ -250,6 +250,17 @@ export const text: NodeSpec = {
 };
 
 /**
+ * Horizontal rule node - for document separators
+ */
+export const horizontalRule: NodeSpec = {
+  group: 'block',
+  parseDOM: [{ tag: 'hr' }],
+  toDOM() {
+    return ['hr'];
+  },
+};
+
+/**
  * All node specifications
  */
 export const nodes = {
@@ -258,4 +269,5 @@ export const nodes = {
   text,
   hardBreak,
   image,
+  horizontalRule,
 };
