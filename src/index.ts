@@ -391,3 +391,20 @@ export {
   type SelectionHighlightConfig,
   type SelectionRange,
 } from './utils/selectionHighlight';
+
+// Text selection utilities for word/paragraph selection
+export {
+  isWordCharacter,
+  isWhitespace,
+  findWordBoundaries,
+  getWordAt,
+  findWordAt,
+  selectWordAtCursor,
+  selectWordInTextNode,
+  expandSelectionToWordBoundaries,
+  selectParagraphAtCursor,
+  handleClickForMultiClick,
+  createDoubleClickWordSelector,
+  createTripleClickParagraphSelector,
+  type WordSelectionResult,
+} from './utils/textSelection';

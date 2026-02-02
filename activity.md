@@ -6533,3 +6533,68 @@ Implemented comprehensive text selection highlighting across multiple runs with 
 - Playwright visual tests: 5/5 passed
 
 ---
+
+### US-151: Add word-level double-click selection
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Implemented word-level double-click selection for the editor.
+
+**Created Files:**
+
+1. **`src/utils/textSelection.ts`:**
+   - Comprehensive text selection utilities for word and paragraph selection
+   - Word boundary detection with Unicode support (letters, numbers, apostrophes, hyphens)
+   - DOM-based selection manipulation using native browser APIs
+
+**Word Boundary Detection:**
+- `isWordCharacter(char)` - Check if character is a word character (uses Unicode regex)
+- `isWhitespace(char)` - Check if character is whitespace
+- `findWordBoundaries(text, position)` - Find [start, end] of word at position
+- `getWordAt(text, position)` - Get the word string at position
+- `findWordAt(text, position)` - Get word with detailed info (word, startIndex, endIndex)
+
+**DOM Selection Functions:**
+- `selectWordAtCursor()` - Select word at current cursor position (main function)
+- `selectWordInTextNode(textNode, offset)` - Select word in specific text node
+- `expandSelectionToWordBoundaries()` - Expand existing selection to word boundaries
+
+**Paragraph Selection Functions:**
+- `selectParagraphAtCursor()` - Select entire paragraph at cursor
+- Finds elements with `data-paragraph-index` attribute
+
+**Multi-click Support:**
+- `handleClickForMultiClick(event)` - Track click count for double/triple click
+- `createDoubleClickWordSelector()` - Create double-click handler for word selection
+- `createTripleClickParagraphSelector()` - Create triple-click handler for paragraph selection
+
+**Updated Files:**
+
+1. **`src/components/Editor.tsx`:**
+   - Imported `selectWordAtCursor` from text selection utilities
+   - Added `handleDoubleClick` callback that selects word at cursor
+   - Added `onDoubleClick` handler to main container div
+   - Double-click handler respects `editable` prop and modifier keys
+
+2. **`src/index.ts`:**
+   - Exported all text selection utilities:
+     - `isWordCharacter`, `isWhitespace`, `findWordBoundaries`
+     - `getWordAt`, `findWordAt`, `selectWordAtCursor`
+     - `selectWordInTextNode`, `expandSelectionToWordBoundaries`
+     - `selectParagraphAtCursor`, `handleClickForMultiClick`
+     - `createDoubleClickWordSelector`, `createTripleClickParagraphSelector`
+   - Exported `WordSelectionResult` type
+
+**Features:**
+- Double-clicking a word selects the entire word
+- Works across contentEditable spans
+- Handles different character types (letters, numbers, punctuation)
+- Unicode support for international text
+- Respects modifier keys (Ctrl/Meta/Alt/Shift allow browser default behavior)
+- Only activates when editor is in editable mode
+
+**Verified:**
+- bun build exits 0: ✓
+- Playwright visual tests: 5/5 passed
+
+---

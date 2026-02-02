@@ -41,6 +41,7 @@ import { getDefaultSectionProperties } from '../docx/sectionParser';
 import { twipsToPixels, formatPx } from '../utils/units';
 import { SELECTION_DATA_ATTRIBUTES } from '../hooks/useSelection';
 import { calculatePages, type PageLayoutResult, type Page as PageData, type PageContent } from '../layout/pageLayout';
+import { selectWordAtCursor } from '../utils/textSelection';
 
 // ============================================================================
 // TYPES
@@ -719,6 +720,32 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
   );
 
   /**
+   * Handle double-click to select word
+   * Uses native browser selection APIs for reliable word selection
+   */
+  const handleDoubleClick = useCallback(
+    (event: React.MouseEvent) => {
+      // Don't interfere with modifier keys (user might want different behavior)
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
+        return;
+      }
+
+      // Only handle double-clicks on editable content
+      if (!editable) {
+        return;
+      }
+
+      // Let the browser's native selection happen first, then enhance it
+      // The browser's native double-click selection is usually good for single text nodes,
+      // but we want to ensure consistent word boundary detection across our document
+      setTimeout(() => {
+        selectWordAtCursor();
+      }, 0);
+    },
+    [editable]
+  );
+
+  /**
    * Store paragraph ref
    */
   const setParagraphRef = useCallback(
@@ -1291,6 +1318,7 @@ export const Editor = React.forwardRef<EditorRef, EditorProps>(function Editor(
       ref={containerRef}
       className={`docx-editor ${className || ''}`}
       style={{ ...EDITOR_CONTAINER_STYLE, ...style }}
+      onDoubleClick={handleDoubleClick}
       {...{ [SELECTION_DATA_ATTRIBUTES.EDITOR_ROOT]: 'true' }}
     >
       <div
