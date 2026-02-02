@@ -208,6 +208,19 @@ export {
   getContrastingTextColor,
   DEFAULT_CELL_COLORS,
 } from './components/ui/CellBackgroundPicker';
+export {
+  UnsavedIndicator,
+  type UnsavedIndicatorProps,
+  type IndicatorVariant,
+  type IndicatorPosition,
+  type UseUnsavedChangesOptions,
+  type UseUnsavedChangesReturn,
+  useUnsavedChanges,
+  getVariantLabel,
+  getAllVariants as getAllIndicatorVariants,
+  getAllPositions as getAllIndicatorPositions,
+  createChangeTracker,
+} from './components/ui/UnsavedIndicator';
 
 // ============================================================================
 // DIALOGS
