@@ -166,7 +166,7 @@ function DemoApp() {
               <li>Full text formatting (bold, italic, underline, etc.)</li>
               <li>Paragraph styles and alignment</li>
               <li>Tables, images, and shapes</li>
-              <li>Template variables ({{'{{'}}variable{'}}'}}</li>
+              <li>Template variables (&#123;&#123;variable&#125;&#125;)</li>
               <li>Right-click for AI actions</li>
               <li>Zoom control</li>
             </ul>

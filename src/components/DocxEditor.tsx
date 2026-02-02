@@ -16,7 +16,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { Document, Theme, TextFormatting, ParagraphFormatting } from '../types/document';
 import type { AIAction, AIActionRequest, AgentResponse, SelectionContext } from '../types/agentApi';
 
-import { Toolbar, type ToolbarProps } from './Toolbar';
+import { Toolbar, type SelectionFormatting, type FormattingAction, getSelectionFormatting, applyFormattingAction } from './Toolbar';
 import { AIEditor, type AIEditorRef, type AIEditorProps, type AIRequestHandler } from './AIEditor';
 import { VariablePanel, type VariablePanelProps } from './VariablePanel';
 import { ErrorBoundary, ErrorProvider, useErrorNotifications } from './ErrorBoundary';
@@ -24,6 +24,7 @@ import { ZoomControl } from './ui/ZoomControl';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import { parseDocx } from '../docx/parser';
 import { onFontsLoaded, isLoading as isFontsLoading } from '../utils/fontLoader';
+import { executeCommand } from '../agent/executor';
 
 // ============================================================================
 // TYPES
@@ -111,7 +112,12 @@ interface EditorState {
   zoom: number;
   variableValues: Record<string, string>;
   isApplyingVariables: boolean;
-  currentFormatting: Partial<TextFormatting>;
+  /** Current selection formatting for toolbar */
+  selectionFormatting: SelectionFormatting;
+  /** Can undo history */
+  canUndo: boolean;
+  /** Can redo history */
+  canRedo: boolean;
 }
 
 // ============================================================================
@@ -155,7 +161,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     zoom: initialZoom,
     variableValues: {},
     isApplyingVariables: false,
-    currentFormatting: {},
+    selectionFormatting: {},
+    canUndo: false,
+    canRedo: false,
   });
 
   // Refs
@@ -226,6 +234,34 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     return cleanup;
   }, [onFontsLoadedCallback]);
 
+  // Listen for selection changes to update toolbar formatting
+  useEffect(() => {
+    const handleSelectionChangeEvent = () => {
+      if (!editorRef.current) return;
+
+      const context = editorRef.current.getSelectionContext();
+      if (context && context.formatting) {
+        setState((prev) => ({
+          ...prev,
+          selectionFormatting: getSelectionFormatting(context.formatting),
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          selectionFormatting: {},
+        }));
+      }
+      onSelectionChange?.(context);
+    };
+
+    // Listen for selection changes
+    document.addEventListener('selectionchange', handleSelectionChangeEvent);
+
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChangeEvent);
+    };
+  }, [onSelectionChange]);
+
   // Handle document change
   const handleDocumentChange = useCallback(
     (newDocument: Document) => {
@@ -235,24 +271,50 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     [onChange]
   );
 
-  // Handle formatting change from toolbar
-  const handleFormatChange = useCallback(
-    (formatting: Partial<TextFormatting>) => {
-      if (!editorRef.current) return;
-      // The Editor will apply formatting to selection
-      setState((prev) => ({ ...prev, currentFormatting: formatting }));
+  // Handle formatting action from toolbar
+  const handleFormat = useCallback(
+    (action: FormattingAction) => {
+      if (!editorRef.current || !state.document) return;
+
+      // Get current selection context
+      const selectionContext = editorRef.current.getSelectionContext();
+      if (!selectionContext || !selectionContext.range) return;
+
+      const { range } = selectionContext;
+
+      // Get the current formatting and apply the action
+      const currentFormatting = selectionContext.formatting || {};
+      const newFormatting = applyFormattingAction(currentFormatting, action);
+
+      // Apply formatting to the selection using executeCommand
+      const newDoc = executeCommand(state.document, {
+        type: 'formatText',
+        range,
+        formatting: newFormatting,
+      });
+
+      handleDocumentChange(newDoc);
+
+      // Update selection formatting state
+      setState((prev) => ({
+        ...prev,
+        selectionFormatting: getSelectionFormatting(newFormatting),
+      }));
     },
-    []
+    [state.document, handleDocumentChange]
   );
 
-  // Handle paragraph formatting change
-  const handleParagraphFormatChange = useCallback(
-    (formatting: Partial<ParagraphFormatting>) => {
-      // Apply paragraph formatting
-      // This would be handled by the editor
-    },
-    []
-  );
+  // Handle undo action
+  const handleUndo = useCallback(() => {
+    // TODO: Implement history/undo stack in US-104
+    console.log('Undo requested - will be implemented in US-104');
+  }, []);
+
+  // Handle redo action
+  const handleRedo = useCallback(() => {
+    // TODO: Implement history/redo stack in US-104
+    console.log('Redo requested - will be implemented in US-104');
+  }, []);
 
   // Handle variable values change
   const handleVariableValuesChange = useCallback((values: Record<string, string>) => {
@@ -403,12 +465,16 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           {/* Toolbar */}
           {showToolbar && (
             <Toolbar
-              formatting={state.currentFormatting}
-              onFormatChange={handleFormatChange}
-              onParagraphFormatChange={handleParagraphFormatChange}
+              currentFormatting={state.selectionFormatting}
+              onFormat={handleFormat}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              canUndo={state.canUndo}
+              canRedo={state.canRedo}
               disabled={readOnly}
-              extra={toolbarExtra}
-            />
+            >
+              {toolbarExtra}
+            </Toolbar>
           )}
 
           {/* Main content area */}
@@ -428,11 +494,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               {showZoomControl && (
                 <div style={zoomControlStyle}>
                   <ZoomControl
-                    zoom={state.zoom}
+                    value={state.zoom}
                     onChange={handleZoomChange}
-                    min={0.25}
-                    max={3}
-                    step={0.25}
+                    minZoom={0.25}
+                    maxZoom={3}
                   />
                 </div>
               )}

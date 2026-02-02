@@ -4,12 +4,12 @@
 
 You are running inside a Ralph autonomous loop (frankbria/ralph-claude-code). Each iteration you must:
 
-1. Read `.ralph/fix_plan.md` to see the task checklist.
+1. Read the current plan file in `.ralph/` (highest numbered `##_*.md` file, e.g., `02_current.md`).
 2. Find the **first** unchecked task (`- [ ]`).
 3. If all tasks are checked, output the exit signal (see below) and stop.
 4. Implement ONLY that one task. Do not touch other tasks.
 5. Run the verify command: `bun install && bun build ./src/main.tsx --outdir ./dist --loader:.css=css`
-6. If the build passes, mark the task as done (`- [x]`) in `.ralph/fix_plan.md`, commit everything with a message like `feat: <task title>`, and update `progress.txt` with any learnings.
+6. If the build passes, mark the task as done (`- [x]`) in the current plan file, commit everything with a message like `feat: <task title>`, and update `progress.txt` with any learnings.
 7. If the build fails, fix the errors and retry until it passes. Do NOT move on.
 8. At the end of your response, always output a RALPH_STATUS block:
 
@@ -54,7 +54,7 @@ This is a WYSIWYG editor. The output must look identical to the document in Micr
 
 - **Screenshots:** Always save screenshots to the `screenshots/` folder (e.g., `screenshots/table-fixed.png`). Do NOT save screenshots in the project root to avoid polluting commits.
 - Work on exactly ONE task per iteration. Do not implement multiple tasks.
-- Do NOT modify other tasks in `.ralph/fix_plan.md`. Only check off the task you completed.
+- Do NOT modify other tasks in the current plan file. Only check off the task you completed.
 - Do NOT delete or rewrite files from previous tasks unless the current task explicitly requires it.
 - If you need to know how WYSIWYG Editor's API actually works (constructor options, how to pass a document, how to destroy an instance, font loading, style resolution), investigate `~/wysiwyg-editor`. Start with `ls ~/wysiwyg-editor`, read the README, then dig into source. Do not guess.
 - If you need to know how docxtemplater + PizZip work together, check: `cat node_modules/docxtemplater/README.md` and `cat node_modules/pizzip/README.md`. Do not guess.

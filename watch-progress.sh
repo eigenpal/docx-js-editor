@@ -4,6 +4,8 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
+RALPH_DIR=".ralph"
+
 while true; do
   clear
   echo "═══════════════════════════════════════════"
@@ -11,18 +13,21 @@ while true; do
   echo "═══════════════════════════════════════════"
   echo ""
 
-  # Count passes - format is "**passes:** true"
-  DONE=$(grep -c '\*\*passes:\*\* true' plan.md 2>/dev/null || echo "0")
-  TODO=$(grep -c '\*\*passes:\*\* false' plan.md 2>/dev/null || echo "0")
+  # Count from all .ralph/*.md files
+  PASSES_DONE=$(grep -h '\*\*passes:\*\* true' "$RALPH_DIR"/*.md 2>/dev/null | wc -l | tr -d '[:space:]')
+  PASSES_TODO=$(grep -h '\*\*passes:\*\* false' "$RALPH_DIR"/*.md 2>/dev/null | wc -l | tr -d '[:space:]')
+  CHECK_DONE=$(grep -h '^\- \[x\]' "$RALPH_DIR"/*.md 2>/dev/null | wc -l | tr -d '[:space:]')
+  CHECK_TODO=$(grep -h '^\- \[ \]' "$RALPH_DIR"/*.md 2>/dev/null | wc -l | tr -d '[:space:]')
 
-  # Trim whitespace
-  DONE=$(echo "$DONE" | tr -d '[:space:]')
-  TODO=$(echo "$TODO" | tr -d '[:space:]')
+  # Default to 0 if empty
+  : "${PASSES_DONE:=0}"
+  : "${PASSES_TODO:=0}"
+  : "${CHECK_DONE:=0}"
+  : "${CHECK_TODO:=0}"
 
-  # Handle empty values
-  if [ -z "$DONE" ]; then DONE=0; fi
-  if [ -z "$TODO" ]; then TODO=0; fi
-
+  # Combine totals
+  DONE=$((PASSES_DONE + CHECK_DONE))
+  TODO=$((PASSES_TODO + CHECK_TODO))
   TOTAL=$((DONE + TODO))
 
   if [ "$TOTAL" -gt 0 ]; then
@@ -40,36 +45,66 @@ while true; do
   echo "  [$BAR] $PCT%"
   echo "  ✅ $DONE completed | ⏳ $TODO remaining | 📊 $TOTAL total"
   echo ""
+
+  # List plan files
+  echo "───────────────────────────────────────────"
+  echo "  📁 Plans:"
+  for f in "$RALPH_DIR"/*.md; do
+    if [ -f "$f" ]; then
+      fname=$(basename "$f")
+      fdone_passes=$(grep -c '\*\*passes:\*\* true' "$f" 2>/dev/null)
+      fdone_check=$(grep -c '^\- \[x\]' "$f" 2>/dev/null)
+      ftodo_passes=$(grep -c '\*\*passes:\*\* false' "$f" 2>/dev/null)
+      ftodo_check=$(grep -c '^\- \[ \]' "$f" 2>/dev/null)
+      # Ensure numeric values
+      fdone_passes=$((fdone_passes + 0))
+      fdone_check=$((fdone_check + 0))
+      ftodo_passes=$((ftodo_passes + 0))
+      ftodo_check=$((ftodo_check + 0))
+      fdone=$((fdone_passes + fdone_check))
+      ftodo=$((ftodo_passes + ftodo_check))
+      ftotal=$((fdone + ftodo))
+      if [ "$ftotal" -gt 0 ]; then
+        echo "  $fname: $fdone/$ftotal"
+      else
+        echo "  $fname: (empty)"
+      fi
+    fi
+  done
+  echo ""
+
   echo "───────────────────────────────────────────"
   echo "  📍 Current Task:"
-  # Get the first task with passes: false - need more context lines
-  CURRENT=$(grep -B20 '\*\*passes:\*\* false' plan.md 2>/dev/null | grep "^### US-" | head -1 | sed 's/### /  /')
+
+  # Find first unchecked task
+  CURRENT=$(grep -h '^\- \[ \]' "$RALPH_DIR"/*.md 2>/dev/null | head -1 | sed 's/^- \[ \] /  /')
   if [ -n "$CURRENT" ]; then
     echo "$CURRENT"
   else
-    echo "  (none found)"
+    CURRENT=$(grep -B20 '\*\*passes:\*\* false' "$RALPH_DIR"/*.md 2>/dev/null | grep "^### US-" | head -1 | sed 's/### /  /')
+    if [ -n "$CURRENT" ]; then
+      echo "$CURRENT"
+    else
+      echo "  (none - all done!)"
+    fi
   fi
   echo ""
+
   echo "───────────────────────────────────────────"
   echo "  📋 Recently Completed:"
-  # Get the last 5 tasks with passes: true
-  COMPLETED=$(grep -B20 '\*\*passes:\*\* true' plan.md 2>/dev/null | grep "^### US-" | tail -5 | sed 's/### /  ✓ /')
-  if [ -n "$COMPLETED" ]; then
-    echo "$COMPLETED"
-  else
+  CHECK_COMPLETED=$(grep -h '^\- \[x\]' "$RALPH_DIR"/*.md 2>/dev/null | tail -3 | sed 's/^- \[x\] /  ✓ /')
+  if [ -n "$CHECK_COMPLETED" ]; then
+    echo "$CHECK_COMPLETED"
+  fi
+  PASSES_COMPLETED=$(grep -B20 '\*\*passes:\*\* true' "$RALPH_DIR"/*.md 2>/dev/null | grep "^### US-" | tail -3 | sed 's/### /  ✓ /')
+  if [ -n "$PASSES_COMPLETED" ]; then
+    echo "$PASSES_COMPLETED"
+  fi
+  if [ -z "$CHECK_COMPLETED" ] && [ -z "$PASSES_COMPLETED" ]; then
     echo "  (none yet)"
   fi
   echo ""
-  echo "───────────────────────────────────────────"
-  echo "  📝 Latest Activity:"
-  # Get last entries from activity.md
-  ACTIVITY=$(grep -A2 "^### US-" activity.md 2>/dev/null | grep -v "^--$" | tail -8)
-  if [ -n "$ACTIVITY" ]; then
-    echo "$ACTIVITY" | sed 's/^/  /'
-  else
-    echo "  (no activity yet)"
-  fi
-  echo ""
+
   echo "═══════════════════════════════════════════"
   echo "  $(date '+%H:%M:%S') | Refreshing every 5s"
 
