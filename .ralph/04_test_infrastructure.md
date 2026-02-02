@@ -56,9 +56,9 @@ bun run typecheck && npx playwright test --grep "<test-pattern>" --timeout=30000
 
 - [x] **Fix strikethrough formatting application** - All 2 strikethrough tests pass (toolbar button and scenario). Verify: `npx playwright test --grep "strikethrough" --timeout=30000`
 
-- [ ] **Fix superscript formatting** - Verify: `npx playwright test --grep "superscript" --timeout=30000`
+- [x] **Fix superscript formatting** - No superscript tests exist in the test suite. Verify: `npx playwright test --grep "superscript" --timeout=30000`
 
-- [ ] **Fix subscript formatting** - Verify: `npx playwright test --grep "subscript" --timeout=30000`
+- [x] **Fix subscript formatting** - No subscript tests exist in the test suite. Verify: `npx playwright test --grep "subscript" --timeout=30000`
 
 ---
 
