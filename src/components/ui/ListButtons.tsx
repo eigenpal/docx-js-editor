@@ -11,6 +11,7 @@
 import React, { useState, useCallback } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { NumberFormat } from '../../types/document';
+import { MaterialSymbol } from './MaterialSymbol';
 
 // ============================================================================
 // TYPES
@@ -88,54 +89,50 @@ export interface ListButtonProps {
 const CONTAINER_STYLE: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '2px',
+  gap: '4px',
 };
 
 const BUTTON_GROUP_STYLE: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '2px',
-  borderRadius: '4px',
-  border: '1px solid #e0e0e0',
-  padding: '2px',
-  backgroundColor: '#fff',
+  gap: '4px',
 };
 
 const BUTTON_STYLE: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '28px',
-  height: '28px',
+  width: '32px',
+  height: '32px',
   padding: '4px',
   border: 'none',
-  borderRadius: '3px',
+  borderRadius: '4px',
   backgroundColor: 'transparent',
   cursor: 'pointer',
-  transition: 'background-color 0.15s, color 0.15s',
-  color: '#444',
+  transition: 'background-color 0.1s',
+  color: '#5f6368',
 };
 
 const BUTTON_HOVER_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  backgroundColor: '#f0f0f0',
+  backgroundColor: 'rgba(0, 0, 0, 0.06)',
 };
 
 const BUTTON_ACTIVE_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  backgroundColor: '#e3f2fd',
-  color: '#0066cc',
+  backgroundColor: '#e8f0fe',
+  color: '#1967d2',
 };
 
 const BUTTON_DISABLED_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  cursor: 'not-allowed',
-  opacity: 0.5,
+  cursor: 'default',
+  opacity: 0.38,
 };
 
 const COMPACT_BUTTON_STYLE: CSSProperties = {
-  width: '24px',
-  height: '24px',
+  width: '28px',
+  height: '28px',
   padding: '2px',
 };
 
@@ -143,58 +140,14 @@ const SEPARATOR_STYLE: CSSProperties = {
   width: '1px',
   height: '20px',
   backgroundColor: '#e0e0e0',
-  margin: '0 4px',
+  margin: '0 6px',
 };
 
 // ============================================================================
-// ICONS
+// ICON SIZE CONSTANT
 // ============================================================================
 
-const BulletListIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <circle cx="3" cy="4" r="1.5" />
-    <rect x="6" y="3" width="8" height="2" />
-    <circle cx="3" cy="8" r="1.5" />
-    <rect x="6" y="7" width="8" height="2" />
-    <circle cx="3" cy="12" r="1.5" />
-    <rect x="6" y="11" width="8" height="2" />
-  </svg>
-);
-
-const NumberedListIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <text x="1" y="5" fontSize="5" fontFamily="sans-serif">
-      1.
-    </text>
-    <rect x="6" y="3" width="8" height="2" />
-    <text x="1" y="9" fontSize="5" fontFamily="sans-serif">
-      2.
-    </text>
-    <rect x="6" y="7" width="8" height="2" />
-    <text x="1" y="13" fontSize="5" fontFamily="sans-serif">
-      3.
-    </text>
-    <rect x="6" y="11" width="8" height="2" />
-  </svg>
-);
-
-const IndentIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <rect x="4" y="3" width="10" height="2" />
-    <rect x="6" y="7" width="8" height="2" />
-    <rect x="4" y="11" width="10" height="2" />
-    <path d="M2 5L2 11L5 8L2 5Z" />
-  </svg>
-);
-
-const OutdentIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    <rect x="4" y="3" width="10" height="2" />
-    <rect x="2" y="7" width="12" height="2" />
-    <rect x="4" y="11" width="10" height="2" />
-    <path d="M5 5L5 11L2 8L5 5Z" />
-  </svg>
-);
+const ICON_SIZE = 20;
 
 // ============================================================================
 // LIST BUTTON COMPONENT
@@ -294,7 +247,7 @@ export function ListButtons({
           onClick={onBulletList}
           style={getButtonStyle()}
         >
-          <BulletListIcon />
+          <MaterialSymbol name="format_list_bulleted" size={ICON_SIZE} />
         </ListButton>
 
         <ListButton
@@ -304,7 +257,7 @@ export function ListButtons({
           onClick={onNumberedList}
           style={getButtonStyle()}
         >
-          <NumberedListIcon />
+          <MaterialSymbol name="format_list_numbered" size={ICON_SIZE} />
         </ListButton>
       </div>
 
@@ -320,7 +273,7 @@ export function ListButtons({
               onClick={onOutdent}
               style={getButtonStyle()}
             >
-              <OutdentIcon />
+              <MaterialSymbol name="format_indent_decrease" size={ICON_SIZE} />
             </ListButton>
 
             <ListButton
@@ -330,7 +283,7 @@ export function ListButtons({
               onClick={onIndent}
               style={getButtonStyle()}
             >
-              <IndentIcon />
+              <MaterialSymbol name="format_indent_increase" size={ICON_SIZE} />
             </ListButton>
           </div>
         </>
@@ -502,6 +455,3 @@ export function handleListShortcut(
 // ============================================================================
 
 export default ListButtons;
-
-// Also export individual icons for use elsewhere
-export { BulletListIcon, NumberedListIcon, IndentIcon, OutdentIcon };
