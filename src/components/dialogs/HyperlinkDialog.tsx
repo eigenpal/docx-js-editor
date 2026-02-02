@@ -793,4 +793,82 @@ export function extractBookmarksForDialog(
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// ============================================================================
+// HOOK
+// ============================================================================
+
+/**
+ * Hook state for the Hyperlink dialog
+ */
+export interface UseHyperlinkDialogState {
+  /** Whether the dialog is open */
+  isOpen: boolean;
+  /** Initial data for the dialog (for editing) */
+  initialData?: HyperlinkData;
+  /** Currently selected text */
+  selectedText?: string;
+  /** Whether we're editing an existing hyperlink */
+  isEditing: boolean;
+}
+
+/**
+ * Hook return type for the Hyperlink dialog
+ */
+export interface UseHyperlinkDialogReturn {
+  /** Current state */
+  state: UseHyperlinkDialogState;
+  /** Open dialog for inserting new hyperlink */
+  openInsert: (selectedText?: string) => void;
+  /** Open dialog for editing existing hyperlink */
+  openEdit: (data: HyperlinkData) => void;
+  /** Close the dialog */
+  close: () => void;
+  /** Toggle dialog open/closed */
+  toggle: () => void;
+}
+
+/**
+ * Hook for managing Hyperlink dialog state
+ */
+export function useHyperlinkDialog(): UseHyperlinkDialogReturn {
+  const [state, setState] = useState<UseHyperlinkDialogState>({
+    isOpen: false,
+    isEditing: false,
+  });
+
+  const openInsert = useCallback((selectedText?: string) => {
+    setState({
+      isOpen: true,
+      selectedText,
+      initialData: undefined,
+      isEditing: false,
+    });
+  }, []);
+
+  const openEdit = useCallback((data: HyperlinkData) => {
+    setState({
+      isOpen: true,
+      initialData: data,
+      selectedText: data.displayText,
+      isEditing: true,
+    });
+  }, []);
+
+  const close = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
+  }, []);
+
+  const toggle = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      isOpen: !prev.isOpen,
+    }));
+  }, []);
+
+  return { state, openInsert, openEdit, close, toggle };
+}
+
 export default HyperlinkDialog;

@@ -6295,3 +6295,51 @@ Created `src/components/dialogs/InsertImageDialog.tsx` for inserting images into
 - bun build exits 0: ✓
 
 ---
+
+### US-142: Add Insert Hyperlink dialog
+**Date:** 2026-02-01
+**Status:** Complete ✅
+
+Added `useHyperlinkDialog` hook to complete the existing HyperlinkDialog component.
+
+**Existing Component:**
+- `HyperlinkDialog` - Modal dialog for inserting/editing hyperlinks
+
+**Existing Features:**
+- URL input with validation (http, https, mailto, tel, ftp)
+- Display text input
+- Tooltip input
+- Bookmark selection for internal links
+- Edit mode for existing hyperlinks
+- Remove link option when editing
+
+**Added Hook:**
+- `useHyperlinkDialog()` - State management hook
+
+**Hook Interface:**
+- `state.isOpen` - Dialog visibility
+- `state.initialData` - Data for editing
+- `state.selectedText` - Currently selected text
+- `state.isEditing` - Whether in edit mode
+- `openInsert(selectedText?)` - Open for new hyperlink
+- `openEdit(data)` - Open for editing existing hyperlink
+- `close()` - Close dialog
+- `toggle()` - Toggle dialog
+
+**Existing Utility Functions:**
+- `isValidUrl(url)` - Validate URL
+- `normalizeUrl(url)` - Add protocol if needed
+- `getUrlType(url)` - Detect URL type
+- `createHyperlinkData(url, displayText?)` - Create data
+- `createBookmarkLinkData(bookmark, displayText?)` - Create bookmark link
+- `isExternalHyperlinkData(data)` - Check if external
+- `isBookmarkHyperlinkData(data)` - Check if bookmark
+- `getDisplayText(data)` - Get display text
+- `emailToMailto(email)` - Convert to mailto:
+- `phoneToTel(phone)` - Convert to tel:
+- `extractBookmarksForDialog(bookmarks)` - Extract bookmarks
+
+**Verified:**
+- bun build exits 0: ✓
+
+---
