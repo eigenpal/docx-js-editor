@@ -31,6 +31,9 @@
   color: #000;
   white-space: pre-wrap;
   word-wrap: break-word;
+  /* Tab size for proper tab character rendering (0.5 inch = 48px at 96dpi) */
+  tab-size: 48;
+  -moz-tab-size: 48;
 }
 
 /* Focus state */

@@ -311,25 +311,36 @@ export function paragraphToStyle(
   // LINE SPACING
   // ============================================================================
 
-  if (formatting.lineSpacing !== undefined) {
+  if (formatting.lineSpacing !== undefined && formatting.lineSpacing > 0) {
     switch (formatting.lineSpacingRule) {
-      case 'exact':
+      case 'exact': {
         // Exact line height in twips
-        style.lineHeight = formatPx(twipsToPixels(formatting.lineSpacing));
+        const exactPx = twipsToPixels(formatting.lineSpacing);
+        if (exactPx > 0) {
+          style.lineHeight = formatPx(exactPx);
+        }
         break;
-      case 'atLeast':
+      }
+      case 'atLeast': {
         // Minimum line height in twips
-        style.minHeight = formatPx(twipsToPixels(formatting.lineSpacing));
-        // Use a reasonable default line-height
-        style.lineHeight = formatPx(twipsToPixels(formatting.lineSpacing));
+        const atLeastPx = twipsToPixels(formatting.lineSpacing);
+        if (atLeastPx > 0) {
+          style.minHeight = formatPx(atLeastPx);
+          style.lineHeight = formatPx(atLeastPx);
+        }
         break;
+      }
       case 'auto':
-      default:
+      default: {
         // Auto spacing: value is in 240ths of a line (240 = single space)
         // Convert to line-height multiplier
         const lineMultiplier = formatting.lineSpacing / 240;
-        style.lineHeight = lineMultiplier.toString();
+        // Only set line-height if it's a valid positive value
+        if (lineMultiplier > 0) {
+          style.lineHeight = lineMultiplier.toString();
+        }
         break;
+      }
     }
   }
 

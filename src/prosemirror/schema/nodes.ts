@@ -261,6 +261,32 @@ export const horizontalRule: NodeSpec = {
 };
 
 /**
+ * Tab node - inline tab character with proper width
+ * Renders as a span with minimum width to simulate tab stops
+ */
+export const tab: NodeSpec = {
+  inline: true,
+  group: 'inline',
+  selectable: false,
+  parseDOM: [
+    {
+      tag: 'span.docx-tab',
+    },
+  ],
+  toDOM() {
+    // Render as a span with fixed minimum width (0.5 inch = 48px default tab stop)
+    return [
+      'span',
+      {
+        class: 'docx-tab',
+        style: 'display: inline-block; min-width: 48px; white-space: pre;',
+      },
+      '\t',
+    ];
+  },
+};
+
+/**
  * All node specifications
  */
 export const nodes = {
@@ -270,4 +296,5 @@ export const nodes = {
   hardBreak,
   image,
   horizontalRule,
+  tab,
 };
