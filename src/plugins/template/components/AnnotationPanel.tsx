@@ -7,7 +7,8 @@
 
 import { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import type { PluginPanelProps } from '../../../plugin-api/types';
-import type { TemplatePluginState, TemplateSchema, TemplateElement } from '../types';
+import type { TemplatePluginState, TemplateSchema, TemplateElement, TemplateScope } from '../types';
+import { ELEMENT_COLORS } from '../types';
 import { AnnotationCard, ANNOTATION_CARD_STYLES } from './AnnotationCard';
 import { getFullDataPath } from '../schema-inferrer';
 import { setHoveredElement, setSelectedElement } from '../prosemirror-plugin';
@@ -20,6 +21,12 @@ interface ElementPosition {
   element: TemplateElement;
   dataPath: string;
   top: number;
+}
+
+interface ScopePosition {
+  scope: TemplateScope;
+  startTop: number;
+  endTop: number;
 }
 
 /**
@@ -40,6 +47,7 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
   const selectedElementId = pluginState?.selectedElementId;
 
   const [elementPositions, setElementPositions] = useState<ElementPosition[]>([]);
+  const [scopePositions, setScopePositions] = useState<ScopePosition[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Get elements with paths
@@ -66,6 +74,7 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
   const updatePositions = useCallback(() => {
     if (!editorView || !schema || elementsWithPaths.length === 0) {
       setElementPositions([]);
+      setScopePositions([]);
       return;
     }
 
@@ -73,6 +82,7 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
     const panelContainer = containerRef.current;
     if (!panelContainer) {
       setElementPositions([]);
+      setScopePositions([]);
       return;
     }
     const panelRect = panelContainer.getBoundingClientRect();
@@ -107,6 +117,29 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
     }
 
     setElementPositions(positions);
+
+    // Calculate scope positions (for loops and conditionals)
+    const scopePos: ScopePosition[] = [];
+    for (const scope of schema.scopes) {
+      if (!scope.endElement) continue; // Skip unclosed scopes
+
+      try {
+        const startCoords = editorView.coordsAtPos(scope.startElement.from);
+        const endCoords = editorView.coordsAtPos(scope.endElement.to);
+
+        if (startCoords && endCoords) {
+          scopePos.push({
+            scope,
+            startTop: Math.max(0, startCoords.top - panelRect.top),
+            endTop: Math.max(0, endCoords.top - panelRect.top),
+          });
+        }
+      } catch (_e) {
+        // Position might be invalid
+      }
+    }
+
+    setScopePositions(scopePos);
   }, [editorView, schema, elementsWithPaths]);
 
   // Update positions when editor state changes
@@ -155,9 +188,39 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
     return null; // Don't show anything if no template tags
   }
 
+  // Get scope color
+  const getScopeColor = (type: 'loop' | 'conditional' | 'inverted') => {
+    switch (type) {
+      case 'loop':
+        return ELEMENT_COLORS.loopStart;
+      case 'conditional':
+        return ELEMENT_COLORS.conditionalStart;
+      case 'inverted':
+        return ELEMENT_COLORS.invertedStart;
+      default:
+        return '#666';
+    }
+  };
+
   return (
     <div className="template-panel" ref={containerRef}>
-      {/* Anchored annotations only - minimal view */}
+      {/* Scope indicators (vertical bars) */}
+      <div className="template-panel-scopes">
+        {scopePositions.map(({ scope, startTop, endTop }) => (
+          <div
+            key={scope.id}
+            className={`template-scope-bar template-scope-${scope.type}`}
+            style={{
+              top: `${startTop + 8}px`,
+              height: `${Math.max(20, endTop - startTop + 16)}px`,
+              backgroundColor: getScopeColor(scope.type),
+            }}
+            title={`${scope.type}: ${scope.name}`}
+          />
+        ))}
+      </div>
+
+      {/* Anchored annotations */}
       <div className="template-panel-annotations">
         {elementPositions.map(({ element, dataPath, top }) => (
           <div key={element.id} className="template-annotation-anchor" style={{ top: `${top}px` }}>
@@ -186,11 +249,30 @@ ${ANNOTATION_CARD_STYLES}
 
 .template-panel {
   display: flex;
-  flex-direction: column;
   min-height: 100%;
   background: transparent;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   position: relative;
+}
+
+.template-panel-scopes {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+}
+
+.template-scope-bar {
+  position: absolute;
+  left: 2px;
+  width: 3px;
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
+.template-scope-bar:hover {
+  opacity: 1;
 }
 
 .template-panel-annotations {
@@ -198,6 +280,7 @@ ${ANNOTATION_CARD_STYLES}
   position: relative;
   overflow: visible;
   min-height: 500px;
+  margin-left: 8px;
 }
 
 .template-annotation-anchor {
@@ -206,15 +289,14 @@ ${ANNOTATION_CARD_STYLES}
   right: 0;
   display: flex;
   align-items: flex-start;
-  transition: top 0.1s ease-out;
 }
 
 .template-annotation-connector {
-  width: 8px;
+  width: 12px;
   height: 1px;
   background: #d0d0d0;
   margin-top: 10px;
-  margin-right: 2px;
+  margin-right: 4px;
   flex-shrink: 0;
 }
 
