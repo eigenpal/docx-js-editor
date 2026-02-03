@@ -31,6 +31,7 @@ import type {
   LineSpacingRule,
   ParagraphAlignment,
   RelationshipMap,
+  MediaFile,
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import type { NumberingMap } from './numberingParser';
@@ -502,9 +503,10 @@ function parseHyperlink(
   node: XmlElement,
   rels: RelationshipMap | null,
   styles: StyleMap | null,
-  theme: Theme | null
+  theme: Theme | null,
+  media: Map<string, MediaFile> | null
 ): Hyperlink {
-  return parseHyperlinkFromModule(node, rels, styles, theme);
+  return parseHyperlinkFromModule(node, rels, styles, theme, media);
 }
 
 /**
@@ -598,7 +600,9 @@ function parseFieldType(instruction: string): FieldType {
 function parseSimpleField(
   node: XmlElement,
   styles: StyleMap | null,
-  theme: Theme | null
+  theme: Theme | null,
+  rels: RelationshipMap | null,
+  media: Map<string, MediaFile> | null
 ): SimpleField {
   const instruction = getAttribute(node, 'w', 'instr') ?? '';
   const fieldType = parseFieldType(instruction);
@@ -627,7 +631,7 @@ function parseSimpleField(
   for (const child of children) {
     const localName = getLocalName(child.name);
     if (localName === 'r') {
-      field.content.push(parseRun(child, styles, theme));
+      field.content.push(parseRun(child, styles, theme, rels, media));
     }
   }
 
@@ -644,7 +648,8 @@ function parseParagraphContents(
   styles: StyleMap | null,
   theme: Theme | null,
   _numbering: NumberingMap | null,
-  rels: RelationshipMap | null
+  rels: RelationshipMap | null,
+  media: Map<string, MediaFile> | null
 ): ParagraphContent[] {
   const contents: ParagraphContent[] = [];
   const children = getChildElements(paraElement);
@@ -664,7 +669,7 @@ function parseParagraphContents(
     switch (localName) {
       case 'r': {
         // Check for field characters in this run
-        const run = parseRun(child, styles, theme);
+        const run = parseRun(child, styles, theme, rels, media);
 
         // Look for field characters
         let hasFieldBegin = false;
@@ -742,7 +747,7 @@ function parseParagraphContents(
       }
 
       case 'hyperlink':
-        contents.push(parseHyperlink(child, rels, styles, theme));
+        contents.push(parseHyperlink(child, rels, styles, theme, media));
         break;
 
       case 'bookmarkStart':
@@ -754,7 +759,7 @@ function parseParagraphContents(
         break;
 
       case 'fldSimple':
-        contents.push(parseSimpleField(child, styles, theme));
+        contents.push(parseSimpleField(child, styles, theme, rels, media));
         break;
 
       case 'pPr':
@@ -806,6 +811,7 @@ function parseParagraphContents(
  * @param theme - Theme for resolving theme colors/fonts
  * @param numbering - Numbering definitions for list info
  * @param rels - Relationship map for resolving hyperlink URLs
+ * @param media - Media files map for image data
  * @returns Parsed Paragraph object
  */
 export function parseParagraph(
@@ -813,7 +819,8 @@ export function parseParagraph(
   styles: StyleMap | null,
   theme: Theme | null,
   numbering: NumberingMap | null,
-  rels: RelationshipMap | null = null
+  rels: RelationshipMap | null = null,
+  media: Map<string, MediaFile> | null = null
 ): Paragraph {
   const paragraph: Paragraph = {
     type: 'paragraph',
@@ -844,7 +851,7 @@ export function parseParagraph(
   }
 
   // Parse paragraph contents (runs, hyperlinks, bookmarks, fields)
-  const rawContent = parseParagraphContents(node, styles, theme, numbering, rels);
+  const rawContent = parseParagraphContents(node, styles, theme, numbering, rels, media);
 
   // Consolidate consecutive runs with identical formatting
   // This reduces fragmentation (e.g., 252 tiny runs → a few larger runs)
@@ -861,6 +868,7 @@ export function parseParagraph(
           numId,
           marker: level.lvlText,
           isBullet: level.numFmt === 'bullet',
+          numFmt: level.numFmt,
         };
       }
     }

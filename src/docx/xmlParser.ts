@@ -77,7 +77,10 @@ export function parseXml(xml: string): XmlElement {
     ignoreInstruction: true,
     ignoreDoctype: true,
     alwaysArray: false,
-    trim: true,
+    // IMPORTANT: Do NOT trim whitespace - it strips significant spaces
+    // around hyperlinks and other inline elements. DOCX uses xml:space="preserve"
+    // to indicate significant whitespace, but we need to preserve all text as-is.
+    trim: false,
     attributesKey: 'attributes',
     textKey: 'text',
   }) as XmlElement;

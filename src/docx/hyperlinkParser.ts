@@ -22,6 +22,7 @@ import type {
   BookmarkEnd,
   Theme,
   RelationshipMap,
+  MediaFile,
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import {
@@ -93,13 +94,15 @@ function parseBookmarkEnd(node: XmlElement): BookmarkEnd {
  * @param rels - Relationship map to resolve r:id references
  * @param styles - Style map for resolving run styles
  * @param theme - Theme for resolving colors/fonts
+ * @param media - Media files map for image data
  * @returns Parsed Hyperlink object
  */
 export function parseHyperlink(
   node: XmlElement,
   rels: RelationshipMap | null,
   styles: StyleMap | null = null,
-  theme: Theme | null = null
+  theme: Theme | null = null,
+  media: Map<string, MediaFile> | null = null
 ): Hyperlink {
   const hyperlink: Hyperlink = {
     type: 'hyperlink',
@@ -173,7 +176,7 @@ export function parseHyperlink(
 
     switch (localName) {
       case 'r':
-        hyperlink.children.push(parseRun(child, styles, theme));
+        hyperlink.children.push(parseRun(child, styles, theme, rels, media));
         break;
 
       case 'bookmarkStart':

@@ -342,6 +342,40 @@ export const hyperlink: MarkSpec = {
 };
 
 /**
+ * Footnote reference mark - displays as superscript number
+ */
+export const footnoteRef: MarkSpec = {
+  attrs: {
+    id: {},
+    noteType: { default: 'footnote' }, // 'footnote' or 'endnote'
+  },
+  parseDOM: [
+    {
+      tag: 'sup.docx-footnote-ref',
+      getAttrs: (dom) => {
+        const element = dom as HTMLElement;
+        return {
+          id: element.dataset.id || '',
+          noteType: element.dataset.noteType || 'footnote',
+        };
+      },
+    },
+  ],
+  toDOM(mark) {
+    const attrs = mark.attrs as { id: string; noteType: string };
+    return [
+      'sup',
+      {
+        class: `docx-${attrs.noteType}-ref`,
+        'data-id': attrs.id,
+        'data-note-type': attrs.noteType,
+      },
+      0,
+    ];
+  },
+};
+
+/**
  * All mark specifications
  */
 export const marks = {
@@ -356,4 +390,5 @@ export const marks = {
   superscript,
   subscript,
   hyperlink,
+  footnoteRef,
 };
