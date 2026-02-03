@@ -930,17 +930,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         >
           {/* Toolbar - sticky at top */}
           {showToolbar && (
-            <div
-              style={{
-                position: 'sticky',
-                top: 0,
-                zIndex: 100,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px',
-                backgroundColor: '#fff',
-              }}
-            >
+            <div className="sticky top-0 z-50 flex flex-col gap-1 bg-white">
               <Toolbar
                 currentFormatting={state.selectionFormatting}
                 onFormat={handleFormat}
@@ -973,17 +963,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
 
               {/* Horizontal Ruler - sticky with toolbar */}
               {showRuler && (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    backgroundColor: '#f0f0f0',
-                    padding: '4px 20px',
-                    borderBottom: '1px solid #d0d0d0',
-                    overflow: 'auto',
-                    flexShrink: 0,
-                  }}
-                >
+                <div className="flex justify-center bg-slate-100 px-5 py-1 border-b border-slate-300 overflow-auto flex-shrink-0">
                   <HorizontalRuler
                     sectionProps={history.state?.package.document?.finalSectionProperties}
                     zoom={state.zoom}
