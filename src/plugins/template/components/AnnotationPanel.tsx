@@ -9,7 +9,7 @@
 import { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import type { PluginPanelProps } from '../../../plugin-api/types';
 import type { TemplatePluginState, TemplateSchema, TemplateElement } from '../types';
-import { ELEMENT_COLORS, ELEMENT_ICONS } from '../types';
+import { ELEMENT_COLORS } from '../types';
 import { ANNOTATION_CARD_STYLES } from './AnnotationCard';
 import { setHoveredElement, setSelectedElement } from '../prosemirror-plugin';
 
@@ -116,11 +116,12 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
       try {
         const coords = editorView.coordsAtPos(element.from);
         if (coords) {
+          // Don't clamp - allow negative values so annotations scroll out of view
           const top = coords.top - panelRect.top;
           grouped.push({
             element,
             nestedVariables: getNestedVariables(element, schema),
-            top: Math.max(0, top),
+            top,
           });
         }
       } catch (_e) {
@@ -132,15 +133,17 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
     grouped.sort((a, b) => a.top - b.top);
 
     // Adjust positions to prevent overlaps
-    const minGap = 32;
+    const minGap = 8; // Minimum gap between cards
     for (let i = 1; i < grouped.length; i++) {
       const prev = grouped[i - 1];
       const curr = grouped[i];
-      // Account for nested variables in prev item
-      const prevHeight = 24 + prev.nestedVariables.length * 18;
-      const neededGap = Math.max(minGap, prevHeight);
-      if (curr.top < prev.top + neededGap) {
-        curr.top = prev.top + neededGap;
+      // Calculate previous card height: base height + nested variables
+      const baseHeight = prev.nestedVariables.length > 0 ? 60 : 28;
+      const nestedHeight =
+        prev.nestedVariables.length > 0 ? Math.ceil(prev.nestedVariables.length / 3) * 26 : 0;
+      const prevHeight = baseHeight + nestedHeight + minGap;
+      if (curr.top < prev.top + prevHeight) {
+        curr.top = prev.top + prevHeight;
       }
     }
 
@@ -191,9 +194,32 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
     return null;
   }
 
-  // Get icon and color for element type
-  const getIcon = (el: TemplateElement) => ELEMENT_ICONS[el.type];
+  // Get color for element type
   const getColor = (el: TemplateElement) => ELEMENT_COLORS[el.type];
+
+  // Get type info for display
+  const getTypeInfo = (
+    el: TemplateElement
+  ): { label: string; className: string; description: string } => {
+    switch (el.type) {
+      case 'loopStart':
+      case 'conditionalStart':
+        return { label: '#', className: 'section', description: 'Section block' };
+      case 'invertedStart':
+        return {
+          label: '^',
+          className: 'inverted',
+          description: 'Inverted section (shows when falsy)',
+        };
+      case 'variable':
+      case 'nestedVariable':
+        return { label: '', className: 'variable', description: 'Variable' };
+      case 'rawVariable':
+        return { label: '@', className: 'raw', description: 'Raw HTML' };
+      default:
+        return { label: '', className: 'variable', description: '' };
+    }
+  };
 
   // Check if element is a scope (loop/conditional)
   const isScope = (el: TemplateElement) =>
@@ -202,49 +228,61 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
   return (
     <div className="template-panel" ref={containerRef}>
       <div className="template-panel-annotations">
-        {annotations.map(({ element, nestedVariables, top }) => (
-          <div key={element.id} className="template-annotation-anchor" style={{ top: `${top}px` }}>
-            <div className="template-annotation-connector" />
-            <div
-              className={`template-annotation-chip ${element.id === hoveredElementId ? 'hovered' : ''} ${element.id === selectedElementId ? 'selected' : ''}`}
-              style={{ borderLeftColor: getColor(element) }}
-              onMouseEnter={() => handleHover(element.id)}
-              onMouseLeave={() => handleHover(undefined)}
-              onClick={() => handleClick(element.id)}
-            >
-              <span className="template-chip-icon" style={{ color: getColor(element) }}>
-                {getIcon(element)}
-              </span>
-              <span className="template-chip-name">{element.name}</span>
+        {annotations.map(({ element, nestedVariables, top }) => {
+          const typeInfo = getTypeInfo(element);
+          const hasNested = isScope(element) && nestedVariables.length > 0;
 
-              {/* Show nested variables for scopes */}
-              {isScope(element) && nestedVariables.length > 0 && (
-                <span className="template-chip-nested">
-                  {nestedVariables.map((v) => (
-                    <span
-                      key={v.id}
-                      className={`template-nested-var ${v.id === hoveredElementId ? 'hovered' : ''}`}
-                      onMouseEnter={(e) => {
-                        e.stopPropagation();
-                        handleHover(v.id);
-                      }}
-                      onMouseLeave={(e) => {
-                        e.stopPropagation();
-                        handleHover(undefined);
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleClick(v.id);
-                      }}
-                    >
-                      {v.name.includes('.') ? v.name.split('.').pop() : v.name}
-                    </span>
-                  ))}
-                </span>
-              )}
+          return (
+            <div
+              key={element.id}
+              className="template-annotation-anchor"
+              style={{ top: `${top}px` }}
+            >
+              <div className="template-annotation-connector" />
+              <div
+                className={`template-annotation-chip template-chip-${typeInfo.className} ${element.id === hoveredElementId ? 'hovered' : ''} ${element.id === selectedElementId ? 'selected' : ''}`}
+                style={{ '--accent-color': getColor(element) } as React.CSSProperties}
+                onMouseEnter={() => handleHover(element.id)}
+                onMouseLeave={() => handleHover(undefined)}
+                onClick={() => handleClick(element.id)}
+                title={typeInfo.description}
+              >
+                {/* Type badge for scopes */}
+                {typeInfo.label && <span className="template-chip-badge">{typeInfo.label}</span>}
+
+                {/* Variable name */}
+                <span className="template-chip-name">{element.name}</span>
+
+                {/* Nested variables for scopes */}
+                {hasNested && (
+                  <div className="template-chip-nested">
+                    {nestedVariables.map((v) => (
+                      <span
+                        key={v.id}
+                        className={`template-nested-var ${v.id === hoveredElementId ? 'hovered' : ''}`}
+                        onMouseEnter={(e) => {
+                          e.stopPropagation();
+                          handleHover(v.id);
+                        }}
+                        onMouseLeave={(e) => {
+                          e.stopPropagation();
+                          handleHover(undefined);
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleClick(v.id);
+                        }}
+                        title="Variable inside scope"
+                      >
+                        {v.name.includes('.') ? v.name.split('.').pop() : v.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -268,7 +306,12 @@ ${ANNOTATION_CARD_STYLES}
   flex: 1;
   position: relative;
   overflow: visible;
-  min-height: 500px;
+  min-height: 100%;
+  pointer-events: none;
+}
+
+.template-panel-annotations > * {
+  pointer-events: auto;
 }
 
 .template-annotation-anchor {
@@ -283,7 +326,7 @@ ${ANNOTATION_CARD_STYLES}
   width: 20px;
   height: 1px;
   background: #d0d0d0;
-  margin-top: 11px;
+  margin-top: 12px;
   margin-right: 4px;
   flex-shrink: 0;
 }
@@ -292,36 +335,84 @@ ${ANNOTATION_CARD_STYLES}
   background: #3b82f6;
 }
 
-/* Annotation chip */
+/* Annotation chip - base */
 .template-annotation-chip {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
+  padding: 5px 10px;
   background: white;
   border: 1px solid #e2e8f0;
-  border-left: 3px solid #6c757d;
+  border-left: 3px solid var(--accent-color, #6c757d);
   border-radius: 4px;
   font-size: 11px;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  max-width: 180px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  max-width: 200px;
 }
 
 .template-annotation-chip:hover,
 .template-annotation-chip.hovered {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   border-color: #cbd5e1;
 }
 
 .template-annotation-chip.selected {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px var(--accent-color, #3b82f6);
 }
 
-.template-chip-icon {
-  font-size: 10px;
-  font-weight: bold;
+/* Type badge */
+.template-chip-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Variable chip - simple yellow dot */
+.template-chip-variable {
+  border-left-color: #f59e0b;
+}
+.template-chip-variable .template-chip-name::before {
+  content: '●';
+  color: #f59e0b;
+  margin-right: 4px;
+  font-size: 8px;
+}
+
+/* Section chip - blue with # badge */
+.template-chip-section {
+  border-left-color: #3b82f6;
+  background: linear-gradient(to right, #eff6ff, white);
+}
+.template-chip-section .template-chip-badge {
+  background: #3b82f6;
+  color: white;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+/* Inverted conditional - purple with IF NOT badge */
+.template-chip-inverted {
+  border-left-color: #8b5cf6;
+  background: linear-gradient(to right, #f5f3ff, white);
+}
+.template-chip-inverted .template-chip-badge {
+  background: #8b5cf6;
+  color: white;
+}
+
+/* Raw HTML - red */
+.template-chip-raw {
+  border-left-color: #ef4444;
+  background: linear-gradient(to right, #fef2f2, white);
+}
+.template-chip-raw .template-chip-badge {
+  background: #ef4444;
+  color: white;
 }
 
 .template-chip-name {
@@ -333,25 +424,25 @@ ${ANNOTATION_CARD_STYLES}
 .template-chip-nested {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
+  gap: 4px;
   width: 100%;
-  margin-top: 2px;
-  padding-top: 3px;
-  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .template-nested-var {
   font-size: 10px;
   color: #64748b;
-  background: #f8fafc;
-  padding: 1px 4px;
-  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 6px;
+  border-radius: 3px;
   cursor: pointer;
 }
 
 .template-nested-var:hover,
 .template-nested-var.hovered {
-  background: #e2e8f0;
-  color: #334155;
+  background: rgba(59, 130, 246, 0.15);
+  color: #1e40af;
 }
 `;

@@ -64,7 +64,7 @@ const PLUGIN_HOST_STYLES = `
   display: flex;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
 }
 
@@ -73,7 +73,7 @@ const PLUGIN_HOST_STYLES = `
   display: flex;
   flex-direction: column;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 
@@ -166,6 +166,7 @@ const PLUGIN_HOST_STYLES = `
   pointer-events: none;
   z-index: 100;
   overflow: visible;
+  clip: unset;
 }
 
 .plugin-panel-overlay {
@@ -176,9 +177,10 @@ const PLUGIN_HOST_STYLES = `
   bottom: 0;
   display: flex;
   flex-shrink: 0;
-  pointer-events: auto;
+  pointer-events: none;
   background: transparent;
   overflow: visible;
+  clip: unset;
 }
 
 .plugin-panel-overlay.collapsed {
@@ -189,6 +191,7 @@ const PLUGIN_HOST_STYLES = `
   flex: 1;
   overflow: visible;
   position: relative;
+  clip: unset;
 }
 `;
 
