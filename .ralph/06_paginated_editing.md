@@ -392,9 +392,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 8.1: Measure header/footer content
 
-- [ ] Create `src/layout-bridge/measureHeaderFooter.ts`
-- [ ] Measure actual height of header/footer content
-- [ ] Pass heights to layout engine
+- [x] Create `src/layout-bridge/measureHeaderFooter.ts`
+- [x] Measure actual height of header/footer content
+- [x] Pass heights to layout engine
 
 **SuperDoc reference (concept only):**
 
