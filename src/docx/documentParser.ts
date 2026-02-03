@@ -30,6 +30,128 @@ import { parseTable } from './tableParser';
 import { parseSectionProperties, getDefaultSectionProperties } from './sectionParser';
 
 // ============================================================================
+// LIST MARKER COMPUTATION
+// ============================================================================
+
+/**
+ * Compute the actual list marker for a paragraph
+ *
+ * Replaces %1, %2, etc. in lvlText with actual counter values.
+ * Tracks and increments counters as list items are encountered.
+ *
+ * @param paragraph - The paragraph to compute marker for
+ * @param numbering - Numbering definitions
+ * @param listCounters - Map tracking counters per numId
+ */
+function computeListMarker(
+  paragraph: Paragraph,
+  numbering: NumberingMap | null,
+  listCounters: Map<number, number[]>
+): void {
+  const listRendering = paragraph.listRendering;
+  if (!listRendering || !numbering) return;
+
+  const { numId, level } = listRendering;
+  if (numId === undefined || numId === 0) return;
+
+  // Initialize counters for this numId if not exists
+  if (!listCounters.has(numId)) {
+    listCounters.set(numId, new Array(9).fill(0)); // Up to 9 levels
+  }
+
+  const counters = listCounters.get(numId)!;
+
+  // Increment counter at current level
+  counters[level] = (counters[level] || 0) + 1;
+
+  // Reset all deeper level counters when we go to a shallower level
+  for (let i = level + 1; i < counters.length; i++) {
+    counters[i] = 0;
+  }
+
+  // Get the lvlText pattern (e.g., "%1.%2.%3.")
+  const pattern = listRendering.marker;
+
+  // For bullet lists, use the marker character directly
+  if (listRendering.isBullet) {
+    // Bullet markers are usually single characters like •, ●, ○, ■
+    // The pattern might contain the actual bullet character
+    return;
+  }
+
+  // Compute the actual marker by replacing %1, %2, etc.
+  let computedMarker = pattern;
+
+  // Replace %1, %2, etc. with actual counter values
+  // Format each level according to its numFmt
+  for (let lvl = 0; lvl <= level; lvl++) {
+    const placeholder = `%${lvl + 1}`;
+    if (computedMarker.includes(placeholder)) {
+      const value = counters[lvl];
+      const levelInfo = numbering.getLevel(numId, lvl);
+      const formatted = formatNumber(value, levelInfo?.numFmt || 'decimal');
+      computedMarker = computedMarker.replace(placeholder, formatted);
+    }
+  }
+
+  // Update the marker with the computed value
+  listRendering.marker = computedMarker;
+}
+
+/**
+ * Format a number according to OOXML number format
+ */
+function formatNumber(value: number, numFmt: string): string {
+  switch (numFmt) {
+    case 'decimal':
+    case 'decimalZero':
+      return String(value);
+    case 'lowerLetter':
+      return String.fromCharCode(96 + ((value - 1) % 26) + 1); // a, b, c...
+    case 'upperLetter':
+      return String.fromCharCode(64 + ((value - 1) % 26) + 1); // A, B, C...
+    case 'lowerRoman':
+      return toRoman(value).toLowerCase();
+    case 'upperRoman':
+      return toRoman(value);
+    case 'bullet':
+      return '•';
+    default:
+      return String(value);
+  }
+}
+
+/**
+ * Convert number to Roman numerals
+ */
+function toRoman(num: number): string {
+  const romanNumerals: [number, string][] = [
+    [1000, 'M'],
+    [900, 'CM'],
+    [500, 'D'],
+    [400, 'CD'],
+    [100, 'C'],
+    [90, 'XC'],
+    [50, 'L'],
+    [40, 'XL'],
+    [10, 'X'],
+    [9, 'IX'],
+    [5, 'V'],
+    [4, 'IV'],
+    [1, 'I'],
+  ];
+
+  let result = '';
+  for (const [value, symbol] of romanNumerals) {
+    while (num >= value) {
+      result += symbol;
+      num -= value;
+    }
+  }
+  return result;
+}
+
+// ============================================================================
 // TEMPLATE VARIABLE DETECTION
 // ============================================================================
 
@@ -152,12 +274,18 @@ function parseBlockContent(
   const content: BlockContent[] = [];
   const children = getChildElements(parent);
 
+  // Track list counters for computing markers
+  // Map: numId -> array of counters for each level
+  const listCounters = new Map<number, number[]>();
+
   for (const child of children) {
     const name = child.name ?? '';
 
     // Paragraph (w:p)
     if (name === 'w:p' || name.endsWith(':p')) {
       const paragraph = parseParagraph(child, styles, theme, numbering, rels, media);
+      // Compute list marker if this is a list item
+      computeListMarker(paragraph, numbering, listCounters);
       content.push(paragraph);
     }
     // Table (w:tbl)

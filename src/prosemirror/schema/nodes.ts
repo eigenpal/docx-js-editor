@@ -52,6 +52,8 @@ export interface ParagraphAttrs {
   listNumFmt?: NumberFormat;
   /** Whether this is a bullet list */
   listIsBullet?: boolean;
+  /** Computed list marker text (e.g., "1.", "1.1.", "•") */
+  listMarker?: string;
 
   // Style reference
   styleId?: string;
@@ -204,6 +206,7 @@ export const paragraph: NodeSpec = {
     numPr: { default: null },
     listNumFmt: { default: null },
     listIsBullet: { default: null },
+    listMarker: { default: null },
 
     // Style reference
     styleId: { default: null },
@@ -258,6 +261,11 @@ export const paragraph: NodeSpec = {
 
     if (attrs.styleId) {
       domAttrs['data-style-id'] = attrs.styleId;
+    }
+
+    // Add list marker as data attribute for CSS to use
+    if (attrs.listMarker) {
+      domAttrs['data-list-marker'] = attrs.listMarker;
     }
 
     return ['p', domAttrs, 0];
