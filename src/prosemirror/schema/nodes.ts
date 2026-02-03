@@ -86,9 +86,27 @@ export interface ImageAttrs {
   src: string;
   alt?: string;
   title?: string;
+  /** Width in pixels (already converted from EMU) */
   width?: number;
+  /** Height in pixels (already converted from EMU) */
   height?: number;
   rId?: string;
+  /** Wrap type from DOCX: inline, square, tight, through, topAndBottom, behind, inFront */
+  wrapType?: 'inline' | 'square' | 'tight' | 'through' | 'topAndBottom' | 'behind' | 'inFront';
+  /** Display mode for CSS: inline (flows with text), float (left/right float), block (centered) */
+  displayMode?: 'inline' | 'float' | 'block';
+  /** CSS float direction for floating images */
+  cssFloat?: 'left' | 'right' | 'none';
+  /** CSS transform string (rotation, flip) */
+  transform?: string;
+  /** Distance from text above (pixels) */
+  distTop?: number;
+  /** Distance from text below (pixels) */
+  distBottom?: number;
+  /** Distance from text left (pixels) */
+  distLeft?: number;
+  /** Distance from text right (pixels) */
+  distRight?: number;
 }
 
 /**
@@ -286,7 +304,20 @@ export const hardBreak: NodeSpec = {
 };
 
 /**
- * Image node - inline image
+ * Image node - inline or floating image
+ *
+ * DOCX images can be:
+ * - Inline (wp:inline): Flow with text like a character
+ * - Floating/Anchored (wp:anchor) with wrap types:
+ *   - Square/Tight/Through: Text wraps around image using CSS float
+ *   - TopAndBottom: Image on own line, text above/below only
+ *   - None/Behind/InFront: Positioned image (rendered as block)
+ *
+ * For proper Word-like rendering:
+ * - Width/height in pixels (converted from EMUs)
+ * - Floating images use CSS float: left/right
+ * - Block images use display:block + margin:auto for centering
+ * - max-width prevents overflow beyond page bounds
  */
 export const image: NodeSpec = {
   inline: true,
@@ -299,6 +330,14 @@ export const image: NodeSpec = {
     width: { default: null },
     height: { default: null },
     rId: { default: null },
+    wrapType: { default: 'inline' },
+    displayMode: { default: 'inline' },
+    cssFloat: { default: null },
+    transform: { default: null },
+    distTop: { default: null },
+    distBottom: { default: null },
+    distLeft: { default: null },
+    distRight: { default: null },
   },
   parseDOM: [
     {
@@ -312,6 +351,10 @@ export const image: NodeSpec = {
           width: element.width || undefined,
           height: element.height || undefined,
           rId: element.dataset.rid || undefined,
+          wrapType: (element.dataset.wrapType as ImageAttrs['wrapType']) || 'inline',
+          displayMode: (element.dataset.displayMode as ImageAttrs['displayMode']) || 'inline',
+          cssFloat: (element.dataset.cssFloat as ImageAttrs['cssFloat']) || undefined,
+          transform: element.dataset.transform || undefined,
         };
       },
     },
@@ -320,13 +363,83 @@ export const image: NodeSpec = {
     const attrs = node.attrs as ImageAttrs;
     const domAttrs: Record<string, string> = {
       src: attrs.src,
+      class: 'docx-image',
     };
 
     if (attrs.alt) domAttrs.alt = attrs.alt;
     if (attrs.title) domAttrs.title = attrs.title;
-    if (attrs.width) domAttrs.width = String(attrs.width);
-    if (attrs.height) domAttrs.height = String(attrs.height);
     if (attrs.rId) domAttrs['data-rid'] = attrs.rId;
+    if (attrs.wrapType) domAttrs['data-wrap-type'] = attrs.wrapType;
+    if (attrs.displayMode) domAttrs['data-display-mode'] = attrs.displayMode;
+    if (attrs.cssFloat) domAttrs['data-css-float'] = attrs.cssFloat;
+    if (attrs.transform) domAttrs['data-transform'] = attrs.transform;
+
+    // Build inline styles for proper sizing and layout
+    const styles: string[] = [];
+
+    // Set explicit dimensions if available
+    if (attrs.width) {
+      domAttrs.width = String(attrs.width);
+      styles.push(`width: ${attrs.width}px`);
+    }
+    if (attrs.height) {
+      domAttrs.height = String(attrs.height);
+      styles.push(`height: ${attrs.height}px`);
+    }
+
+    // Constrain to page width to prevent overflow
+    styles.push('max-width: 100%');
+
+    // Maintain aspect ratio when constrained
+    if (attrs.width && attrs.height) {
+      styles.push('object-fit: contain');
+    } else {
+      styles.push('height: auto');
+    }
+
+    // Apply display mode and float
+    if (attrs.displayMode === 'float' && attrs.cssFloat && attrs.cssFloat !== 'none') {
+      // Floating image - use CSS float for text wrapping
+      styles.push(`float: ${attrs.cssFloat}`);
+      domAttrs.class += ` docx-image-float docx-image-float-${attrs.cssFloat}`;
+
+      // Add margins based on wrap distances
+      const marginTop = attrs.distTop ?? 0;
+      const marginBottom = attrs.distBottom ?? 0;
+      const marginLeft = attrs.distLeft ?? 0;
+      const marginRight = attrs.distRight ?? 0;
+
+      // Add spacing around floated image
+      if (attrs.cssFloat === 'left') {
+        styles.push(
+          `margin: ${marginTop}px ${marginRight || 12}px ${marginBottom}px ${marginLeft}px`
+        );
+      } else {
+        styles.push(
+          `margin: ${marginTop}px ${marginRight}px ${marginBottom}px ${marginLeft || 12}px`
+        );
+      }
+    } else if (attrs.displayMode === 'block') {
+      // Block image (TopAndBottom or centered) - centered on own line
+      styles.push('display: block');
+      styles.push('margin-left: auto');
+      styles.push('margin-right: auto');
+      domAttrs.class += ' docx-image-block';
+
+      // Add vertical margins
+      const marginTop = attrs.distTop ?? 8;
+      const marginBottom = attrs.distBottom ?? 8;
+      styles.push(`margin-top: ${marginTop}px`);
+      styles.push(`margin-bottom: ${marginBottom}px`);
+    }
+    // Inline images (default) - no special styling needed
+
+    // Apply transform if present (rotation, flip)
+    if (attrs.transform) {
+      styles.push(`transform: ${attrs.transform}`);
+    }
+
+    domAttrs.style = styles.join('; ');
 
     return ['img', domAttrs];
   },
@@ -431,6 +544,8 @@ export interface TableCellAttrs {
   borders?: { top?: boolean; bottom?: boolean; left?: boolean; right?: boolean };
   /** Per-side border colors (RGB hex) */
   borderColors?: { top?: string; bottom?: string; left?: string; right?: string };
+  /** Per-side border widths (in eighths of a point) */
+  borderWidths?: { top?: number; bottom?: number; left?: number; right?: number };
 }
 
 /**
@@ -469,8 +584,19 @@ export const table: NodeSpec = {
       domAttrs['data-style-id'] = attrs.styleId;
     }
 
-    // Apply table width style
-    const styles: string[] = ['border-collapse: collapse', 'width: 100%', 'table-layout: fixed'];
+    // Apply table width style - use auto layout for natural sizing
+    const styles: string[] = ['border-collapse: collapse', 'table-layout: auto'];
+
+    // Only set explicit width if specified in DOCX
+    if (attrs.width && attrs.widthType === 'pct') {
+      styles.push(`width: ${attrs.width / 50}%`); // DOCX pct is in 50ths of a percent
+    } else if (attrs.width && attrs.widthType === 'dxa') {
+      // Convert twips to pixels
+      const widthPx = Math.round((attrs.width / 20) * 1.333);
+      styles.push(`width: ${widthPx}px`);
+    }
+    // If no width specified, let table size naturally based on content
+
     if (attrs.justification === 'center') {
       styles.push('margin-left: auto', 'margin-right: auto');
     } else if (attrs.justification === 'right') {
@@ -526,6 +652,7 @@ export const tableCell: NodeSpec = {
     backgroundColor: { default: null },
     borders: { default: null }, // { top?: boolean, bottom?: boolean, left?: boolean, right?: boolean }
     borderColors: { default: null }, // { top?: string, bottom?: string, left?: string, right?: string }
+    borderWidths: { default: null }, // { top?: number, bottom?: number, left?: number, right?: number } in eighths of a point
     noWrap: { default: false },
   },
   parseDOM: [
@@ -580,23 +707,38 @@ export const tableCell: NodeSpec = {
       styles.push(`width: ${widthPx}px`);
     }
 
-    // Handle borders - support per-side colors
+    // Handle borders - support per-side colors and widths
     const borders = (attrs as TableCellAttrs).borders;
     const borderColors = (attrs as TableCellAttrs).borderColors;
+    const borderWidths = (attrs as TableCellAttrs).borderWidths;
+
+    // Helper to convert DOCX border size (eighths of a point) to CSS pixels
+    const toBorderWidth = (size?: number): string => {
+      if (!size) return '1px';
+      // 1 point = 1.333px at 96 DPI, size is in eighths of a point
+      // Use Math.ceil to ensure thin borders are visible
+      const px = Math.max(1, Math.ceil((size / 8) * 1.333));
+      return `${px}px`;
+    };
+
     if (borders) {
-      // Individual border control with per-side colors
+      // Individual border control with per-side colors and widths
       const topColor = borderColors?.top ? `#${borderColors.top}` : '#000000';
       const bottomColor = borderColors?.bottom ? `#${borderColors.bottom}` : '#000000';
       const leftColor = borderColors?.left ? `#${borderColors.left}` : '#000000';
       const rightColor = borderColors?.right ? `#${borderColors.right}` : '#000000';
-      styles.push(`border-top: ${borders.top ? '1px solid ' + topColor : 'none'}`);
-      styles.push(`border-bottom: ${borders.bottom ? '1px solid ' + bottomColor : 'none'}`);
-      styles.push(`border-left: ${borders.left ? '1px solid ' + leftColor : 'none'}`);
-      styles.push(`border-right: ${borders.right ? '1px solid ' + rightColor : 'none'}`);
-    } else {
-      // Default: all borders with black color (like Word)
-      styles.push(`border: 1px solid #000000`);
+      const topWidth = toBorderWidth(borderWidths?.top);
+      const bottomWidth = toBorderWidth(borderWidths?.bottom);
+      const leftWidth = toBorderWidth(borderWidths?.left);
+      const rightWidth = toBorderWidth(borderWidths?.right);
+      styles.push(`border-top: ${borders.top ? topWidth + ' solid ' + topColor : 'none'}`);
+      styles.push(
+        `border-bottom: ${borders.bottom ? bottomWidth + ' solid ' + bottomColor : 'none'}`
+      );
+      styles.push(`border-left: ${borders.left ? leftWidth + ' solid ' + leftColor : 'none'}`);
+      styles.push(`border-right: ${borders.right ? rightWidth + ' solid ' + rightColor : 'none'}`);
     }
+    // If no borders specified, don't add any default borders
 
     if (attrs.verticalAlign) {
       domAttrs['data-valign'] = attrs.verticalAlign;
@@ -630,6 +772,7 @@ export const tableHeader: NodeSpec = {
     backgroundColor: { default: null },
     borders: { default: null },
     borderColors: { default: null },
+    borderWidths: { default: null },
     noWrap: { default: false },
   },
   parseDOM: [
@@ -684,36 +827,47 @@ export const tableHeader: NodeSpec = {
       styles.push(`width: ${widthPx}px`);
     }
 
-    // Handle borders - default to black borders like Word
-    // Handle borders - support per-side colors
+    // Handle borders - support per-side colors and widths
     const borders = (attrs as TableCellAttrs).borders;
     const borderColors = (attrs as TableCellAttrs).borderColors;
+    const borderWidths = (attrs as TableCellAttrs).borderWidths;
+
+    // Helper to convert DOCX border size (eighths of a point) to CSS pixels
+    const toBorderWidth = (size?: number): string => {
+      if (!size) return '1px';
+      // Use Math.ceil to ensure thin borders are visible
+      const px = Math.max(1, Math.ceil((size / 8) * 1.333));
+      return `${px}px`;
+    };
+
     if (borders) {
-      // Individual border control with per-side colors
+      // Individual border control with per-side colors and widths
       const topColor = borderColors?.top ? `#${borderColors.top}` : '#000000';
       const bottomColor = borderColors?.bottom ? `#${borderColors.bottom}` : '#000000';
       const leftColor = borderColors?.left ? `#${borderColors.left}` : '#000000';
       const rightColor = borderColors?.right ? `#${borderColors.right}` : '#000000';
-      styles.push(`border-top: ${borders.top ? '1px solid ' + topColor : 'none'}`);
-      styles.push(`border-bottom: ${borders.bottom ? '1px solid ' + bottomColor : 'none'}`);
-      styles.push(`border-left: ${borders.left ? '1px solid ' + leftColor : 'none'}`);
-      styles.push(`border-right: ${borders.right ? '1px solid ' + rightColor : 'none'}`);
-    } else {
-      // Default: all borders with black color (like Word)
-      styles.push(`border: 1px solid #000000`);
+      const topWidth = toBorderWidth(borderWidths?.top);
+      const bottomWidth = toBorderWidth(borderWidths?.bottom);
+      const leftWidth = toBorderWidth(borderWidths?.left);
+      const rightWidth = toBorderWidth(borderWidths?.right);
+      styles.push(`border-top: ${borders.top ? topWidth + ' solid ' + topColor : 'none'}`);
+      styles.push(
+        `border-bottom: ${borders.bottom ? bottomWidth + ' solid ' + bottomColor : 'none'}`
+      );
+      styles.push(`border-left: ${borders.left ? leftWidth + ' solid ' + leftColor : 'none'}`);
+      styles.push(`border-right: ${borders.right ? rightWidth + ' solid ' + rightColor : 'none'}`);
     }
+    // If no borders specified, don't add any default borders
 
     if (attrs.verticalAlign) {
       domAttrs['data-valign'] = attrs.verticalAlign;
       styles.push(`vertical-align: ${attrs.verticalAlign}`);
     }
 
-    // Background color - default to light gray for headers
+    // Background color - only apply if explicitly set
     if (attrs.backgroundColor) {
       domAttrs['data-bgcolor'] = attrs.backgroundColor;
       styles.push(`background-color: #${attrs.backgroundColor}`);
-    } else {
-      styles.push('background-color: #f5f5f5');
     }
 
     domAttrs.style = styles.join('; ');

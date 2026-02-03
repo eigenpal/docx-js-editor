@@ -28,7 +28,9 @@ import type {
   TableRow,
   TableCell,
   TableCellFormatting,
+  TableBorders,
 } from '../../types/document';
+import { emuToPixels } from '../../docx/imageParser';
 import { createStyleResolver, type StyleResolver } from '../styles';
 import type { TableAttrs, TableRowAttrs, TableCellAttrs } from '../schema/nodes';
 
@@ -214,9 +216,18 @@ function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode
   const tableStyleId = table.formatting?.styleId;
   const look = table.formatting?.look;
 
+  // Resolve table borders: prefer table's own borders, fall back to table style's borders
+  const tableStyle = tableStyleId ? styleResolver?.getStyle(tableStyleId) : undefined;
+  const resolvedTableBorders = table.formatting?.borders ?? tableStyle?.tblPr?.borders;
+
   // Get firstRow style if enabled
   const firstRowStyle = look?.firstRow
     ? resolveTableStyleConditional(styleResolver, tableStyleId, 'firstRow')
+    : undefined;
+
+  // Get lastRow style if enabled
+  const lastRowStyle = look?.lastRow
+    ? resolveTableStyleConditional(styleResolver, tableStyleId, 'lastRow')
     : undefined;
 
   // Get banded row styles if horizontal banding is enabled (noHBand is false or undefined)
@@ -230,13 +241,18 @@ function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode
 
   // Track data row index (excluding header rows) for banding
   let dataRowIndex = 0;
+  const totalRows = table.rows.length;
   const rows = table.rows.map((row, rowIndex) => {
     const isHeader = rowIndex === 0 && !!look?.firstRow;
+    const isLastRow = rowIndex === totalRows - 1 && !!look?.lastRow;
 
     // Determine conditional style for this row
+    // lastRow takes precedence over banding for the final row
     let conditionalStyle: { tcPr?: TableCellFormatting; rPr?: TextFormatting } | undefined;
     if (isHeader) {
       conditionalStyle = firstRowStyle;
+    } else if (isLastRow) {
+      conditionalStyle = lastRowStyle;
     } else if (bandingEnabled) {
       // Alternate between band1 and band2 for data rows
       conditionalStyle = dataRowIndex % 2 === 0 ? band1HorzStyle : band2HorzStyle;
@@ -249,7 +265,10 @@ function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode
       isHeader,
       columnWidths,
       totalWidth,
-      conditionalStyle
+      conditionalStyle,
+      resolvedTableBorders, // Pass resolved table borders (own or from style)
+      rowIndex,
+      totalRows
     );
   });
 
@@ -265,7 +284,10 @@ function convertTableRow(
   isHeaderRow: boolean,
   columnWidths?: number[],
   totalWidth?: number,
-  conditionalStyle?: { tcPr?: TableCellFormatting; rPr?: TextFormatting }
+  conditionalStyle?: { tcPr?: TableCellFormatting; rPr?: TextFormatting },
+  tableBorders?: TableBorders,
+  rowIndex?: number,
+  totalRows?: number
 ): PMNode {
   const attrs: TableRowAttrs = {
     height: row.formatting?.height?.value,
@@ -273,9 +295,13 @@ function convertTableRow(
     isHeader: isHeaderRow || row.formatting?.header,
   };
 
+  const numCells = row.cells.length;
+  const isFirstRow = rowIndex === 0;
+  const isLastRow = rowIndex === (totalRows ?? 1) - 1;
+
   // Track column index for mapping to columnWidths (accounting for colspan)
   let colIndex = 0;
-  const cells = row.cells.map((cell) => {
+  const cells = row.cells.map((cell, cellIndex) => {
     const colspan = cell.formatting?.gridSpan ?? 1;
     // Calculate the width for this cell from columnWidths if cell doesn't have own width
     let gridWidth: number | undefined;
@@ -289,7 +315,23 @@ function convertTableRow(
       gridWidth = Math.round((cellWidthTwips / totalWidth) * 100);
     }
     colIndex += colspan;
-    return convertTableCell(cell, styleResolver, isHeaderRow, gridWidth, conditionalStyle);
+
+    // Determine cell position for table border application
+    const isFirstCol = cellIndex === 0;
+    const isLastCol = cellIndex === numCells - 1;
+
+    return convertTableCell(
+      cell,
+      styleResolver,
+      isHeaderRow,
+      gridWidth,
+      conditionalStyle,
+      tableBorders,
+      isFirstRow,
+      isLastRow,
+      isFirstCol,
+      isLastCol
+    );
   });
 
   return schema.node('tableRow', attrs, cells);
@@ -303,7 +345,12 @@ function convertTableCell(
   styleResolver: StyleResolver | null,
   isHeader: boolean,
   gridWidthPercent?: number,
-  conditionalStyle?: { tcPr?: TableCellFormatting; rPr?: TextFormatting }
+  conditionalStyle?: { tcPr?: TableCellFormatting; rPr?: TextFormatting },
+  tableBorders?: TableBorders,
+  isFirstRow?: boolean,
+  isLastRow?: boolean,
+  isFirstCol?: boolean,
+  isLastCol?: boolean
 ): PMNode {
   const formatting = cell.formatting;
 
@@ -327,22 +374,61 @@ function convertTableCell(
     formatting?.shading?.fill?.rgb ?? conditionalStyle?.tcPr?.shading?.fill?.rgb;
 
   // Convert borders to the format expected by ProseMirror schema
-  const cellBorders = formatting?.borders;
+  // Priority: cell borders > conditional style borders > table borders
+  const cellBorders = formatting?.borders ?? conditionalStyle?.tcPr?.borders;
   let borders: { top?: boolean; bottom?: boolean; left?: boolean; right?: boolean } | undefined;
   let borderColors: { top?: string; bottom?: string; left?: string; right?: string } | undefined;
+  let borderWidths: { top?: number; bottom?: number; left?: number; right?: number } | undefined;
+
+  // Helper to check if a border side is visible (has a style that's not none/nil)
+  const isBorderVisible = (border?: { style?: string }): boolean => {
+    return !!border && !!border.style && border.style !== 'none' && border.style !== 'nil';
+  };
 
   if (cellBorders) {
+    // Use cell-level or conditional style borders
     borders = {
-      top: cellBorders.top?.style !== 'none' && cellBorders.top?.style !== 'nil',
-      bottom: cellBorders.bottom?.style !== 'none' && cellBorders.bottom?.style !== 'nil',
-      left: cellBorders.left?.style !== 'none' && cellBorders.left?.style !== 'nil',
-      right: cellBorders.right?.style !== 'none' && cellBorders.right?.style !== 'nil',
+      top: isBorderVisible(cellBorders.top),
+      bottom: isBorderVisible(cellBorders.bottom),
+      left: isBorderVisible(cellBorders.left),
+      right: isBorderVisible(cellBorders.right),
     };
     borderColors = {
       top: cellBorders.top?.color?.rgb,
       bottom: cellBorders.bottom?.color?.rgb,
       left: cellBorders.left?.color?.rgb,
       right: cellBorders.right?.color?.rgb,
+    };
+    borderWidths = {
+      top: cellBorders.top?.size,
+      bottom: cellBorders.bottom?.size,
+      left: cellBorders.left?.size,
+      right: cellBorders.right?.size,
+    };
+  } else if (tableBorders) {
+    // Fall back to table-level borders based on cell position
+    // Table borders: top/bottom/left/right for outer edges, insideH/insideV for internal
+    borders = {
+      top: isFirstRow ? isBorderVisible(tableBorders.top) : isBorderVisible(tableBorders.insideH),
+      bottom: isLastRow
+        ? isBorderVisible(tableBorders.bottom)
+        : isBorderVisible(tableBorders.insideH),
+      left: isFirstCol ? isBorderVisible(tableBorders.left) : isBorderVisible(tableBorders.insideV),
+      right: isLastCol
+        ? isBorderVisible(tableBorders.right)
+        : isBorderVisible(tableBorders.insideV),
+    };
+    borderColors = {
+      top: isFirstRow ? tableBorders.top?.color?.rgb : tableBorders.insideH?.color?.rgb,
+      bottom: isLastRow ? tableBorders.bottom?.color?.rgb : tableBorders.insideH?.color?.rgb,
+      left: isFirstCol ? tableBorders.left?.color?.rgb : tableBorders.insideV?.color?.rgb,
+      right: isLastCol ? tableBorders.right?.color?.rgb : tableBorders.insideV?.color?.rgb,
+    };
+    borderWidths = {
+      top: isFirstRow ? tableBorders.top?.size : tableBorders.insideH?.size,
+      bottom: isLastRow ? tableBorders.bottom?.size : tableBorders.insideH?.size,
+      left: isFirstCol ? tableBorders.left?.size : tableBorders.insideV?.size,
+      right: isLastCol ? tableBorders.right?.size : tableBorders.insideV?.size,
     };
   }
 
@@ -356,6 +442,7 @@ function convertTableCell(
     noWrap: formatting?.noWrap,
     borders: borders,
     borderColors: borderColors,
+    borderWidths: borderWidths,
   };
 
   // Convert cell content (paragraphs and nested tables)
@@ -481,15 +568,119 @@ function convertRunContent(content: RunContent, marks: ReturnType<typeof schema.
 
 /**
  * Convert an Image to a ProseMirror image node
+ *
+ * DOCX images have size in EMUs (English Metric Units), which must be
+ * converted to pixels for proper HTML rendering.
+ * 914400 EMU = 1 inch = 96 CSS pixels
+ *
+ * Image types in DOCX:
+ * 1. Inline (wp:inline) - flows with text like a character
+ * 2. Floating/Anchored (wp:anchor) with wrap types:
+ *    - Square/Tight/Through: text wraps around image
+ *      - wrapText='left' → text on LEFT, image floats RIGHT
+ *      - wrapText='right' → text on RIGHT, image floats LEFT
+ *      - wrapText='bothSides' → depends on horizontal alignment
+ *    - TopAndBottom: image on its own line, text above/below only
+ *    - None/Behind/InFront: positioned image, no text wrap
  */
 function convertImage(image: Image): PMNode {
+  // Convert EMU to pixels for proper sizing
+  const widthPx = image.size?.width ? emuToPixels(image.size.width) : undefined;
+  const heightPx = image.size?.height ? emuToPixels(image.size.height) : undefined;
+
+  // Determine wrap type and float direction
+  const wrapType = image.wrap.type;
+  const wrapText = image.wrap.wrapText;
+  const hAlign = image.position?.horizontal?.alignment;
+
+  // Determine CSS float based on wrap settings
+  // In DOCX: wrapText='left' means "text flows on the left" → image is on right → float: right
+  //          wrapText='right' means "text flows on the right" → image is on left → float: left
+  let cssFloat: 'left' | 'right' | 'none' | undefined;
+
+  if (wrapType === 'inline') {
+    cssFloat = 'none'; // Inline images don't float
+  } else if (wrapType === 'topAndBottom') {
+    cssFloat = 'none'; // Block images don't float
+  } else if (wrapType === 'square' || wrapType === 'tight' || wrapType === 'through') {
+    // These wrap types support text wrapping around the image
+    if (wrapText === 'left') {
+      cssFloat = 'right'; // Text on left → image floats right
+    } else if (wrapText === 'right') {
+      cssFloat = 'left'; // Text on right → image floats left
+    } else if (wrapText === 'bothSides' || wrapText === 'largest') {
+      // Use horizontal alignment to determine float
+      if (hAlign === 'left') {
+        cssFloat = 'left';
+      } else if (hAlign === 'right') {
+        cssFloat = 'right';
+      } else {
+        cssFloat = 'none'; // Center or no alignment → block
+      }
+    } else {
+      // Default: use horizontal alignment
+      if (hAlign === 'left') {
+        cssFloat = 'left';
+      } else if (hAlign === 'right') {
+        cssFloat = 'right';
+      } else {
+        cssFloat = 'none';
+      }
+    }
+  } else {
+    // Behind, inFront, etc. - positioned images, no float
+    cssFloat = 'none';
+  }
+
+  // Determine display mode for CSS
+  let displayMode: 'inline' | 'block' | 'float' = 'inline';
+  if (wrapType === 'inline') {
+    displayMode = 'inline';
+  } else if (cssFloat && cssFloat !== 'none') {
+    displayMode = 'float';
+  } else {
+    displayMode = 'block'; // TopAndBottom or centered
+  }
+
+  // Build transform string if needed (rotation, flip)
+  let transform: string | undefined;
+  if (image.transform) {
+    const transforms: string[] = [];
+    if (image.transform.rotation) {
+      transforms.push(`rotate(${image.transform.rotation}deg)`);
+    }
+    if (image.transform.flipH) {
+      transforms.push('scaleX(-1)');
+    }
+    if (image.transform.flipV) {
+      transforms.push('scaleY(-1)');
+    }
+    if (transforms.length > 0) {
+      transform = transforms.join(' ');
+    }
+  }
+
+  // Convert wrap distances from EMU to pixels for margins
+  const distTop = image.wrap.distT ? emuToPixels(image.wrap.distT) : undefined;
+  const distBottom = image.wrap.distB ? emuToPixels(image.wrap.distB) : undefined;
+  const distLeft = image.wrap.distL ? emuToPixels(image.wrap.distL) : undefined;
+  const distRight = image.wrap.distR ? emuToPixels(image.wrap.distR) : undefined;
+
   return schema.node('image', {
     src: image.src || '',
     alt: image.alt,
     title: image.title,
-    width: image.size?.width,
-    height: image.size?.height,
+    width: widthPx,
+    height: heightPx,
     rId: image.rId,
+    wrapType: wrapType,
+    displayMode: displayMode,
+    cssFloat: cssFloat,
+    transform: transform,
+    distTop: distTop,
+    distBottom: distBottom,
+    distLeft: distLeft,
+    distRight: distRight,
   });
 }
 

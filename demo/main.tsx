@@ -148,6 +148,7 @@ function DemoApp() {
           showZoomControl={true}
           initialZoom={1.0}
           variablePanelPosition="right"
+          enablePageNavigation={false}
         />
       </main>
     </div>

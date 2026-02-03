@@ -4,14 +4,23 @@
  * Provides page-like layout similar to Word/Google Docs
  */
 
-/* Editor container */
-.prosemirror-editor {
-  background: var(--doc-bg);
-  padding: 20px;
+/* Outer wrapper - handles scrolling and background */
+.prosemirror-editor-wrapper {
   min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  /* overflow, background, and padding set via inline styles */
+}
+
+/* Zoom container - sized to match scaled content for proper scrolling */
+.prosemirror-zoom-container {
+  /* Width, height, margin set via inline styles based on zoom */
+}
+
+/* Editor container - the transform target */
+.prosemirror-editor {
+  /* Transform applied via inline styles for zoom */
+  /* CSS variables (--page-width, etc.) set via inline styles */
+  /* Width is set to page width so transform scales correctly */
+  width: var(--page-width, 8.5in);
 }
 
 /* Editor content area (the actual editable content) */
@@ -26,7 +35,7 @@
   padding-bottom: var(--margin-bottom, 72px);
   padding-left: var(--margin-left, 72px);
   padding-right: var(--margin-right, 72px);
-  max-width: 100%;
+  /* Remove max-width constraint - let the page be its natural size */
   outline: none;
   /* Default font - will be overridden by inline styles from DOCX */
   font-family: 'Calibri', 'Arial', sans-serif;
@@ -145,14 +154,18 @@
 .prosemirror-editor .ProseMirror .docx-list-bullet,
 .prosemirror-editor .ProseMirror .docx-list-numbered {
   position: relative;
-  padding-left: 36px;
+  /* Increased padding to accommodate longer markers like "1.1.1." */
+  padding-left: 48px;
 }
 
 /* Use the computed marker from DOCX when available */
 .prosemirror-editor .ProseMirror [data-list-marker]::before {
   content: attr(data-list-marker);
   position: absolute;
-  left: 12px;
+  /* Position marker at right edge of the marker area so it aligns with content */
+  left: 0;
+  width: 44px;
+  text-align: right;
   white-space: nowrap;
 }
 
@@ -160,7 +173,9 @@
 .prosemirror-editor .ProseMirror .docx-list-bullet:not([data-list-marker])::before {
   content: '•';
   position: absolute;
-  left: 12px;
+  left: 0;
+  width: 44px;
+  text-align: right;
 }
 
 /* Fallback for numbered lists without marker - use CSS counters */
@@ -171,31 +186,41 @@
 .prosemirror-editor .ProseMirror .docx-list-decimal:not([data-list-marker])::before {
   content: counter(list-counter) '.';
   position: absolute;
-  left: 12px;
+  left: 0;
+  width: 44px;
+  text-align: right;
 }
 
 .prosemirror-editor .ProseMirror .docx-list-lower-roman:not([data-list-marker])::before {
   content: counter(list-counter, lower-roman) '.';
   position: absolute;
-  left: 12px;
+  left: 0;
+  width: 44px;
+  text-align: right;
 }
 
 .prosemirror-editor .ProseMirror .docx-list-upper-roman:not([data-list-marker])::before {
   content: counter(list-counter, upper-roman) '.';
   position: absolute;
-  left: 12px;
+  left: 0;
+  width: 44px;
+  text-align: right;
 }
 
 .prosemirror-editor .ProseMirror .docx-list-lower-alpha:not([data-list-marker])::before {
   content: counter(list-counter, lower-alpha) '.';
   position: absolute;
-  left: 12px;
+  left: 0;
+  width: 44px;
+  text-align: right;
 }
 
 .prosemirror-editor .ProseMirror .docx-list-upper-alpha:not([data-list-marker])::before {
   content: counter(list-counter, upper-alpha) '.';
   position: absolute;
-  left: 12px;
+  left: 0;
+  width: 44px;
+  text-align: right;
 }
 
 /* Reset counter at level 0 for fallback */
@@ -242,8 +267,68 @@
   pointer-events: none;
 }
 
-/* Image styling */
-.prosemirror-editor .ProseMirror img {
+/* ============================================================================
+   IMAGE STYLES - Word-like image rendering
+   ============================================================================
+
+   DOCX images have three main display modes:
+   1. Inline - flows with text like a character (displayMode='inline')
+   2. Float - text wraps around image (displayMode='float', cssFloat='left'|'right')
+   3. Block - centered on its own line (displayMode='block')
+*/
+
+/* Base image styling - all images */
+.prosemirror-editor .ProseMirror img.docx-image {
+  /* IMPORTANT: Override global CSS reset that sets img { display: block } */
+  /* Default to inline for inline images - block/float set via inline style */
+  display: inline;
+  /* Dimensions set via inline styles, but constrain to page */
+  max-width: 100%;
+  /* Maintain aspect ratio when width-constrained */
+  object-fit: contain;
+  /* Vertical alignment for inline images - aligns bottom of image with text baseline */
+  vertical-align: baseline;
+  /* Prevent selection outline issues */
+  outline: none;
+}
+
+/* Floating images - text wraps around */
+.prosemirror-editor .ProseMirror img.docx-image-float {
+  /* Float direction set via inline style */
+  /* Margins set via inline style based on wrap distances */
+}
+
+/* Left-floated images - text wraps on right side */
+.prosemirror-editor .ProseMirror img.docx-image-float-left {
+  clear: left;
+}
+
+/* Right-floated images - text wraps on left side */
+.prosemirror-editor .ProseMirror img.docx-image-float-right {
+  clear: right;
+}
+
+/* Block images - centered on their own line */
+.prosemirror-editor .ProseMirror img.docx-image-block {
+  /* display:block and margin:auto set via inline style */
+  clear: both;
+}
+
+/* Clear floats after paragraphs containing floated images */
+.prosemirror-editor .ProseMirror p:has(img.docx-image-float)::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+/* Selected image indicator */
+.prosemirror-editor .ProseMirror img.docx-image.ProseMirror-selectednode {
+  outline: 2px solid var(--doc-primary, #4285f4);
+  outline-offset: 2px;
+}
+
+/* Fallback for images without docx-image class */
+.prosemirror-editor .ProseMirror img:not(.docx-image) {
   max-width: 100%;
   height: auto;
 }
@@ -287,28 +372,29 @@
 /* Table container */
 .prosemirror-editor .ProseMirror table.docx-table {
   border-collapse: collapse;
-  width: 100%;
   margin: 12pt 0;
-  table-layout: fixed; /* Critical for maintaining column widths */
+  /* Use auto layout to allow cells to expand for content (like Word) */
+  table-layout: auto;
+  /* Constrain table to fit within the page - prevent overflow */
+  max-width: 100%;
+  /* Allow table to shrink if needed */
+  width: auto;
 }
 
 /* Table cells */
 .prosemirror-editor .ProseMirror td.docx-table-cell,
 .prosemirror-editor .ProseMirror th.docx-table-header {
-  border: 1px solid var(--doc-border-dark);
+  /* Borders are set via inline styles from DOCX - no default border here */
+  /* to avoid conflicting with per-side border styling */
   padding: 4px 8px;
   vertical-align: top;
-  min-width: 20px;
-  /* Text wrapping for fixed table layout */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  overflow: hidden;
+  min-width: 30px;
+  /* Text wrapping handled via inline styles based on noWrap attribute */
 }
 
-/* Table header cells */
+/* Table header cells - styling comes from inline styles, not CSS defaults */
 .prosemirror-editor .ProseMirror th.docx-table-header {
   font-weight: bold;
-  background-color: var(--doc-bg-subtle);
   text-align: left;
 }
 

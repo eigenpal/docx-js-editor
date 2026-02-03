@@ -34,6 +34,80 @@ import { parseSectionProperties, getDefaultSectionProperties } from './sectionPa
 // ============================================================================
 
 /**
+ * Convert Symbol font bullet characters to Unicode equivalents
+ *
+ * DOCX often uses characters from Symbol, Wingdings, or Webdings fonts
+ * that don't render correctly without the font. This maps them to
+ * standard Unicode bullets that work with any font.
+ */
+function convertBulletToUnicode(bulletChar: string): string {
+  // If empty or whitespace, use standard bullet
+  if (!bulletChar || bulletChar.trim() === '') {
+    return '•';
+  }
+
+  // Get the character code
+  const charCode = bulletChar.charCodeAt(0);
+
+  // Map common Symbol/Wingdings characters to Unicode
+  // Symbol font mappings (often used for bullets)
+  const symbolMap: Record<number, string> = {
+    // Symbol font
+    0x00b7: '•', // Middle dot → bullet
+    0x006f: '○', // lowercase o → white circle (used in Symbol font)
+    0x00a7: '■', // Section sign → black square (Symbol)
+    0x00fc: '✓', // Checkmark in Symbol/Wingdings
+
+    // Wingdings mappings (character codes when Wingdings not available)
+    0x006e: '■', // Wingdings n → black square
+    0x0071: '○', // Wingdings q → white circle
+    0x0075: '◆', // Wingdings u → black diamond
+    0x0076: '❖', // Wingdings v → diamond
+    0x00a8: '✓', // Wingdings checkmark
+    0x00fb: '✓', // Checkmark
+    0x00fe: '✓', // Checkmark variant
+
+    // Common control characters that might appear
+    0xf0b7: '•', // Private use area bullet
+    0xf06e: '■', // Private use area square
+    0xf06f: '○', // Private use area circle
+    0xf0a7: '■', // Private use area
+    0xf0fc: '✓', // Private use area checkmark
+
+    // Other common bullet-like characters
+    0x2022: '•', // Already a bullet
+    0x25cf: '●', // Black circle
+    0x25cb: '○', // White circle
+    0x25a0: '■', // Black square
+    0x25a1: '□', // White square
+    0x25c6: '◆', // Black diamond
+    0x25c7: '◇', // White diamond
+    0x2013: '–', // En dash
+    0x2014: '—', // Em dash
+    0x003e: '>', // Greater than (used as arrow)
+    0x002d: '-', // Hyphen
+  };
+
+  // Check if we have a mapping for this character
+  if (symbolMap[charCode]) {
+    return symbolMap[charCode];
+  }
+
+  // If it's in the private use area (often Symbol/Wingdings), use bullet
+  if (charCode >= 0xe000 && charCode <= 0xf8ff) {
+    return '•';
+  }
+
+  // If it's a control character or non-printable, use bullet
+  if (charCode < 32 || (charCode >= 127 && charCode < 160)) {
+    return '•';
+  }
+
+  // Otherwise, use the character as-is (might be a valid Unicode bullet)
+  return bulletChar;
+}
+
+/**
  * Compute the actual list marker for a paragraph
  *
  * Replaces %1, %2, etc. in lvlText with actual counter values.
@@ -72,10 +146,12 @@ function computeListMarker(
   // Get the lvlText pattern (e.g., "%1.%2.%3.")
   const pattern = listRendering.marker;
 
-  // For bullet lists, use the marker character directly
+  // For bullet lists, convert Symbol font characters to proper Unicode
   if (listRendering.isBullet) {
-    // Bullet markers are usually single characters like •, ●, ○, ■
-    // The pattern might contain the actual bullet character
+    // DOCX often uses Symbol font characters that don't render correctly
+    // Map common Symbol font codes to Unicode equivalents
+    const bulletChar = pattern || '';
+    listRendering.marker = convertBulletToUnicode(bulletChar);
     return;
   }
 
