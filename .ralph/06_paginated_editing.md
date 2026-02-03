@@ -52,9 +52,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 1.1: Create layout engine types
 
-- [ ] Create `src/layout-engine/types.ts` with core types
-- [ ] Define: `FlowBlock`, `Measure`, `Layout`, `Page`, `Fragment`
-- [ ] Each fragment tracks `pmStart`/`pmEnd` for position mapping
+- [x] Create `src/layout-engine/types.ts` with core types
+- [x] Define: `FlowBlock`, `Measure`, `Layout`, `Page`, `Fragment`
+- [x] Each fragment tracks `pmStart`/`pmEnd` for position mapping
 
 **SuperDoc reference (concept only):**
 

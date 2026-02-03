@@ -467,3 +467,29 @@ Features:
   - TypeScript interface inference from template
 
 Tests: All 27 formatting tests pass (no regressions)
+[2026-02-03 12:07] TASK: Create layout engine types
+[2026-02-03 12:07] STATUS: starting
+[2026-02-03 12:07] NOTES: Phase 1, Task 1.1 - Creating core types for paginated layout engine
+[2026-02-03 12:07] STATUS: researching-superdoc
+[2026-02-03 12:07] NOTES: Found SuperDoc layout-engine at /Users/jedrzejblaszyk/superdoc/packages/layout-engine/
+[2026-02-03 12:08] NOTES: Read SuperDoc contracts/src/index.ts - 1763 lines
+[2026-02-03 12:08] NOTES: Key concepts from SuperDoc:
+[2026-02-03 12:08] NOTES: - FlowBlock: union of ParagraphBlock | ImageBlock | DrawingBlock | ListBlock | TableBlock | SectionBreakBlock | PageBreakBlock | ColumnBreakBlock
+[2026-02-03 12:08] NOTES: - Measure: union of ParagraphMeasure | ImageMeasure | DrawingMeasure | TableMeasure | ListMeasure | SectionBreakMeasure | PageBreakMeasure | ColumnBreakMeasure
+[2026-02-03 12:08] NOTES: - Fragment: ParaFragment | ImageFragment | DrawingFragment | ListItemFragment | TableFragment - positioned on page with x, y, width, pmStart/pmEnd
+[2026-02-03 12:08] NOTES: - Page: has number, fragments[], margins, size, orientation, sectionRefs
+[2026-02-03 12:08] NOTES: - Layout: final output with pageSize, pages[], columns, headerFooter, pageGap
+[2026-02-03 12:08] NOTES: Read SuperDoc paginator.ts - 130 lines
+[2026-02-03 12:08] NOTES: Key insight: Paginator is a factory function that returns {pages, states, startNewPage, ensurePage, advanceColumn, columnX}
+[2026-02-03 12:08] NOTES: PageState tracks cursorY, columnIndex, topMargin, contentBottom, constraintBoundaries, trailingSpacing
+[2026-02-03 12:08] STATUS: editing
+[2026-02-03 12:08] NOTES: Now writing own implementation based on understanding (clean room)
+[2026-02-03 12:09] STATUS: testing
+[2026-02-03 12:09] NOTES: Typecheck passes - types compile correctly
+[2026-02-03 12:09] STATUS: done
+[2026-02-03 12:09] NOTES: Created src/layout-engine/types.ts with:
+[2026-02-03 12:09] NOTES:   - FlowBlock types: ParagraphBlock, TableBlock, ImageBlock, SectionBreakBlock, PageBreakBlock, ColumnBreakBlock
+[2026-02-03 12:09] NOTES:   - Measure types: ParagraphMeasure (with lines), ImageMeasure, TableMeasure, etc.
+[2026-02-03 12:09] NOTES:   - Fragment types: ParagraphFragment, TableFragment, ImageFragment - all with pmStart/pmEnd
+[2026-02-03 12:09] NOTES:   - Page and Layout types for final output
+[2026-02-03 12:09] NOTES:   - Utility types: HitTestResult, DocumentPosition for click mapping
