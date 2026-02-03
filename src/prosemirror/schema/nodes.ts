@@ -15,6 +15,7 @@ import type {
   BorderSpec,
   ShadingProperties,
   TabStop,
+  TextFormatting,
 } from '../../types/document';
 import { paragraphToStyle } from '../../utils/formatToStyle';
 
@@ -65,6 +66,10 @@ export interface ParagraphAttrs {
 
   // Tab stops
   tabs?: TabStop[];
+
+  // Default text formatting for empty paragraphs (persists when navigating away)
+  // Maps to OOXML pPr/rPr (paragraph's default run properties)
+  defaultTextFormatting?: TextFormatting;
 }
 
 /**
@@ -170,6 +175,9 @@ export const paragraph: NodeSpec = {
 
     // Tab stops
     tabs: { default: null },
+
+    // Default text formatting for empty paragraphs (persists when navigating away)
+    defaultTextFormatting: { default: null },
   },
   parseDOM: [
     {

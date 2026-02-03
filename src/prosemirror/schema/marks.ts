@@ -242,7 +242,9 @@ export const fontSize: MarkSpec = {
   toDOM(mark) {
     const size = mark.attrs.size as number;
     const pt = size / 2;
-    return ['span', { style: `font-size: ${pt}pt` }, 0];
+    // Word uses 1.15x line-height for single line spacing
+    const lineHeight = (pt * 1.15).toFixed(2);
+    return ['span', { style: `font-size: ${pt}pt; line-height: ${lineHeight}pt` }, 0];
   },
 };
 

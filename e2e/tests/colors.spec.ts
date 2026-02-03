@@ -71,11 +71,14 @@ test.describe('Text Color', () => {
   });
 
   test('multiple colors in document', async ({ page }) => {
+    // Type all text first
     await editor.typeText('Red text');
-    await editor.selectAll();
-    await editor.setTextColor('#FF0000');
     await editor.pressEnter();
     await editor.typeText('Blue text');
+
+    // Now color each part
+    await editor.selectText('Red text');
+    await editor.setTextColor('#FF0000');
     await editor.selectText('Blue text');
     await editor.setTextColor('#0000FF');
 
@@ -154,11 +157,14 @@ test.describe('Highlight Color', () => {
   });
 
   test('multiple highlights in document', async ({ page }) => {
+    // Type all text first
     await editor.typeText('Yellow text');
-    await editor.selectAll();
-    await editor.setHighlightColor('yellow');
     await editor.pressEnter();
     await editor.typeText('Cyan text');
+
+    // Now highlight each part
+    await editor.selectText('Yellow text');
+    await editor.setHighlightColor('yellow');
     await editor.selectText('Cyan text');
     await editor.setHighlightColor('cyan');
 

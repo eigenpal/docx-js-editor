@@ -19,6 +19,7 @@ import { schema } from './schema';
 import { toProseDoc, createEmptyDoc } from './conversion';
 import { fromProseDoc } from './conversion/fromProseDoc';
 import { createListKeymap } from './plugins/keymap';
+import { textFormattingToMarks } from './commands/formatting';
 import type { Document, Theme, TextFormatting, ParagraphFormatting } from '../types/document';
 import type { SelectionContext } from '../types/agentApi';
 
@@ -164,11 +165,26 @@ function extractSelectionState(state: EditorState): SelectionState | null {
   });
 
   // Get current text formatting from marks at selection
-  const textFormatting: TextFormatting = {};
+  let textFormatting: TextFormatting = {};
+
+  // Check paragraph for default text formatting (for empty paragraphs)
+  const paragraph = $from.parent;
+  const isEmptyParagraph =
+    paragraph.type.name === 'paragraph' && paragraph.textContent.length === 0;
+  const paragraphDefaultFormatting = paragraph.attrs?.defaultTextFormatting as
+    | TextFormatting
+    | undefined;
+
   // For empty selection (cursor), use stored marks or marks at cursor position
   // For non-empty selection, check marks at the start of selection
   const marks = state.storedMarks || selection.$from.marks();
 
+  // If in empty paragraph with no marks but has defaultTextFormatting, use that
+  if (isEmptyParagraph && marks.length === 0 && paragraphDefaultFormatting) {
+    textFormatting = { ...paragraphDefaultFormatting };
+  }
+
+  // Override with actual marks if present
   for (const mark of marks) {
     switch (mark.type.name) {
       case 'bold':
@@ -220,7 +236,7 @@ function extractSelectionState(state: EditorState): SelectionState | null {
   // Get paragraph formatting and styleId from current paragraph
   const paragraphFormatting: ParagraphFormatting = {};
   let styleId: string | null = null;
-  const paragraph = $from.parent;
+  // Note: paragraph is already defined above
   if (paragraph.type.name === 'paragraph') {
     if (paragraph.attrs.alignment) {
       paragraphFormatting.alignment = paragraph.attrs.alignment;
@@ -280,18 +296,121 @@ export const ProseMirrorEditor = memo(
     // Track document version to prevent circular updates
     const lastDocVersionRef = useRef<number>(0);
 
+    // Helper to convert marks to TextFormatting for saving
+    const marksToFormatting = useCallback(
+      (marks: readonly import('prosemirror-model').Mark[]): TextFormatting => {
+        const formatting: TextFormatting = {};
+        for (const mark of marks) {
+          switch (mark.type.name) {
+            case 'bold':
+              formatting.bold = true;
+              break;
+            case 'italic':
+              formatting.italic = true;
+              break;
+            case 'underline':
+              formatting.underline = { style: mark.attrs.style || 'single' };
+              break;
+            case 'strike':
+              formatting.strike = true;
+              break;
+            case 'textColor':
+              formatting.color = mark.attrs;
+              break;
+            case 'highlight':
+              formatting.highlight = mark.attrs.color;
+              break;
+            case 'fontSize':
+              formatting.fontSize = mark.attrs.size;
+              break;
+            case 'fontFamily':
+              formatting.fontFamily = { ascii: mark.attrs.ascii, hAnsi: mark.attrs.hAnsi };
+              break;
+            case 'superscript':
+              formatting.vertAlign = 'superscript';
+              break;
+            case 'subscript':
+              formatting.vertAlign = 'subscript';
+              break;
+          }
+        }
+        return formatting;
+      },
+      []
+    );
+
     // Create dispatch transaction handler
     const dispatchTransaction = useCallback(
       (tr: Transaction) => {
         const view = viewRef.current;
         if (!view) return;
 
+        const oldState = view.state;
+
         // Apply transaction to get new state
-        const newState = view.state.apply(tr);
+        let newState = view.state.apply(tr);
+
+        // Check if stored marks changed (for toolbar updates when setting formatting without selection)
+        const storedMarksChanged = oldState.storedMarks !== newState.storedMarks;
+
+        // When cursor is in an empty paragraph with saved formatting, restore stored marks
+        // This handles both: 1) navigating to empty paragraph, 2) deleting all text
+        const shouldRestoreMarks = tr.selectionSet || tr.docChanged;
+        if (shouldRestoreMarks) {
+          const { $from } = newState.selection;
+          const paragraph = $from.parent;
+
+          if (
+            paragraph.type.name === 'paragraph' &&
+            paragraph.textContent.length === 0 &&
+            paragraph.attrs?.defaultTextFormatting
+          ) {
+            // Only restore if there are no current stored marks
+            const currentMarks = newState.storedMarks || $from.marks();
+            if (currentMarks.length === 0) {
+              const restoredMarks = textFormattingToMarks(
+                paragraph.attrs.defaultTextFormatting as TextFormatting
+              );
+              if (restoredMarks.length > 0) {
+                // Create a new transaction to set stored marks
+                const marksTr = newState.tr.setStoredMarks(restoredMarks);
+                newState = newState.apply(marksTr);
+              }
+            }
+          }
+        }
+
+        // When stored marks change on an empty paragraph, save to paragraph attrs
+        if (storedMarksChanged && !tr.docChanged) {
+          const { $from } = newState.selection;
+          const paragraph = $from.parent;
+
+          if (paragraph.type.name === 'paragraph' && paragraph.textContent.length === 0) {
+            const marks = newState.storedMarks || [];
+            const defaultTextFormatting = marks.length > 0 ? marksToFormatting(marks) : null;
+
+            // Only save if formatting actually changed
+            const currentFormatting = paragraph.attrs?.defaultTextFormatting;
+            const formattingChanged =
+              JSON.stringify(defaultTextFormatting) !== JSON.stringify(currentFormatting);
+
+            if (formattingChanged) {
+              // Preserve stored marks when saving to paragraph attrs
+              const saveTr = newState.tr
+                .setNodeMarkup($from.before(), undefined, {
+                  ...paragraph.attrs,
+                  defaultTextFormatting,
+                })
+                .setStoredMarks(marks.length > 0 ? marks : null);
+              newState = newState.apply(saveTr);
+            }
+          }
+        }
+
         view.updateState(newState);
 
-        // Notify selection changes
-        if (tr.selectionSet || tr.docChanged) {
+        // Notify selection changes (including stored marks changes for immediate toolbar feedback)
+        if (tr.selectionSet || tr.docChanged || storedMarksChanged) {
           const selectionState = extractSelectionState(newState);
           onSelectionChange?.(selectionState);
         }
@@ -304,7 +423,7 @@ export const ProseMirrorEditor = memo(
           onChange?.(newDocument);
         }
       },
-      [onChange, onSelectionChange]
+      [onChange, onSelectionChange, marksToFormatting]
     );
 
     // Initialize/cleanup EditorView
