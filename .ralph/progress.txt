@@ -538,3 +538,20 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 12:37] STATUS: running
 [2026-02-03 12:37] NOTES: Typecheck passed
 [2026-02-03 12:37] STATUS: done
+
+[2026-02-03 12:39] TASK: 1.5 Handle keepNext/keepLines
+[2026-02-03 12:39] STATUS: starting
+[2026-02-03 12:39] STATUS: researching-superdoc
+[2026-02-03 12:42] NOTES: Read SuperDoc keepNext handling - key concepts:
+[2026-02-03 12:42] NOTES: 1. computeKeepNextChains: pre-scan to find consecutive keepNext paragraphs
+[2026-02-03 12:42] NOTES: 2. Chain = consecutive keepNext paragraphs + anchor (first non-keepNext after)
+[2026-02-03 12:42] NOTES: 3. calculateChainHeight: sum all member heights + spacing + anchor first line
+[2026-02-03 12:42] NOTES: 4. If chain doesn't fit, move entire chain to next page
+[2026-02-03 12:43] STATUS: editing
+[2026-02-03 12:48] NOTES: Created src/layout-engine/keep-together.ts - clean room implementation
+[2026-02-03 12:48] NOTES: Features: computeKeepNextChains, calculateChainHeight, getMidChainIndices
+[2026-02-03 12:48] NOTES: Also: hasKeepLines, hasPageBreakBefore helper functions
+[2026-02-03 12:48] NOTES: Updated index.ts to use keepNext chain logic in layout loop
+[2026-02-03 12:49] STATUS: running
+[2026-02-03 12:49] NOTES: Typecheck passed
+[2026-02-03 12:49] STATUS: done

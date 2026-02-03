@@ -22,6 +22,12 @@ import type {
 } from './types';
 
 import { createPaginator } from './paginator';
+import {
+  computeKeepNextChains,
+  calculateChainHeight,
+  getMidChainIndices,
+  hasPageBreakBefore,
+} from './keep-together';
 
 // Default page size (US Letter in pixels at 96 DPI)
 const DEFAULT_PAGE_SIZE = { w: 816, h: 1056 };
@@ -93,10 +99,40 @@ export function layoutDocument(
     columns: options.columns,
   });
 
+  // Pre-compute keepNext chains for pagination decisions
+  const keepNextChains = computeKeepNextChains(blocks);
+  const midChainIndices = getMidChainIndices(keepNextChains);
+
   // Process each block
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
     const measure = measures[i];
+
+    // Handle pageBreakBefore on paragraphs
+    if (hasPageBreakBefore(block)) {
+      paginator.forcePageBreak();
+    }
+
+    // Handle keepNext chains - if this is a chain start, check if chain fits
+    const chain = keepNextChains.get(i);
+    if (chain && !midChainIndices.has(i)) {
+      const chainHeight = calculateChainHeight(chain, blocks, measures);
+      const state = paginator.getCurrentState();
+      const availableHeight = paginator.getAvailableHeight();
+      const pageContentHeight = state.contentBottom - state.topMargin;
+
+      // Only move to new page if:
+      // 1. Chain fits on a blank page (avoid infinite loop for oversized chains)
+      // 2. Chain doesn't fit in current available space
+      // 3. Current page already has content
+      if (
+        chainHeight <= pageContentHeight &&
+        chainHeight > availableHeight &&
+        state.page.fragments.length > 0
+      ) {
+        paginator.forcePageBreak();
+      }
+    }
 
     switch (block.kind) {
       case 'paragraph':
@@ -427,3 +463,20 @@ function handleSectionBreak(
 export * from './types';
 export { createPaginator } from './paginator';
 export type { PageState, PaginatorOptions, Paginator } from './paginator';
+export {
+  computeKeepNextChains,
+  calculateChainHeight,
+  getMidChainIndices,
+  hasKeepLines,
+  hasPageBreakBefore,
+} from './keep-together';
+export type { KeepNextChain } from './keep-together';
+export {
+  scheduleSectionBreak,
+  applyPendingToActive,
+  createInitialSectionState,
+  getEffectiveMargins,
+  getEffectivePageSize,
+  getEffectiveColumns,
+} from './section-breaks';
+export type { SectionState, BreakDecision } from './section-breaks';
