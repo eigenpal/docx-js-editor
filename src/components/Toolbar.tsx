@@ -146,6 +146,8 @@ export interface ToolbarProps {
   zoom?: number;
   /** Callback when zoom changes */
   onZoomChange?: (zoom: number) => void;
+  /** Callback to refocus the editor after toolbar interactions */
+  onRefocusEditor?: () => void;
 }
 
 /**
@@ -310,6 +312,7 @@ export function Toolbar({
   showZoomControl = true,
   zoom,
   onZoomChange,
+  onRefocusEditor,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -536,17 +539,25 @@ export function Toolbar({
     };
   }, [enableShortcuts, handleFormat, editorRef]);
 
-  // Prevent toolbar clicks from stealing focus from editor
+  // Prevent toolbar clicks from stealing focus and refocus editor
   const handleToolbarMouseDown = useCallback((e: React.MouseEvent) => {
-    // Allow clicks on input elements and dropdowns to work normally
+    // Allow clicks on input elements to work normally
     const target = e.target as HTMLElement;
     const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
-    const isInteractive = target.closest('[role="listbox"]') || target.closest('[role="combobox"]');
 
-    if (!isInput && !isInteractive) {
+    if (!isInput) {
+      // Prevent the mousedown from stealing focus
       e.preventDefault();
     }
   }, []);
+
+  // Refocus editor after toolbar click (called on mouseup)
+  const handleToolbarMouseUp = useCallback(() => {
+    // Use requestAnimationFrame to ensure the click action completes first
+    requestAnimationFrame(() => {
+      onRefocusEditor?.();
+    });
+  }, [onRefocusEditor]);
 
   return (
     <div
@@ -560,6 +571,7 @@ export function Toolbar({
       aria-label="Formatting toolbar"
       data-testid="toolbar"
       onMouseDown={handleToolbarMouseDown}
+      onMouseUp={handleToolbarMouseUp}
     >
       {/* Undo/Redo/Print Group */}
       <ToolbarGroup label="History">

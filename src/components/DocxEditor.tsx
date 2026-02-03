@@ -946,6 +946,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 showZoomControl={showZoomControl}
                 zoom={state.zoom}
                 onZoomChange={handleZoomChange}
+                onRefocusEditor={() => editorRef.current?.focus()}
               >
                 {toolbarExtra}
               </Toolbar>
@@ -990,9 +991,11 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
 
               <div
                 style={{ flex: 1, overflow: 'auto', position: 'relative' }}
-                onClick={(e) => {
+                onMouseDown={(e) => {
                   // Focus editor when clicking on the background area (not the editor itself)
+                  // Using mouseDown for immediate response before focus can be lost
                   if (e.target === e.currentTarget) {
+                    e.preventDefault();
                     editorRef.current?.focus();
                   }
                 }}
