@@ -522,3 +522,19 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 12:26] STATUS: running
 [2026-02-03 12:26] NOTES: Typecheck passed
 [2026-02-03 12:26] STATUS: done
+
+[2026-02-03 12:28] TASK: 1.4 Handle section breaks
+[2026-02-03 12:28] STATUS: starting
+[2026-02-03 12:28] STATUS: researching-wysiwyg-editor
+[2026-02-03 12:32] NOTES: Read WYSIWYG Editor section-breaks.ts - key concepts:
+[2026-02-03 12:32] NOTES: 1. SectionState tracks active vs pending margins/pageSize/columns/orientation
+[2026-02-03 12:32] NOTES: 2. scheduleSectionBreak determines break decision (forcePageBreak, forceMidPageRegion, parity)
+[2026-02-03 12:32] NOTES: 3. First section applied immediately, others scheduled as pending
+[2026-02-03 12:32] NOTES: 4. applyPendingToActive transfers pending to active at page boundary
+[2026-02-03 12:33] STATUS: editing
+[2026-02-03 12:36] NOTES: Created src/layout-engine/section-breaks.ts - clean room implementation
+[2026-02-03 12:36] NOTES: Features: SectionState type, scheduleSectionBreak, applyPendingToActive
+[2026-02-03 12:36] NOTES: Handles nextPage, evenPage, oddPage, continuous break types
+[2026-02-03 12:37] STATUS: running
+[2026-02-03 12:37] NOTES: Typecheck passed
+[2026-02-03 12:37] STATUS: done

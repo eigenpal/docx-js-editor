@@ -103,9 +103,9 @@ WYSIWYG Editor is licensed under **AGPL-3.0**. We use it ONLY to understand conc
 
 ### Task 1.4: Handle section breaks
 
-- [ ] Create `src/layout-engine/section-breaks.ts`
-- [ ] Handle page size changes, margin changes at section boundaries
-- [ ] Support `nextPage`, `continuous`, `evenPage`, `oddPage` break types
+- [x] Create `src/layout-engine/section-breaks.ts`
+- [x] Handle page size changes, margin changes at section boundaries
+- [x] Support `nextPage`, `continuous`, `evenPage`, `oddPage` break types
 
 **WYSIWYG Editor reference (concept only):**
 
