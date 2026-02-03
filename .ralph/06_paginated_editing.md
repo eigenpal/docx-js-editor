@@ -409,9 +409,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 8.2: Inflate margins for headers/footers
 
-- [ ] Adjust effective top margin based on header height
-- [ ] Adjust effective bottom margin based on footer height
-- [ ] Prevent body content overlap with header/footer
+- [x] Adjust effective top margin based on header height
+- [x] Adjust effective bottom margin based on footer height
+- [x] Prevent body content overlap with header/footer
 
 **SuperDoc reference (concept only):**
 

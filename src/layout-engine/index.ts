@@ -77,7 +77,7 @@ export function layoutDocument(
 
   // Set up options with defaults
   const pageSize = options.pageSize ?? DEFAULT_PAGE_SIZE;
-  const margins = {
+  const baseMargins = {
     top: options.margins?.top ?? DEFAULT_MARGINS.top,
     right: options.margins?.right ?? DEFAULT_MARGINS.right,
     bottom: options.margins?.bottom ?? DEFAULT_MARGINS.bottom,
@@ -86,13 +86,54 @@ export function layoutDocument(
     footer: options.margins?.footer ?? options.margins?.bottom ?? DEFAULT_MARGINS.bottom,
   };
 
+  // Calculate effective margins based on header/footer content heights
+  // effectiveTopMargin = max(baseTopMargin, headerDistance + headerContentHeight)
+  // effectiveBottomMargin = max(baseBottomMargin, footerDistance + footerContentHeight)
+  const headerHeights = options.headerContentHeights ?? {};
+  const footerHeights = options.footerContentHeights ?? {};
+  // Options for per-page margin calculation (kept for future use)
+  void options.titlePage;
+  void options.evenAndOddHeaders;
+
+  // Calculate maximum effective margins (conservative approach)
+  // This ensures all pages have enough space for headers/footers
+  // A more advanced implementation would use per-page margins
+  const maxHeaderHeight = Math.max(
+    headerHeights.default ?? 0,
+    headerHeights.first ?? 0,
+    headerHeights.even ?? 0,
+    headerHeights.odd ?? 0
+  );
+  const maxFooterHeight = Math.max(
+    footerHeights.default ?? 0,
+    footerHeights.first ?? 0,
+    footerHeights.even ?? 0,
+    footerHeights.odd ?? 0
+  );
+
+  const effectiveTopMargin =
+    maxHeaderHeight > 0
+      ? Math.max(baseMargins.top, baseMargins.header + maxHeaderHeight)
+      : baseMargins.top;
+
+  const effectiveBottomMargin =
+    maxFooterHeight > 0
+      ? Math.max(baseMargins.bottom, baseMargins.footer + maxFooterHeight)
+      : baseMargins.bottom;
+
+  const margins = {
+    ...baseMargins,
+    top: effectiveTopMargin,
+    bottom: effectiveBottomMargin,
+  };
+
   // Calculate content width
   const contentWidth = pageSize.w - margins.left - margins.right;
   if (contentWidth <= 0) {
     throw new Error('layoutDocument: page size and margins yield no content area');
   }
 
-  // Create paginator
+  // Create paginator with effective margins
   const paginator = createPaginator({
     pageSize,
     margins,

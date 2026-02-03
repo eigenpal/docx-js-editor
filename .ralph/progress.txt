@@ -977,3 +977,25 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 16:15] NOTES:   - getHeaderFooterForPage(): select correct variant for a page
 [2026-02-03 16:15] NOTES:   - getMaxHeaderHeight/getMaxFooterHeight: get max heights
 [2026-02-03 16:15] NOTES:   - Converts Document content to FlowBlocks, then measures
+
+[2026-02-03 16:18] TASK: 8.2 Inflate margins for headers/footers
+[2026-02-03 16:18] STATUS: starting
+[2026-02-03 16:18] STATUS: researching-superdoc
+[2026-02-03 16:20] NOTES: Read SuperDoc layout-engine index.ts:642-670
+[2026-02-03 16:20] NOTES: Key concepts from SuperDoc:
+[2026-02-03 16:20] NOTES:   - effectiveTopMargin = max(baseTopMargin, headerDistance + headerHeight)
+[2026-02-03 16:20] NOTES:   - effectiveBottomMargin = max(baseBottomMargin, footerDistance + footerHeight)
+[2026-02-03 16:20] NOTES:   - headerDistance is distance from page edge to header content area
+[2026-02-03 16:20] NOTES:   - This prevents body content from overlapping header/footer
+[2026-02-03 16:21] STATUS: editing
+[2026-02-03 16:21] NOTES: Adding header/footer height support to LayoutOptions
+[2026-02-03 16:28] STATUS: testing
+[2026-02-03 16:28] NOTES: Typecheck passed
+[2026-02-03 16:28] STATUS: done
+[2026-02-03 16:28] NOTES: Updated layout engine for header/footer margin inflation:
+[2026-02-03 16:28] NOTES:   - Added HeaderFooterContentHeights type to types.ts
+[2026-02-03 16:28] NOTES:   - Added headerContentHeights, footerContentHeights to LayoutOptions
+[2026-02-03 16:28] NOTES:   - Added titlePage, evenAndOddHeaders options
+[2026-02-03 16:28] NOTES:   - layoutDocument calculates max header/footer heights
+[2026-02-03 16:28] NOTES:   - effectiveTopMargin = max(baseTop, headerDistance + headerHeight)
+[2026-02-03 16:28] NOTES:   - effectiveBottomMargin = max(baseBottom, footerDistance + footerHeight)

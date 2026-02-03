@@ -494,6 +494,13 @@ export type Layout = {
 // =============================================================================
 
 /**
+ * Header/footer content heights by variant type.
+ */
+export type HeaderFooterContentHeights = Partial<
+  Record<'default' | 'first' | 'even' | 'odd', number>
+>;
+
+/**
  * Options for the layout engine.
  */
 export type LayoutOptions = {
@@ -507,6 +514,14 @@ export type LayoutOptions = {
   pageGap?: number;
   /** Default line height multiplier. */
   defaultLineHeight?: number;
+  /** Header content heights by variant. */
+  headerContentHeights?: HeaderFooterContentHeights;
+  /** Footer content heights by variant. */
+  footerContentHeights?: HeaderFooterContentHeights;
+  /** Whether section has different first page header/footer. */
+  titlePage?: boolean;
+  /** Whether section has different even/odd headers/footers. */
+  evenAndOddHeaders?: boolean;
 };
 
 // =============================================================================
