@@ -19,7 +19,13 @@
 
 import { useRef, useEffect, useCallback, useImperativeHandle, forwardRef, memo } from 'react';
 import type { CSSProperties } from 'react';
-import { EditorState, Transaction, type Command, type Plugin } from 'prosemirror-state';
+import {
+  EditorState,
+  Transaction,
+  TextSelection,
+  type Command,
+  type Plugin,
+} from 'prosemirror-state';
 import { EditorView, type DirectEditorProps } from 'prosemirror-view';
 import { history, undo, redo } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
@@ -197,6 +203,11 @@ const HiddenProseMirrorComponent = forwardRef<HiddenProseMirrorRef, HiddenProseM
     const viewRef = useRef<EditorView | null>(null);
     const documentRef = useRef<Document | null>(document);
     const isDestroyingRef = useRef(false);
+    // Track the document identity to detect truly external changes
+    // vs changes that originated from editing (which get passed back through props)
+    const lastDocumentIdRef = useRef<string | null>(null);
+    // Track if we've initialized - first render needs to set up state
+    const isInitializedRef = useRef(false);
 
     // Keep document ref in sync
     documentRef.current = document;
@@ -286,18 +297,45 @@ const HiddenProseMirrorComponent = forwardRef<HiddenProseMirrorRef, HiddenProseM
       return () => destroyView();
     }, []); // Only on mount/unmount
 
-    // Update state when document changes externally
+    // Update state when document changes externally (e.g., loading a new file)
+    // This should NOT run when the document prop changes due to internal edits
+    // being passed back through the parent component's state
     useEffect(() => {
       if (!viewRef.current || isDestroyingRef.current) return;
 
-      // Only recreate if document actually changed
+      // Generate a simple document identity based on its structure
+      // This helps detect truly different documents vs the same doc passed back after editing
+      const getDocumentId = (doc: Document | null): string => {
+        if (!doc) return 'empty';
+        // Use the document's package id or a hash of its structure
+        // For simplicity, we compare based on whether it's a different document object
+        // and whether it has different metadata
+        const meta = doc.package?.properties;
+        return `${meta?.created || ''}-${meta?.modified || ''}-${meta?.title || ''}`;
+      };
+
+      const currentDocId = getDocumentId(document);
+
+      // Skip if this is the same document (likely passed back after internal edit)
+      // Only reset state if:
+      // 1. Not yet initialized (first mount)
+      // 2. Document identity changed (truly external change like loading a new file)
+      if (isInitializedRef.current && currentDocId === lastDocumentIdRef.current) {
+        return;
+      }
+
+      // Update tracking refs
+      isInitializedRef.current = true;
+      lastDocumentIdRef.current = currentDocId;
+
+      // Create new state from document
       const newState = createInitialState(document, styles, externalPlugins);
       viewRef.current.updateState(newState);
 
       if (onSelectionChange) {
         onSelectionChange(newState);
       }
-    }, [document, styles, externalPlugins]);
+    }, [document, styles, externalPlugins, onSelectionChange]);
 
     // Update editable state
     useEffect(() => {
@@ -373,7 +411,6 @@ const HiddenProseMirrorComponent = forwardRef<HiddenProseMirrorRef, HiddenProseM
         setSelection(anchor: number, head?: number) {
           if (!viewRef.current) return;
           const { state, dispatch } = viewRef.current;
-          const { TextSelection } = require('prosemirror-state');
           const $anchor = state.doc.resolve(anchor);
           const $head = head !== undefined ? state.doc.resolve(head) : $anchor;
           const selection = TextSelection.between($anchor, $head);

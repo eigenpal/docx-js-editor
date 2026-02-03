@@ -48,7 +48,7 @@ import type {
 // Layout bridge
 import { toFlowBlocks } from '../layout-bridge/toFlowBlocks';
 import { measureParagraph } from '../layout-bridge/measuring';
-import { hitTestPage, hitTestFragment } from '../layout-bridge/hitTest';
+import { hitTestFragment } from '../layout-bridge/hitTest';
 import { clickToPosition } from '../layout-bridge/clickToPosition';
 import {
   selectionToRects,
@@ -141,6 +141,9 @@ const DEFAULT_MARGINS: PageMargins = {
 };
 
 const DEFAULT_PAGE_GAP = 24;
+
+// Stable empty array to avoid re-creating on each render
+const EMPTY_PLUGINS: Plugin[] = [];
 
 // =============================================================================
 // STYLES
@@ -317,7 +320,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
       zoom = 1,
       onDocumentChange,
       onSelectionChange,
-      externalPlugins = [],
+      externalPlugins = EMPTY_PLUGINS,
       onReady,
       className,
       style,
@@ -342,14 +345,17 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     const margins = useMemo(() => getMargins(sectionProperties), [sectionProperties]);
     const contentWidth = pageSize.w - margins.left - margins.right;
 
-    // Initialize painter
-    useEffect(() => {
-      painterRef.current = new LayoutPainter({
+    // Initialize painter using useMemo to ensure it's ready before first render callbacks
+    const painter = useMemo(() => {
+      return new LayoutPainter({
         pageGap,
         showShadow: true,
         pageBackground: '#fff',
       });
     }, [pageGap]);
+
+    // Keep ref in sync with memoized painter
+    painterRef.current = painter;
 
     // =========================================================================
     // Layout Pipeline
@@ -478,22 +484,58 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
       (e: React.MouseEvent) => {
         if (!layout || !pagesContainerRef.current || !hiddenPMRef.current) return;
 
-        // Get click position relative to pages container
-        const rect = pagesContainerRef.current.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / zoom;
-        const y = (e.clientY - rect.top) / zoom;
+        // Find the page element that was clicked
+        // Pages are rendered with class 'layout-page' and are centered in the container
+        const pageElements = pagesContainerRef.current.querySelectorAll('.layout-page');
+        let clickedPageIndex = -1;
+        let pageRect: DOMRect | null = null;
 
-        // Hit test page
-        const pageHit = hitTestPage(layout, { x, y });
-        if (!pageHit) return;
+        for (let i = 0; i < pageElements.length; i++) {
+          const pageEl = pageElements[i];
+          const rect = pageEl.getBoundingClientRect();
+          if (
+            e.clientX >= rect.left &&
+            e.clientX <= rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.bottom
+          ) {
+            clickedPageIndex = i;
+            pageRect = rect;
+            break;
+          }
+        }
 
-        // Hit test fragment within page
-        const pageLocalX = x;
-        const pageLocalY = pageHit.pageY;
+        if (clickedPageIndex < 0 || !pageRect) {
+          // Clicked outside all pages - position at end of document
+          const view = hiddenPMRef.current.getView();
+          if (view) {
+            const endPos = view.state.doc.content.size - 1;
+            hiddenPMRef.current.setSelection(Math.max(0, endPos));
+          }
+          hiddenPMRef.current.focus();
+          setIsFocused(true);
+          return;
+        }
 
+        // Get click position relative to the page element (not the container)
+        const pageX = (e.clientX - pageRect.left) / zoom;
+        const pageY = (e.clientY - pageRect.top) / zoom;
+
+        // Get the page from layout
+        const page = layout.pages[clickedPageIndex];
+        if (!page) return;
+
+        // Create a page hit result
+        const pageHit = {
+          pageIndex: clickedPageIndex,
+          page,
+          pageY,
+        };
+
+        // Hit test fragment within page using page-relative coordinates
         const fragmentHit = hitTestFragment(pageHit, blocks, measures, {
-          x: pageLocalX,
-          y: pageLocalY,
+          x: pageX,
+          y: pageY,
         });
 
         if (!fragmentHit) {
@@ -518,7 +560,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         hiddenPMRef.current.focus();
         setIsFocused(true);
       },
-      [layout, blocks, measures, pageGap, zoom]
+      [layout, blocks, measures, zoom]
     );
 
     /**

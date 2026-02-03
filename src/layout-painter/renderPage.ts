@@ -16,6 +16,7 @@ import type {
 } from '../layout-engine/types';
 import { renderFragment } from './renderFragment';
 import { renderParagraphFragment } from './renderParagraph';
+import type { BlockLookup } from './index';
 
 /**
  * CSS class names for page elements
@@ -73,6 +74,8 @@ export interface RenderPageOptions {
   headerDistance?: number;
   /** Distance from page bottom to footer content. */
   footerDistance?: number;
+  /** Block lookup for rendering actual content. */
+  blockLookup?: BlockLookup;
 }
 
 /**
@@ -115,11 +118,18 @@ function applyContentAreaStyles(element: HTMLElement, page: Page): void {
 
 /**
  * Apply fragment positioning styles
+ * Note: Fragment x/y include page margins, but fragments are positioned
+ * inside the content area which already has margin offsets applied.
+ * So we subtract the margins to get content-area-relative positions.
  */
-function applyFragmentStyles(element: HTMLElement, fragment: Fragment): void {
+function applyFragmentStyles(
+  element: HTMLElement,
+  fragment: Fragment,
+  margins: { left: number; top: number }
+): void {
   element.style.position = 'absolute';
-  element.style.left = `${fragment.x}px`;
-  element.style.top = `${fragment.y}px`;
+  element.style.left = `${fragment.x - margins.left}px`;
+  element.style.top = `${fragment.y - margins.top}px`;
   element.style.width = `${fragment.width}px`;
 
   // Height handling varies by fragment type
@@ -212,15 +222,33 @@ export function renderPage(
 
   // Render each fragment
   for (const fragment of page.fragments) {
-    const fragmentEl = renderFragment(
-      fragment,
-      { ...context, section: 'body' },
-      {
-        document: doc,
-      }
-    );
+    let fragmentEl: HTMLElement;
 
-    applyFragmentStyles(fragmentEl, fragment);
+    // If we have block lookup and this is a paragraph fragment, render actual content
+    if (options.blockLookup && fragment.kind === 'paragraph' && fragment.blockId) {
+      const blockData = options.blockLookup.get(String(fragment.blockId));
+      if (
+        blockData &&
+        blockData.block.kind === 'paragraph' &&
+        blockData.measure.kind === 'paragraph'
+      ) {
+        fragmentEl = renderParagraphFragment(
+          fragment as ParagraphFragment,
+          blockData.block as ParagraphBlock,
+          blockData.measure as ParagraphMeasure,
+          { ...context, section: 'body' },
+          { document: doc }
+        );
+      } else {
+        // Fallback to placeholder
+        fragmentEl = renderFragment(fragment, { ...context, section: 'body' }, { document: doc });
+      }
+    } else {
+      // Use placeholder for other fragment types or when no blockLookup
+      fragmentEl = renderFragment(fragment, { ...context, section: 'body' }, { document: doc });
+    }
+
+    applyFragmentStyles(fragmentEl, fragment, { left: page.margins.left, top: page.margins.top });
     contentEl.appendChild(fragmentEl);
   }
 
@@ -346,7 +374,7 @@ export function updatePage(
       }
     );
 
-    applyFragmentStyles(fragmentEl, fragment);
+    applyFragmentStyles(fragmentEl, fragment, { left: page.margins.left, top: page.margins.top });
     contentEl.appendChild(fragmentEl);
   }
 }
