@@ -157,7 +157,7 @@ function parseBlockContent(
 
     // Paragraph (w:p)
     if (name === 'w:p' || name.endsWith(':p')) {
-      const paragraph = parseParagraph(child, styles, theme, numbering, rels);
+      const paragraph = parseParagraph(child, styles, theme, numbering, rels, media);
       content.push(paragraph);
     }
     // Table (w:tbl)

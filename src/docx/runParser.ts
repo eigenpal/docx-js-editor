@@ -37,6 +37,8 @@ import type {
   UnderlineStyle,
   Theme,
   Image,
+  RelationshipMap,
+  MediaFile,
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import {
@@ -49,6 +51,7 @@ import {
   type XmlElement,
 } from './xmlParser';
 import { resolveThemeFontRef } from './themeParser';
+import { parseImage } from './imageParser';
 
 /**
  * Parse color value from attributes
@@ -494,31 +497,19 @@ function parseInstrText(element: XmlElement): InstrTextContent {
 /**
  * Parse drawing content (w:drawing)
  *
- * This is a placeholder - full image parsing will be done in imageParser.ts (US-20)
- * For now, we detect the presence of an image and store basic info
+ * Uses imageParser to fully parse the drawing element including
+ * image data resolution from relationships and media files.
  */
-function parseDrawingContent(element: XmlElement): DrawingContent | null {
-  // Drawing elements contain either wp:inline or wp:anchor
-  // We'll do basic detection here; full parsing is in imageParser
-  const children = getChildElements(element);
-  if (children.length === 0) return null;
+function parseDrawingContent(
+  element: XmlElement,
+  rels: RelationshipMap | null,
+  media: Map<string, MediaFile> | null
+): DrawingContent | null {
+  // Use the full imageParser to parse the drawing
+  const image = parseImage(element, rels ?? undefined, media ?? undefined);
 
-  // Placeholder image - will be populated by imageParser later
-  const image: Image = {
-    type: 'image',
-    rId: '',
-    size: { width: 0, height: 0 },
-    wrap: { type: 'inline' },
-  };
-
-  // Try to extract basic info
-  const firstChild = children[0];
-  const localName = firstChild.name?.split(':')[1] || firstChild.name || '';
-
-  if (localName === 'inline') {
-    image.wrap = { type: 'inline' };
-  } else if (localName === 'anchor') {
-    image.wrap = { type: 'square' }; // Default for anchored images
+  if (!image) {
+    return null;
   }
 
   return {
@@ -539,7 +530,11 @@ function getLocalName(name: string | undefined): string {
 /**
  * Parse all content within a run element
  */
-function parseRunContents(runElement: XmlElement): RunContent[] {
+function parseRunContents(
+  runElement: XmlElement,
+  rels: RelationshipMap | null,
+  media: Map<string, MediaFile> | null
+): RunContent[] {
   const contents: RunContent[] = [];
   const children = getChildElements(runElement);
 
@@ -599,7 +594,7 @@ function parseRunContents(runElement: XmlElement): RunContent[] {
 
       case 'drawing':
         // Drawing/image
-        const drawing = parseDrawingContent(child);
+        const drawing = parseDrawingContent(child, rels, media);
         if (drawing) {
           contents.push(drawing);
         }
@@ -651,9 +646,17 @@ function parseRunContents(runElement: XmlElement): RunContent[] {
  * @param node - The w:r XML element
  * @param styles - Style map for resolving style references
  * @param theme - Theme for resolving theme colors/fonts
+ * @param rels - Relationship map for resolving image references
+ * @param media - Media files map for image data
  * @returns Parsed Run object
  */
-export function parseRun(node: XmlElement, styles: StyleMap | null, theme: Theme | null): Run {
+export function parseRun(
+  node: XmlElement,
+  styles: StyleMap | null,
+  theme: Theme | null,
+  rels: RelationshipMap | null = null,
+  media: Map<string, MediaFile> | null = null
+): Run {
   const run: Run = {
     type: 'run',
     content: [],
@@ -666,7 +669,7 @@ export function parseRun(node: XmlElement, styles: StyleMap | null, theme: Theme
   }
 
   // Parse run contents (text, tabs, breaks, images, etc.)
-  run.content = parseRunContents(node);
+  run.content = parseRunContents(node, rels, media);
 
   return run;
 }

@@ -27,6 +27,7 @@ import type {
   Table,
   TableRow,
   TableCell,
+  TableCellFormatting,
 } from '../../types/document';
 import { createStyleResolver, type StyleResolver } from '../styles';
 import type { TableAttrs, TableRowAttrs, TableCellAttrs } from '../schema/nodes';
@@ -121,6 +122,9 @@ function paragraphFormattingToAttrs(
     textId: paragraph.textId ?? undefined,
     styleId: styleId,
     numPr: formatting?.numPr,
+    // List rendering info from parsed numbering definitions
+    listNumFmt: paragraph.listRendering?.numFmt,
+    listIsBullet: paragraph.listRendering?.isBullet,
   };
 
   // If we have a style resolver, resolve the style and get base properties
@@ -170,6 +174,23 @@ function paragraphFormattingToAttrs(
 // ============================================================================
 
 /**
+ * Resolve table style conditional formatting
+ */
+function resolveTableStyleConditional(
+  styleResolver: StyleResolver | null,
+  tableStyleId: string | undefined,
+  conditionType: string
+): { tcPr?: TableCellFormatting; rPr?: TextFormatting } | undefined {
+  if (!styleResolver || !tableStyleId) return undefined;
+
+  const style = styleResolver.getStyle(tableStyleId);
+  if (!style?.tblStylePr) return undefined;
+
+  const conditional = style.tblStylePr.find((p) => p.type === conditionType);
+  return conditional ? { tcPr: conditional.tcPr, rPr: conditional.rPr } : undefined;
+}
+
+/**
  * Convert a Table to a ProseMirror table node
  *
  * Handles column widths from w:tblGrid - if cell widths aren't specified,
@@ -188,13 +209,20 @@ function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode
   const columnWidths = table.columnWidths;
   const totalWidth = columnWidths?.reduce((sum, w) => sum + w, 0) ?? 0;
 
+  // Get the table style's conditional formatting for header row
+  const tableStyleId = table.formatting?.styleId;
+  const firstRowStyle = table.formatting?.look?.firstRow
+    ? resolveTableStyleConditional(styleResolver, tableStyleId, 'firstRow')
+    : undefined;
+
   const rows = table.rows.map((row, rowIndex) =>
     convertTableRow(
       row,
       styleResolver,
       rowIndex === 0 && !!table.formatting?.look?.firstRow,
       columnWidths,
-      totalWidth
+      totalWidth,
+      rowIndex === 0 ? firstRowStyle : undefined
     )
   );
 
@@ -209,7 +237,8 @@ function convertTableRow(
   styleResolver: StyleResolver | null,
   isHeaderRow: boolean,
   columnWidths?: number[],
-  totalWidth?: number
+  totalWidth?: number,
+  conditionalStyle?: { tcPr?: TableCellFormatting; rPr?: TextFormatting }
 ): PMNode {
   const attrs: TableRowAttrs = {
     height: row.formatting?.height?.value,
@@ -233,7 +262,7 @@ function convertTableRow(
       gridWidth = Math.round((cellWidthTwips / totalWidth) * 100);
     }
     colIndex += colspan;
-    return convertTableCell(cell, styleResolver, isHeaderRow, gridWidth);
+    return convertTableCell(cell, styleResolver, isHeaderRow, gridWidth, conditionalStyle);
   });
 
   return schema.node('tableRow', attrs, cells);
@@ -246,7 +275,8 @@ function convertTableCell(
   cell: TableCell,
   styleResolver: StyleResolver | null,
   isHeader: boolean,
-  gridWidthPercent?: number
+  gridWidthPercent?: number,
+  conditionalStyle?: { tcPr?: TableCellFormatting; rPr?: TextFormatting }
 ): PMNode {
   const formatting = cell.formatting;
 
@@ -265,13 +295,17 @@ function convertTableCell(
     widthType = 'pct';
   }
 
+  // Determine background color: prefer cell's own shading, fall back to conditional style
+  const backgroundColor =
+    formatting?.shading?.fill?.rgb ?? conditionalStyle?.tcPr?.shading?.fill?.rgb;
+
   const attrs: TableCellAttrs = {
     colspan: formatting?.gridSpan ?? 1,
     rowspan: rowspan,
     width: width,
     widthType: widthType,
     verticalAlign: formatting?.verticalAlign,
-    backgroundColor: formatting?.shading?.fill?.rgb,
+    backgroundColor: backgroundColor,
   };
 
   // Convert cell content (paragraphs and nested tables)
@@ -373,6 +407,22 @@ function convertRunContent(content: RunContent, marks: ReturnType<typeof schema.
         return [convertImage(content.image)];
       }
       return [];
+
+    case 'footnoteRef':
+      // Footnote reference - render as superscript number with footnoteRef mark
+      const footnoteMark = schema.mark('footnoteRef', {
+        id: content.id.toString(),
+        noteType: 'footnote',
+      });
+      return [schema.text(content.id.toString(), [...marks, footnoteMark])];
+
+    case 'endnoteRef':
+      // Endnote reference - render as superscript number with footnoteRef mark
+      const endnoteMark = schema.mark('footnoteRef', {
+        id: content.id.toString(),
+        noteType: 'endnote',
+      });
+      return [schema.text(content.id.toString(), [...marks, endnoteMark])];
 
     default:
       return [];

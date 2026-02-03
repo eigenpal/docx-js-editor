@@ -158,8 +158,33 @@
   counter-increment: list-counter;
 }
 
-.prosemirror-editor .ProseMirror .docx-list-numbered::before {
+/* Default numbered list (decimal) */
+.prosemirror-editor .ProseMirror .docx-list-decimal::before {
   content: counter(list-counter) '.';
+  position: absolute;
+  left: 12px;
+}
+
+/* Roman numeral lists */
+.prosemirror-editor .ProseMirror .docx-list-lower-roman::before {
+  content: counter(list-counter, lower-roman) '.';
+  position: absolute;
+  left: 12px;
+}
+.prosemirror-editor .ProseMirror .docx-list-upper-roman::before {
+  content: counter(list-counter, upper-roman) '.';
+  position: absolute;
+  left: 12px;
+}
+
+/* Alphabetic lists */
+.prosemirror-editor .ProseMirror .docx-list-lower-alpha::before {
+  content: counter(list-counter, lower-alpha) '.';
+  position: absolute;
+  left: 12px;
+}
+.prosemirror-editor .ProseMirror .docx-list-upper-alpha::before {
+  content: counter(list-counter, upper-alpha) '.';
   position: absolute;
   left: 12px;
 }
@@ -184,6 +209,15 @@
 }
 .prosemirror-editor .ProseMirror .docx-list-level-5 {
   margin-left: 2.5in;
+}
+.prosemirror-editor .ProseMirror .docx-list-level-6 {
+  margin-left: 3in;
+}
+.prosemirror-editor .ProseMirror .docx-list-level-7 {
+  margin-left: 3.5in;
+}
+.prosemirror-editor .ProseMirror .docx-list-level-8 {
+  margin-left: 4in;
 }
 
 /* Selection styling */
@@ -213,6 +247,20 @@
 
 .prosemirror-editor .ProseMirror a:hover {
   color: var(--doc-primary-hover);
+}
+
+/* Footnote/Endnote references */
+.prosemirror-editor .ProseMirror .docx-footnote-ref,
+.prosemirror-editor .ProseMirror .docx-endnote-ref {
+  color: var(--doc-link, #0066cc);
+  cursor: pointer;
+  vertical-align: super;
+  font-size: smaller;
+}
+
+.prosemirror-editor .ProseMirror .docx-footnote-ref:hover,
+.prosemirror-editor .ProseMirror .docx-endnote-ref:hover {
+  text-decoration: underline;
 }
 
 /* Horizontal rule */

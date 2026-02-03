@@ -16,6 +16,7 @@ import type {
   ShadingProperties,
   TabStop,
   TextFormatting,
+  NumberFormat,
 } from '../../types/document';
 import { paragraphToStyle } from '../../utils/formatToStyle';
 
@@ -47,6 +48,10 @@ export interface ParagraphAttrs {
     numId?: number;
     ilvl?: number;
   };
+  /** List number format (decimal, lowerRoman, upperRoman, etc.) for CSS counter styling */
+  listNumFmt?: NumberFormat;
+  /** Whether this is a bullet list */
+  listIsBullet?: boolean;
 
   // Style reference
   styleId?: string;
@@ -113,19 +118,43 @@ function paragraphAttrsToDOMStyle(attrs: ParagraphAttrs): string {
 }
 
 /**
+ * Map OOXML numFmt to CSS counter style class
+ */
+function numFmtToClass(numFmt: NumberFormat | undefined): string {
+  switch (numFmt) {
+    case 'upperRoman':
+      return 'docx-list-upper-roman';
+    case 'lowerRoman':
+      return 'docx-list-lower-roman';
+    case 'upperLetter':
+      return 'docx-list-upper-alpha';
+    case 'lowerLetter':
+      return 'docx-list-lower-alpha';
+    case 'decimal':
+    case 'decimalZero':
+    default:
+      return 'docx-list-decimal';
+  }
+}
+
+/**
  * Get CSS class for list styling
  */
-function getListClass(numPr?: ParagraphAttrs['numPr']): string {
+function getListClass(
+  numPr?: ParagraphAttrs['numPr'],
+  listIsBullet?: boolean,
+  listNumFmt?: NumberFormat
+): string {
   if (!numPr?.numId) return '';
 
-  // Check if it's a bullet list (numId 1 is typically bullets in our system)
-  // This is simplified - real implementation would check numbering definitions
-  const isBullet = numPr.numId === 1;
   const level = numPr.ilvl ?? 0;
 
-  return isBullet
-    ? `docx-list-bullet docx-list-level-${level}`
-    : `docx-list-numbered docx-list-level-${level}`;
+  if (listIsBullet) {
+    return `docx-list-bullet docx-list-level-${level}`;
+  }
+
+  const formatClass = numFmtToClass(listNumFmt);
+  return `docx-list-numbered ${formatClass} docx-list-level-${level}`;
 }
 
 /**
@@ -163,6 +192,8 @@ export const paragraph: NodeSpec = {
 
     // List properties
     numPr: { default: null },
+    listNumFmt: { default: null },
+    listIsBullet: { default: null },
 
     // Style reference
     styleId: { default: null },
@@ -195,7 +226,7 @@ export const paragraph: NodeSpec = {
   toDOM(node) {
     const attrs = node.attrs as ParagraphAttrs;
     const style = paragraphAttrsToDOMStyle(attrs);
-    const listClass = getListClass(attrs.numPr);
+    const listClass = getListClass(attrs.numPr, attrs.listIsBullet, attrs.listNumFmt);
 
     const domAttrs: Record<string, string> = {};
 
