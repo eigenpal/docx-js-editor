@@ -214,3 +214,147 @@ test.describe('Cursor Focus - Rapid Interactions', () => {
     expect(text).toContain('Test more');
   });
 });
+
+test.describe('Cursor Focus - Text Selection Preservation', () => {
+  let editor: EditorPage;
+
+  test.beforeEach(async ({ page }) => {
+    editor = new EditorPage(page);
+    await editor.goto();
+    await editor.waitForReady();
+    await editor.focus();
+  });
+
+  test('text selection preserved when clicking Bold button', async ({ page }) => {
+    // Type text
+    await editor.typeText('Hello World');
+
+    // Select "World" by using keyboard (Shift+Ctrl+Left to select word)
+    await page.keyboard.press('Shift+Control+ArrowLeft');
+
+    // Verify there's a selection
+    const hasSelectionBefore = await page.evaluate(() => {
+      const selection = window.getSelection();
+      return selection && !selection.isCollapsed;
+    });
+    expect(hasSelectionBefore).toBe(true);
+
+    // Click Bold button
+    await page.getByTestId('toolbar-bold').click();
+
+    // Verify text is now bold
+    const hasBold = await page.evaluate(() => {
+      const editor = document.querySelector('.prosemirror-editor-content');
+      return editor?.querySelector('strong, b') !== null;
+    });
+    expect(hasBold).toBe(true);
+
+    // Verify selection is still there (editor still has focus)
+    const editorHasFocus = await page.evaluate(() => {
+      const editor = document.querySelector('.prosemirror-editor-content');
+      return document.activeElement === editor || editor?.contains(document.activeElement);
+    });
+    expect(editorHasFocus).toBe(true);
+  });
+
+  test('text selection preserved when using font family dropdown', async ({ page }) => {
+    // Type text
+    await editor.typeText('Select this text');
+
+    // Select all text
+    await editor.selectAll();
+
+    // Verify there's a selection
+    const hasSelectionBefore = await page.evaluate(() => {
+      const selection = window.getSelection();
+      return selection && !selection.isCollapsed;
+    });
+    expect(hasSelectionBefore).toBe(true);
+
+    // Change font family
+    await editor.setFontFamily('Georgia');
+
+    // Verify editor still has focus
+    const editorHasFocus = await page.evaluate(() => {
+      const editor = document.querySelector('.prosemirror-editor-content');
+      return document.activeElement === editor || editor?.contains(document.activeElement);
+    });
+    expect(editorHasFocus).toBe(true);
+
+    // Verify the font was applied (by checking for Georgia font style)
+    const hasGeorgia = await page.evaluate(() => {
+      const editor = document.querySelector('.prosemirror-editor-content');
+      const span = editor?.querySelector('span[style*="Georgia"], span[style*="georgia"]');
+      return span !== null;
+    });
+    expect(hasGeorgia).toBe(true);
+  });
+
+  test('text selection preserved when using font size dropdown', async ({ page }) => {
+    // Type text
+    await editor.typeText('Size this text');
+
+    // Select all text
+    await editor.selectAll();
+
+    // Verify there's a selection
+    const hasSelectionBefore = await page.evaluate(() => {
+      const selection = window.getSelection();
+      return selection && !selection.isCollapsed;
+    });
+    expect(hasSelectionBefore).toBe(true);
+
+    // Change font size
+    await editor.setFontSize(18);
+
+    // Verify editor still has focus
+    const editorHasFocus = await page.evaluate(() => {
+      const editor = document.querySelector('.prosemirror-editor-content');
+      return document.activeElement === editor || editor?.contains(document.activeElement);
+    });
+    expect(editorHasFocus).toBe(true);
+  });
+});
+
+test.describe('Cursor Focus - Background Click', () => {
+  let editor: EditorPage;
+
+  test.beforeEach(async ({ page }) => {
+    editor = new EditorPage(page);
+    await editor.goto();
+    await editor.waitForReady();
+    await editor.focus();
+  });
+
+  test('clicking toolbar does not lose editor focus', async ({ page }) => {
+    // Type some text first
+    await editor.typeText('Some text');
+
+    // Click on the toolbar area (but not on a button)
+    const toolbar = page.getByTestId('toolbar');
+    const box = await toolbar.boundingBox();
+    if (box) {
+      // Click on empty area of toolbar (far right where there are no buttons)
+      await page.mouse.click(box.x + box.width - 10, box.y + box.height / 2);
+    }
+
+    // Small delay to allow focus to settle
+    await page.waitForTimeout(50);
+
+    // Verify editor still has focus
+    const editorHasFocus = await page.evaluate(() => {
+      const editor = document.querySelector('.prosemirror-editor-content');
+      return document.activeElement === editor || editor?.contains(document.activeElement);
+    });
+    expect(editorHasFocus).toBe(true);
+
+    // Should be able to type immediately
+    await page.keyboard.type(' more');
+
+    const text = await page.evaluate(() => {
+      const editor = document.querySelector('.prosemirror-editor-content');
+      return editor?.textContent;
+    });
+    expect(text).toContain('Some text more');
+  });
+});

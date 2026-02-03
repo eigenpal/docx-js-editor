@@ -358,6 +358,7 @@ export function ColorGrid({
             type="button"
             style={isNoColor ? { ...NO_COLOR_CELL_STYLE, ...cellStyle } : cellStyle}
             onClick={() => onSelect(color)}
+            onMouseDown={(e) => e.preventDefault()} // Prevent focus stealing from editor
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
             title={color.name}
@@ -503,6 +504,7 @@ export function ColorPicker({
         className="docx-color-picker-button"
         style={buttonStyle}
         onClick={toggleDropdown}
+        onMouseDown={(e) => e.preventDefault()} // Prevent focus stealing from editor
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         disabled={disabled}
@@ -532,6 +534,7 @@ export function ColorPicker({
           style={{ ...DROPDOWN_STYLE, width: dropdownWidth }}
           role="dialog"
           aria-label={`${type === 'text' ? 'Font' : 'Highlight'} color picker`}
+          onMouseDown={(e) => e.preventDefault()} // Prevent focus stealing from editor
         >
           {type === 'highlight' && <div style={SECTION_LABEL_STYLE}>Highlight Colors</div>}
 
