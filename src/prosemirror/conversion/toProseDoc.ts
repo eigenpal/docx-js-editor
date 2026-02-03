@@ -72,17 +72,28 @@ export function toProseDoc(document: Document, options?: ToProseDocOptions): PMN
 
 /**
  * Convert a Paragraph to a ProseMirror paragraph node
+ *
+ * Resolves style-based text formatting and passes it to runs so that
+ * paragraph styles (like Heading1) apply their font size, color, etc.
  */
 function convertParagraph(paragraph: Paragraph, styleResolver: StyleResolver | null): PMNode {
   const attrs = paragraphFormattingToAttrs(paragraph, styleResolver);
   const inlineNodes: PMNode[] = [];
 
+  // Get style-based text formatting (font size, bold, color, etc.)
+  // This comes from the paragraph's style (e.g., Heading1 defines fontSize: 28pt, bold: true)
+  let styleRunFormatting: TextFormatting | undefined;
+  if (styleResolver) {
+    const resolved = styleResolver.resolveParagraphStyle(paragraph.formatting?.styleId);
+    styleRunFormatting = resolved.runFormatting;
+  }
+
   for (const content of paragraph.content) {
     if (content.type === 'run') {
-      const runNodes = convertRun(content);
+      const runNodes = convertRun(content, styleRunFormatting);
       inlineNodes.push(...runNodes);
     } else if (content.type === 'hyperlink') {
-      const linkNodes = convertHyperlink(content);
+      const linkNodes = convertHyperlink(content, styleRunFormatting);
       inlineNodes.push(...linkNodes);
     }
     // Skip other content types for now (bookmarks, fields, etc.)
@@ -160,6 +171,10 @@ function paragraphFormattingToAttrs(
 
 /**
  * Convert a Table to a ProseMirror table node
+ *
+ * Handles column widths from w:tblGrid - if cell widths aren't specified,
+ * we use the grid column widths to set cell widths. This ensures tables
+ * preserve their layout when opened from DOCX files.
  */
 function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode {
   const attrs: TableAttrs = {
@@ -169,8 +184,18 @@ function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode
     justification: table.formatting?.justification,
   };
 
+  // Calculate total width from columnWidths if available (for percentage calculation)
+  const columnWidths = table.columnWidths;
+  const totalWidth = columnWidths?.reduce((sum, w) => sum + w, 0) ?? 0;
+
   const rows = table.rows.map((row, rowIndex) =>
-    convertTableRow(row, styleResolver, rowIndex === 0 && !!table.formatting?.look?.firstRow)
+    convertTableRow(
+      row,
+      styleResolver,
+      rowIndex === 0 && !!table.formatting?.look?.firstRow,
+      columnWidths,
+      totalWidth
+    )
   );
 
   return schema.node('table', attrs, rows);
@@ -182,7 +207,9 @@ function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode
 function convertTableRow(
   row: TableRow,
   styleResolver: StyleResolver | null,
-  isHeaderRow: boolean
+  isHeaderRow: boolean,
+  columnWidths?: number[],
+  totalWidth?: number
 ): PMNode {
   const attrs: TableRowAttrs = {
     height: row.formatting?.height?.value,
@@ -190,7 +217,24 @@ function convertTableRow(
     isHeader: isHeaderRow || row.formatting?.header,
   };
 
-  const cells = row.cells.map((cell) => convertTableCell(cell, styleResolver, isHeaderRow));
+  // Track column index for mapping to columnWidths (accounting for colspan)
+  let colIndex = 0;
+  const cells = row.cells.map((cell) => {
+    const colspan = cell.formatting?.gridSpan ?? 1;
+    // Calculate the width for this cell from columnWidths if cell doesn't have own width
+    let gridWidth: number | undefined;
+    if (columnWidths && totalWidth && totalWidth > 0) {
+      // Sum widths for all columns this cell spans
+      let cellWidthTwips = 0;
+      for (let i = 0; i < colspan && colIndex + i < columnWidths.length; i++) {
+        cellWidthTwips += columnWidths[colIndex + i];
+      }
+      // Convert to percentage of total table width
+      gridWidth = Math.round((cellWidthTwips / totalWidth) * 100);
+    }
+    colIndex += colspan;
+    return convertTableCell(cell, styleResolver, isHeaderRow, gridWidth);
+  });
 
   return schema.node('tableRow', attrs, cells);
 }
@@ -201,7 +245,8 @@ function convertTableRow(
 function convertTableCell(
   cell: TableCell,
   styleResolver: StyleResolver | null,
-  isHeader: boolean
+  isHeader: boolean,
+  gridWidthPercent?: number
 ): PMNode {
   const formatting = cell.formatting;
 
@@ -210,11 +255,21 @@ function convertTableCell(
   // tracking state across rows. A future enhancement could handle this properly.
   const rowspan = 1; // Would need to calculate from vMerge tracking
 
+  // Determine width: prefer cell's own width, fall back to grid width
+  let width = formatting?.width?.value;
+  let widthType = formatting?.width?.type;
+
+  // If cell doesn't have its own width, use the grid-calculated percentage
+  if (width === undefined && gridWidthPercent !== undefined) {
+    width = gridWidthPercent;
+    widthType = 'pct';
+  }
+
   const attrs: TableCellAttrs = {
     colspan: formatting?.gridSpan ?? 1,
     rowspan: rowspan,
-    width: formatting?.width?.value,
-    widthType: formatting?.width?.type,
+    width: width,
+    widthType: widthType,
     verticalAlign: formatting?.verticalAlign,
     backgroundColor: formatting?.shading?.fill?.rgb,
   };
@@ -242,10 +297,17 @@ function convertTableCell(
 
 /**
  * Convert a Run to ProseMirror text nodes with marks
+ *
+ * @param run - The run to convert
+ * @param styleFormatting - Text formatting from the paragraph's style (e.g., Heading1's font size/color)
  */
-function convertRun(run: Run): PMNode[] {
+function convertRun(run: Run, styleFormatting?: TextFormatting): PMNode[] {
   const nodes: PMNode[] = [];
-  const marks = textFormattingToMarks(run.formatting);
+
+  // Merge style formatting with run's inline formatting
+  // Inline formatting takes precedence over style formatting
+  const mergedFormatting = mergeTextFormatting(styleFormatting, run.formatting);
+  const marks = textFormattingToMarks(mergedFormatting);
 
   for (const content of run.content) {
     const contentNodes = convertRunContent(content, marks);
@@ -253,6 +315,35 @@ function convertRun(run: Run): PMNode[] {
   }
 
   return nodes;
+}
+
+/**
+ * Merge two TextFormatting objects (source overrides target)
+ */
+function mergeTextFormatting(
+  target: TextFormatting | undefined,
+  source: TextFormatting | undefined
+): TextFormatting | undefined {
+  if (!source && !target) return undefined;
+  if (!source) return target;
+  if (!target) return source;
+
+  // Start with target (style formatting), then overlay source (inline formatting)
+  const result: TextFormatting = { ...target };
+
+  // Merge each property - source (inline) takes precedence
+  if (source.bold !== undefined) result.bold = source.bold;
+  if (source.italic !== undefined) result.italic = source.italic;
+  if (source.underline !== undefined) result.underline = source.underline;
+  if (source.strike !== undefined) result.strike = source.strike;
+  if (source.doubleStrike !== undefined) result.doubleStrike = source.doubleStrike;
+  if (source.color !== undefined) result.color = source.color;
+  if (source.highlight !== undefined) result.highlight = source.highlight;
+  if (source.fontSize !== undefined) result.fontSize = source.fontSize;
+  if (source.fontFamily !== undefined) result.fontFamily = source.fontFamily;
+  if (source.vertAlign !== undefined) result.vertAlign = source.vertAlign;
+
+  return result;
 }
 
 /**
@@ -304,8 +395,11 @@ function convertImage(image: Image): PMNode {
 
 /**
  * Convert a Hyperlink to ProseMirror nodes with link mark
+ *
+ * @param hyperlink - The hyperlink to convert
+ * @param styleFormatting - Text formatting from the paragraph's style
  */
-function convertHyperlink(hyperlink: Hyperlink): PMNode[] {
+function convertHyperlink(hyperlink: Hyperlink, styleFormatting?: TextFormatting): PMNode[] {
   const nodes: PMNode[] = [];
 
   // Create link mark
@@ -317,7 +411,9 @@ function convertHyperlink(hyperlink: Hyperlink): PMNode[] {
 
   for (const child of hyperlink.children) {
     if (child.type === 'run') {
-      const runMarks = textFormattingToMarks(child.formatting);
+      // Merge style formatting with run's inline formatting
+      const mergedFormatting = mergeTextFormatting(styleFormatting, child.formatting);
+      const runMarks = textFormattingToMarks(mergedFormatting);
       // Add link mark to run marks
       const allMarks = [...runMarks, linkMark];
 

@@ -9,7 +9,9 @@
  */
 
 import type { Command, EditorState } from 'prosemirror-state';
+import type { Mark as MarkType } from 'prosemirror-model';
 import type { ParagraphAlignment, LineSpacingRule } from '../../types/document';
+import { schema } from '../schema';
 
 // ============================================================================
 // ALIGNMENT
@@ -449,6 +451,65 @@ export function applyStyle(styleId: string, resolvedAttrs?: ResolvedStyleAttrs):
     let tr = state.tr;
     const seen = new Set<number>();
 
+    // Build marks from run formatting if provided
+    const styleMarks: MarkType[] = [];
+    if (resolvedAttrs?.runFormatting) {
+      const rpr = resolvedAttrs.runFormatting;
+
+      // Bold
+      if (rpr.bold) {
+        styleMarks.push(schema.marks.bold.create());
+      }
+
+      // Italic
+      if (rpr.italic) {
+        styleMarks.push(schema.marks.italic.create());
+      }
+
+      // Font size
+      if (rpr.fontSize) {
+        styleMarks.push(schema.marks.fontSize.create({ size: rpr.fontSize }));
+      }
+
+      // Font family
+      if (rpr.fontFamily) {
+        styleMarks.push(
+          schema.marks.fontFamily.create({
+            ascii: rpr.fontFamily.ascii,
+            hAnsi: rpr.fontFamily.hAnsi,
+            asciiTheme: rpr.fontFamily.asciiTheme,
+          })
+        );
+      }
+
+      // Text color
+      if (rpr.color && !rpr.color.auto) {
+        styleMarks.push(
+          schema.marks.textColor.create({
+            rgb: rpr.color.rgb,
+            themeColor: rpr.color.themeColor,
+            themeTint: rpr.color.themeTint,
+            themeShade: rpr.color.themeShade,
+          })
+        );
+      }
+
+      // Underline
+      if (rpr.underline && rpr.underline.style !== 'none') {
+        styleMarks.push(
+          schema.marks.underline.create({
+            style: rpr.underline.style,
+            color: rpr.underline.color,
+          })
+        );
+      }
+
+      // Strikethrough
+      if (rpr.strike || rpr.doubleStrike) {
+        styleMarks.push(schema.marks.strike.create({ double: rpr.doubleStrike || false }));
+      }
+    }
+
     state.doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
       if (node.type.name === 'paragraph' && !seen.has(pos)) {
         seen.add(pos);
@@ -473,6 +534,17 @@ export function applyStyle(styleId: string, resolvedAttrs?: ResolvedStyleAttrs):
         }
 
         tr = tr.setNodeMarkup(pos, undefined, newAttrs);
+
+        // Apply run formatting marks to all text in this paragraph
+        if (styleMarks.length > 0) {
+          const paragraphStart = pos + 1; // +1 to skip the paragraph node itself
+          const paragraphEnd = pos + node.nodeSize - 1; // -1 to exclude the closing
+
+          // Add each mark to the entire paragraph content
+          for (const mark of styleMarks) {
+            tr = tr.addMark(paragraphStart, paragraphEnd, mark);
+          }
+        }
       }
     });
 
