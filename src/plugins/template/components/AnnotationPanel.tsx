@@ -2,43 +2,70 @@
  * Annotation Panel Component
  *
  * Displays template annotations anchored to their positions in the document,
- * like Google Docs comments.
+ * like Google Docs comments. Scopes (loops/conditionals) are collapsed to
+ * show nested variables inline.
  */
 
 import { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import type { PluginPanelProps } from '../../../plugin-api/types';
-import type { TemplatePluginState, TemplateSchema, TemplateElement, TemplateScope } from '../types';
-import { ELEMENT_COLORS } from '../types';
-import { AnnotationCard, ANNOTATION_CARD_STYLES } from './AnnotationCard';
-import { getFullDataPath } from '../schema-inferrer';
+import type { TemplatePluginState, TemplateSchema, TemplateElement } from '../types';
+import { ELEMENT_COLORS, ELEMENT_ICONS } from '../types';
+import { ANNOTATION_CARD_STYLES } from './AnnotationCard';
 import { setHoveredElement, setSelectedElement } from '../prosemirror-plugin';
 
 export interface AnnotationPanelProps extends PluginPanelProps<TemplatePluginState> {
   // Additional props can be added here
 }
 
-interface ElementPosition {
+interface GroupedAnnotation {
+  /** Main element (variable or scope start) */
   element: TemplateElement;
-  dataPath: string;
+  /** Nested variables if this is a scope */
+  nestedVariables: TemplateElement[];
+  /** Position */
   top: number;
 }
 
-interface ScopePosition {
-  scope: TemplateScope;
-  startTop: number;
-  endTop: number;
+/**
+ * Group elements: show scope starts with their nested variables,
+ * skip scope ends and nested variables as separate items.
+ */
+function groupElements(schema: TemplateSchema): TemplateElement[] {
+  const scopeElementIds = new Set<string>();
+
+  // Collect IDs of elements inside scopes (nested variables) and scope ends
+  for (const scope of schema.scopes) {
+    // Mark all variables inside this scope
+    for (const v of scope.variables) {
+      scopeElementIds.add(v.id);
+    }
+    // Mark the end element
+    if (scope.endElement) {
+      scopeElementIds.add(scope.endElement.id);
+    }
+  }
+
+  // Return only elements that are NOT inside a scope (top-level vars and scope starts)
+  return schema.elements.filter((el) => !scopeElementIds.has(el.id));
 }
 
 /**
- * Get elements sorted by position with their data paths.
+ * Get nested variables for a scope start element.
  */
-function getElementsWithPaths(
-  schema: TemplateSchema
-): Array<{ element: TemplateElement; dataPath: string }> {
-  return schema.elements.map((element) => ({
-    element,
-    dataPath: getFullDataPath(element, schema.scopes),
-  }));
+function getNestedVariables(element: TemplateElement, schema: TemplateSchema): TemplateElement[] {
+  if (
+    element.type !== 'loopStart' &&
+    element.type !== 'conditionalStart' &&
+    element.type !== 'invertedStart'
+  ) {
+    return [];
+  }
+
+  // Find the scope for this element
+  const scope = schema.scopes.find((s) => s.startElement.id === element.id);
+  if (!scope) return [];
+
+  return scope.variables;
 }
 
 export function AnnotationPanel({ editorView, pluginState, selectRange }: AnnotationPanelProps) {
@@ -46,17 +73,16 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
   const hoveredElementId = pluginState?.hoveredElementId;
   const selectedElementId = pluginState?.selectedElementId;
 
-  const [elementPositions, setElementPositions] = useState<ElementPosition[]>([]);
-  const [scopePositions, setScopePositions] = useState<ScopePosition[]>([]);
+  const [annotations, setAnnotations] = useState<GroupedAnnotation[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get elements with paths
-  const elementsWithPaths = useMemo(() => {
+  // Get grouped elements (scope starts + top-level variables)
+  const groupedElements = useMemo(() => {
     if (!schema) return [];
-    return getElementsWithPaths(schema);
+    return groupElements(schema);
   }, [schema]);
 
-  // Find the scroll container - look for ancestor with overflow:auto
+  // Find the scroll container
   const findScrollContainer = useCallback((element: HTMLElement | null): HTMLElement | null => {
     if (!element) return null;
     let current: HTMLElement | null = element.parentElement;
@@ -70,68 +96,31 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
     return null;
   }, []);
 
-  // Calculate element positions using coordsAtPos
+  // Calculate positions
   const updatePositions = useCallback(() => {
-    if (!editorView || !schema || elementsWithPaths.length === 0) {
-      setElementPositions([]);
-      setScopePositions([]);
+    if (!editorView || !schema || groupedElements.length === 0) {
+      setAnnotations([]);
       return;
     }
 
-    // Get the annotation panel container
     const panelContainer = containerRef.current;
     if (!panelContainer) {
-      setElementPositions([]);
-      setScopePositions([]);
+      setAnnotations([]);
       return;
     }
     const panelRect = panelContainer.getBoundingClientRect();
 
-    const positions: ElementPosition[] = [];
+    const grouped: GroupedAnnotation[] = [];
 
-    for (const { element, dataPath } of elementsWithPaths) {
+    for (const element of groupedElements) {
       try {
-        // Get screen coordinates for the element position
         const coords = editorView.coordsAtPos(element.from);
         if (coords) {
-          // Calculate top relative to panel, accounting for where panel starts
           const top = coords.top - panelRect.top;
-          positions.push({ element, dataPath, top: Math.max(0, top) });
-        }
-      } catch (_e) {
-        // Position might be invalid after document changes
-      }
-    }
-
-    // Sort by position and handle overlaps
-    positions.sort((a, b) => a.top - b.top);
-
-    // Adjust positions to prevent overlaps (minimum 36px apart for compact cards)
-    const minGap = 36;
-    for (let i = 1; i < positions.length; i++) {
-      const prev = positions[i - 1];
-      const curr = positions[i];
-      if (curr.top < prev.top + minGap) {
-        curr.top = prev.top + minGap;
-      }
-    }
-
-    setElementPositions(positions);
-
-    // Calculate scope positions (for loops and conditionals)
-    const scopePos: ScopePosition[] = [];
-    for (const scope of schema.scopes) {
-      if (!scope.endElement) continue; // Skip unclosed scopes
-
-      try {
-        const startCoords = editorView.coordsAtPos(scope.startElement.from);
-        const endCoords = editorView.coordsAtPos(scope.endElement.to);
-
-        if (startCoords && endCoords) {
-          scopePos.push({
-            scope,
-            startTop: Math.max(0, startCoords.top - panelRect.top),
-            endTop: Math.max(0, endCoords.top - panelRect.top),
+          grouped.push({
+            element,
+            nestedVariables: getNestedVariables(element, schema),
+            top: Math.max(0, top),
           });
         }
       } catch (_e) {
@@ -139,19 +128,33 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
       }
     }
 
-    setScopePositions(scopePos);
-  }, [editorView, schema, elementsWithPaths]);
+    // Sort by position
+    grouped.sort((a, b) => a.top - b.top);
 
-  // Update positions when editor state changes
+    // Adjust positions to prevent overlaps
+    const minGap = 32;
+    for (let i = 1; i < grouped.length; i++) {
+      const prev = grouped[i - 1];
+      const curr = grouped[i];
+      // Account for nested variables in prev item
+      const prevHeight = 24 + prev.nestedVariables.length * 18;
+      const neededGap = Math.max(minGap, prevHeight);
+      if (curr.top < prev.top + neededGap) {
+        curr.top = prev.top + neededGap;
+      }
+    }
+
+    setAnnotations(grouped);
+  }, [editorView, schema, groupedElements]);
+
+  // Update on scroll
   useEffect(() => {
     updatePositions();
 
-    // Also update on scroll - find the scroll container
     if (editorView) {
       const scrollContainer = findScrollContainer(editorView.dom);
       if (scrollContainer) {
         const handleScroll = () => {
-          // Use requestAnimationFrame for smooth updates
           requestAnimationFrame(updatePositions);
         };
         scrollContainer.addEventListener('scroll', handleScroll);
@@ -160,7 +163,7 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
     }
   }, [updatePositions, editorView, findScrollContainer]);
 
-  // Update positions on window resize
+  // Update on resize
   useEffect(() => {
     window.addEventListener('resize', updatePositions);
     return () => window.removeEventListener('resize', updatePositions);
@@ -185,55 +188,61 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
   };
 
   if (!schema || schema.elements.length === 0) {
-    return null; // Don't show anything if no template tags
+    return null;
   }
 
-  // Get scope color
-  const getScopeColor = (type: 'loop' | 'conditional' | 'inverted') => {
-    switch (type) {
-      case 'loop':
-        return ELEMENT_COLORS.loopStart;
-      case 'conditional':
-        return ELEMENT_COLORS.conditionalStart;
-      case 'inverted':
-        return ELEMENT_COLORS.invertedStart;
-      default:
-        return '#666';
-    }
-  };
+  // Get icon and color for element type
+  const getIcon = (el: TemplateElement) => ELEMENT_ICONS[el.type];
+  const getColor = (el: TemplateElement) => ELEMENT_COLORS[el.type];
+
+  // Check if element is a scope (loop/conditional)
+  const isScope = (el: TemplateElement) =>
+    el.type === 'loopStart' || el.type === 'conditionalStart' || el.type === 'invertedStart';
 
   return (
     <div className="template-panel" ref={containerRef}>
-      {/* Scope indicators (vertical bars) */}
-      <div className="template-panel-scopes">
-        {scopePositions.map(({ scope, startTop, endTop }) => (
-          <div
-            key={scope.id}
-            className={`template-scope-bar template-scope-${scope.type}`}
-            style={{
-              top: `${startTop + 8}px`,
-              height: `${Math.max(20, endTop - startTop + 16)}px`,
-              backgroundColor: getScopeColor(scope.type),
-            }}
-            title={`${scope.type}: ${scope.name}`}
-          />
-        ))}
-      </div>
-
-      {/* Anchored annotations */}
       <div className="template-panel-annotations">
-        {elementPositions.map(({ element, dataPath, top }) => (
+        {annotations.map(({ element, nestedVariables, top }) => (
           <div key={element.id} className="template-annotation-anchor" style={{ top: `${top}px` }}>
             <div className="template-annotation-connector" />
-            <AnnotationCard
-              element={element}
-              dataPath={dataPath}
-              isHovered={element.id === hoveredElementId}
-              isSelected={element.id === selectedElementId}
-              onHover={handleHover}
-              onClick={handleClick}
-              compact
-            />
+            <div
+              className={`template-annotation-chip ${element.id === hoveredElementId ? 'hovered' : ''} ${element.id === selectedElementId ? 'selected' : ''}`}
+              style={{ borderLeftColor: getColor(element) }}
+              onMouseEnter={() => handleHover(element.id)}
+              onMouseLeave={() => handleHover(undefined)}
+              onClick={() => handleClick(element.id)}
+            >
+              <span className="template-chip-icon" style={{ color: getColor(element) }}>
+                {getIcon(element)}
+              </span>
+              <span className="template-chip-name">{element.name}</span>
+
+              {/* Show nested variables for scopes */}
+              {isScope(element) && nestedVariables.length > 0 && (
+                <span className="template-chip-nested">
+                  {nestedVariables.map((v) => (
+                    <span
+                      key={v.id}
+                      className={`template-nested-var ${v.id === hoveredElementId ? 'hovered' : ''}`}
+                      onMouseEnter={(e) => {
+                        e.stopPropagation();
+                        handleHover(v.id);
+                      }}
+                      onMouseLeave={(e) => {
+                        e.stopPropagation();
+                        handleHover(undefined);
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleClick(v.id);
+                      }}
+                    >
+                      {v.name.includes('.') ? v.name.split('.').pop() : v.name}
+                    </span>
+                  ))}
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -255,32 +264,11 @@ ${ANNOTATION_CARD_STYLES}
   position: relative;
 }
 
-.template-panel-scopes {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 8px;
-}
-
-.template-scope-bar {
-  position: absolute;
-  left: 2px;
-  width: 3px;
-  border-radius: 2px;
-  opacity: 0.6;
-}
-
-.template-scope-bar:hover {
-  opacity: 1;
-}
-
 .template-panel-annotations {
   flex: 1;
   position: relative;
   overflow: visible;
   min-height: 500px;
-  margin-left: 8px;
 }
 
 .template-annotation-anchor {
@@ -292,15 +280,78 @@ ${ANNOTATION_CARD_STYLES}
 }
 
 .template-annotation-connector {
-  width: 12px;
+  width: 20px;
   height: 1px;
   background: #d0d0d0;
-  margin-top: 10px;
+  margin-top: 11px;
   margin-right: 4px;
   flex-shrink: 0;
 }
 
 .template-annotation-anchor:hover .template-annotation-connector {
   background: #3b82f6;
+}
+
+/* Annotation chip */
+.template-annotation-chip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #6c757d;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  max-width: 180px;
+}
+
+.template-annotation-chip:hover,
+.template-annotation-chip.hovered {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
+}
+
+.template-annotation-chip.selected {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.template-chip-icon {
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.template-chip-name {
+  color: #334155;
+  font-weight: 500;
+}
+
+/* Nested variables */
+.template-chip-nested {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  width: 100%;
+  margin-top: 2px;
+  padding-top: 3px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.template-nested-var {
+  font-size: 10px;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 1px 4px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.template-nested-var:hover,
+.template-nested-var.hovered {
+  background: #e2e8f0;
+  color: #334155;
 }
 `;
