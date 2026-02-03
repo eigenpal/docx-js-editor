@@ -419,6 +419,10 @@ export interface TableCellAttrs {
   backgroundColor?: string;
   /** No text wrapping in cell */
   noWrap?: boolean;
+  /** Which borders are visible */
+  borders?: { top?: boolean; bottom?: boolean; left?: boolean; right?: boolean };
+  /** Per-side border colors (RGB hex) */
+  borderColors?: { top?: string; bottom?: string; left?: string; right?: string };
 }
 
 /**
@@ -513,7 +517,7 @@ export const tableCell: NodeSpec = {
     verticalAlign: { default: null },
     backgroundColor: { default: null },
     borders: { default: null }, // { top?: boolean, bottom?: boolean, left?: boolean, right?: boolean }
-    borderColor: { default: null },
+    borderColors: { default: null }, // { top?: string, bottom?: string, left?: string, right?: string }
     noWrap: { default: false },
   },
   parseDOM: [
@@ -568,18 +572,22 @@ export const tableCell: NodeSpec = {
       styles.push(`width: ${widthPx}px`);
     }
 
-    // Handle borders - default to black borders like Word
-    const borderColor = (attrs as any).borderColor ? `#${(attrs as any).borderColor}` : '#000000';
-    const borders = (attrs as any).borders;
+    // Handle borders - support per-side colors
+    const borders = (attrs as TableCellAttrs).borders;
+    const borderColors = (attrs as TableCellAttrs).borderColors;
     if (borders) {
-      // Individual border control
-      styles.push(`border-top: ${borders.top ? '1px solid ' + borderColor : 'none'}`);
-      styles.push(`border-bottom: ${borders.bottom ? '1px solid ' + borderColor : 'none'}`);
-      styles.push(`border-left: ${borders.left ? '1px solid ' + borderColor : 'none'}`);
-      styles.push(`border-right: ${borders.right ? '1px solid ' + borderColor : 'none'}`);
+      // Individual border control with per-side colors
+      const topColor = borderColors?.top ? `#${borderColors.top}` : '#000000';
+      const bottomColor = borderColors?.bottom ? `#${borderColors.bottom}` : '#000000';
+      const leftColor = borderColors?.left ? `#${borderColors.left}` : '#000000';
+      const rightColor = borderColors?.right ? `#${borderColors.right}` : '#000000';
+      styles.push(`border-top: ${borders.top ? '1px solid ' + topColor : 'none'}`);
+      styles.push(`border-bottom: ${borders.bottom ? '1px solid ' + bottomColor : 'none'}`);
+      styles.push(`border-left: ${borders.left ? '1px solid ' + leftColor : 'none'}`);
+      styles.push(`border-right: ${borders.right ? '1px solid ' + rightColor : 'none'}`);
     } else {
       // Default: all borders with black color (like Word)
-      styles.push(`border: 1px solid ${borderColor}`);
+      styles.push(`border: 1px solid #000000`);
     }
 
     if (attrs.verticalAlign) {
@@ -613,7 +621,7 @@ export const tableHeader: NodeSpec = {
     verticalAlign: { default: null },
     backgroundColor: { default: null },
     borders: { default: null },
-    borderColor: { default: null },
+    borderColors: { default: null },
     noWrap: { default: false },
   },
   parseDOM: [
@@ -669,17 +677,22 @@ export const tableHeader: NodeSpec = {
     }
 
     // Handle borders - default to black borders like Word
-    const borderColor = (attrs as any).borderColor ? `#${(attrs as any).borderColor}` : '#000000';
-    const borders = (attrs as any).borders;
+    // Handle borders - support per-side colors
+    const borders = (attrs as TableCellAttrs).borders;
+    const borderColors = (attrs as TableCellAttrs).borderColors;
     if (borders) {
-      // Individual border control
-      styles.push(`border-top: ${borders.top ? '1px solid ' + borderColor : 'none'}`);
-      styles.push(`border-bottom: ${borders.bottom ? '1px solid ' + borderColor : 'none'}`);
-      styles.push(`border-left: ${borders.left ? '1px solid ' + borderColor : 'none'}`);
-      styles.push(`border-right: ${borders.right ? '1px solid ' + borderColor : 'none'}`);
+      // Individual border control with per-side colors
+      const topColor = borderColors?.top ? `#${borderColors.top}` : '#000000';
+      const bottomColor = borderColors?.bottom ? `#${borderColors.bottom}` : '#000000';
+      const leftColor = borderColors?.left ? `#${borderColors.left}` : '#000000';
+      const rightColor = borderColors?.right ? `#${borderColors.right}` : '#000000';
+      styles.push(`border-top: ${borders.top ? '1px solid ' + topColor : 'none'}`);
+      styles.push(`border-bottom: ${borders.bottom ? '1px solid ' + bottomColor : 'none'}`);
+      styles.push(`border-left: ${borders.left ? '1px solid ' + leftColor : 'none'}`);
+      styles.push(`border-right: ${borders.right ? '1px solid ' + rightColor : 'none'}`);
     } else {
       // Default: all borders with black color (like Word)
-      styles.push(`border: 1px solid ${borderColor}`);
+      styles.push(`border: 1px solid #000000`);
     }
 
     if (attrs.verticalAlign) {
