@@ -2,7 +2,7 @@
  * TableGridPicker Component
  *
  * A compact grid picker dropdown for inserting tables.
- * Similar to SuperDoc/Google Docs style table insert:
+ * Similar to Google Docs style table insert:
  * - Hover over grid cells to select dimensions
  * - Click to insert table with selected dimensions
  * - Shows preview of selected dimensions
