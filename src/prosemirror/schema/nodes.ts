@@ -93,13 +93,23 @@ export interface ImageAttrs {
  * Helper to convert paragraph attrs to DOM style
  */
 function paragraphAttrsToDOMStyle(attrs: ParagraphAttrs): string {
+  // For list items, calculate the correct indentation based on level
+  // Each level indents 0.5 inch (720 twips) more
+  let indentLeft = attrs.indentLeft;
+  if (attrs.numPr?.numId) {
+    const level = attrs.numPr.ilvl ?? 0;
+    // Base indentation: 0.5 inch (720 twips) per level
+    // Level 0 = 720 twips (48px), Level 1 = 1440 twips (96px), etc.
+    indentLeft = (level + 1) * 720;
+  }
+
   const formatting = {
     alignment: attrs.alignment,
     spaceBefore: attrs.spaceBefore,
     spaceAfter: attrs.spaceAfter,
     lineSpacing: attrs.lineSpacing,
     lineSpacingRule: attrs.lineSpacingRule,
-    indentLeft: attrs.indentLeft,
+    indentLeft: indentLeft,
     indentRight: attrs.indentRight,
     indentFirstLine: attrs.indentFirstLine,
     hangingIndent: attrs.hangingIndent,
@@ -407,6 +417,8 @@ export interface TableCellAttrs {
   verticalAlign?: 'top' | 'center' | 'bottom';
   /** Background color (RGB hex) */
   backgroundColor?: string;
+  /** No text wrapping in cell */
+  noWrap?: boolean;
 }
 
 /**
@@ -502,6 +514,7 @@ export const tableCell: NodeSpec = {
     backgroundColor: { default: null },
     borders: { default: null }, // { top?: boolean, bottom?: boolean, left?: boolean, right?: boolean }
     borderColor: { default: null },
+    noWrap: { default: false },
   },
   parseDOM: [
     {
@@ -531,12 +544,16 @@ export const tableCell: NodeSpec = {
     }
 
     // Build style - text wrapping and overflow control are critical for table-layout: fixed
-    const styles: string[] = [
-      'padding: 4px 8px',
-      'word-wrap: break-word',
-      'overflow-wrap: break-word',
-      'overflow: hidden',
-    ];
+    const styles: string[] = ['padding: 4px 8px'];
+
+    // Handle text wrapping - noWrap prevents text from wrapping in the cell
+    if ((attrs as TableCellAttrs).noWrap) {
+      styles.push('white-space: nowrap');
+    } else {
+      styles.push('word-wrap: break-word');
+      styles.push('overflow-wrap: break-word');
+      styles.push('overflow: hidden');
+    }
 
     // Handle cell width - colwidth takes priority (set by prosemirror-tables resizing)
     if (attrs.colwidth && attrs.colwidth.length > 0) {
@@ -597,6 +614,7 @@ export const tableHeader: NodeSpec = {
     backgroundColor: { default: null },
     borders: { default: null },
     borderColor: { default: null },
+    noWrap: { default: false },
   },
   parseDOM: [
     {
@@ -626,14 +644,16 @@ export const tableHeader: NodeSpec = {
     }
 
     // Build style - headers get bold and centered by default
-    // Text wrapping and overflow control are critical for table-layout: fixed
-    const styles: string[] = [
-      'padding: 4px 8px',
-      'font-weight: bold',
-      'word-wrap: break-word',
-      'overflow-wrap: break-word',
-      'overflow: hidden',
-    ];
+    const styles: string[] = ['padding: 4px 8px', 'font-weight: bold'];
+
+    // Handle text wrapping - noWrap prevents text from wrapping in the cell
+    if ((attrs as TableCellAttrs).noWrap) {
+      styles.push('white-space: nowrap');
+    } else {
+      styles.push('word-wrap: break-word');
+      styles.push('overflow-wrap: break-word');
+      styles.push('overflow: hidden');
+    }
 
     // Handle cell width - colwidth takes priority (set by prosemirror-tables resizing)
     if (attrs.colwidth && attrs.colwidth.length > 0) {

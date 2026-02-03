@@ -209,22 +209,48 @@ function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode
   const columnWidths = table.columnWidths;
   const totalWidth = columnWidths?.reduce((sum, w) => sum + w, 0) ?? 0;
 
-  // Get the table style's conditional formatting for header row
+  // Get the table style's conditional formatting
   const tableStyleId = table.formatting?.styleId;
-  const firstRowStyle = table.formatting?.look?.firstRow
+  const look = table.formatting?.look;
+
+  // Get firstRow style if enabled
+  const firstRowStyle = look?.firstRow
     ? resolveTableStyleConditional(styleResolver, tableStyleId, 'firstRow')
     : undefined;
 
-  const rows = table.rows.map((row, rowIndex) =>
-    convertTableRow(
+  // Get banded row styles if horizontal banding is enabled (noHBand is false or undefined)
+  const bandingEnabled = look?.noHBand !== true;
+  const band1HorzStyle = bandingEnabled
+    ? resolveTableStyleConditional(styleResolver, tableStyleId, 'band1Horz')
+    : undefined;
+  const band2HorzStyle = bandingEnabled
+    ? resolveTableStyleConditional(styleResolver, tableStyleId, 'band2Horz')
+    : undefined;
+
+  // Track data row index (excluding header rows) for banding
+  let dataRowIndex = 0;
+  const rows = table.rows.map((row, rowIndex) => {
+    const isHeader = rowIndex === 0 && !!look?.firstRow;
+
+    // Determine conditional style for this row
+    let conditionalStyle: { tcPr?: TableCellFormatting; rPr?: TextFormatting } | undefined;
+    if (isHeader) {
+      conditionalStyle = firstRowStyle;
+    } else if (bandingEnabled) {
+      // Alternate between band1 and band2 for data rows
+      conditionalStyle = dataRowIndex % 2 === 0 ? band1HorzStyle : band2HorzStyle;
+      dataRowIndex++;
+    }
+
+    return convertTableRow(
       row,
       styleResolver,
-      rowIndex === 0 && !!table.formatting?.look?.firstRow,
+      isHeader,
       columnWidths,
       totalWidth,
-      rowIndex === 0 ? firstRowStyle : undefined
-    )
-  );
+      conditionalStyle
+    );
+  });
 
   return schema.node('table', attrs, rows);
 }
@@ -306,6 +332,7 @@ function convertTableCell(
     widthType: widthType,
     verticalAlign: formatting?.verticalAlign,
     backgroundColor: backgroundColor,
+    noWrap: formatting?.noWrap,
   };
 
   // Convert cell content (paragraphs and nested tables)
