@@ -131,6 +131,10 @@ export interface DocxEditorProps {
   onError?: (error: Error) => void;
   /** Callback when fonts are loaded */
   onFontsLoaded?: () => void;
+  /** External ProseMirror plugins (from PluginHost) */
+  externalPlugins?: import('prosemirror-state').Plugin[];
+  /** Callback when editor view is ready (for PluginHost) */
+  onEditorViewReady?: (view: import('prosemirror-view').EditorView) => void;
   /** Theme for styling */
   theme?: Theme | null;
   /** Whether to show toolbar (default: true) */
@@ -281,6 +285,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     onCopy: _onCopy,
     onCut: _onCut,
     onPaste: _onPaste,
+    externalPlugins,
+    onEditorViewReady,
   },
   ref
 ) {
@@ -1309,6 +1315,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                   onSelectionChange={handleSelectionChange}
                   readOnly={readOnly}
                   autoFocus
+                  externalPlugins={externalPlugins}
+                  onEditorViewReady={onEditorViewReady}
                 />
 
                 {/* Page navigation / indicator */}

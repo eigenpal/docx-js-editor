@@ -58,6 +58,168 @@ function injectStyles(pluginId: string, css: string): () => void {
   };
 }
 
+// Default styles for PluginHost - defined here so it can be used in the component
+const PLUGIN_HOST_STYLES = `
+.plugin-host {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.plugin-host-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.plugin-host-editor-wrapper {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: auto;
+}
+
+.plugin-host-editor-wrapper > *:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.plugin-panels-left,
+.plugin-panels-right {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: #f8f9fa;
+  border-color: #e9ecef;
+}
+
+.plugin-panels-left {
+  border-right: 1px solid #e9ecef;
+}
+
+.plugin-panels-right {
+  border-left: 1px solid #e9ecef;
+}
+
+.plugin-panels-bottom {
+  border-top: 1px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.plugin-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.2s ease, height 0.2s ease;
+}
+
+.plugin-panel.collapsed {
+  overflow: visible;
+}
+
+.plugin-panel-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.plugin-panel.collapsed .plugin-panel-toggle {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  flex-direction: column;
+  height: 100%;
+  padding: 8px 6px;
+}
+
+.plugin-panel-toggle:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.plugin-panel-toggle-icon {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.plugin-panel.collapsed .plugin-panel-toggle-icon {
+  transform: rotate(90deg);
+}
+
+.plugin-panel-toggle-label {
+  font-weight: 500;
+}
+
+.plugin-panel-content {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Overlay panels - positioned inside the editor scroll area */
+.plugin-panels-overlay-right {
+  flex-shrink: 0;
+  width: 280px;
+  position: relative;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.plugin-panel-overlay {
+  position: sticky;
+  top: 120px; /* Below toolbar */
+  display: flex;
+  flex-shrink: 0;
+  pointer-events: auto;
+  background: transparent;
+  max-height: calc(100vh - 140px);
+  overflow: visible;
+}
+
+.plugin-panel-overlay.collapsed {
+  width: 32px;
+}
+
+.plugin-panel-overlay .plugin-panel-toggle {
+  position: absolute;
+  left: -24px;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: #f1f3f4;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #6c757d;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.plugin-panel-overlay .plugin-panel-toggle:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.plugin-panel-overlay-content {
+  flex: 1;
+  overflow: visible;
+}
+`;
+
 /**
  * PluginHost Component
  *
@@ -109,6 +271,12 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
     }
     forceUpdate({});
   }, [plugins, editorView]);
+
+  // Inject base PluginHost styles
+  useEffect(() => {
+    const cleanup = injectStyles('plugin-host-base', PLUGIN_HOST_STYLES);
+    return cleanup;
+  }, []);
 
   // Inject plugin styles
   useEffect(() => {
@@ -364,6 +532,52 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
     );
   };
 
+  // Render right panels as overlay inside editor
+  const renderRightPanelOverlay = (plugin: EditorPlugin) => {
+    if (!plugin.Panel) return null;
+
+    const config = { ...DEFAULT_PANEL_CONFIG, ...plugin.panelConfig };
+    const isCollapsed = collapsedPanels.has(plugin.id);
+    const size = panelSizes.get(plugin.id) ?? config.defaultSize;
+
+    const Panel = plugin.Panel;
+    const pluginState = pluginStatesRef.current.get(plugin.id);
+
+    return (
+      <div
+        key={plugin.id}
+        className={`plugin-panel-overlay ${isCollapsed ? 'collapsed' : ''}`}
+        style={{
+          width: isCollapsed ? '32px' : `${size}px`,
+        }}
+        data-plugin-id={plugin.id}
+      >
+        {config.collapsible && (
+          <button
+            className="plugin-panel-toggle"
+            onClick={() => togglePanelCollapsed(plugin.id)}
+            title={isCollapsed ? `Show ${plugin.name}` : `Hide ${plugin.name}`}
+            aria-label={isCollapsed ? `Show ${plugin.name}` : `Hide ${plugin.name}`}
+          >
+            <span className="plugin-panel-toggle-icon">{isCollapsed ? '‹' : '›'}</span>
+          </button>
+        )}
+        {!isCollapsed && (
+          <div className="plugin-panel-overlay-content">
+            <Panel
+              editorView={editorView}
+              doc={editorView?.state.doc ?? null}
+              scrollToPosition={scrollToPosition}
+              selectRange={selectRange}
+              pluginState={pluginState}
+              panelWidth={size}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={`plugin-host ${className}`}>
       {/* Left panels */}
@@ -371,118 +585,29 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
         <div className="plugin-panels-left">{pluginsByPosition.left.map(renderPanel)}</div>
       )}
 
-      {/* Main editor area */}
+      {/* Main editor area with right panel overlay */}
       <div className="plugin-host-editor">
-        {editorElement}
+        <div className="plugin-host-editor-wrapper">
+          {editorElement}
+
+          {/* Right panels as overlay inside the editor scroll area */}
+          {pluginsByPosition.right.length > 0 && (
+            <div className="plugin-panels-overlay-right">
+              {pluginsByPosition.right.map(renderRightPanelOverlay)}
+            </div>
+          )}
+        </div>
 
         {/* Bottom panels */}
         {pluginsByPosition.bottom.length > 0 && (
           <div className="plugin-panels-bottom">{pluginsByPosition.bottom.map(renderPanel)}</div>
         )}
       </div>
-
-      {/* Right panels */}
-      {pluginsByPosition.right.length > 0 && (
-        <div className="plugin-panels-right">{pluginsByPosition.right.map(renderPanel)}</div>
-      )}
     </div>
   );
 });
 
-// Default styles for PluginHost
-export const PLUGIN_HOST_STYLES = `
-.plugin-host {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.plugin-host-editor {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.plugin-panels-left,
-.plugin-panels-right {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  background: #f8f9fa;
-  border-color: #e9ecef;
-}
-
-.plugin-panels-left {
-  border-right: 1px solid #e9ecef;
-}
-
-.plugin-panels-right {
-  border-left: 1px solid #e9ecef;
-}
-
-.plugin-panels-bottom {
-  border-top: 1px solid #e9ecef;
-  background: #f8f9fa;
-}
-
-.plugin-panel {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: width 0.2s ease, height 0.2s ease;
-}
-
-.plugin-panel.collapsed {
-  overflow: visible;
-}
-
-.plugin-panel-toggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 8px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 12px;
-  color: #6c757d;
-  white-space: nowrap;
-}
-
-.plugin-panel.collapsed .plugin-panel-toggle {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  flex-direction: column;
-  height: 100%;
-  padding: 8px 6px;
-}
-
-.plugin-panel-toggle:hover {
-  background: #e9ecef;
-  color: #495057;
-}
-
-.plugin-panel-toggle-icon {
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.plugin-panel.collapsed .plugin-panel-toggle-icon {
-  transform: rotate(90deg);
-}
-
-.plugin-panel-toggle-label {
-  font-weight: 500;
-}
-
-.plugin-panel-content {
-  flex: 1;
-  overflow: auto;
-}
-`;
+// Export the styles constant for external use
+export { PLUGIN_HOST_STYLES };
 
 export default PluginHost;
