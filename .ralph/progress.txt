@@ -1021,3 +1021,50 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 16:45] NOTES:   - renderPage now accepts headerContent/footerContent options
 [2026-02-03 16:45] NOTES:   - Headers positioned at headerDistance from top
 [2026-02-03 16:45] NOTES:   - Footers positioned at footerDistance from bottom
+
+[2026-02-03 16:48] ========================================
+[2026-02-03 16:48] PHASE 8 COMPLETE: Headers and Footers
+[2026-02-03 16:48] ========================================
+[2026-02-03 16:48] - Task 8.1: Created measureHeaderFooter.ts
+[2026-02-03 16:48] - Task 8.2: Added margin inflation to layout engine
+[2026-02-03 16:48] - Task 8.3: Added header/footer rendering to page painter
+[2026-02-03 16:48] ========================================
+
+[2026-02-03 16:48] NEXT: Phase 9 - Integration and Testing (Tasks 9.1, 9.2, 9.3)
+
+[2026-02-03 17:00] TASK: 9.1 Create integration tests
+[2026-02-03 17:00] STATUS: starting
+[2026-02-03 17:00] NOTES: Phase 9, Task 9.1 - Creating integration tests for paginated editing
+[2026-02-03 17:00] STATUS: researching-superdoc
+[2026-02-03 17:00] NOTES: Searching SuperDoc for testing patterns
+[2026-02-03 17:01] NOTES: Read SuperDoc index.test.ts - uses vitest with helper functions for test data
+[2026-02-03 17:02] NOTES: Read project's styleResolver.test.ts - uses bun:test with describe/test/expect
+[2026-02-03 17:03] NOTES: Reviewed layout-engine/index.ts, hitTest.ts, clickToPosition.ts
+[2026-02-03 17:04] STATUS: editing
+[2026-02-03 17:04] NOTES: Creating src/layout-engine/integration.test.ts with:
+[2026-02-03 17:04] NOTES:   - Test: layout produces correct pages
+[2026-02-03 17:04] NOTES:   - Test: click maps to correct PM position
+[2026-02-03 17:04] NOTES:   - Test: PM edits update visual pages (via blocks/measures)
+[2026-02-03 17:05] STATUS: testing
+[2026-02-03 17:05] NOTES: Typecheck passed
+[2026-02-03 17:06] NOTES: All 29 integration tests pass
+[2026-02-03 17:06] STATUS: done
+[2026-02-03 17:06] NOTES: Created comprehensive integration tests covering:
+[2026-02-03 17:06] NOTES:   - Layout Engine - Page Production (12 tests)
+[2026-02-03 17:06] NOTES:     * Empty document, single/multiple paragraphs on one page
+[2026-02-03 17:06] NOTES:     * Multi-page scenarios, explicit page breaks, pageBreakBefore
+[2026-02-03 17:06] NOTES:     * Paragraph splitting across pages, keepNext chain handling
+[2026-02-03 17:06] NOTES:     * Margin and positioning validation
+[2026-02-03 17:06] NOTES:   - Click-to-Position Mapping (6 tests)
+[2026-02-03 17:06] NOTES:     * Page hit testing (hitTestPage, getPageTop)
+[2026-02-03 17:06] NOTES:     * Fragment hit testing (hitTestFragment)
+[2026-02-03 17:06] NOTES:     * Click to PM position (clickToPositionInParagraph)
+[2026-02-03 17:06] NOTES:   - Document Updates (6 tests)
+[2026-02-03 17:06] NOTES:     * Adding content increases fragments/pages
+[2026-02-03 17:06] NOTES:     * Removing content decreases fragments/pages
+[2026-02-03 17:06] NOTES:     * Modifying content updates PM positions
+[2026-02-03 17:06] NOTES:   - Section Breaks (2 tests)
+[2026-02-03 17:06] NOTES:     * nextPage forces new page, continuous does not
+[2026-02-03 17:06] NOTES:   - Header/Footer Margin Inflation (3 tests)
+[2026-02-03 17:06] NOTES:     * Header height inflates top margin
+[2026-02-03 17:06] NOTES:     * Footer height inflates bottom margin
