@@ -7,7 +7,6 @@
  * - Full docxtemplater syntax detection (variables, loops, conditionals)
  * - Schema annotation panel showing template structure
  * - Differentiated visual highlighting by element type
- * - Inferred TypeScript data structure display
  *
  * @example
  * ```tsx
@@ -26,7 +25,7 @@
 
 import type { EditorPlugin } from '../../plugin-api/types';
 import type { EditorView } from 'prosemirror-view';
-import type { TemplatePluginState, TemplateSchema } from './types';
+import type { TemplateTag } from './prosemirror-plugin';
 import {
   createTemplatePlugin,
   templatePluginKey,
@@ -35,15 +34,21 @@ import {
 import { AnnotationPanel, ANNOTATION_PANEL_STYLES } from './components/AnnotationPanel';
 
 /**
+ * Plugin state interface
+ */
+interface TemplatePluginState {
+  tags: TemplateTag[];
+  hoveredId?: string;
+  selectedId?: string;
+}
+
+/**
  * Create the template plugin instance.
  *
  * @param options - Plugin configuration options
  */
 export function createPlugin(
   options: {
-    /** Callback when template schema changes */
-    onSchemaChange?: (schema: TemplateSchema) => void;
-
     /** Initial panel collapsed state */
     defaultCollapsed?: boolean;
 
@@ -54,15 +59,8 @@ export function createPlugin(
     panelWidth?: number;
   } = {}
 ): EditorPlugin<TemplatePluginState> {
-  // Store schema change callback for external access
-  const schemaChangeCallback = options.onSchemaChange;
-
   // Create the ProseMirror plugin
-  const pmPlugin = createTemplatePlugin({
-    onSchemaChange: (schema) => {
-      schemaChangeCallback?.(schema);
-    },
-  });
+  const pmPlugin = createTemplatePlugin();
 
   return {
     id: 'template',
@@ -87,21 +85,15 @@ export function createPlugin(
       if (!pluginState) return undefined;
 
       return {
-        schema: pluginState.schema,
-        isParsing: false,
-        hoveredElementId: pluginState.hoveredElementId,
-        selectedElementId: pluginState.selectedElementId,
-        showErrors: true,
-        annotationsExpanded: true,
+        tags: pluginState.tags,
+        hoveredId: pluginState.hoveredId,
+        selectedId: pluginState.selectedId,
       };
     },
 
     initialize: (_view: EditorView | null): TemplatePluginState => {
       return {
-        schema: null,
-        isParsing: true,
-        showErrors: true,
-        annotationsExpanded: true,
+        tags: [],
       };
     },
 
@@ -118,51 +110,15 @@ ${ANNOTATION_PANEL_STYLES}
  */
 export const templatePlugin = createPlugin();
 
-// Re-export types
-export type {
-  TemplateElement,
-  TemplateElementType,
-  TemplateScope,
-  TemplateSchema,
-  TemplatePluginState,
-  InferredDataType,
-  ValidationError,
-} from './types';
-
-// Re-export utilities
-export {
-  parseDocument,
-  parseText,
-  containsTemplateTags,
-  extractTagNames,
-  getUniqueVariableNames,
-} from './parser';
-
-export {
-  buildScopes,
-  createRootScope,
-  getScopeById,
-  getScopeAtPosition,
-  flattenScopes,
-} from './scope-tracker';
-
-export { validateAll, validateElements, validateScopes, isValidVariableName } from './validator';
-
-export {
-  inferDataStructure,
-  toTypeScriptInterface,
-  getFullDataPath,
-  getStructureSummary,
-} from './schema-inferrer';
-
+// Re-export types and utilities from prosemirror-plugin
+export type { TemplateTag, TagType } from './prosemirror-plugin';
 export {
   createTemplatePlugin,
   templatePluginKey,
-  getTemplateSchema,
-  getTemplateElements,
-  getValidationErrors,
+  getTemplateTags,
   setHoveredElement,
   setSelectedElement,
+  TEMPLATE_DECORATION_STYLES,
 } from './prosemirror-plugin';
 
-export { ELEMENT_COLORS, ELEMENT_ICONS, TEMPLATE_CLASS_PREFIX } from './types';
+export { AnnotationPanel, ANNOTATION_PANEL_STYLES } from './components/AnnotationPanel';

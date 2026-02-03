@@ -1,304 +1,234 @@
 /**
  * Annotation Panel Component
  *
- * Displays template annotations anchored to their positions in the document,
- * like Google Docs comments. Scopes (loops/conditionals) are collapsed to
- * show nested variables inline.
+ * Displays template tags anchored to their positions in the document.
  */
 
 import { useMemo, useEffect, useState, useRef, useCallback } from 'react';
+import { TextSelection } from 'prosemirror-state';
 import type { PluginPanelProps } from '../../../plugin-api/types';
-import type { TemplatePluginState, TemplateSchema, TemplateElement } from '../types';
-import { ELEMENT_COLORS } from '../types';
-import { ANNOTATION_CARD_STYLES } from './AnnotationCard';
+import type { TemplateTag, TagType } from '../prosemirror-plugin';
 import { setHoveredElement, setSelectedElement } from '../prosemirror-plugin';
 
-export interface AnnotationPanelProps extends PluginPanelProps<TemplatePluginState> {
-  // Additional props can be added here
+interface PluginState {
+  tags: TemplateTag[];
+  hoveredId?: string;
+  selectedId?: string;
 }
 
-interface GroupedAnnotation {
-  /** Main element (variable or scope start) */
-  element: TemplateElement;
-  /** Nested variables if this is a scope */
-  nestedVariables: TemplateElement[];
-  /** Position */
+export interface AnnotationPanelProps extends PluginPanelProps<PluginState> {}
+
+interface TagPosition {
+  tag: TemplateTag;
   top: number;
 }
 
-/**
- * Group elements: show scope starts with their nested variables,
- * skip scope ends and nested variables as separate items.
- */
-function groupElements(schema: TemplateSchema): TemplateElement[] {
-  const scopeElementIds = new Set<string>();
+/** Colors for tag types */
+const COLORS: Record<TagType, string> = {
+  variable: '#f59e0b',
+  sectionStart: '#3b82f6',
+  sectionEnd: '#3b82f6',
+  invertedStart: '#8b5cf6',
+  raw: '#ef4444',
+};
 
-  // Collect IDs of elements inside scopes (nested variables) and scope ends
-  for (const scope of schema.scopes) {
-    // Mark all variables inside this scope
-    for (const v of scope.variables) {
-      scopeElementIds.add(v.id);
-    }
-    // Mark the end element
-    if (scope.endElement) {
-      scopeElementIds.add(scope.endElement.id);
-    }
+/** Labels for tag types */
+function getLabel(type: TagType): string {
+  switch (type) {
+    case 'sectionStart':
+      return 'LOOP / IF';
+    case 'invertedStart':
+      return 'IF NOT';
+    case 'raw':
+      return 'HTML';
+    default:
+      return '';
   }
-
-  // Return only elements that are NOT inside a scope (top-level vars and scope starts)
-  return schema.elements.filter((el) => !scopeElementIds.has(el.id));
 }
 
-/**
- * Get nested variables for a scope start element.
- */
-function getNestedVariables(element: TemplateElement, schema: TemplateSchema): TemplateElement[] {
-  if (
-    element.type !== 'loopStart' &&
-    element.type !== 'conditionalStart' &&
-    element.type !== 'invertedStart'
-  ) {
-    return [];
-  }
+export function AnnotationPanel({ editorView, pluginState }: AnnotationPanelProps) {
+  const tags = pluginState?.tags ?? [];
+  const hoveredId = pluginState?.hoveredId;
+  const selectedId = pluginState?.selectedId;
 
-  // Find the scope for this element
-  const scope = schema.scopes.find((s) => s.startElement.id === element.id);
-  if (!scope) return [];
-
-  return scope.variables;
-}
-
-export function AnnotationPanel({ editorView, pluginState, selectRange }: AnnotationPanelProps) {
-  const schema = pluginState?.schema ?? null;
-  const hoveredElementId = pluginState?.hoveredElementId;
-  const selectedElementId = pluginState?.selectedElementId;
-
-  const [annotations, setAnnotations] = useState<GroupedAnnotation[]>([]);
+  const [positions, setPositions] = useState<TagPosition[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const chipRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const lastMeasuredTagsKey = useRef<string>('');
 
-  // Get grouped elements (scope starts + top-level variables)
-  const groupedElements = useMemo(() => {
-    if (!schema) return [];
-    return groupElements(schema);
-  }, [schema]);
+  // Filter to show only variables and section starts (not ends or vars inside sections)
+  const visibleTags = useMemo(() => {
+    return tags.filter((t) => t.type !== 'sectionEnd' && !t.insideSection);
+  }, [tags]);
 
-  // Find the scroll container
-  const findScrollContainer = useCallback((element: HTMLElement | null): HTMLElement | null => {
-    if (!element) return null;
-    let current: HTMLElement | null = element.parentElement;
+  // Find scroll container
+  const findScrollContainer = useCallback((el: HTMLElement | null): HTMLElement | null => {
+    if (!el) return null;
+    let current = el.parentElement;
     while (current) {
       const style = window.getComputedStyle(current);
-      if (style.overflow === 'auto' || style.overflowY === 'auto') {
-        return current;
-      }
+      if (style.overflow === 'auto' || style.overflowY === 'auto') return current;
       current = current.parentElement;
     }
     return null;
   }, []);
 
-  // Calculate positions
+  // Update positions
   const updatePositions = useCallback(() => {
-    if (!editorView || !schema || groupedElements.length === 0) {
-      setAnnotations([]);
+    if (!editorView || visibleTags.length === 0) {
+      setPositions([]);
       return;
     }
 
-    const panelContainer = containerRef.current;
-    if (!panelContainer) {
-      setAnnotations([]);
-      return;
-    }
-    const panelRect = panelContainer.getBoundingClientRect();
+    const panel = containerRef.current;
+    if (!panel) return;
 
-    const grouped: GroupedAnnotation[] = [];
+    const panelRect = panel.getBoundingClientRect();
+    const newPositions: TagPosition[] = [];
 
-    for (const element of groupedElements) {
+    for (const tag of visibleTags) {
       try {
-        const coords = editorView.coordsAtPos(element.from);
+        const coords = editorView.coordsAtPos(tag.from);
         if (coords) {
-          // Don't clamp - allow negative values so annotations scroll out of view
-          const top = coords.top - panelRect.top;
-          grouped.push({
-            element,
-            nestedVariables: getNestedVariables(element, schema),
-            top,
-          });
+          newPositions.push({ tag, top: coords.top - panelRect.top });
         }
-      } catch (_e) {
+      } catch {
         // Position might be invalid
       }
     }
 
-    // Sort by position
-    grouped.sort((a, b) => a.top - b.top);
-
-    // Adjust positions to prevent overlaps
+    // Sort and prevent overlaps using measured heights
+    newPositions.sort((a, b) => a.top - b.top);
     const minGap = 6;
-    for (let i = 1; i < grouped.length; i++) {
-      const prev = grouped[i - 1];
-      const curr = grouped[i];
-      // Calculate previous card height: base + nested rows
-      const baseHeight = prev.nestedVariables.length > 0 ? 54 : 28;
-      const nestedHeight =
-        prev.nestedVariables.length > 0 ? Math.ceil(prev.nestedVariables.length / 3) * 24 : 0;
-      const prevHeight = baseHeight + nestedHeight + minGap;
-      if (curr.top < prev.top + prevHeight) {
-        curr.top = prev.top + prevHeight;
+
+    for (let i = 1; i < newPositions.length; i++) {
+      const prev = newPositions[i - 1];
+      const curr = newPositions[i];
+
+      // Use measured height if available, otherwise estimate conservatively
+      const prevChipEl = chipRefs.current.get(prev.tag.id);
+      let prevHeight = 32; // default for simple chip
+      if (prevChipEl) {
+        prevHeight = prevChipEl.offsetHeight;
+      } else if (prev.tag.nestedVars && prev.tag.nestedVars.length > 0) {
+        // Conservative estimate: each nested var gets its own row
+        prevHeight = 32 + 10 + prev.tag.nestedVars.length * 26;
+      }
+
+      if (curr.top < prev.top + prevHeight + minGap) {
+        curr.top = prev.top + prevHeight + minGap;
       }
     }
 
-    setAnnotations(grouped);
-  }, [editorView, schema, groupedElements]);
+    setPositions(newPositions);
+  }, [editorView, visibleTags]);
 
   // Update on scroll
   useEffect(() => {
     updatePositions();
-
     if (editorView) {
       const scrollContainer = findScrollContainer(editorView.dom);
       if (scrollContainer) {
-        const handleScroll = () => {
-          requestAnimationFrame(updatePositions);
-        };
-        scrollContainer.addEventListener('scroll', handleScroll);
-        return () => scrollContainer.removeEventListener('scroll', handleScroll);
+        const onScroll = () => requestAnimationFrame(updatePositions);
+        scrollContainer.addEventListener('scroll', onScroll);
+        return () => scrollContainer.removeEventListener('scroll', onScroll);
       }
     }
   }, [updatePositions, editorView, findScrollContainer]);
 
-  // Update on window resize
+  // Update on resize
   useEffect(() => {
     window.addEventListener('resize', updatePositions);
     return () => window.removeEventListener('resize', updatePositions);
   }, [updatePositions]);
 
-  // Update on editor DOM resize (handles zoom changes)
+  // ResizeObserver for zoom
   useEffect(() => {
     if (!editorView) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      requestAnimationFrame(updatePositions);
-    });
-
-    // Observe the editor DOM element
-    resizeObserver.observe(editorView.dom);
-
-    // Also observe parent containers that might change with zoom
-    const parent = editorView.dom.parentElement;
-    if (parent) {
-      resizeObserver.observe(parent);
-    }
-
-    return () => resizeObserver.disconnect();
+    const observer = new ResizeObserver(() => requestAnimationFrame(updatePositions));
+    observer.observe(editorView.dom);
+    if (editorView.dom.parentElement) observer.observe(editorView.dom.parentElement);
+    return () => observer.disconnect();
   }, [editorView, updatePositions]);
 
-  // Handle hover
-  const handleHover = (elementId: string | undefined) => {
-    if (editorView) {
-      setHoveredElement(editorView, elementId);
+  // Second pass: recalculate once after initial render to use measured heights
+  useEffect(() => {
+    const tagsKey = visibleTags.map((t) => t.id).join(',');
+    if (tagsKey && lastMeasuredTagsKey.current !== tagsKey) {
+      const timer = setTimeout(() => {
+        lastMeasuredTagsKey.current = tagsKey;
+        updatePositions();
+      }, 100);
+      return () => clearTimeout(timer);
     }
+  }, [visibleTags]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleHover = (id: string | undefined) => {
+    if (editorView) setHoveredElement(editorView, id);
   };
 
-  // Handle click
-  const handleClick = (elementId: string) => {
-    if (!editorView || !schema) return;
-
-    const element = schema.elements.find((el) => el.id === elementId);
-    if (!element) return;
-
-    setSelectedElement(editorView, elementId);
-    selectRange(element.from, element.to);
+  const handleClick = (tag: TemplateTag) => {
+    if (!editorView) return;
+    setSelectedElement(editorView, tag.id);
+    // Select the tag in editor
+    const { state } = editorView;
+    const tr = state.tr.setSelection(TextSelection.near(state.doc.resolve(tag.from)));
+    editorView.dispatch(tr);
+    editorView.focus();
   };
 
-  if (!schema || schema.elements.length === 0) {
-    return null;
-  }
-
-  // Get color for element type
-  const getColor = (el: TemplateElement) => ELEMENT_COLORS[el.type];
-
-  // Get type info for display
-  const getTypeInfo = (
-    el: TemplateElement
-  ): { label: string; className: string; description: string } => {
-    switch (el.type) {
-      case 'loopStart':
-      case 'conditionalStart':
-        return {
-          label: 'LOOP / IF',
-          className: 'section',
-          description: 'Loop or conditional section',
-        };
-      case 'invertedStart':
-        return {
-          label: 'IF NOT',
-          className: 'inverted',
-          description: 'Inverted section (shows when falsy)',
-        };
-      case 'variable':
-      case 'nestedVariable':
-        return { label: '', className: 'variable', description: 'Variable' };
-      case 'rawVariable':
-        return { label: 'HTML', className: 'raw', description: 'Raw HTML' };
-      default:
-        return { label: '', className: 'variable', description: '' };
-    }
-  };
-
-  // Check if element is a scope (loop/conditional)
-  const isScope = (el: TemplateElement) =>
-    el.type === 'loopStart' || el.type === 'conditionalStart' || el.type === 'invertedStart';
+  if (visibleTags.length === 0) return null;
 
   return (
     <div className="template-panel" ref={containerRef}>
       <div className="template-panel-annotations">
-        {annotations.map(({ element, nestedVariables, top }) => {
-          const typeInfo = getTypeInfo(element);
-          const hasNested = isScope(element) && nestedVariables.length > 0;
+        {positions.map(({ tag, top }) => {
+          const label = getLabel(tag.type);
+          const color = COLORS[tag.type];
+          const isSection = tag.type === 'sectionStart' || tag.type === 'invertedStart';
+          const isHovered = tag.id === hoveredId;
+          const isSelected = tag.id === selectedId;
 
           return (
-            <div
-              key={element.id}
-              className="template-annotation-anchor"
-              style={{ top: `${top}px` }}
-            >
+            <div key={tag.id} className="template-annotation-anchor" style={{ top: `${top}px` }}>
               <div className="template-annotation-connector" />
               <div
-                className={`template-annotation-chip template-chip-${typeInfo.className} ${element.id === hoveredElementId ? 'hovered' : ''} ${element.id === selectedElementId ? 'selected' : ''}`}
-                style={{ '--accent-color': getColor(element) } as React.CSSProperties}
-                onMouseEnter={() => handleHover(element.id)}
+                ref={(el) => {
+                  if (el) chipRefs.current.set(tag.id, el);
+                  else chipRefs.current.delete(tag.id);
+                }}
+                className={`template-annotation-chip ${isHovered ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`}
+                style={{ borderLeftColor: color }}
+                onMouseEnter={() => handleHover(tag.id)}
                 onMouseLeave={() => handleHover(undefined)}
-                onClick={() => handleClick(element.id)}
-                title={typeInfo.description}
+                onClick={() => handleClick(tag)}
+                title={
+                  isSection
+                    ? `${tag.rawTag}\nIterates over ${tag.name}[]. Access nested properties via ${tag.name}.property`
+                    : tag.rawTag
+                }
               >
-                {/* Type badge for scopes */}
-                {typeInfo.label && <span className="template-chip-badge">{typeInfo.label}</span>}
+                {label && (
+                  <span className="template-chip-badge" style={{ background: color }}>
+                    {label}
+                  </span>
+                )}
+                {!label && (
+                  <span className="template-chip-dot" style={{ color }}>
+                    ●
+                  </span>
+                )}
+                <span className="template-chip-name">{tag.name}</span>
 
-                {/* Variable name */}
-                <span className="template-chip-name">{element.name}</span>
-
-                {/* Nested variables for scopes */}
-                {hasNested && (
+                {isSection && tag.nestedVars && tag.nestedVars.length > 0 && (
                   <div className="template-chip-nested">
-                    {nestedVariables.map((v) => (
+                    {tag.nestedVars.map((v, i) => (
                       <span
-                        key={v.id}
-                        className={`template-nested-var ${v.id === hoveredElementId ? 'hovered' : ''}`}
-                        onMouseEnter={(e) => {
-                          e.stopPropagation();
-                          handleHover(v.id);
-                        }}
-                        onMouseLeave={(e) => {
-                          e.stopPropagation();
-                          handleHover(undefined);
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleClick(v.id);
-                        }}
-                        title="Variable inside scope"
+                        key={i}
+                        className="template-nested-var"
+                        title={`Access: ${tag.name}.${v}`}
                       >
-                        {v.name.includes('.') ? v.name.split('.').pop() : v.name}
+                        {v.includes('.') ? v.split('.').pop() : v}
                       </span>
                     ))}
                   </div>
@@ -312,12 +242,7 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
   );
 }
 
-/**
- * CSS styles for the annotation panel.
- */
 export const ANNOTATION_PANEL_STYLES = `
-${ANNOTATION_CARD_STYLES}
-
 .template-panel {
   display: flex;
   min-height: 100%;
@@ -359,7 +284,6 @@ ${ANNOTATION_CARD_STYLES}
   background: #3b82f6;
 }
 
-/* Annotation chip - base */
 .template-annotation-chip {
   display: inline-flex;
   flex-wrap: wrap;
@@ -368,7 +292,7 @@ ${ANNOTATION_CARD_STYLES}
   padding: 5px 10px;
   background: white;
   border: 1px solid #e2e8f0;
-  border-left: 3px solid var(--accent-color, #6c757d);
+  border-left: 3px solid #6c757d;
   border-radius: 4px;
   font-size: 11px;
   cursor: pointer;
@@ -383,60 +307,21 @@ ${ANNOTATION_CARD_STYLES}
 }
 
 .template-annotation-chip.selected {
-  box-shadow: 0 0 0 2px var(--accent-color, #3b82f6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
 }
 
-/* Type badge */
 .template-chip-badge {
   font-size: 9px;
   font-weight: 600;
   padding: 1px 5px;
   border-radius: 3px;
+  color: white;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
-/* Variable chip - simple yellow dot */
-.template-chip-variable {
-  border-left-color: #f59e0b;
-}
-.template-chip-variable .template-chip-name::before {
-  content: '●';
-  color: #f59e0b;
-  margin-right: 4px;
+.template-chip-dot {
   font-size: 8px;
-}
-
-/* Section chip - blue with # badge */
-.template-chip-section {
-  border-left-color: #3b82f6;
-  background: linear-gradient(to right, #eff6ff, white);
-}
-.template-chip-section .template-chip-badge {
-  background: #3b82f6;
-  color: white;
-  font-weight: 700;
-  font-size: 11px;
-}
-
-/* Inverted conditional - purple with IF NOT badge */
-.template-chip-inverted {
-  border-left-color: #8b5cf6;
-  background: linear-gradient(to right, #f5f3ff, white);
-}
-.template-chip-inverted .template-chip-badge {
-  background: #8b5cf6;
-  color: white;
-}
-
-/* Raw HTML - red */
-.template-chip-raw {
-  border-left-color: #ef4444;
-  background: linear-gradient(to right, #fef2f2, white);
-}
-.template-chip-raw .template-chip-badge {
-  background: #ef4444;
-  color: white;
 }
 
 .template-chip-name {
@@ -444,7 +329,6 @@ ${ANNOTATION_CARD_STYLES}
   font-weight: 500;
 }
 
-/* Nested variables */
 .template-chip-nested {
   display: flex;
   flex-wrap: wrap;
@@ -461,11 +345,9 @@ ${ANNOTATION_CARD_STYLES}
   background: rgba(0, 0, 0, 0.04);
   padding: 2px 6px;
   border-radius: 3px;
-  cursor: pointer;
 }
 
-.template-nested-var:hover,
-.template-nested-var.hovered {
+.template-nested-var:hover {
   background: rgba(59, 130, 246, 0.15);
   color: #1e40af;
 }

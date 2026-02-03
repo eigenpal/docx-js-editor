@@ -47,8 +47,11 @@ import type { TextColorAttrs, UnderlineAttrs, FontFamilyAttrs } from '../schema/
 export function fromProseDoc(pmDoc: PMNode, baseDocument?: Document): Document {
   const blocks = extractBlocks(pmDoc);
 
+  // Preserve section properties (margins, headers, footers) from base document
   const documentBody: DocumentBody = {
     content: blocks,
+    finalSectionProperties: baseDocument?.package.document.finalSectionProperties,
+    sections: baseDocument?.package.document.sections,
   };
 
   // If we have a base document, preserve its package structure

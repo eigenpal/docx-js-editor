@@ -1,197 +1,220 @@
 /**
  * Template ProseMirror Plugin
  *
- * ProseMirror plugin that parses template syntax and manages decorations.
+ * Simple plugin that finds template tags using regex and creates decorations.
+ * No separate parsing layer - everything happens here.
  */
 
 import { Plugin, PluginKey } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { DecorationSet } from 'prosemirror-view';
-import type { TemplateElement, TemplateScope, TemplateSchema, ValidationError } from './types';
-import { parseDocument, addLineNumbers } from './parser';
-import { buildScopes, createRootScope, flattenScopes } from './scope-tracker';
-import { validateAll } from './validator';
-import { inferDataStructure } from './schema-inferrer';
-import { createDecorations, TEMPLATE_DECORATION_STYLES } from './decorations';
+import { Decoration, DecorationSet } from 'prosemirror-view';
+import type { Node as ProseMirrorNode } from 'prosemirror-model';
 
 /**
- * Plugin state interface.
+ * Template tag types
  */
-interface TemplatePluginState {
-  /** All parsed elements */
-  elements: TemplateElement[];
+export type TagType = 'variable' | 'sectionStart' | 'sectionEnd' | 'invertedStart' | 'raw';
 
-  /** All scopes */
-  scopes: TemplateScope[];
-
-  /** The root scope */
-  rootScope: TemplateScope | null;
-
-  /** The complete schema */
-  schema: TemplateSchema | null;
-
-  /** Validation errors */
-  errors: ValidationError[];
-
-  /** Current decorations */
-  decorations: DecorationSet;
-
-  /** Hovered element ID */
-  hoveredElementId?: string;
-
-  /** Selected element ID */
-  selectedElementId?: string;
-
-  /** Last document content hash (for caching) */
-  lastDocHash: number;
+/**
+ * A found template tag
+ */
+export interface TemplateTag {
+  id: string;
+  type: TagType;
+  name: string;
+  rawTag: string;
+  from: number;
+  to: number;
+  /** For sections: nested variable names */
+  nestedVars?: string[];
+  /** True if this variable is inside a section (shown in section's nested vars) */
+  insideSection?: boolean;
 }
 
 /**
- * Plugin key for accessing plugin state.
+ * Plugin state
+ */
+interface TemplatePluginState {
+  tags: TemplateTag[];
+  decorations: DecorationSet;
+  hoveredId?: string;
+  selectedId?: string;
+}
+
+/**
+ * Regex to match template tags: {name}, {#name}, {/name}, {^name}, {@name}
+ */
+const TAG_REGEX = /\{([#/^@]?)([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\}/g;
+
+/**
+ * Plugin key
  */
 export const templatePluginKey = new PluginKey<TemplatePluginState>('template');
 
+let idCounter = 0;
+function genId(): string {
+  return `t${++idCounter}`;
+}
+
 /**
- * Create a simple hash of document content.
+ * Find all template tags in the document
  */
-function hashDocument(doc: import('prosemirror-model').Node): number {
-  const text = doc.textContent;
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) {
-    const char = text.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
+function findTags(doc: ProseMirrorNode): TemplateTag[] {
+  // Collect all text with positions
+  const parts: { text: string; pos: number }[] = [];
+  doc.descendants((node, pos) => {
+    if (node.isText && node.text) {
+      parts.push({ text: node.text, pos });
+    }
+    return true;
+  });
+
+  // Build combined text and position map
+  let combined = '';
+  const posMap: number[] = [];
+  for (const p of parts) {
+    for (let i = 0; i < p.text.length; i++) {
+      posMap.push(p.pos + i);
+    }
+    combined += p.text;
   }
-  return hash;
+
+  // Find tags
+  const tags: TemplateTag[] = [];
+  const sectionStack: TemplateTag[] = [];
+  let match: RegExpExecArray | null;
+
+  TAG_REGEX.lastIndex = 0;
+  while ((match = TAG_REGEX.exec(combined)) !== null) {
+    const [rawTag, prefix, name] = match;
+    const from = posMap[match.index];
+    const to = posMap[match.index + rawTag.length - 1] + 1;
+
+    let type: TagType;
+    if (prefix === '#') type = 'sectionStart';
+    else if (prefix === '/') type = 'sectionEnd';
+    else if (prefix === '^') type = 'invertedStart';
+    else if (prefix === '@') type = 'raw';
+    else type = 'variable';
+
+    const tag: TemplateTag = { id: genId(), type, name, rawTag, from, to };
+
+    // Track nested variables in sections
+    if (type === 'sectionStart' || type === 'invertedStart') {
+      tag.nestedVars = [];
+      sectionStack.push(tag);
+    } else if (type === 'sectionEnd') {
+      // Pop matching section
+      for (let i = sectionStack.length - 1; i >= 0; i--) {
+        if (sectionStack[i].name === name) {
+          sectionStack.splice(i, 1);
+          break;
+        }
+      }
+    } else if (type === 'variable' && sectionStack.length > 0) {
+      // Add to nearest section's nested vars and mark as inside section
+      const section = sectionStack[sectionStack.length - 1];
+      section.nestedVars?.push(name);
+      tag.insideSection = true;
+    }
+
+    tags.push(tag);
+  }
+
+  return tags;
 }
 
 /**
- * Parse template schema from document.
+ * Get color for tag type
  */
-function parseSchema(doc: import('prosemirror-model').Node): TemplateSchema {
-  // Parse elements
-  let elements = parseDocument(doc);
-
-  // Add line numbers
-  elements = addLineNumbers(elements, doc);
-
-  // Build scopes
-  const { scopes, errors: scopeErrors } = buildScopes(elements);
-
-  // Create root scope
-  const rootScope = createRootScope(elements, scopes);
-
-  // Validate
-  const validationErrors = validateAll(elements, scopes);
-
-  // Infer data structure
-  const dataStructure = inferDataStructure(elements, flattenScopes(scopes));
-
-  return {
-    elements,
-    scopes,
-    rootScope,
-    dataStructure,
-    errors: [...scopeErrors, ...validationErrors],
-  };
+function getColor(type: TagType): string {
+  switch (type) {
+    case 'sectionStart':
+    case 'sectionEnd':
+      return '#3b82f6';
+    case 'invertedStart':
+      return '#8b5cf6';
+    case 'raw':
+      return '#ef4444';
+    default:
+      return '#f59e0b';
+  }
 }
 
 /**
- * Create the template plugin.
+ * Create decorations for tags
  */
-export function createTemplatePlugin(
-  options: {
-    /** Callback when schema changes */
-    onSchemaChange?: (schema: TemplateSchema) => void;
-    /** Callback when element is hovered */
-    onElementHover?: (elementId: string | undefined) => void;
-    /** Callback when element is selected */
-    onElementSelect?: (elementId: string | undefined) => void;
-  } = {}
-): Plugin<TemplatePluginState> {
+function createDecorations(
+  doc: ProseMirrorNode,
+  tags: TemplateTag[],
+  hoveredId?: string,
+  selectedId?: string
+): DecorationSet {
+  const decorations: Decoration[] = [];
+
+  for (const tag of tags) {
+    const isHovered = tag.id === hoveredId;
+    const isSelected = tag.id === selectedId;
+    const color = getColor(tag.type);
+
+    const classes = ['docx-template-tag'];
+    if (isHovered) classes.push('hovered');
+    if (isSelected) classes.push('selected');
+
+    decorations.push(
+      Decoration.inline(tag.from, tag.to, {
+        class: classes.join(' '),
+        'data-tag-id': tag.id,
+        style: `background-color: ${color}22; border-radius: 2px;`,
+      })
+    );
+  }
+
+  return DecorationSet.create(doc, decorations);
+}
+
+/**
+ * Create the template plugin
+ */
+export function createTemplatePlugin(): Plugin<TemplatePluginState> {
   return new Plugin<TemplatePluginState>({
     key: templatePluginKey,
 
     state: {
       init(_, state) {
-        const docHash = hashDocument(state.doc);
-        const schema = parseSchema(state.doc);
-
-        if (options.onSchemaChange) {
-          options.onSchemaChange(schema);
-        }
-
+        const tags = findTags(state.doc);
         return {
-          elements: schema.elements,
-          scopes: schema.scopes,
-          rootScope: schema.rootScope,
-          schema,
-          errors: schema.errors,
-          decorations: createDecorations(state, schema.elements, schema.scopes),
-          lastDocHash: docHash,
+          tags,
+          decorations: createDecorations(state.doc, tags),
         };
       },
 
       apply(tr, value, _oldState, newState) {
-        // Check if document changed
-        const newDocHash = hashDocument(newState.doc);
-
-        if (newDocHash !== value.lastDocHash || tr.docChanged) {
-          // Re-parse the document
-          const schema = parseSchema(newState.doc);
-
-          if (options.onSchemaChange) {
-            options.onSchemaChange(schema);
-          }
-
+        // Re-parse on doc change
+        if (tr.docChanged) {
+          const tags = findTags(newState.doc);
           return {
-            elements: schema.elements,
-            scopes: schema.scopes,
-            rootScope: schema.rootScope,
-            schema,
-            errors: schema.errors,
-            decorations: createDecorations(
-              newState,
-              schema.elements,
-              schema.scopes,
-              value.hoveredElementId,
-              value.selectedElementId
-            ),
-            hoveredElementId: value.hoveredElementId,
-            selectedElementId: value.selectedElementId,
-            lastDocHash: newDocHash,
+            tags,
+            decorations: createDecorations(newState.doc, tags, value.hoveredId, value.selectedId),
+            hoveredId: value.hoveredId,
+            selectedId: value.selectedId,
           };
         }
 
-        // Check for metadata changes (hover/select)
+        // Handle hover/select changes
         const meta = tr.getMeta(templatePluginKey);
         if (meta) {
-          const newHoveredId = meta.hoveredElementId ?? value.hoveredElementId;
-          const newSelectedId = meta.selectedElementId ?? value.selectedElementId;
-
-          if (newHoveredId !== value.hoveredElementId) {
-            options.onElementHover?.(newHoveredId);
-          }
-
-          if (newSelectedId !== value.selectedElementId) {
-            options.onElementSelect?.(newSelectedId);
-          }
-
+          const newHovered = meta.hoveredId ?? value.hoveredId;
+          const newSelected = meta.selectedId ?? value.selectedId;
           return {
             ...value,
-            hoveredElementId: newHoveredId,
-            selectedElementId: newSelectedId,
-            decorations: createDecorations(
-              newState,
-              value.elements,
-              value.scopes,
-              newHoveredId,
-              newSelectedId
-            ),
+            hoveredId: newHovered,
+            selectedId: newSelected,
+            decorations: createDecorations(newState.doc, value.tags, newHovered, newSelected),
           };
         }
 
-        // Map decorations through document changes
+        // Map decorations
         return {
           ...value,
           decorations: value.decorations.map(tr.mapping, tr.doc),
@@ -201,69 +224,45 @@ export function createTemplatePlugin(
 
     props: {
       decorations(state) {
-        const pluginState = templatePluginKey.getState(state);
-        return pluginState?.decorations ?? DecorationSet.empty;
+        return templatePluginKey.getState(state)?.decorations ?? DecorationSet.empty;
       },
 
-      handleClick(view: EditorView, pos: number, _event: MouseEvent) {
-        const pluginState = templatePluginKey.getState(view.state);
-        if (!pluginState) return false;
+      handleClick(view: EditorView, pos: number) {
+        const tags = templatePluginKey.getState(view.state)?.tags ?? [];
+        const clicked = tags.find((t) => pos >= t.from && pos <= t.to);
 
-        // Find clicked element
-        const clickedElement = pluginState.elements.find((el) => pos >= el.from && pos <= el.to);
-
-        if (clickedElement) {
-          // Update selection
-          const tr = view.state.tr.setMeta(templatePluginKey, {
-            selectedElementId: clickedElement.id,
-          });
-          view.dispatch(tr);
+        if (clicked) {
+          view.dispatch(view.state.tr.setMeta(templatePluginKey, { selectedId: clicked.id }));
           return true;
         }
 
-        // Clear selection if clicking elsewhere
-        if (pluginState.selectedElementId) {
-          const tr = view.state.tr.setMeta(templatePluginKey, {
-            selectedElementId: undefined,
-          });
-          view.dispatch(tr);
+        const current = templatePluginKey.getState(view.state)?.selectedId;
+        if (current) {
+          view.dispatch(view.state.tr.setMeta(templatePluginKey, { selectedId: undefined }));
         }
-
         return false;
       },
 
       handleDOMEvents: {
         mouseover(view: EditorView, event) {
-          const target = event.target as HTMLElement;
-          const elementId = target.getAttribute?.('data-element-id');
+          const el = (event.target as HTMLElement).closest?.('[data-tag-id]');
+          const id = el?.getAttribute('data-tag-id') || undefined;
+          const current = templatePluginKey.getState(view.state)?.hoveredId;
 
-          const pluginState = templatePluginKey.getState(view.state);
-          if (!pluginState) return false;
-
-          if (elementId !== pluginState.hoveredElementId) {
-            const tr = view.state.tr.setMeta(templatePluginKey, {
-              hoveredElementId: elementId || undefined,
-            });
-            view.dispatch(tr);
+          if (id !== current) {
+            view.dispatch(view.state.tr.setMeta(templatePluginKey, { hoveredId: id }));
           }
-
           return false;
         },
 
         mouseout(view: EditorView, event: MouseEvent) {
-          const relatedTarget = event.relatedTarget as HTMLElement;
-          const stillInElement = relatedTarget?.closest?.(`[data-element-id]`);
-
-          if (!stillInElement) {
-            const pluginState = templatePluginKey.getState(view.state);
-            if (pluginState?.hoveredElementId) {
-              const tr = view.state.tr.setMeta(templatePluginKey, {
-                hoveredElementId: undefined,
-              });
-              view.dispatch(tr);
+          const related = event.relatedTarget as HTMLElement;
+          if (!related?.closest?.('[data-tag-id]')) {
+            const current = templatePluginKey.getState(view.state)?.hoveredId;
+            if (current) {
+              view.dispatch(view.state.tr.setMeta(templatePluginKey, { hoveredId: undefined }));
             }
           }
-
           return false;
         },
       },
@@ -272,56 +271,41 @@ export function createTemplatePlugin(
 }
 
 /**
- * Get the current template schema from editor state.
+ * Get tags from editor state
  */
-export function getTemplateSchema(
-  state: import('prosemirror-state').EditorState
-): TemplateSchema | null {
-  const pluginState = templatePluginKey.getState(state);
-  return pluginState?.schema ?? null;
+export function getTemplateTags(state: import('prosemirror-state').EditorState): TemplateTag[] {
+  return templatePluginKey.getState(state)?.tags ?? [];
 }
 
 /**
- * Get template elements from editor state.
+ * Set hovered tag
  */
-export function getTemplateElements(
-  state: import('prosemirror-state').EditorState
-): TemplateElement[] {
-  const pluginState = templatePluginKey.getState(state);
-  return pluginState?.elements ?? [];
+export function setHoveredElement(view: EditorView, id: string | undefined): void {
+  view.dispatch(view.state.tr.setMeta(templatePluginKey, { hoveredId: id }));
 }
 
 /**
- * Get validation errors from editor state.
+ * Set selected tag
  */
-export function getValidationErrors(
-  state: import('prosemirror-state').EditorState
-): ValidationError[] {
-  const pluginState = templatePluginKey.getState(state);
-  return pluginState?.errors ?? [];
+export function setSelectedElement(view: EditorView, id: string | undefined): void {
+  view.dispatch(view.state.tr.setMeta(templatePluginKey, { selectedId: id }));
 }
 
 /**
- * Set hovered element programmatically.
+ * CSS styles for template decorations
  */
-export function setHoveredElement(view: EditorView, elementId: string | undefined): void {
-  const tr = view.state.tr.setMeta(templatePluginKey, {
-    hoveredElementId: elementId,
-  });
-  view.dispatch(tr);
+export const TEMPLATE_DECORATION_STYLES = `
+.docx-template-tag {
+  cursor: pointer;
+  transition: background-color 0.1s;
 }
 
-/**
- * Set selected element programmatically.
- */
-export function setSelectedElement(view: EditorView, elementId: string | undefined): void {
-  const tr = view.state.tr.setMeta(templatePluginKey, {
-    selectedElementId: elementId,
-  });
-  view.dispatch(tr);
+.docx-template-tag:hover,
+.docx-template-tag.hovered {
+  filter: brightness(0.95);
 }
 
-/**
- * Export CSS styles
- */
-export { TEMPLATE_DECORATION_STYLES };
+.docx-template-tag.selected {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+`;
