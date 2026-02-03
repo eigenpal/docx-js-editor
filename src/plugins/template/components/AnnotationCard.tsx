@@ -28,6 +28,9 @@ export interface AnnotationCardProps {
 
   /** Callback when card is clicked */
   onClick?: (elementId: string) => void;
+
+  /** Use compact mode for anchored display */
+  compact?: boolean;
 }
 
 /**
@@ -97,6 +100,7 @@ export function AnnotationCard({
   isSelected = false,
   onHover,
   onClick,
+  compact = false,
 }: AnnotationCardProps) {
   const icon = ELEMENT_ICONS[element.type];
   const color = ELEMENT_COLORS[element.type];
@@ -104,6 +108,29 @@ export function AnnotationCard({
   const description = getDescription(element, scope);
 
   const isError = !element.isValid;
+
+  // Compact mode for anchored display
+  if (compact) {
+    return (
+      <div
+        className={`template-annotation-card compact ${isHovered ? 'hovered' : ''} ${isSelected ? 'selected' : ''} ${isError ? 'error' : ''}`}
+        style={
+          {
+            '--accent-color': color,
+          } as React.CSSProperties
+        }
+        onMouseEnter={() => onHover?.(element.id)}
+        onMouseLeave={() => onHover?.(undefined)}
+        onClick={() => onClick?.(element.id)}
+      >
+        <span className="template-annotation-icon" style={{ color }}>
+          {icon}
+        </span>
+        <span className="template-annotation-name">{element.name}</span>
+        {isError && <span className="template-annotation-error-badge">⚠</span>}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -229,5 +256,41 @@ export const ANNOTATION_CARD_STYLES = `
   padding: 4px 6px;
   background: rgba(220, 53, 69, 0.1);
   border-radius: 3px;
+}
+
+/* Compact mode styles for anchored display */
+.template-annotation-card.compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  margin: 0;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.template-annotation-card.compact .template-annotation-icon {
+  font-size: 12px;
+}
+
+.template-annotation-card.compact .template-annotation-name {
+  color: #495057;
+  font-weight: 500;
+}
+
+.template-annotation-card.compact .template-annotation-error-badge {
+  color: #dc3545;
+  font-size: 10px;
+}
+
+.template-annotation-card.compact:hover,
+.template-annotation-card.compact.hovered {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateX(-2px);
+}
+
+.template-annotation-card.compact.selected {
+  box-shadow: 0 0 0 2px var(--accent-color, #6c757d);
 }
 `;
