@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/eigenpal/docx-js-editor">
-    <img src="https://raw.githubusercontent.com/eigenpal/docx-js-editor/main/assets/logo.png" alt="DOCX JS Editor" width="600" />
+    <img src="./assets/logo.png" alt="DOCX JS Editor" width="600" />
   </a>
 </p>
 
