@@ -183,9 +183,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 3.1: Create measurement container
 
-- [ ] Create `src/layout-bridge/measuring/measureContainer.ts`
-- [ ] Hidden DOM element for measuring text
-- [ ] Set up with proper fonts, widths
+- [x] Create `src/layout-bridge/measuring/measureContainer.ts`
+- [x] Hidden DOM element for measuring text
+- [x] Set up with proper fonts, widths
 
 **SuperDoc reference (concept only):**
 
@@ -200,9 +200,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 3.2: Measure paragraph lines
 
-- [ ] Create `src/layout-bridge/measuring/measureParagraph.ts`
-- [ ] Render paragraph text, measure line breaks
-- [ ] Return: `{ lines: Line[], totalHeight }`
+- [x] Create `src/layout-bridge/measuring/measureParagraph.ts`
+- [x] Render paragraph text, measure line breaks
+- [x] Return: `{ lines: Line[], totalHeight }`
 
 **Clean room implementation:**
 

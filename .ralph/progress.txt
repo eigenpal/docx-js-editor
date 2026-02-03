@@ -582,3 +582,58 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 13:06] STATUS: running
 [2026-02-03 13:06] NOTES: Typecheck passed
 [2026-02-03 13:06] STATUS: done
+
+[2026-02-03 13:10] ========================================
+[2026-02-03 13:10] PHASE 2 COMPLETE: PM to Blocks Conversion
+[2026-02-03 13:10] ========================================
+[2026-02-03 13:10] - Task 2.1: Created toFlowBlocks.ts (PM to FlowBlock converter)
+[2026-02-03 13:10] - Task 2.2: Paragraph conversion with runs extraction (included in 2.1)
+[2026-02-03 13:10] - Task 2.3: Table conversion with cells (included in 2.1)
+[2026-02-03 13:10] ========================================
+
+[2026-02-03 14:00] TASK: 3.1 Create measurement container
+[2026-02-03 14:00] STATUS: starting
+[2026-02-03 14:00] NOTES: Phase 3, Task 3.1 - Creating hidden DOM element for measuring text
+[2026-02-03 14:01] STATUS: researching-superdoc
+[2026-02-03 14:01] NOTES: Read SuperDoc measuring/dom/src/index.ts - key concepts:
+[2026-02-03 14:01] NOTES: 1. Uses Canvas API (not hidden DOM) for text measurement
+[2026-02-03 14:01] NOTES: 2. getCanvasContext() creates/caches a canvas 2D context
+[2026-02-03 14:01] NOTES: 3. buildFontString() creates CSS font string from run properties
+[2026-02-03 14:01] NOTES: 4. measureText() uses ctx.measureText() with actualBoundingBox
+[2026-02-03 14:01] NOTES: 5. Typography metrics: ascent ≈ fontSize * 0.8, descent ≈ 0.2
+[2026-02-03 14:01] NOTES: 6. Line height = fontSize * 1.15 (Word single spacing)
+[2026-02-03 14:01] NOTES: Canvas approach is simpler and more accurate than DOM measurement
+[2026-02-03 14:02] STATUS: editing
+[2026-02-03 14:02] NOTES: Created src/layout-bridge/measuring/measureContainer.ts
+[2026-02-03 14:02] NOTES: Features: Canvas-based measurement, per-character widths, typography metrics
+[2026-02-03 14:02] NOTES: Functions: measureText, measureRun, findCharacterAtX, getFontMetrics
+[2026-02-03 14:02] NOTES: Unit conversions: twips/px, pt/px, halfPt/px
+[2026-02-03 14:03] STATUS: running
+[2026-02-03 14:03] NOTES: Typecheck passed
+[2026-02-03 14:03] STATUS: done
+
+[2026-02-03 14:04] TASK: 3.2 Measure paragraph lines
+[2026-02-03 14:04] STATUS: starting
+[2026-02-03 14:04] NOTES: Phase 3, Task 3.2 - Measuring paragraphs and computing line breaks
+[2026-02-03 14:04] STATUS: researching-superdoc
+[2026-02-03 14:05] NOTES: Read SuperDoc measureParagraphBlock function - key concepts:
+[2026-02-03 14:05] NOTES: 1. Line tracking: fromRun, fromChar, toRun, toChar, width, maxFontSize
+[2026-02-03 14:05] NOTES: 2. calculateTypographyMetrics computes ascent/descent/lineHeight from maxFontSize
+[2026-02-03 14:05] NOTES: 3. Greedy word-by-word algorithm with WIDTH_FUDGE_PX (0.5px) tolerance
+[2026-02-03 14:05] NOTES: 4. Handles indents: firstLine, hanging, left, right
+[2026-02-03 14:05] NOTES: 5. normalizeRunsForMeasurement pre-processes runs
+[2026-02-03 14:05] NOTES: 6. Tab stops handled with alignSegmentAtTab
+[2026-02-03 14:06] NOTES: 7. Empty paragraph uses calculateEmptyParagraphMetrics
+[2026-02-03 14:06] STATUS: editing
+[2026-02-03 14:07] NOTES: Created src/layout-bridge/measuring/measureParagraph.ts
+[2026-02-03 14:07] NOTES: Features:
+[2026-02-03 14:07] NOTES:   - measureParagraph(): main function, converts block + maxWidth to lines
+[2026-02-03 14:07] NOTES:   - Word-by-word greedy algorithm with WIDTH_TOLERANCE (0.5px)
+[2026-02-03 14:07] NOTES:   - LineState tracking: fromRun/fromChar, toRun/toChar, width, maxFontSize
+[2026-02-03 14:07] NOTES:   - calculateTypographyMetrics: handles exact/atLeast/multiplier line rules
+[2026-02-03 14:07] NOTES:   - Handles indentation: left, right, firstLine, hanging
+[2026-02-03 14:07] NOTES:   - Handles tabs, images, line breaks
+[2026-02-03 14:07] NOTES:   - getRunCharWidths(): for click positioning
+[2026-02-03 14:08] STATUS: running
+[2026-02-03 14:08] NOTES: Typecheck passed
+[2026-02-03 14:08] STATUS: done
