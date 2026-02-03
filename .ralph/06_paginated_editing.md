@@ -377,8 +377,8 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 7.3: Handle keyboard input
 
-- [ ] Route keyboard events to hidden PM
-- [ ] Keep focus on hidden PM during editing
+- [x] Route keyboard events to hidden PM
+- [x] Keep focus on hidden PM during editing
 
 **Clean room implementation:**
 

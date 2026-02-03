@@ -922,3 +922,25 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 15:56] NOTES:   - Selection sync: PM selection → compute rects → update overlay
 [2026-02-03 15:56] NOTES:   - Layout pipeline: PM transaction → blocks → measure → layout → paint
 [2026-02-03 15:56] NOTES:   - Imperative ref for external control
+
+[2026-02-03 15:58] TASK: 7.3 Handle keyboard input
+[2026-02-03 15:58] STATUS: starting
+[2026-02-03 15:58] STATUS: researching-superdoc
+[2026-02-03 15:59] NOTES: Searched SuperDoc PresentationInputBridge.ts
+[2026-02-03 15:59] NOTES: Key concepts from SuperDoc:
+[2026-02-03 15:59] NOTES:   - PresentationInputBridge forwards events from visible surface to hidden PM
+[2026-02-03 15:59] NOTES:   - Binds keydown, keyup, composition, beforeinput, input events
+[2026-02-03 15:59] NOTES:   - Creates synthetic events and dispatches to hidden editor DOM
+[2026-02-03 15:59] NOTES:   - Handles IME composition properly
+[2026-02-03 15:59] NOTES:   - Checks isEditable() before forwarding to prevent modifications in read-only
+[2026-02-03 16:00] STATUS: editing
+[2026-02-03 16:00] NOTES: Reviewing current implementation - PagedEditor already focuses hidden PM on click
+[2026-02-03 16:02] STATUS: testing
+[2026-02-03 16:02] NOTES: Typecheck passed
+[2026-02-03 16:02] STATUS: done
+[2026-02-03 16:02] NOTES: Enhanced PagedEditor keyboard handling:
+[2026-02-03 16:02] NOTES:   - handleKeyDown: ensures hidden PM is focused on keypress
+[2026-02-03 16:02] NOTES:   - handleMouseDown: focus PM immediately on mousedown
+[2026-02-03 16:02] NOTES:   - Cmd/Ctrl+Home/End: scroll container appropriately
+[2026-02-03 16:02] NOTES:   - Focus already redirects to hidden PM via handleContainerFocus
+[2026-02-03 16:02] NOTES:   - PM handles all keyboard input naturally when focused
