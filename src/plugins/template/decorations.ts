@@ -70,7 +70,7 @@ function createElementDecorations(
       class: classes.join(' '),
       'data-element-id': element.id,
       'data-element-type': element.type,
-      style: `background-color: ${getBackgroundColor(element.type, element.isValid)}; border-radius: 3px; padding: 0 2px;`,
+      style: `background-color: ${getBackgroundColor(element.type, element.isValid)}; border-radius: 2px;`,
     })
   );
 
