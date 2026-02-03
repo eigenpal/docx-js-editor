@@ -540,13 +540,21 @@ export function applyStyle(styleId: string, resolvedAttrs?: ResolvedStyleAttrs):
           const paragraphStart = pos + 1; // +1 to skip the paragraph node itself
           const paragraphEnd = pos + node.nodeSize - 1; // -1 to exclude the closing
 
-          // Add each mark to the entire paragraph content
-          for (const mark of styleMarks) {
-            tr = tr.addMark(paragraphStart, paragraphEnd, mark);
+          // Only add marks if there's actual content (not empty paragraph)
+          if (paragraphEnd > paragraphStart) {
+            for (const mark of styleMarks) {
+              tr = tr.addMark(paragraphStart, paragraphEnd, mark);
+            }
           }
         }
       }
     });
+
+    // Set stored marks so newly typed text gets the style's formatting
+    // This is crucial for empty paragraphs or when cursor is at end
+    if (styleMarks.length > 0) {
+      tr = tr.setStoredMarks(styleMarks);
+    }
 
     dispatch(tr.scrollIntoView());
     return true;
