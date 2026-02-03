@@ -109,6 +109,9 @@ import {
   type TableContextInfo,
 } from '../prosemirror';
 
+// Paginated editor
+import { PagedEditor, type PagedEditorRef } from '../paged-editor/PagedEditor';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -189,6 +192,12 @@ export interface DocxEditorProps {
   onCut?: () => void;
   /** Callback when content is pasted */
   onPaste?: () => void;
+  /**
+   * Use paginated editor mode (experimental).
+   * When enabled, shows true paginated editing with visible page breaks.
+   * When disabled (default), uses standard ProseMirror editor.
+   */
+  usePaginatedEditor?: boolean;
 }
 
 /**
@@ -287,6 +296,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     onPaste: _onPaste,
     externalPlugins,
     onEditorViewReady,
+    usePaginatedEditor = false,
   },
   ref
 ) {
@@ -313,10 +323,46 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
 
   // Refs
   const editorRef = useRef<ProseMirrorEditorRef>(null);
+  const pagedEditorRef = useRef<PagedEditorRef>(null);
   const agentRef = useRef<DocumentAgent | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   // Save the last known selection for restoring after toolbar interactions
   const lastSelectionRef = useRef<{ from: number; to: number } | null>(null);
+
+  // Helper to get the active editor's view
+  const getActiveEditorView = useCallback(() => {
+    if (usePaginatedEditor) {
+      return pagedEditorRef.current?.getView();
+    }
+    return editorRef.current?.getView();
+  }, [usePaginatedEditor]);
+
+  // Helper to focus the active editor
+  const focusActiveEditor = useCallback(() => {
+    if (usePaginatedEditor) {
+      pagedEditorRef.current?.focus();
+    } else {
+      editorRef.current?.focus();
+    }
+  }, [usePaginatedEditor]);
+
+  // Helper to undo in the active editor
+  const undoActiveEditor = useCallback(() => {
+    if (usePaginatedEditor) {
+      pagedEditorRef.current?.undo();
+    } else {
+      editorRef.current?.undo();
+    }
+  }, [usePaginatedEditor]);
+
+  // Helper to redo in the active editor
+  const redoActiveEditor = useCallback(() => {
+    if (usePaginatedEditor) {
+      pagedEditorRef.current?.redo();
+    } else {
+      editorRef.current?.redo();
+    }
+  }, [usePaginatedEditor]);
 
   // Find/Replace hook
   const findReplace = useFindReplace();
@@ -422,7 +468,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         } else if (e.key.toLowerCase() === 'k') {
           e.preventDefault();
           // Open hyperlink dialog
-          const view = editorRef.current?.getView();
+          const view = usePaginatedEditor
+            ? pagedEditorRef.current?.getView()
+            : editorRef.current?.getView();
           if (view) {
             const selectedText = getSelectedText(view.state);
             const existingLink = getHyperlinkAttrs(view.state);
@@ -444,7 +492,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [findReplace, hyperlinkDialog]);
+  }, [findReplace, hyperlinkDialog, usePaginatedEditor]);
 
   // Handle document change
   const handleDocumentChange = useCallback(
@@ -459,7 +507,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   const handleSelectionChange = useCallback(
     (selectionState: SelectionState | null) => {
       // Save selection for restoring after toolbar interactions
-      const view = editorRef.current?.getView();
+      const view = getActiveEditorView();
       if (view) {
         const { from, to } = view.state.selection;
         // Only save non-empty selections (when text is actually selected)
@@ -545,17 +593,20 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   });
 
   // Handle table insert from toolbar
-  const handleInsertTable = useCallback((rows: number, columns: number) => {
-    const view = editorRef.current?.getView();
-    if (!view) return;
-    insertTable(rows, columns)(view.state, view.dispatch);
-    editorRef.current?.focus();
-  }, []);
+  const handleInsertTable = useCallback(
+    (rows: number, columns: number) => {
+      const view = getActiveEditorView();
+      if (!view) return;
+      insertTable(rows, columns)(view.state, view.dispatch);
+      focusActiveEditor();
+    },
+    [getActiveEditorView, focusActiveEditor]
+  );
 
   // Handle table action from Toolbar - use ProseMirror commands
   const handleTableAction = useCallback(
     (action: TableAction) => {
-      const view = editorRef.current?.getView();
+      const view = getActiveEditorView();
       if (!view) return;
 
       switch (action) {
@@ -607,150 +658,155 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           }
       }
 
-      editorRef.current?.focus();
+      focusActiveEditor();
     },
-    [tableSelection]
+    [tableSelection, getActiveEditorView, focusActiveEditor]
   );
 
   // Handle formatting action from toolbar
-  const handleFormat = useCallback((action: FormattingAction) => {
-    const view = editorRef.current?.getView();
-    if (!view) return;
+  const handleFormat = useCallback(
+    (action: FormattingAction) => {
+      const view = usePaginatedEditor
+        ? pagedEditorRef.current?.getView()
+        : editorRef.current?.getView();
+      if (!view) return;
 
-    // Focus editor first to ensure we can dispatch commands
-    view.focus();
+      // Focus editor first to ensure we can dispatch commands
+      view.focus();
 
-    // Restore selection if it was lost during toolbar interaction
-    // This happens when user clicks on dropdown menus (font picker, style picker, etc.)
-    const { from, to } = view.state.selection;
-    const isEmptySelection = from === to;
-    const savedSelection = lastSelectionRef.current;
+      // Restore selection if it was lost during toolbar interaction
+      // This happens when user clicks on dropdown menus (font picker, style picker, etc.)
+      const { from, to } = view.state.selection;
+      const isEmptySelection = from === to;
+      const savedSelection = lastSelectionRef.current;
 
-    if (isEmptySelection && savedSelection && savedSelection.from !== savedSelection.to) {
-      // Selection was lost - restore it before applying the format
-      try {
-        const tr = view.state.tr.setSelection(
-          TextSelection.create(view.state.doc, savedSelection.from, savedSelection.to)
-        );
-        view.dispatch(tr);
-      } catch (e) {
-        // If restoration fails (e.g., positions are invalid after doc change), continue with current selection
-        console.warn('Could not restore selection:', e);
-      }
-    }
-
-    // Handle simple toggle actions
-    if (action === 'bold') {
-      toggleBold(view.state, view.dispatch);
-      return;
-    }
-    if (action === 'italic') {
-      toggleItalic(view.state, view.dispatch);
-      return;
-    }
-    if (action === 'underline') {
-      toggleUnderline(view.state, view.dispatch);
-      return;
-    }
-    if (action === 'strikethrough') {
-      toggleStrike(view.state, view.dispatch);
-      return;
-    }
-    if (action === 'superscript') {
-      toggleSuperscript(view.state, view.dispatch);
-      return;
-    }
-    if (action === 'subscript') {
-      toggleSubscript(view.state, view.dispatch);
-      return;
-    }
-    if (action === 'bulletList') {
-      toggleBulletList(view.state, view.dispatch);
-      return;
-    }
-    if (action === 'numberedList') {
-      toggleNumberedList(view.state, view.dispatch);
-      return;
-    }
-    if (action === 'indent') {
-      // Try list indent first, then paragraph indent
-      if (!increaseListLevel(view.state, view.dispatch)) {
-        increaseIndent()(view.state, view.dispatch);
-      }
-      return;
-    }
-    if (action === 'outdent') {
-      // Try list outdent first, then paragraph outdent
-      if (!decreaseListLevel(view.state, view.dispatch)) {
-        decreaseIndent()(view.state, view.dispatch);
-      }
-      return;
-    }
-    if (action === 'clearFormatting') {
-      clearFormatting(view.state, view.dispatch);
-      return;
-    }
-    if (action === 'insertLink') {
-      // Get the selected text for the hyperlink dialog
-      const selectedText = getSelectedText(view.state);
-      // Check if we're editing an existing link
-      const existingLink = getHyperlinkAttrs(view.state);
-      if (existingLink) {
-        hyperlinkDialog.openEdit({
-          url: existingLink.href,
-          displayText: selectedText,
-          tooltip: existingLink.tooltip,
-        });
-      } else {
-        hyperlinkDialog.openInsert(selectedText);
-      }
-      return;
-    }
-
-    // Handle object-based actions
-    if (typeof action === 'object') {
-      switch (action.type) {
-        case 'alignment':
-          setAlignment(action.value)(view.state, view.dispatch);
-          break;
-        case 'textColor':
-          // action.value can be a string like "#FF0000" or a color name
-          setTextColor({ rgb: action.value.replace('#', '') })(view.state, view.dispatch);
-          break;
-        case 'highlightColor':
-          setHighlight(action.value)(view.state, view.dispatch);
-          break;
-        case 'fontSize':
-          // Convert points to half-points (OOXML uses half-points for font sizes)
-          setFontSize(pointsToHalfPoints(action.value))(view.state, view.dispatch);
-          break;
-        case 'fontFamily':
-          setFontFamily(action.value)(view.state, view.dispatch);
-          break;
-        case 'lineSpacing':
-          setLineSpacing(action.value)(view.state, view.dispatch);
-          break;
-        case 'applyStyle': {
-          // Resolve style to get its formatting properties
-          const styleResolver = history.state?.package.styles
-            ? createStyleResolver(history.state.package.styles)
-            : null;
-
-          if (styleResolver) {
-            const resolved = styleResolver.resolveParagraphStyle(action.value);
-            applyStyle(action.value, {
-              paragraphFormatting: resolved.paragraphFormatting,
-              runFormatting: resolved.runFormatting,
-            })(view.state, view.dispatch);
-          } else {
-            // No styles available, just set the styleId
-            applyStyle(action.value)(view.state, view.dispatch);
-          }
-          break;
+      if (isEmptySelection && savedSelection && savedSelection.from !== savedSelection.to) {
+        // Selection was lost - restore it before applying the format
+        try {
+          const tr = view.state.tr.setSelection(
+            TextSelection.create(view.state.doc, savedSelection.from, savedSelection.to)
+          );
+          view.dispatch(tr);
+        } catch (e) {
+          // If restoration fails (e.g., positions are invalid after doc change), continue with current selection
+          console.warn('Could not restore selection:', e);
         }
       }
-    }
-  }, []);
+
+      // Handle simple toggle actions
+      if (action === 'bold') {
+        toggleBold(view.state, view.dispatch);
+        return;
+      }
+      if (action === 'italic') {
+        toggleItalic(view.state, view.dispatch);
+        return;
+      }
+      if (action === 'underline') {
+        toggleUnderline(view.state, view.dispatch);
+        return;
+      }
+      if (action === 'strikethrough') {
+        toggleStrike(view.state, view.dispatch);
+        return;
+      }
+      if (action === 'superscript') {
+        toggleSuperscript(view.state, view.dispatch);
+        return;
+      }
+      if (action === 'subscript') {
+        toggleSubscript(view.state, view.dispatch);
+        return;
+      }
+      if (action === 'bulletList') {
+        toggleBulletList(view.state, view.dispatch);
+        return;
+      }
+      if (action === 'numberedList') {
+        toggleNumberedList(view.state, view.dispatch);
+        return;
+      }
+      if (action === 'indent') {
+        // Try list indent first, then paragraph indent
+        if (!increaseListLevel(view.state, view.dispatch)) {
+          increaseIndent()(view.state, view.dispatch);
+        }
+        return;
+      }
+      if (action === 'outdent') {
+        // Try list outdent first, then paragraph outdent
+        if (!decreaseListLevel(view.state, view.dispatch)) {
+          decreaseIndent()(view.state, view.dispatch);
+        }
+        return;
+      }
+      if (action === 'clearFormatting') {
+        clearFormatting(view.state, view.dispatch);
+        return;
+      }
+      if (action === 'insertLink') {
+        // Get the selected text for the hyperlink dialog
+        const selectedText = getSelectedText(view.state);
+        // Check if we're editing an existing link
+        const existingLink = getHyperlinkAttrs(view.state);
+        if (existingLink) {
+          hyperlinkDialog.openEdit({
+            url: existingLink.href,
+            displayText: selectedText,
+            tooltip: existingLink.tooltip,
+          });
+        } else {
+          hyperlinkDialog.openInsert(selectedText);
+        }
+        return;
+      }
+
+      // Handle object-based actions
+      if (typeof action === 'object') {
+        switch (action.type) {
+          case 'alignment':
+            setAlignment(action.value)(view.state, view.dispatch);
+            break;
+          case 'textColor':
+            // action.value can be a string like "#FF0000" or a color name
+            setTextColor({ rgb: action.value.replace('#', '') })(view.state, view.dispatch);
+            break;
+          case 'highlightColor':
+            setHighlight(action.value)(view.state, view.dispatch);
+            break;
+          case 'fontSize':
+            // Convert points to half-points (OOXML uses half-points for font sizes)
+            setFontSize(pointsToHalfPoints(action.value))(view.state, view.dispatch);
+            break;
+          case 'fontFamily':
+            setFontFamily(action.value)(view.state, view.dispatch);
+            break;
+          case 'lineSpacing':
+            setLineSpacing(action.value)(view.state, view.dispatch);
+            break;
+          case 'applyStyle': {
+            // Resolve style to get its formatting properties
+            const styleResolver = history.state?.package.styles
+              ? createStyleResolver(history.state.package.styles)
+              : null;
+
+            if (styleResolver) {
+              const resolved = styleResolver.resolveParagraphStyle(action.value);
+              applyStyle(action.value, {
+                paragraphFormatting: resolved.paragraphFormatting,
+                runFormatting: resolved.runFormatting,
+              })(view.state, view.dispatch);
+            } else {
+              // No styles available, just set the styleId
+              applyStyle(action.value)(view.state, view.dispatch);
+            }
+            break;
+          }
+        }
+      }
+    },
+    [usePaginatedEditor]
+  );
 
   // Handle variable values change
   const handleVariableValuesChange = useCallback((values: Record<string, string>) => {
@@ -784,7 +840,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   // Handle hyperlink dialog submit
   const handleHyperlinkSubmit = useCallback(
     (data: HyperlinkData) => {
-      const view = editorRef.current?.getView();
+      const view = getActiveEditorView();
       if (!view) return;
 
       const url = data.url || '';
@@ -805,20 +861,20 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       }
 
       hyperlinkDialog.close();
-      editorRef.current?.focus();
+      focusActiveEditor();
     },
-    [hyperlinkDialog]
+    [hyperlinkDialog, getActiveEditorView, focusActiveEditor]
   );
 
   // Handle hyperlink removal
   const handleHyperlinkRemove = useCallback(() => {
-    const view = editorRef.current?.getView();
+    const view = getActiveEditorView();
     if (!view) return;
 
     removeHyperlink(view.state, view.dispatch);
     hyperlinkDialog.close();
-    editorRef.current?.focus();
-  }, [hyperlinkDialog]);
+    focusActiveEditor();
+  }, [hyperlinkDialog, getActiveEditorView, focusActiveEditor]);
 
   // Handle margin changes from rulers
   const handleLeftMarginChange = useCallback(
@@ -1143,7 +1199,13 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       save: handleSave,
       setZoom: (zoom: number) => setState((prev) => ({ ...prev, zoom })),
       getZoom: () => state.zoom,
-      focus: () => editorRef.current?.focus(),
+      focus: () => {
+        if (usePaginatedEditor) {
+          pagedEditorRef.current?.focus();
+        } else {
+          editorRef.current?.focus();
+        }
+      },
       getCurrentPage: () => state.currentPage,
       getTotalPages: () => state.totalPages,
       scrollToPage: (_pageNumber: number) => {
@@ -1160,6 +1222,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       handleSave,
       handleOpenPrintPreview,
       handleDirectPrint,
+      usePaginatedEditor,
     ]
   );
 
@@ -1258,8 +1321,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                   <Toolbar
                     currentFormatting={state.selectionFormatting}
                     onFormat={handleFormat}
-                    onUndo={() => editorRef.current?.undo()}
-                    onRedo={() => editorRef.current?.redo()}
+                    onUndo={undoActiveEditor}
+                    onRedo={redoActiveEditor}
                     canUndo={true}
                     canRedo={true}
                     disabled={readOnly}
@@ -1270,7 +1333,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                     showZoomControl={showZoomControl}
                     zoom={state.zoom}
                     onZoomChange={handleZoomChange}
-                    onRefocusEditor={() => editorRef.current?.focus()}
+                    onRefocusEditor={focusActiveEditor}
                     onInsertTable={handleInsertTable}
                     showTableInsert={true}
                     tableContext={state.pmTableContext}
@@ -1325,22 +1388,57 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                   // Using mouseDown for immediate response before focus can be lost
                   if (e.target === e.currentTarget) {
                     e.preventDefault();
-                    editorRef.current?.focus();
+                    if (usePaginatedEditor) {
+                      pagedEditorRef.current?.focus();
+                    } else {
+                      editorRef.current?.focus();
+                    }
                   }
                 }}
               >
-                <ProseMirrorEditor
-                  ref={editorRef}
-                  document={history.state}
-                  sectionProperties={history.state?.package.document?.finalSectionProperties}
-                  zoom={state.zoom}
-                  onChange={handleDocumentChange}
-                  onSelectionChange={handleSelectionChange}
-                  readOnly={readOnly}
-                  autoFocus
-                  externalPlugins={externalPlugins}
-                  onEditorViewReady={onEditorViewReady}
-                />
+                {usePaginatedEditor ? (
+                  <PagedEditor
+                    ref={pagedEditorRef}
+                    document={history.state}
+                    styles={history.state?.package.styles}
+                    theme={history.state?.package.theme || theme}
+                    sectionProperties={history.state?.package.document?.finalSectionProperties}
+                    zoom={state.zoom}
+                    readOnly={readOnly}
+                    onDocumentChange={handleDocumentChange}
+                    onSelectionChange={(_from, _to) => {
+                      // PagedEditor provides PM positions, we need to build SelectionState
+                      const view = pagedEditorRef.current?.getView();
+                      if (view) {
+                        // Get table context
+                        const pmTableCtx = getTableContext(view.state);
+                        setState((prev) => ({
+                          ...prev,
+                          pmTableContext: pmTableCtx.isInTable ? pmTableCtx : null,
+                        }));
+                      }
+                      // Notify parent of raw selection change
+                      onSelectionChange?.(null);
+                    }}
+                    externalPlugins={externalPlugins}
+                    onReady={(ref) => {
+                      onEditorViewReady?.(ref.getView()!);
+                    }}
+                  />
+                ) : (
+                  <ProseMirrorEditor
+                    ref={editorRef}
+                    document={history.state}
+                    sectionProperties={history.state?.package.document?.finalSectionProperties}
+                    zoom={state.zoom}
+                    onChange={handleDocumentChange}
+                    onSelectionChange={handleSelectionChange}
+                    readOnly={readOnly}
+                    autoFocus
+                    externalPlugins={externalPlugins}
+                    onEditorViewReady={onEditorViewReady}
+                  />
+                )}
 
                 {/* Page navigation / indicator */}
                 {showPageNumbers &&

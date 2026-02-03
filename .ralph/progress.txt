@@ -1102,3 +1102,28 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 17:26] NOTES:   - Initial Layout tests (10-page document, scaling)
 [2026-02-03 17:26] NOTES:   - Incremental Update tests (single char, paragraph insert)
 [2026-02-03 17:26] NOTES:   - Edge Cases (empty doc, single para, keepNext, page breaks)
+
+[2026-02-03 17:30] TASK: 9.3 Replace DocumentViewer with PagedEditor
+[2026-02-03 17:30] STATUS: starting
+[2026-02-03 17:30] NOTES: Phase 9, Task 9.3 - Integrating PagedEditor into DocxEditor
+[2026-02-03 17:30] STATUS: researching-superdoc
+[2026-02-03 17:35] STATUS: reading
+[2026-02-03 17:35] NOTES: Read DocxEditor.tsx (1590 lines) and PagedEditor.tsx (760 lines)
+[2026-02-03 17:36] NOTES: DocxEditor uses ProseMirrorEditor at line 1332
+[2026-02-03 17:36] NOTES: PagedEditor has similar ref interface (getView, focus, undo, redo)
+[2026-02-03 17:36] NOTES: Plan: Add usePaginatedEditor prop to DocxEditor to switch between editors
+[2026-02-03 17:37] STATUS: editing
+[2026-02-03 17:45] STATUS: editing
+[2026-02-03 17:45] NOTES: Updated DocxEditor.tsx with usePaginatedEditor prop
+[2026-02-03 17:46] NOTES: Added import for PagedEditor
+[2026-02-03 17:46] NOTES: Added pagedEditorRef and helper functions (getActiveEditorView, focusActiveEditor, etc.)
+[2026-02-03 17:47] NOTES: Updated all editorRef usages to conditionally use pagedEditorRef
+[2026-02-03 17:47] NOTES: Typecheck passes
+[2026-02-03 17:48] STATUS: testing
+[2026-02-03 17:55] STATUS: testing
+[2026-02-03 17:55] NOTES: formatting.spec.ts - 27/27 pass
+[2026-02-03 17:55] NOTES: alignment.spec.ts + lists.spec.ts - 60/61 pass (1 skipped)
+[2026-02-03 17:56] NOTES: layout-engine/integration.test.ts - 29/29 pass
+[2026-02-03 17:56] NOTES: layout-engine/performance.test.ts - 8/8 pass
+[2026-02-03 17:56] STATUS: done
+[2026-02-03 17:56] NOTES: Task 9.3 complete - DocxEditor now supports both ProseMirrorEditor (default) and PagedEditor (via usePaginatedEditor prop)
