@@ -696,3 +696,45 @@ export {
   type ParsedClipboardContent,
   type ClipboardOptions,
 } from './utils/clipboard';
+
+// ============================================================================
+// PLUGIN API
+// ============================================================================
+
+export {
+  PluginHost,
+  PLUGIN_HOST_STYLES,
+  type EditorPlugin,
+  type PluginPanelProps,
+  type PanelConfig,
+  type PluginContext,
+  type PluginHostProps,
+  type PluginHostRef,
+} from './plugin-api';
+
+// ============================================================================
+// PLUGINS
+// ============================================================================
+
+// Template Plugin
+export {
+  templatePlugin,
+  createPlugin as createTemplatePlugin,
+  parseDocument as parseTemplateDocument,
+  containsTemplateTags,
+  extractTagNames,
+  getUniqueVariableNames,
+  toTypeScriptInterface,
+  getTemplateSchema,
+  getTemplateElements,
+  getValidationErrors,
+  ELEMENT_COLORS,
+  ELEMENT_ICONS,
+  type TemplateElement,
+  type TemplateElementType,
+  type TemplateScope,
+  type TemplateSchema,
+  type TemplatePluginState,
+  type InferredDataType,
+  type ValidationError as TemplateValidationError,
+} from './plugins/template';
