@@ -364,9 +364,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 7.2: Create PagedEditor main component
 
-- [ ] Create `src/paged-editor/PagedEditor.tsx`
-- [ ] Integrate hidden PM, layout engine, painter
-- [ ] Wire up click handling and selection sync
+- [x] Create `src/paged-editor/PagedEditor.tsx`
+- [x] Integrate hidden PM, layout engine, painter
+- [x] Wire up click handling and selection sync
 
 **Clean room implementation:**
 

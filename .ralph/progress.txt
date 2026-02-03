@@ -892,3 +892,33 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 15:41] NOTES:   - Handles transactions and selection changes via callbacks
 [2026-02-03 15:41] NOTES:   - Imperative ref for external control (focus, dispatch, undo/redo, setSelection)
 [2026-02-03 15:41] NOTES:   - Supports read-only mode, external plugins, document conversion
+
+[2026-02-03 15:42] TASK: 7.2 Create PagedEditor main component
+[2026-02-03 15:42] STATUS: starting
+[2026-02-03 15:42] STATUS: researching-superdoc
+[2026-02-03 15:44] NOTES: Searched SuperDoc PresentationEditor.ts
+[2026-02-03 15:44] NOTES: Key concepts from SuperDoc:
+[2026-02-03 15:44] NOTES:   - visibleHost: the user-visible container element
+[2026-02-03 15:44] NOTES:   - viewportHost: div that contains pages, marked aria-hidden=true
+[2026-02-03 15:44] NOTES:   - painterHost: div where actual page divs are rendered
+[2026-02-03 15:44] NOTES:   - selectionOverlay: positioned over viewportHost for caret/selection
+[2026-02-03 15:44] NOTES:   - hiddenHost: off-screen PM (already have HiddenProseMirror)
+[2026-02-03 15:44] NOTES:   - Flow: PM transaction → toFlowBlocks → measure → layout → paint
+[2026-02-03 15:44] NOTES:   - Click handling: hit test → clickToPosition → update PM selection
+[2026-02-03 15:45] STATUS: editing
+[2026-02-03 15:45] NOTES: Creating clean room React implementation
+[2026-02-03 15:55] STATUS: testing
+[2026-02-03 15:55] NOTES: Fixed TypeScript errors:
+[2026-02-03 15:55] NOTES:   - Fixed SectionProperties fields (pageWidth/pageHeight vs pageSize)
+[2026-02-03 15:55] NOTES:   - Fixed hitTestPage/hitTestFragment API signatures
+[2026-02-03 15:55] NOTES:   - Fixed clickToPosition return type (number not PositionResult)
+[2026-02-03 15:55] NOTES:   - Fixed renderPages API (takes container element, not returns elements)
+[2026-02-03 15:55] NOTES:   - Added twipsToPixels conversion for margins/page size
+[2026-02-03 15:56] NOTES: Typecheck passed
+[2026-02-03 15:56] STATUS: done
+[2026-02-03 15:56] NOTES: Created src/paged-editor/PagedEditor.tsx with:
+[2026-02-03 15:56] NOTES:   - Integration of HiddenProseMirror, layout engine, DOM painter
+[2026-02-03 15:56] NOTES:   - Click handling: hit test pages/fragments → update PM selection
+[2026-02-03 15:56] NOTES:   - Selection sync: PM selection → compute rects → update overlay
+[2026-02-03 15:56] NOTES:   - Layout pipeline: PM transaction → blocks → measure → layout → paint
+[2026-02-03 15:56] NOTES:   - Imperative ref for external control
