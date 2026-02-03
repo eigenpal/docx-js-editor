@@ -314,9 +314,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 6.1: PM selection to rectangles
 
-- [ ] Create `src/layout-bridge/selectionRects.ts`
-- [ ] Convert PM selection range → screen rectangles
-- [ ] Handle multi-line, multi-page selections
+- [x] Create `src/layout-bridge/selectionRects.ts`
+- [x] Convert PM selection range → screen rectangles
+- [x] Handle multi-line, multi-page selections
 
 **SuperDoc reference (concept only):**
 
@@ -331,9 +331,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 6.2: Create selection overlay component
 
-- [ ] Create `src/paged-editor/SelectionOverlay.tsx`
-- [ ] Render caret (blinking cursor)
-- [ ] Render selection highlights
+- [x] Create `src/paged-editor/SelectionOverlay.tsx`
+- [x] Render caret (blinking cursor)
+- [x] Render selection highlights
 
 **Clean room implementation:**
 

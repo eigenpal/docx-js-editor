@@ -819,3 +819,47 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 14:56] - Task 5.2: hitTestFragment implemented in hitTest.ts
 [2026-02-03 14:56] - Task 5.3: Created clickToPosition.ts (click to PM position mapping)
 [2026-02-03 14:56] ========================================
+
+[2026-02-03 15:00] TASK: 6.1 PM selection to rectangles
+[2026-02-03 15:00] STATUS: starting
+[2026-02-03 15:00] NOTES: Creating src/layout-bridge/selectionRects.ts
+[2026-02-03 15:00] STATUS: researching-superdoc
+[2026-02-03 15:02] NOTES: Read SuperDoc selectionToRects - key concepts:
+[2026-02-03 15:02] NOTES:   - Walk pages and fragments
+[2026-02-03 15:02] NOTES:   - For each paragraph fragment, find lines intersecting PM range
+[2026-02-03 15:02] NOTES:   - Calculate PM range overlap (sliceFrom, sliceTo)
+[2026-02-03 15:02] NOTES:   - Convert PM positions to character offsets
+[2026-02-03 15:02] NOTES:   - Use mapPmToX to get X coordinates
+[2026-02-03 15:02] NOTES:   - Create rect: {x, y, width, height, pageIndex}
+[2026-02-03 15:02] NOTES:   - Handle tables by recursing into cells
+[2026-02-03 15:03] STATUS: editing
+[2026-02-03 15:10] STATUS: testing
+[2026-02-03 15:10] NOTES: Typecheck passed
+[2026-02-03 15:10] STATUS: done
+[2026-02-03 15:10] NOTES: Created src/layout-bridge/selectionRects.ts with:
+[2026-02-03 15:10] NOTES:   - selectionToRects(): converts PM range to screen rectangles
+[2026-02-03 15:10] NOTES:   - getCaretPosition(): gets caret position for collapsed selection
+[2026-02-03 15:10] NOTES:   - Handles paragraph, table, and image fragments
+[2026-02-03 15:10] NOTES:   - Handles multi-page selections
+[2026-02-03 15:10] NOTES:   - Helper utilities: findLinesInRange, charOffsetToX, etc.
+
+[2026-02-03 15:11] TASK: 6.2 Create selection overlay component
+[2026-02-03 15:11] STATUS: starting
+[2026-02-03 15:11] NOTES: Creating src/paged-editor/SelectionOverlay.tsx
+[2026-02-03 15:15] STATUS: editing
+[2026-02-03 15:18] STATUS: testing
+[2026-02-03 15:18] NOTES: Typecheck passed
+[2026-02-03 15:18] STATUS: done
+[2026-02-03 15:18] NOTES: Created src/paged-editor/SelectionOverlay.tsx with:
+[2026-02-03 15:18] NOTES:   - SelectionOverlay component: renders selection highlights and caret
+[2026-02-03 15:18] NOTES:   - Caret component: blinking cursor with configurable interval
+[2026-02-03 15:18] NOTES:   - SelectionRectangle component: renders individual selection rects
+[2026-02-03 15:18] NOTES:   - useSelectionOverlay hook: manages selection state from PM selection
+[2026-02-03 15:18] NOTES:   - Customizable colors, caret width, blink interval
+
+[2026-02-03 15:19] ========================================
+[2026-02-03 15:19] PHASE 6 COMPLETE: Selection Overlay
+[2026-02-03 15:19] ========================================
+[2026-02-03 15:19] - Task 6.1: Created selectionRects.ts (PM selection to screen rects)
+[2026-02-03 15:19] - Task 6.2: Created SelectionOverlay.tsx (React overlay component)
+[2026-02-03 15:19] ========================================
