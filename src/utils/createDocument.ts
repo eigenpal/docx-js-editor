@@ -12,7 +12,176 @@ import type {
   Run,
   TextContent,
   SectionProperties,
+  Style,
 } from '../types/document';
+
+// ============================================================================
+// DEFAULT STYLES
+// ============================================================================
+
+/**
+ * Get default paragraph styles (matching Google Docs defaults)
+ *
+ * Font sizes are in half-points (e.g., 22 = 11pt, 40 = 20pt)
+ * Colors are RGB hex without # prefix
+ */
+function getDefaultStyles(): Style[] {
+  return [
+    // Normal - base style for body text (11pt Arial)
+    {
+      styleId: 'Normal',
+      type: 'paragraph',
+      name: 'Normal',
+      default: true,
+      qFormat: true,
+      uiPriority: 0,
+      rPr: {
+        fontSize: 22, // 11pt
+        fontFamily: {
+          ascii: 'Arial',
+          hAnsi: 'Arial',
+        },
+      },
+      pPr: {
+        lineSpacing: 276, // 1.15 spacing
+      },
+    },
+    // Title - document title (26pt, bold)
+    {
+      styleId: 'Title',
+      type: 'paragraph',
+      name: 'Title',
+      basedOn: 'Normal',
+      next: 'Normal',
+      qFormat: true,
+      uiPriority: 10,
+      rPr: {
+        fontSize: 52, // 26pt
+        bold: true,
+        fontFamily: {
+          ascii: 'Arial',
+          hAnsi: 'Arial',
+        },
+      },
+      pPr: {
+        lineSpacing: 240, // Single spacing
+      },
+    },
+    // Subtitle (15pt, gray)
+    {
+      styleId: 'Subtitle',
+      type: 'paragraph',
+      name: 'Subtitle',
+      basedOn: 'Normal',
+      next: 'Normal',
+      qFormat: true,
+      uiPriority: 11,
+      rPr: {
+        fontSize: 30, // 15pt
+        color: { rgb: '666666' }, // Gray
+        fontFamily: {
+          ascii: 'Arial',
+          hAnsi: 'Arial',
+        },
+      },
+      pPr: {
+        lineSpacing: 240,
+      },
+    },
+    // Heading 1 (20pt, bold)
+    {
+      styleId: 'Heading1',
+      type: 'paragraph',
+      name: 'Heading 1',
+      basedOn: 'Normal',
+      next: 'Normal',
+      qFormat: true,
+      uiPriority: 9,
+      rPr: {
+        fontSize: 40, // 20pt
+        bold: true,
+        fontFamily: {
+          ascii: 'Arial',
+          hAnsi: 'Arial',
+        },
+      },
+      pPr: {
+        spaceBefore: 400, // 20pt before
+        spaceAfter: 120, // 6pt after
+        lineSpacing: 240,
+      },
+    },
+    // Heading 2 (16pt, bold)
+    {
+      styleId: 'Heading2',
+      type: 'paragraph',
+      name: 'Heading 2',
+      basedOn: 'Normal',
+      next: 'Normal',
+      qFormat: true,
+      uiPriority: 9,
+      rPr: {
+        fontSize: 32, // 16pt
+        bold: true,
+        fontFamily: {
+          ascii: 'Arial',
+          hAnsi: 'Arial',
+        },
+      },
+      pPr: {
+        spaceBefore: 360, // 18pt before
+        spaceAfter: 80, // 4pt after
+        lineSpacing: 240,
+      },
+    },
+    // Heading 3 (14pt, bold)
+    {
+      styleId: 'Heading3',
+      type: 'paragraph',
+      name: 'Heading 3',
+      basedOn: 'Normal',
+      next: 'Normal',
+      qFormat: true,
+      uiPriority: 9,
+      rPr: {
+        fontSize: 28, // 14pt
+        bold: true,
+        fontFamily: {
+          ascii: 'Arial',
+          hAnsi: 'Arial',
+        },
+      },
+      pPr: {
+        spaceBefore: 320, // 16pt before
+        spaceAfter: 80, // 4pt after
+        lineSpacing: 240,
+      },
+    },
+    // Heading 4 (12pt, bold)
+    {
+      styleId: 'Heading4',
+      type: 'paragraph',
+      name: 'Heading 4',
+      basedOn: 'Normal',
+      next: 'Normal',
+      qFormat: true,
+      uiPriority: 9,
+      rPr: {
+        fontSize: 24, // 12pt
+        bold: true,
+        fontFamily: {
+          ascii: 'Arial',
+          hAnsi: 'Arial',
+        },
+      },
+      pPr: {
+        spaceBefore: 280, // 14pt before
+        spaceAfter: 80, // 4pt after
+        lineSpacing: 240,
+      },
+    },
+  ];
+}
 
 // ============================================================================
 // DEFAULT SECTION PROPERTIES
@@ -112,10 +281,10 @@ export function createEmptyDocument(options: CreateEmptyDocumentOptions = {}): D
     type: 'run',
     content: options.initialText ? [textContent] : [],
     formatting: {
-      fontSize: 24, // 12pt (half-points)
+      fontSize: 22, // 11pt (half-points) - Google Docs default
       fontFamily: {
-        ascii: 'Calibri',
-        hAnsi: 'Calibri',
+        ascii: 'Arial',
+        hAnsi: 'Arial',
       },
     },
   };
@@ -134,23 +303,23 @@ export function createEmptyDocument(options: CreateEmptyDocumentOptions = {}): D
     finalSectionProperties: sectionProps,
   };
 
-  // Create package
+  // Create package with default styles
   const docxPackage: DocxPackage = {
     document: documentBody,
     styles: {
       docDefaults: {
         rPr: {
-          fontSize: 24,
+          fontSize: 22, // 11pt (Google Docs default)
           fontFamily: {
-            ascii: 'Calibri',
-            hAnsi: 'Calibri',
+            ascii: 'Arial',
+            hAnsi: 'Arial',
           },
         },
         pPr: {
-          lineSpacing: 276,
+          lineSpacing: 276, // 1.15 line spacing
         },
       },
-      styles: [],
+      styles: getDefaultStyles(),
     },
   };
 
