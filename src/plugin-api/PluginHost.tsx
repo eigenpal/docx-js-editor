@@ -65,6 +65,7 @@ const PLUGIN_HOST_STYLES = `
   width: 100%;
   height: 100%;
   overflow: hidden;
+  position: relative;
 }
 
 .plugin-host-editor {
@@ -75,17 +76,6 @@ const PLUGIN_HOST_STYLES = `
   overflow: hidden;
 }
 
-.plugin-host-editor-wrapper {
-  flex: 1;
-  display: flex;
-  position: relative;
-  overflow: auto;
-}
-
-.plugin-host-editor-wrapper > *:first-child {
-  flex: 1;
-  min-width: 0;
-}
 
 .plugin-panels-left,
 .plugin-panels-right {
@@ -165,24 +155,28 @@ const PLUGIN_HOST_STYLES = `
   overflow: auto;
 }
 
-/* Overlay panels - positioned inside the editor scroll area */
+/* Overlay panels - positioned absolutely over the editor */
 .plugin-panels-overlay-right {
-  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: 280px;
-  position: relative;
   pointer-events: none;
-  z-index: 10;
+  z-index: 100;
+  overflow: visible;
 }
 
 .plugin-panel-overlay {
   position: sticky;
-  top: 120px; /* Below toolbar */
+  top: 130px; /* Below toolbar and ruler */
   display: flex;
   flex-shrink: 0;
   pointer-events: auto;
   background: transparent;
-  max-height: calc(100vh - 140px);
+  max-height: calc(100vh - 150px);
   overflow: visible;
+  padding-right: 8px;
 }
 
 .plugin-panel-overlay.collapsed {
@@ -585,24 +579,22 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
         <div className="plugin-panels-left">{pluginsByPosition.left.map(renderPanel)}</div>
       )}
 
-      {/* Main editor area with right panel overlay */}
+      {/* Main editor area */}
       <div className="plugin-host-editor">
-        <div className="plugin-host-editor-wrapper">
-          {editorElement}
-
-          {/* Right panels as overlay inside the editor scroll area */}
-          {pluginsByPosition.right.length > 0 && (
-            <div className="plugin-panels-overlay-right">
-              {pluginsByPosition.right.map(renderRightPanelOverlay)}
-            </div>
-          )}
-        </div>
+        {editorElement}
 
         {/* Bottom panels */}
         {pluginsByPosition.bottom.length > 0 && (
           <div className="plugin-panels-bottom">{pluginsByPosition.bottom.map(renderPanel)}</div>
         )}
       </div>
+
+      {/* Right panels as floating overlay */}
+      {pluginsByPosition.right.length > 0 && (
+        <div className="plugin-panels-overlay-right">
+          {pluginsByPosition.right.map(renderRightPanelOverlay)}
+        </div>
+      )}
     </div>
   );
 });
