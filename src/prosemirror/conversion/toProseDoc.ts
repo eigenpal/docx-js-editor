@@ -125,6 +125,7 @@ function paragraphFormattingToAttrs(
     // List rendering info from parsed numbering definitions
     listNumFmt: paragraph.listRendering?.numFmt,
     listIsBullet: paragraph.listRendering?.isBullet,
+    listMarker: paragraph.listRendering?.marker,
   };
 
   // If we have a style resolver, resolve the style and get base properties

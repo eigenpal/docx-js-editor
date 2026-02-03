@@ -148,49 +148,58 @@
   padding-left: 36px;
 }
 
-.prosemirror-editor .ProseMirror .docx-list-bullet::before {
+/* Use the computed marker from DOCX when available */
+.prosemirror-editor .ProseMirror [data-list-marker]::before {
+  content: attr(data-list-marker);
+  position: absolute;
+  left: 12px;
+  white-space: nowrap;
+}
+
+/* Fallback for bullet lists without marker */
+.prosemirror-editor .ProseMirror .docx-list-bullet:not([data-list-marker])::before {
   content: '•';
   position: absolute;
   left: 12px;
 }
 
-.prosemirror-editor .ProseMirror .docx-list-numbered {
+/* Fallback for numbered lists without marker - use CSS counters */
+.prosemirror-editor .ProseMirror .docx-list-numbered:not([data-list-marker]) {
   counter-increment: list-counter;
 }
 
-/* Default numbered list (decimal) */
-.prosemirror-editor .ProseMirror .docx-list-decimal::before {
+.prosemirror-editor .ProseMirror .docx-list-decimal:not([data-list-marker])::before {
   content: counter(list-counter) '.';
   position: absolute;
   left: 12px;
 }
 
-/* Roman numeral lists */
-.prosemirror-editor .ProseMirror .docx-list-lower-roman::before {
+.prosemirror-editor .ProseMirror .docx-list-lower-roman:not([data-list-marker])::before {
   content: counter(list-counter, lower-roman) '.';
   position: absolute;
   left: 12px;
 }
-.prosemirror-editor .ProseMirror .docx-list-upper-roman::before {
+
+.prosemirror-editor .ProseMirror .docx-list-upper-roman:not([data-list-marker])::before {
   content: counter(list-counter, upper-roman) '.';
   position: absolute;
   left: 12px;
 }
 
-/* Alphabetic lists */
-.prosemirror-editor .ProseMirror .docx-list-lower-alpha::before {
+.prosemirror-editor .ProseMirror .docx-list-lower-alpha:not([data-list-marker])::before {
   content: counter(list-counter, lower-alpha) '.';
   position: absolute;
   left: 12px;
 }
-.prosemirror-editor .ProseMirror .docx-list-upper-alpha::before {
+
+.prosemirror-editor .ProseMirror .docx-list-upper-alpha:not([data-list-marker])::before {
   content: counter(list-counter, upper-alpha) '.';
   position: absolute;
   left: 12px;
 }
 
-/* Reset counter at level 0 */
-.prosemirror-editor .ProseMirror .docx-list-level-0:first-of-type {
+/* Reset counter at level 0 for fallback */
+.prosemirror-editor .ProseMirror .docx-list-level-0:not([data-list-marker]):first-of-type {
   counter-reset: list-counter;
 }
 
