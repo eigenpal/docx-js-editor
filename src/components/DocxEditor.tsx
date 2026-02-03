@@ -444,6 +444,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         lineSpacing: paragraphFormatting.lineSpacing,
         listState,
         styleId: selectionState.styleId ?? undefined,
+        indentLeft: paragraphFormatting.indentLeft,
       };
       setState((prev) => ({
         ...prev,
@@ -987,7 +988,15 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 </div>
               )}
 
-              <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+              <div
+                style={{ flex: 1, overflow: 'auto', position: 'relative' }}
+                onClick={(e) => {
+                  // Focus editor when clicking on the background area (not the editor itself)
+                  if (e.target === e.currentTarget) {
+                    editorRef.current?.focus();
+                  }
+                }}
+              >
                 <ProseMirrorEditor
                   ref={editorRef}
                   document={history.state}

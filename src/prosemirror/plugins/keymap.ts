@@ -206,6 +206,65 @@ export function insertTab(): Command {
 }
 
 /**
+ * Command to split a list item, continuing the list
+ */
+export function splitListItem(): Command {
+  return (state, dispatch) => {
+    const { $from, empty } = state.selection;
+    if (!empty) return false;
+
+    // Check if we're in a list paragraph (has numPr)
+    const paragraph = $from.parent;
+    if (paragraph.type.name !== 'paragraph') return false;
+
+    const numPr = paragraph.attrs.numPr;
+    if (!numPr) return false;
+
+    // Split the block and preserve list attributes
+    if (dispatch) {
+      const { tr } = state;
+      const pos = $from.pos;
+
+      // Split at cursor position
+      tr.split(pos, 1, [{ type: state.schema.nodes.paragraph, attrs: { ...paragraph.attrs } }]);
+
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  };
+}
+
+/**
+ * Command to handle backspace at start of list item
+ */
+export function backspaceExitList(): Command {
+  return (state, dispatch) => {
+    const { $from, empty } = state.selection;
+    if (!empty) return false;
+
+    // Check if cursor is at the start of the paragraph
+    if ($from.parentOffset !== 0) return false;
+
+    // Check if we're in a list paragraph (has numPr)
+    const paragraph = $from.parent;
+    if (paragraph.type.name !== 'paragraph') return false;
+
+    const numPr = paragraph.attrs.numPr;
+    if (!numPr) return false;
+
+    // Remove list formatting
+    if (dispatch) {
+      const tr = state.tr.setNodeMarkup($from.before(), undefined, {
+        ...paragraph.attrs,
+        numPr: null,
+      });
+      dispatch(tr);
+    }
+    return true;
+  };
+}
+
+/**
  * Create keymap with list-aware Tab handling
  * Tab priority: table navigation > list indent > insert tab character
  */
@@ -214,6 +273,10 @@ export function createListKeymap() {
     Tab: chainCommands(goToNextCell(), increaseListIndent(), insertTab()),
     'Shift-Tab': chainCommands(goToPrevCell(), decreaseListIndent()),
     'Shift-Enter': () => false, // Let base keymap handle this
+    // List-aware Enter: exit empty list item, or split and continue list
+    Enter: chainCommands(exitListOnEmptyEnter(), splitListItem()),
+    // List-aware Backspace: exit list if at start of list item
+    Backspace: backspaceExitList(),
   });
 }
 

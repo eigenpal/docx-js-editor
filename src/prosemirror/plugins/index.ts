@@ -11,6 +11,8 @@ export {
   createEditorKeymaps,
   insertHardBreak,
   exitListOnEmptyEnter,
+  splitListItem,
+  backspaceExitList,
   increaseListIndent,
   decreaseListIndent,
 } from './keymap';

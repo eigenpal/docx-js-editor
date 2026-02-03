@@ -8,13 +8,155 @@
  */
 
 import { toggleMark } from 'prosemirror-commands';
-import type { Command, EditorState } from 'prosemirror-state';
-import type { MarkType } from 'prosemirror-model';
+import type { Command, EditorState, Transaction } from 'prosemirror-state';
+import type { MarkType, Mark } from 'prosemirror-model';
 import { schema } from '../schema';
 import type { TextColorAttrs } from '../schema';
+import type { TextFormatting } from '../../types/document';
 
 // Helper type for mark attributes
 type MarkAttrs = Record<string, unknown>;
+
+// ============================================================================
+// PARAGRAPH DEFAULT FORMATTING HELPERS
+// ============================================================================
+
+/**
+ * Convert marks array to TextFormatting object
+ */
+function marksToTextFormatting(marks: readonly Mark[]): TextFormatting {
+  const formatting: TextFormatting = {};
+
+  for (const mark of marks) {
+    switch (mark.type.name) {
+      case 'bold':
+        formatting.bold = true;
+        break;
+      case 'italic':
+        formatting.italic = true;
+        break;
+      case 'underline':
+        formatting.underline = { style: mark.attrs.style || 'single' };
+        break;
+      case 'strike':
+        formatting.strike = true;
+        break;
+      case 'textColor':
+        formatting.color = mark.attrs;
+        break;
+      case 'highlight':
+        formatting.highlight = mark.attrs.color;
+        break;
+      case 'fontSize':
+        formatting.fontSize = mark.attrs.size;
+        break;
+      case 'fontFamily':
+        formatting.fontFamily = {
+          ascii: mark.attrs.ascii,
+          hAnsi: mark.attrs.hAnsi,
+        };
+        break;
+      case 'superscript':
+        formatting.vertAlign = 'superscript';
+        break;
+      case 'subscript':
+        formatting.vertAlign = 'subscript';
+        break;
+    }
+  }
+
+  return formatting;
+}
+
+/**
+ * Convert TextFormatting object to an array of marks
+ * Used to restore stored marks when entering an empty paragraph with saved formatting
+ */
+export function textFormattingToMarks(formatting: TextFormatting): Mark[] {
+  const marks: Mark[] = [];
+
+  if (formatting.bold) {
+    marks.push(schema.marks.bold.create());
+  }
+  if (formatting.italic) {
+    marks.push(schema.marks.italic.create());
+  }
+  if (formatting.underline) {
+    marks.push(
+      schema.marks.underline.create({
+        style: formatting.underline.style || 'single',
+        color: formatting.underline.color,
+      })
+    );
+  }
+  if (formatting.strike) {
+    marks.push(schema.marks.strike.create());
+  }
+  if (formatting.doubleStrike) {
+    marks.push(schema.marks.strike.create({ double: true }));
+  }
+  if (formatting.color) {
+    marks.push(
+      schema.marks.textColor.create({
+        rgb: formatting.color.rgb,
+        themeColor: formatting.color.themeColor,
+        themeTint: formatting.color.themeTint,
+        themeShade: formatting.color.themeShade,
+      })
+    );
+  }
+  if (formatting.highlight) {
+    marks.push(schema.marks.highlight.create({ color: formatting.highlight }));
+  }
+  if (formatting.fontSize) {
+    marks.push(schema.marks.fontSize.create({ size: formatting.fontSize }));
+  }
+  if (formatting.fontFamily) {
+    marks.push(
+      schema.marks.fontFamily.create({
+        ascii: formatting.fontFamily.ascii,
+        hAnsi: formatting.fontFamily.hAnsi,
+        asciiTheme: formatting.fontFamily.asciiTheme,
+      })
+    );
+  }
+  if (formatting.vertAlign === 'superscript') {
+    marks.push(schema.marks.superscript.create());
+  }
+  if (formatting.vertAlign === 'subscript') {
+    marks.push(schema.marks.subscript.create());
+  }
+
+  return marks;
+}
+
+/**
+ * Save stored marks to paragraph's defaultTextFormatting
+ * Called when formatting is set on an empty paragraph
+ */
+function saveStoredMarksToParagraph(state: EditorState, tr: Transaction): Transaction {
+  const { $from } = state.selection;
+  const paragraph = $from.parent;
+
+  if (paragraph.type.name !== 'paragraph') return tr;
+  if (paragraph.textContent.length > 0) return tr; // Only for empty paragraphs
+
+  const marks = tr.storedMarks || state.storedMarks || [];
+  if (marks.length === 0) {
+    // Clear defaultTextFormatting if no marks
+    return tr.setNodeMarkup($from.before(), undefined, {
+      ...paragraph.attrs,
+      defaultTextFormatting: null,
+    });
+  }
+
+  const defaultTextFormatting = marksToTextFormatting(marks);
+
+  return tr.setNodeMarkup($from.before(), undefined, {
+    ...paragraph.attrs,
+    defaultTextFormatting,
+  });
+}
 
 // ============================================================================
 // TOGGLE MARKS (simple on/off)
@@ -260,7 +402,10 @@ function setMark(markType: MarkType, attrs: Record<string, unknown>): Command {
           ? (state.storedMarks || state.selection.$from.marks()).filter((m) => m.type !== markType)
           : state.storedMarks || state.selection.$from.marks();
 
-        dispatch(state.tr.setStoredMarks([...marks, mark]));
+        let tr = state.tr.setStoredMarks([...marks, mark]);
+        // Also save to paragraph's defaultTextFormatting for persistence
+        tr = saveStoredMarksToParagraph(state, tr);
+        dispatch(tr);
       }
       return true;
     }
@@ -286,7 +431,10 @@ function removeMark(markType: MarkType): Command {
         const marks = (state.storedMarks || state.selection.$from.marks()).filter(
           (m) => m.type !== markType
         );
-        dispatch(state.tr.setStoredMarks(marks));
+        let tr = state.tr.setStoredMarks(marks);
+        // Also save to paragraph's defaultTextFormatting for persistence
+        tr = saveStoredMarksToParagraph(state, tr);
+        dispatch(tr);
       }
       return true;
     }

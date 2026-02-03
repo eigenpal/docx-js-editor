@@ -60,6 +60,8 @@ export interface ListButtonsProps {
   showIndentButtons?: boolean;
   /** Compact mode (smaller buttons) */
   compact?: boolean;
+  /** Whether the current paragraph has left indentation (for enabling outdent) */
+  hasIndent?: boolean;
 }
 
 /**
@@ -223,6 +225,7 @@ export function ListButtons({
   style,
   showIndentButtons = true,
   compact = false,
+  hasIndent = false,
 }: ListButtonsProps) {
   /**
    * Get button style with compact option
@@ -235,7 +238,8 @@ export function ListButtons({
   const isBulletList = listState?.type === 'bullet';
   const isNumberedList = listState?.type === 'numbered';
   const isInList = listState?.isInList || isBulletList || isNumberedList;
-  const canOutdent = isInList && (listState?.level ?? 0) > 0;
+  // Can outdent if: in a list with level > 0, OR has paragraph indentation
+  const canOutdent = (isInList && (listState?.level ?? 0) > 0) || hasIndent;
 
   return (
     <div

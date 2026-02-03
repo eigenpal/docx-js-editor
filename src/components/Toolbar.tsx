@@ -61,6 +61,8 @@ export interface SelectionFormatting {
   lineSpacing?: number;
   /** Paragraph style ID */
   styleId?: string;
+  /** Paragraph left indentation in twips */
+  indentLeft?: number;
 }
 
 /**
@@ -534,6 +536,18 @@ export function Toolbar({
     };
   }, [enableShortcuts, handleFormat, editorRef]);
 
+  // Prevent toolbar clicks from stealing focus from editor
+  const handleToolbarMouseDown = useCallback((e: React.MouseEvent) => {
+    // Allow clicks on input elements and dropdowns to work normally
+    const target = e.target as HTMLElement;
+    const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+    const isInteractive = target.closest('[role="listbox"]') || target.closest('[role="combobox"]');
+
+    if (!isInput && !isInteractive) {
+      e.preventDefault();
+    }
+  }, []);
+
   return (
     <div
       ref={toolbarRef}
@@ -545,6 +559,7 @@ export function Toolbar({
       role="toolbar"
       aria-label="Formatting toolbar"
       data-testid="toolbar"
+      onMouseDown={handleToolbarMouseDown}
     >
       {/* Undo/Redo/Print Group */}
       <ToolbarGroup label="History">
@@ -739,6 +754,7 @@ export function Toolbar({
               disabled={disabled}
               showIndentButtons={true}
               compact
+              hasIndent={(currentFormatting.indentLeft ?? 0) > 0}
             />
           )}
           {showLineSpacingPicker && (

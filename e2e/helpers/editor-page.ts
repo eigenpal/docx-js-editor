@@ -549,8 +549,12 @@ export class EditorPage {
     // Click on font picker trigger (uses Radix Select with aria-label)
     const fontPicker = this.toolbar.locator('[aria-label="Select font family"]');
     await fontPicker.click();
-    // Wait for dropdown to open and select the font by its text
-    await this.page.locator(`[role="option"]:has-text("${fontFamily}")`).click();
+    // Wait for dropdown to open
+    await this.page.waitForSelector('[role="listbox"]', { state: 'visible', timeout: 5000 });
+    // Select the font by exact name match
+    await this.page.getByRole('option', { name: fontFamily, exact: true }).click();
+    // Wait for dropdown to close
+    await this.page.waitForSelector('[role="listbox"]', { state: 'hidden', timeout: 5000 });
     // Refocus editor after selecting from dropdown
     await this.focus();
   }
@@ -617,6 +621,8 @@ export class EditorPage {
         await hexInput.press('Enter');
       }
     }
+    // Refocus editor after selecting from dropdown
+    await this.focus();
   }
 
   /**
@@ -650,6 +656,8 @@ export class EditorPage {
         await fallbackButton.click();
       }
     }
+    // Refocus editor after selecting from dropdown
+    await this.focus();
   }
 
   // ============================================================================
