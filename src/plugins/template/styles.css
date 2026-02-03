@@ -1,0 +1,338 @@
+/**
+ * Template Plugin Styles
+ *
+ * CSS styles for template element highlighting and scope visualization.
+ * These styles are automatically injected when the plugin is loaded.
+ */
+
+/* ============================================================
+   Template Element Base Styles
+   ============================================================ */
+
+.docx-template-element {
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+.docx-template-element:hover {
+  filter: brightness(0.95);
+}
+
+/* ============================================================
+   Element Type Styles
+   ============================================================ */
+
+/* Variables (yellow) */
+.docx-template-variable {
+  background-color: rgba(255, 215, 0, 0.25);
+  color: #856404;
+}
+
+/* Loops (blue) */
+.docx-template-loop {
+  background-color: rgba(74, 144, 217, 0.25);
+  color: #004085;
+  font-weight: 500;
+}
+
+/* Conditionals (green) */
+.docx-template-conditional {
+  background-color: rgba(40, 167, 69, 0.25);
+  color: #155724;
+  font-weight: 500;
+}
+
+/* Inverted conditionals (purple) */
+.docx-template-inverted {
+  background-color: rgba(159, 122, 234, 0.25);
+  color: #6f42c1;
+  font-weight: 500;
+}
+
+/* Raw HTML (red-ish) */
+.docx-template-raw {
+  background-color: rgba(255, 107, 107, 0.25);
+  color: #721c24;
+  font-style: italic;
+}
+
+/* Invalid tags (red) */
+.docx-template-invalid {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: #721c24;
+  text-decoration: wavy underline red;
+}
+
+/* ============================================================
+   Interactive States
+   ============================================================ */
+
+/* Hovered state */
+.docx-template-hovered {
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+}
+
+/* Selected state */
+.docx-template-selected {
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.8);
+}
+
+/* ============================================================
+   Scope Markers
+   ============================================================ */
+
+.docx-template-scope-marker {
+  user-select: none;
+  pointer-events: none;
+  display: inline-block;
+  width: 4px;
+  height: 1em;
+  opacity: 0.3;
+  margin: 0 2px;
+  vertical-align: middle;
+}
+
+.docx-template-scope-loop {
+  background-color: #4a90d9;
+}
+
+.docx-template-scope-conditional {
+  background-color: #28a745;
+}
+
+.docx-template-scope-inverted {
+  background-color: #9f7aea;
+}
+
+/* ============================================================
+   Annotation Panel Styles
+   ============================================================ */
+
+.template-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f8f9fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.template-panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.template-panel-empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.template-panel-empty-text {
+  font-size: 14px;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.template-panel-empty-hint {
+  font-size: 12px;
+  color: #868e96;
+}
+
+.template-panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e9ecef;
+  background: white;
+}
+
+.template-panel-title {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.template-panel-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.template-panel-stats .stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-variables {
+  color: #856404;
+}
+
+.stat-loops {
+  color: #004085;
+}
+
+.stat-conditions {
+  color: #155724;
+}
+
+.stat-errors {
+  color: #dc3545;
+}
+
+.template-panel-errors {
+  padding: 8px 16px;
+  background: rgba(220, 53, 69, 0.1);
+  border-bottom: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.template-panel-errors-header {
+  font-size: 12px;
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.template-panel-annotations {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+.template-panel-schema {
+  border-top: 1px solid #e9ecef;
+  background: white;
+}
+
+.template-panel-schema-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #495057;
+  background: #f1f3f4;
+}
+
+.template-panel-copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 14px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.template-panel-copy-btn:hover {
+  opacity: 1;
+}
+
+.template-panel-schema-code {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 11px;
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  overflow-x: auto;
+  background: #fff;
+  color: #24292e;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* ============================================================
+   Annotation Card Styles
+   ============================================================ */
+
+.template-annotation-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-left: 3px solid var(--accent-color, #6c757d);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+  font-size: 12px;
+}
+
+.template-annotation-card:hover,
+.template-annotation-card.hovered {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent-color, #6c757d);
+}
+
+.template-annotation-card.selected {
+  box-shadow: 0 0 0 2px var(--accent-color, #6c757d);
+}
+
+.template-annotation-card.error {
+  border-left-color: #dc3545;
+  background: #fff5f5;
+}
+
+.template-annotation-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.template-annotation-icon {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.template-annotation-label {
+  color: #495057;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.template-annotation-label strong {
+  color: #212529;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.template-annotation-body {
+  padding-left: 20px;
+}
+
+.template-annotation-description {
+  color: #6c757d;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.template-annotation-path {
+  color: #868e96;
+  font-size: 10px;
+}
+
+.template-annotation-path code {
+  background: #f1f3f4;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  font-size: 10px;
+}
+
+.template-annotation-error {
+  color: #dc3545;
+  font-size: 11px;
+  margin-top: 4px;
+  padding: 4px 6px;
+  background: rgba(220, 53, 69, 0.1);
+  border-radius: 3px;
+}

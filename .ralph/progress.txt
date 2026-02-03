@@ -360,3 +360,75 @@
 [2026-02-02 14:31] NOTES: Documenting ProseMirror integration and feature support
 [2026-02-02 14:31] STATUS: done
 [2026-02-02 14:31] NOTES: Updated CLAUDE.md with ProseMirror architecture section
+
+[2026-02-02 15:00] === DOCXTEMPLATER PLUGIN IMPLEMENTATION ===
+[2026-02-02 15:00] TASK: Phase 1.1 - Create EditorPlugin interface
+[2026-02-02 15:00] STATUS: starting
+[2026-02-02 15:00] NOTES: Creating generic plugin interface at src/plugin-api/types.ts
+[2026-02-02 15:02] STATUS: done
+[2026-02-02 15:02] NOTES: Created src/plugin-api/types.ts with EditorPlugin, PluginPanelProps, PanelConfig interfaces
+
+[2026-02-02 15:02] TASK: Phase 1.2 - Create PluginHost component
+[2026-02-02 15:02] STATUS: starting
+[2026-02-02 15:04] STATUS: done
+[2026-02-02 15:04] NOTES: Created src/plugin-api/PluginHost.tsx with:
+  - Plugin state management
+  - Panel rendering (left, right, bottom positions)
+  - CSS injection for plugin styles
+  - Collapsible panels with toggle
+  - scrollToPosition and selectRange callbacks
+
+[2026-02-02 15:04] TASK: Phase 1.3 - Update ProseMirrorEditor for external plugins
+[2026-02-02 15:04] STATUS: starting
+[2026-02-02 15:05] STATUS: done
+[2026-02-02 15:05] NOTES: Added externalPlugins and onEditorViewReady props to ProseMirrorEditor
+
+[2026-02-02 15:05] TASK: Phase 2.1 - Create template plugin types
+[2026-02-02 15:05] STATUS: starting
+[2026-02-02 15:06] STATUS: done
+[2026-02-02 15:06] NOTES: Created src/plugins/template/types.ts with TemplateElement, TemplateScope, TemplateSchema, etc.
+
+[2026-02-02 15:06] TASK: Phase 2.2 - Create template parser
+[2026-02-02 15:06] STATUS: starting
+[2026-02-02 15:07] STATUS: done
+[2026-02-02 15:07] NOTES: Created src/plugins/template/parser.ts - parses {variable}, {#loop}, {/loop}, {^inverted} syntax
+
+[2026-02-02 15:07] TASK: Phase 2.3 - Create scope tracker
+[2026-02-02 15:07] STATUS: starting
+[2026-02-02 15:08] STATUS: done
+[2026-02-02 15:08] NOTES: Created src/plugins/template/scope-tracker.ts - matches opening/closing tags, builds hierarchy
+
+[2026-02-02 15:08] TASK: Phase 2.4 - Create validator
+[2026-02-02 15:08] STATUS: starting
+[2026-02-02 15:09] STATUS: done
+[2026-02-02 15:09] NOTES: Created src/plugins/template/validator.ts - validates elements and scopes, finds errors
+
+[2026-02-02 15:09] TASK: Phase 2.5 - Create schema inferrer
+[2026-02-02 15:09] STATUS: starting
+[2026-02-02 15:10] STATUS: done
+[2026-02-02 15:10] NOTES: Created src/plugins/template/schema-inferrer.ts - infers TypeScript data structure
+
+[2026-02-02 15:10] TASK: Phase 2.6 - Create decorations
+[2026-02-02 15:10] STATUS: starting
+[2026-02-02 15:11] STATUS: done
+[2026-02-02 15:11] NOTES: Created src/plugins/template/decorations.ts - ProseMirror decorations with highlighting
+
+[2026-02-02 15:11] TASK: Phase 2.7 - Create ProseMirror plugin
+[2026-02-02 15:11] STATUS: starting
+[2026-02-02 15:12] STATUS: done
+[2026-02-02 15:12] NOTES: Created src/plugins/template/prosemirror-plugin.ts - integrates parser, decorations, state
+
+[2026-02-02 15:12] TASK: Phase 2.8 - Create annotation components
+[2026-02-02 15:12] STATUS: starting
+[2026-02-02 15:13] STATUS: done
+[2026-02-02 15:13] NOTES: Created AnnotationCard.tsx and AnnotationPanel.tsx components
+
+[2026-02-02 15:13] TASK: Phase 2.9 - Create plugin entry point
+[2026-02-02 15:13] STATUS: starting
+[2026-02-02 15:14] STATUS: done
+[2026-02-02 15:14] NOTES: Created src/plugins/template/index.ts - exports templatePlugin and createPlugin
+
+[2026-02-02 15:14] TASK: Phase 3 - Export from main index.ts
+[2026-02-02 15:14] STATUS: starting
+[2026-02-02 15:15] STATUS: done
+[2026-02-02 15:15] NOTES: Added plugin-api and template plugin exports to src/index.ts. Typecheck passes.

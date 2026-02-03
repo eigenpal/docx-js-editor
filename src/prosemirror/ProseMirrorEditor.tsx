@@ -83,6 +83,10 @@ export interface ProseMirrorEditorProps {
   className?: string;
   /** Whether to auto-focus on mount */
   autoFocus?: boolean;
+  /** External ProseMirror plugins to add (from PluginHost or other sources) */
+  externalPlugins?: import('prosemirror-state').Plugin[];
+  /** Callback when the EditorView is ready */
+  onEditorViewReady?: (view: EditorView) => void;
 }
 
 /**
@@ -126,7 +130,11 @@ export interface ProseMirrorEditorRef {
 /**
  * Create initial editor state from document
  */
-function createEditorState(document: Document | null, _readOnly: boolean): EditorState {
+function createEditorState(
+  document: Document | null,
+  _readOnly: boolean,
+  externalPlugins: import('prosemirror-state').Plugin[] = []
+): EditorState {
   // Pass styles to toProseDoc for style resolution
   const doc = document
     ? toProseDoc(document, { styles: document.package.styles })
@@ -151,6 +159,8 @@ function createEditorState(document: Document | null, _readOnly: boolean): Edito
       'Mod-u': toggleMark(schema.marks.underline),
     }),
     keymap(baseKeymap),
+    // Add external plugins (from PluginHost or other sources)
+    ...externalPlugins,
   ];
 
   return EditorState.create({
@@ -311,6 +321,8 @@ export const ProseMirrorEditor = memo(
       placeholder,
       className = '',
       autoFocus = false,
+      externalPlugins = [],
+      onEditorViewReady,
     },
     ref
   ) {
@@ -465,8 +477,8 @@ export const ProseMirrorEditor = memo(
       const container = containerRef.current;
       if (!container) return;
 
-      // Create initial state
-      const state = createEditorState(document, readOnly);
+      // Create initial state with external plugins
+      const state = createEditorState(document, readOnly, externalPlugins);
 
       // Create view
       const view = new EditorView(container, {
@@ -480,6 +492,9 @@ export const ProseMirrorEditor = memo(
 
       viewRef.current = view;
       documentRef.current = document;
+
+      // Notify that editor view is ready (for plugin system)
+      onEditorViewReady?.(view);
 
       // Initial selection state
       const selectionState = extractSelectionState(state);
