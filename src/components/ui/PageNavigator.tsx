@@ -164,7 +164,7 @@ const FLOATING_STYLE: CSSProperties = {
 const VARIANT_STYLES: Record<PageNavigatorVariant, CSSProperties> = {
   default: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    color: '#333',
+    color: 'var(--doc-text)',
     padding: '4px 8px',
     borderRadius: '6px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
@@ -172,7 +172,7 @@ const VARIANT_STYLES: Record<PageNavigatorVariant, CSSProperties> = {
   },
   compact: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    color: '#333',
+    color: 'var(--doc-text)',
     padding: '2px 4px',
     borderRadius: '4px',
     boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
@@ -181,7 +181,7 @@ const VARIANT_STYLES: Record<PageNavigatorVariant, CSSProperties> = {
   },
   minimal: {
     backgroundColor: 'transparent',
-    color: '#666',
+    color: 'var(--doc-text-muted)',
     padding: '4px',
   },
 };
@@ -225,14 +225,14 @@ const BUTTON_STYLE: CSSProperties = {
   border: 'none',
   borderRadius: '4px',
   backgroundColor: 'transparent',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   cursor: 'pointer',
   transition: 'background-color 0.15s, color 0.15s',
 };
 
 const BUTTON_HOVER_STYLE: CSSProperties = {
-  backgroundColor: 'rgba(0, 0, 0, 0.06)',
-  color: '#333',
+  backgroundColor: 'var(--doc-bg-hover)',
+  color: 'var(--doc-text)',
 };
 
 const BUTTON_DISABLED_STYLE: CSSProperties = {
@@ -369,7 +369,7 @@ function PageInputPopover({
     bottom: 'calc(100% + 8px)',
     left: '50%',
     transform: 'translateX(-50%)',
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
     borderRadius: '8px',
     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
     border: '1px solid rgba(0, 0, 0, 0.1)',
@@ -389,7 +389,7 @@ function PageInputPopover({
     flex: 1,
     padding: '8px 12px',
     fontSize: '14px',
-    border: error ? '1px solid #c5221f' : '1px solid #ccc',
+    border: error ? '1px solid var(--doc-error)' : '1px solid var(--doc-border)',
     borderRadius: '4px',
     outline: 'none',
     textAlign: 'center',
@@ -400,15 +400,15 @@ function PageInputPopover({
     padding: '8px 16px',
     fontSize: '14px',
     fontWeight: 500,
-    backgroundColor: '#1a73e8',
-    color: '#fff',
+    backgroundColor: 'var(--doc-primary)',
+    color: 'white',
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
   };
 
   const errorStyle: CSSProperties = {
-    color: '#c5221f',
+    color: 'var(--doc-error)',
     fontSize: '12px',
     marginBottom: '8px',
   };
@@ -423,16 +423,23 @@ function PageInputPopover({
     flex: 1,
     padding: '6px 12px',
     fontSize: '12px',
-    backgroundColor: '#f5f5f5',
-    color: '#333',
-    border: '1px solid #ddd',
+    backgroundColor: 'var(--doc-bg-muted)',
+    color: 'var(--doc-text)',
+    border: '1px solid var(--doc-border-light)',
     borderRadius: '4px',
     cursor: 'pointer',
   };
 
   return (
     <div ref={popoverRef} style={popoverStyle} role="dialog" aria-label="Go to page">
-      <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px', textAlign: 'center' }}>
+      <div
+        style={{
+          fontSize: '12px',
+          color: 'var(--doc-text-muted)',
+          marginBottom: '8px',
+          textAlign: 'center',
+        }}
+      >
         Go to page (1-{totalPages})
       </div>
 

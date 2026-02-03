@@ -113,7 +113,7 @@ const DIALOG_OVERLAY_STYLE: CSSProperties = {
 };
 
 const DIALOG_CONTENT_STYLE: CSSProperties = {
-  backgroundColor: '#ffffff',
+  backgroundColor: 'white',
   borderRadius: '4px',
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
   minWidth: '360px',
@@ -128,8 +128,8 @@ const DIALOG_HEADER_STYLE: CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '12px 16px',
-  borderBottom: '1px solid #e0e0e0',
-  backgroundColor: '#f5f5f5',
+  borderBottom: '1px solid var(--doc-border)',
+  backgroundColor: 'var(--doc-bg-subtle)',
   borderTopLeftRadius: '4px',
   borderTopRightRadius: '4px',
 };
@@ -138,7 +138,7 @@ const DIALOG_TITLE_STYLE: CSSProperties = {
   margin: 0,
   fontSize: '14px',
   fontWeight: 600,
-  color: '#333',
+  color: 'var(--doc-text)',
 };
 
 const CLOSE_BUTTON_STYLE: CSSProperties = {
@@ -146,7 +146,7 @@ const CLOSE_BUTTON_STYLE: CSSProperties = {
   border: 'none',
   fontSize: '18px',
   cursor: 'pointer',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   padding: '2px 6px',
   lineHeight: 1,
 };
@@ -165,14 +165,14 @@ const ROW_STYLE: CSSProperties = {
 const LABEL_STYLE: CSSProperties = {
   width: '60px',
   fontSize: '13px',
-  color: '#333',
+  color: 'var(--doc-text)',
   flexShrink: 0,
 };
 
 const INPUT_STYLE: CSSProperties = {
   flex: 1,
   padding: '8px 10px',
-  border: '1px solid #ccc',
+  border: '1px solid var(--doc-border-input)',
   borderRadius: '3px',
   fontSize: '13px',
   boxSizing: 'border-box',
@@ -181,7 +181,7 @@ const INPUT_STYLE: CSSProperties = {
 
 const INPUT_FOCUS_STYLE: CSSProperties = {
   ...INPUT_STYLE,
-  borderColor: '#0563C1',
+  borderColor: 'var(--doc-link)',
   boxShadow: '0 0 0 2px rgba(5, 99, 193, 0.1)',
 };
 
@@ -198,17 +198,17 @@ const BUTTON_BASE_STYLE: CSSProperties = {
   fontSize: '12px',
   fontWeight: 500,
   cursor: 'pointer',
-  border: '1px solid #ccc',
-  backgroundColor: '#f8f8f8',
-  color: '#333',
+  border: '1px solid var(--doc-border-input)',
+  backgroundColor: 'var(--doc-bg-input)',
+  color: 'var(--doc-text)',
   minWidth: '80px',
   textAlign: 'center',
 };
 
 const BUTTON_DISABLED_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#f0f0f0',
-  color: '#999',
+  backgroundColor: 'var(--doc-bg-hover)',
+  color: 'var(--doc-text-placeholder)',
   cursor: 'not-allowed',
 };
 
@@ -217,14 +217,14 @@ const NAV_BUTTON_STYLE: CSSProperties = {
   borderRadius: '3px',
   fontSize: '14px',
   cursor: 'pointer',
-  border: '1px solid #ccc',
-  backgroundColor: '#f8f8f8',
-  color: '#333',
+  border: '1px solid var(--doc-border-input)',
+  backgroundColor: 'var(--doc-bg-input)',
+  color: 'var(--doc-text)',
 };
 
 const NAV_BUTTON_DISABLED_STYLE: CSSProperties = {
   ...NAV_BUTTON_STYLE,
-  color: '#ccc',
+  color: 'var(--doc-border-input)',
   cursor: 'not-allowed',
 };
 
@@ -240,7 +240,7 @@ const CHECKBOX_LABEL_STYLE: CSSProperties = {
   alignItems: 'center',
   gap: '6px',
   fontSize: '12px',
-  color: '#555',
+  color: 'var(--doc-text-muted)',
   cursor: 'pointer',
 };
 
@@ -253,13 +253,13 @@ const CHECKBOX_STYLE: CSSProperties = {
 const STATUS_STYLE: CSSProperties = {
   marginLeft: '68px',
   fontSize: '12px',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   marginBottom: '8px',
 };
 
 const NO_RESULTS_STYLE: CSSProperties = {
   ...STATUS_STYLE,
-  color: '#c00',
+  color: 'var(--doc-error)',
 };
 
 // ============================================================================
@@ -753,7 +753,7 @@ export function FindReplaceDialog({
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#0563C1',
+                  color: 'var(--doc-link)',
                   padding: 0,
                 }}
                 onClick={toggleReplaceMode}
@@ -957,8 +957,8 @@ export interface HighlightOptions {
  */
 export function getDefaultHighlightOptions(): HighlightOptions {
   return {
-    currentMatchColor: '#FFFF00', // Bright yellow for current
-    otherMatchColor: '#FFFFAA', // Light yellow for others
+    currentMatchColor: '#FFFF00', // Bright yellow for current (hardcoded for visibility)
+    otherMatchColor: '#FFFFAA', // Light yellow for others (hardcoded for visibility)
   };
 }
 

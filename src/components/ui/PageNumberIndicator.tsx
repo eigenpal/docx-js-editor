@@ -81,7 +81,7 @@ const FLOATING_STYLE: CSSProperties = {
 const VARIANT_STYLES: Record<PageIndicatorVariant, CSSProperties> = {
   default: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    color: '#333',
+    color: 'var(--doc-text)',
     padding: '6px 12px',
     borderRadius: '4px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
@@ -89,12 +89,12 @@ const VARIANT_STYLES: Record<PageIndicatorVariant, CSSProperties> = {
   },
   minimal: {
     backgroundColor: 'transparent',
-    color: '#666',
+    color: 'var(--doc-text-muted)',
     padding: '4px 8px',
   },
   badge: {
-    backgroundColor: '#1a73e8',
-    color: '#fff',
+    backgroundColor: 'var(--doc-primary)',
+    color: 'white',
     padding: '4px 10px',
     borderRadius: '4px',
     fontWeight: 500,
@@ -102,7 +102,7 @@ const VARIANT_STYLES: Record<PageIndicatorVariant, CSSProperties> = {
   },
   pill: {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    color: '#fff',
+    color: 'white',
     padding: '6px 14px',
     borderRadius: '16px',
     fontSize: '12px',

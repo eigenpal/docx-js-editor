@@ -11,6 +11,7 @@
 import React, { useState, useCallback } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { BorderSpec } from '../../types/document';
+import { MaterialSymbol } from './MaterialSymbol';
 
 // ============================================================================
 // TYPES
@@ -172,72 +173,25 @@ const STYLES: Record<string, CSSProperties> = {
 };
 
 // ============================================================================
-// ICONS
+// ICONS (using Material Symbols)
 // ============================================================================
 
-/**
- * Border All Icon
- */
+const ICON_SIZE = 16;
+
 function BorderAllIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="1"
-        y="1"
-        width="14"
-        height="14"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
-      <line x1="8" y1="1" x2="8" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="1" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1" />
-    </svg>
-  );
+  return <MaterialSymbol name="border_all" size={ICON_SIZE} />;
 }
 
-/**
- * Border Outside Icon
- */
 function BorderOutsideIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" />
-    </svg>
-  );
+  return <MaterialSymbol name="border_outer" size={ICON_SIZE} />;
 }
 
-/**
- * Border Inside Icon
- */
 function BorderInsideIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="14" height="14" stroke="#ccc" strokeWidth="1" fill="none" />
-      <line x1="8" y1="1" x2="8" y2="15" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="1" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
+  return <MaterialSymbol name="border_inner" size={ICON_SIZE} />;
 }
 
-/**
- * Border None Icon
- */
 function BorderNoneIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="1"
-        y="1"
-        width="14"
-        height="14"
-        stroke="#ccc"
-        strokeWidth="1"
-        strokeDasharray="2 2"
-        fill="none"
-      />
-    </svg>
-  );
+  return <MaterialSymbol name="border_clear" size={ICON_SIZE} />;
 }
 
 // ============================================================================

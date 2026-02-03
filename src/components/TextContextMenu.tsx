@@ -220,7 +220,7 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({
         className="docx-text-context-menu-separator"
         style={{
           height: '1px',
-          backgroundColor: '#e0e0e0',
+          backgroundColor: 'var(--doc-border)',
           margin: '4px 12px',
         }}
       />
@@ -244,15 +244,20 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({
           width: '100%',
           padding: '8px 12px',
           border: 'none',
-          background: isHighlighted && !item.disabled ? '#e8f0fe' : 'transparent',
+          background: isHighlighted && !item.disabled ? 'var(--doc-primary-light)' : 'transparent',
           cursor: item.disabled ? 'not-allowed' : 'pointer',
           fontSize: '13px',
-          color: item.disabled ? '#9e9e9e' : '#202124',
+          color: item.disabled ? 'var(--doc-text-subtle)' : 'var(--doc-text)',
           textAlign: 'left',
           opacity: item.disabled ? 0.6 : 1,
         }}
       >
-        <span style={{ display: 'flex', color: item.disabled ? '#bdbdbd' : '#5f6368' }}>
+        <span
+          style={{
+            display: 'flex',
+            color: item.disabled ? 'var(--doc-border)' : 'var(--doc-text-muted)',
+          }}
+        >
           {getActionIcon(item.action)}
         </span>
         <span style={{ flex: 1 }}>{item.label}</span>
@@ -260,7 +265,7 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({
           <span
             style={{
               fontSize: '11px',
-              color: '#9aa0a6',
+              color: 'var(--doc-text-subtle)',
               fontFamily: 'monospace',
             }}
           >
@@ -273,7 +278,7 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({
           className="docx-text-context-menu-separator"
           style={{
             height: '1px',
-            backgroundColor: '#e0e0e0',
+            backgroundColor: 'var(--doc-border)',
             margin: '4px 12px',
           }}
         />
@@ -422,8 +427,8 @@ export const TextContextMenu: React.FC<TextContextMenuProps> = ({
       top: y,
       left: x,
       minWidth: menuWidth,
-      background: '#fff',
-      border: '1px solid #dadce0',
+      background: 'white',
+      border: '1px solid var(--doc-border-light)',
       borderRadius: '8px',
       boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
       zIndex: 10000,

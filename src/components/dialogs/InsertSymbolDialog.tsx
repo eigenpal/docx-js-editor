@@ -66,7 +66,7 @@ const DIALOG_OVERLAY_STYLE: CSSProperties = {
 };
 
 const DIALOG_CONTENT_STYLE: CSSProperties = {
-  backgroundColor: '#ffffff',
+  backgroundColor: 'white',
   borderRadius: '8px',
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
   minWidth: '450px',
@@ -83,14 +83,14 @@ const DIALOG_HEADER_STYLE: CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '16px 20px',
-  borderBottom: '1px solid #e0e0e0',
+  borderBottom: '1px solid var(--doc-border)',
 };
 
 const DIALOG_TITLE_STYLE: CSSProperties = {
   margin: 0,
   fontSize: '18px',
   fontWeight: 600,
-  color: '#333',
+  color: 'var(--doc-text)',
 };
 
 const CLOSE_BUTTON_STYLE: CSSProperties = {
@@ -98,7 +98,7 @@ const CLOSE_BUTTON_STYLE: CSSProperties = {
   border: 'none',
   fontSize: '20px',
   cursor: 'pointer',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   padding: '4px 8px',
   lineHeight: 1,
 };
@@ -112,7 +112,7 @@ const DIALOG_BODY_STYLE: CSSProperties = {
 const SEARCH_INPUT_STYLE: CSSProperties = {
   width: '100%',
   padding: '10px 12px',
-  border: '1px solid #ccc',
+  border: '1px solid var(--doc-border-input)',
   borderRadius: '4px',
   fontSize: '14px',
   marginBottom: '16px',
@@ -128,9 +128,9 @@ const CATEGORY_TABS_STYLE: CSSProperties = {
 
 const CATEGORY_TAB_STYLE: CSSProperties = {
   padding: '6px 12px',
-  border: '1px solid #ccc',
+  border: '1px solid var(--doc-border-input)',
   borderRadius: '4px',
-  backgroundColor: '#fff',
+  backgroundColor: 'white',
   cursor: 'pointer',
   fontSize: '12px',
   transition: 'all 0.15s',
@@ -138,9 +138,9 @@ const CATEGORY_TAB_STYLE: CSSProperties = {
 
 const CATEGORY_TAB_ACTIVE_STYLE: CSSProperties = {
   ...CATEGORY_TAB_STYLE,
-  backgroundColor: '#1a73e8',
-  borderColor: '#1a73e8',
-  color: '#fff',
+  backgroundColor: 'var(--doc-primary)',
+  borderColor: 'var(--doc-primary)',
+  color: 'white',
 };
 
 const SYMBOLS_GRID_STYLE: CSSProperties = {
@@ -157,9 +157,9 @@ const SYMBOL_BUTTON_STYLE: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--doc-border)',
   borderRadius: '4px',
-  backgroundColor: '#fff',
+  backgroundColor: 'white',
   cursor: 'pointer',
   fontSize: '18px',
   transition: 'all 0.15s',
@@ -168,7 +168,7 @@ const SYMBOL_BUTTON_STYLE: CSSProperties = {
 const PREVIEW_SECTION_STYLE: CSSProperties = {
   marginTop: '16px',
   padding: '12px',
-  backgroundColor: '#f5f5f5',
+  backgroundColor: 'var(--doc-bg-subtle)',
   borderRadius: '4px',
   display: 'flex',
   alignItems: 'center',
@@ -182,9 +182,9 @@ const PREVIEW_SYMBOL_STYLE: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  backgroundColor: '#fff',
+  backgroundColor: 'white',
   borderRadius: '4px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--doc-border)',
 };
 
 const PREVIEW_INFO_STYLE: CSSProperties = {
@@ -196,7 +196,7 @@ const DIALOG_FOOTER_STYLE: CSSProperties = {
   justifyContent: 'flex-end',
   gap: '12px',
   padding: '16px 20px',
-  borderTop: '1px solid #e0e0e0',
+  borderTop: '1px solid var(--doc-border)',
 };
 
 const BUTTON_BASE_STYLE: CSSProperties = {
@@ -210,21 +210,21 @@ const BUTTON_BASE_STYLE: CSSProperties = {
 
 const PRIMARY_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#1a73e8',
-  color: '#ffffff',
+  backgroundColor: 'var(--doc-primary)',
+  color: 'white',
 };
 
 const SECONDARY_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#f0f0f0',
-  color: '#333',
-  border: '1px solid #ccc',
+  backgroundColor: 'var(--doc-bg-subtle)',
+  color: 'var(--doc-text)',
+  border: '1px solid var(--doc-border-input)',
 };
 
 const DISABLED_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#ccc',
-  color: '#666',
+  backgroundColor: 'var(--doc-border-input)',
+  color: 'var(--doc-text-muted)',
   cursor: 'not-allowed',
 };
 
@@ -808,7 +808,10 @@ export function InsertSymbolDialog({
                 style={{
                   ...SYMBOL_BUTTON_STYLE,
                   ...(selectedSymbol === symbol
-                    ? { backgroundColor: '#e3f2fd', borderColor: '#1a73e8' }
+                    ? {
+                        backgroundColor: 'var(--doc-primary-light)',
+                        borderColor: 'var(--doc-primary)',
+                      }
                     : {}),
                 }}
                 title={`${symbol} - U+${symbol.codePointAt(0)?.toString(16).toUpperCase()}`}
@@ -820,7 +823,7 @@ export function InsertSymbolDialog({
 
           {/* No results */}
           {filteredSymbols.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--doc-text-muted)' }}>
               No symbols found for "{searchQuery}"
             </div>
           )}
@@ -833,7 +836,9 @@ export function InsertSymbolDialog({
                 <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
                   {symbolInfo.codePoint}
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>Decimal: {symbolInfo.decimal}</div>
+                <div style={{ fontSize: '12px', color: 'var(--doc-text-muted)' }}>
+                  Decimal: {symbolInfo.decimal}
+                </div>
               </div>
             </div>
           )}

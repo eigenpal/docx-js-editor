@@ -222,14 +222,14 @@ const MenuItem: React.FC<MenuItemProps> = ({ action, onClick, isHighlighted, onM
         width: '100%',
         padding: '8px 12px',
         border: 'none',
-        background: isHighlighted ? '#e8f0fe' : 'transparent',
+        background: isHighlighted ? 'var(--doc-primary-light)' : 'transparent',
         cursor: 'pointer',
         fontSize: '13px',
-        color: '#202124',
+        color: 'var(--doc-text)',
         textAlign: 'left',
       }}
     >
-      <span style={{ display: 'flex', color: '#5f6368' }}>{icon}</span>
+      <span style={{ display: 'flex', color: 'var(--doc-text-muted)' }}>{icon}</span>
       <span>{label}</span>
     </button>
   );
@@ -279,12 +279,12 @@ const CustomPromptDialog: React.FC<CustomPromptDialogProps> = ({
         left: 0,
         right: 0,
         padding: '8px',
-        background: '#fff',
-        borderTop: '1px solid #e0e0e0',
+        background: 'white',
+        borderTop: '1px solid var(--doc-border)',
       }}
     >
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>
+        <div style={{ marginBottom: '8px', fontSize: '12px', color: 'var(--doc-text-muted)' }}>
           Selected: "{selectedText.slice(0, 50)}
           {selectedText.length > 50 ? '...' : ''}"
         </div>
@@ -298,7 +298,7 @@ const CustomPromptDialog: React.FC<CustomPromptDialogProps> = ({
           style={{
             width: '100%',
             padding: '8px',
-            border: '1px solid #dadce0',
+            border: '1px solid var(--doc-border-light)',
             borderRadius: '4px',
             fontSize: '13px',
           }}
@@ -309,9 +309,9 @@ const CustomPromptDialog: React.FC<CustomPromptDialogProps> = ({
             onClick={onClose}
             style={{
               padding: '6px 12px',
-              border: '1px solid #dadce0',
+              border: '1px solid var(--doc-border-light)',
               borderRadius: '4px',
-              background: '#fff',
+              background: 'white',
               cursor: 'pointer',
               fontSize: '12px',
             }}
@@ -325,8 +325,8 @@ const CustomPromptDialog: React.FC<CustomPromptDialogProps> = ({
               padding: '6px 12px',
               border: 'none',
               borderRadius: '4px',
-              background: prompt.trim() ? '#1a73e8' : '#e0e0e0',
-              color: prompt.trim() ? '#fff' : '#9e9e9e',
+              background: prompt.trim() ? 'var(--doc-primary)' : 'var(--doc-border)',
+              color: prompt.trim() ? 'white' : 'var(--doc-text-placeholder)',
               cursor: prompt.trim() ? 'pointer' : 'not-allowed',
               fontSize: '12px',
             }}
@@ -446,8 +446,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       top: y,
       left: x,
       minWidth: menuWidth,
-      background: '#fff',
-      border: '1px solid #dadce0',
+      background: 'white',
+      border: '1px solid var(--doc-border-light)',
       borderRadius: '8px',
       boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
       zIndex: 10000,
@@ -484,9 +484,9 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       <div
         style={{
           padding: '8px 12px',
-          borderBottom: '1px solid #e0e0e0',
+          borderBottom: '1px solid var(--doc-border)',
           fontSize: '11px',
-          color: '#5f6368',
+          color: 'var(--doc-text-muted)',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',

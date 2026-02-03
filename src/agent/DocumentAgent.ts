@@ -35,7 +35,7 @@ import type {
 
 import { executeCommand, executeCommands } from './executor';
 import type { AgentCommand } from '../types/agentApi';
-import { repackDocx } from '../docx/rezip';
+import { repackDocx, createDocx } from '../docx/rezip';
 import { detectVariables } from '../utils/variableDetector';
 import { processTemplate } from '../utils/processTemplate';
 import { parseDocx } from '../docx/parser';
@@ -671,7 +671,12 @@ export class DocumentAgent {
    * @returns Promise resolving to DOCX file as ArrayBuffer
    */
   async toBuffer(): Promise<ArrayBuffer> {
-    return repackDocx(this._document);
+    // If we have an original buffer, use repack (preserves styles, themes, etc.)
+    // Otherwise, create a new DOCX from scratch
+    if (this._document.originalBuffer) {
+      return repackDocx(this._document);
+    }
+    return createDocx(this._document);
   }
 
   /**

@@ -33,6 +33,46 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
   --radius: 0.5rem;
+
+  /* ========================================
+   * Document Editor Color System
+   * ======================================== */
+
+  /* Document background - area behind the page */
+  --doc-bg: #f8f9fa;
+
+  /* Primary action color (Google blue) */
+  --doc-primary: #1a73e8;
+  --doc-primary-hover: #1557b0;
+  --doc-primary-light: #e8f0fe; /* selected/active backgrounds */
+
+  /* Text colors */
+  --doc-text: #202124; /* primary text */
+  --doc-text-muted: #5f6368; /* secondary text */
+  --doc-text-subtle: #9aa0a6; /* tertiary/disabled text */
+  --doc-text-placeholder: #999; /* placeholder text */
+
+  /* Border colors */
+  --doc-border: #e0e0e0; /* standard borders */
+  --doc-border-light: #dadce0; /* lighter borders */
+  --doc-border-dark: #d0d0d0; /* darker borders (tables) */
+  --doc-border-input: #ccc; /* input borders */
+
+  /* Background colors */
+  --doc-bg-subtle: #f5f5f5; /* subtle backgrounds */
+  --doc-bg-hover: #f1f3f4; /* hover states */
+  --doc-bg-input: #f8f9fa; /* input backgrounds */
+
+  /* Status colors */
+  --doc-error: #c5221f; /* error states */
+  --doc-error-bg: #fce8e6; /* error backgrounds */
+  --doc-success: #34a853; /* success states */
+  --doc-success-bg: #e8f5e9; /* success backgrounds */
+  --doc-warning: #f9a825; /* warning states */
+  --doc-warning-bg: #fff8e1; /* warning backgrounds */
+
+  /* Link color */
+  --doc-link: #0563c1; /* hyperlinks */
 }
 
 /* ============================================================================

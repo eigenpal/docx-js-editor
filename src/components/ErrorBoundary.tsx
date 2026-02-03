@@ -229,11 +229,21 @@ function NotificationToast({ notification, onDismiss }: NotificationToastProps) 
   const getColors = (severity: ErrorSeverity) => {
     switch (severity) {
       case 'error':
-        return { bg: '#fce8e6', border: '#f5c6cb', text: '#c5221f', icon: '#c5221f' };
+        return {
+          bg: 'var(--doc-error-bg)',
+          border: '#f5c6cb',
+          text: 'var(--doc-error)',
+          icon: 'var(--doc-error)',
+        };
       case 'warning':
-        return { bg: '#fff8e1', border: '#ffeeba', text: '#856404', icon: '#f9a825' };
+        return {
+          bg: 'var(--doc-warning-bg)',
+          border: '#ffeeba',
+          text: '#856404',
+          icon: 'var(--doc-warning)',
+        };
       case 'info':
-        return { bg: '#e8f4fd', border: '#b8daff', text: '#0c5460', icon: '#1a73e8' };
+        return { bg: '#e8f4fd', border: '#b8daff', text: '#0c5460', icon: 'var(--doc-primary)' };
     }
   };
 
@@ -495,27 +505,27 @@ function DefaultErrorFallback({
     padding: '40px',
     textAlign: 'center',
     minHeight: '200px',
-    background: '#fff',
+    background: 'white',
     borderRadius: '8px',
-    border: '1px solid #e0e0e0',
+    border: '1px solid var(--doc-border)',
     margin: '20px',
   };
 
   const iconStyle: CSSProperties = {
-    color: '#c5221f',
+    color: 'var(--doc-error)',
     marginBottom: '16px',
   };
 
   const titleStyle: CSSProperties = {
     fontSize: '18px',
     fontWeight: 600,
-    color: '#202124',
+    color: 'var(--doc-text)',
     marginBottom: '8px',
   };
 
   const messageStyle: CSSProperties = {
     fontSize: '14px',
-    color: '#5f6368',
+    color: 'var(--doc-text-muted)',
     marginBottom: '16px',
     maxWidth: '400px',
   };
@@ -525,7 +535,7 @@ function DefaultErrorFallback({
     maxWidth: '600px',
     marginBottom: '16px',
     padding: '12px',
-    background: '#fce8e6',
+    background: 'var(--doc-error-bg)',
     borderRadius: '4px',
     fontSize: '12px',
     fontFamily: 'monospace',
@@ -538,8 +548,8 @@ function DefaultErrorFallback({
 
   const buttonStyle: CSSProperties = {
     padding: '10px 20px',
-    background: '#1a73e8',
-    color: '#fff',
+    background: 'var(--doc-primary)',
+    color: 'white',
     border: 'none',
     borderRadius: '4px',
     fontSize: '14px',
@@ -607,26 +617,26 @@ export function ParseErrorDisplay({
     justifyContent: 'center',
     padding: '40px',
     textAlign: 'center',
-    background: '#fff',
+    background: 'white',
     borderRadius: '8px',
-    border: '1px solid #dadce0',
+    border: '1px solid var(--doc-border-light)',
   };
 
   const iconStyle: CSSProperties = {
-    color: '#c5221f',
+    color: 'var(--doc-error)',
     marginBottom: '16px',
   };
 
   const titleStyle: CSSProperties = {
     fontSize: '16px',
     fontWeight: 600,
-    color: '#202124',
+    color: 'var(--doc-text)',
     marginBottom: '8px',
   };
 
   const messageStyle: CSSProperties = {
     fontSize: '14px',
-    color: '#5f6368',
+    color: 'var(--doc-text-muted)',
     marginBottom: '16px',
     maxWidth: '400px',
   };
@@ -634,7 +644,7 @@ export function ParseErrorDisplay({
   const detailsStyle: CSSProperties = {
     marginBottom: '16px',
     padding: '12px',
-    background: '#f8f9fa',
+    background: 'var(--doc-bg)',
     borderRadius: '4px',
     fontSize: '12px',
     fontFamily: 'monospace',
@@ -645,8 +655,8 @@ export function ParseErrorDisplay({
 
   const buttonStyle: CSSProperties = {
     padding: '8px 16px',
-    background: '#1a73e8',
-    color: '#fff',
+    background: 'var(--doc-primary)',
+    color: 'white',
     border: 'none',
     borderRadius: '4px',
     fontSize: '13px',
@@ -703,7 +713,7 @@ export function UnsupportedFeatureWarning({
     alignItems: 'center',
     gap: '8px',
     padding: '8px 12px',
-    background: '#fff8e1',
+    background: 'var(--doc-warning-bg)',
     border: '1px solid #ffeeba',
     borderRadius: '4px',
     fontSize: '12px',
@@ -712,7 +722,7 @@ export function UnsupportedFeatureWarning({
 
   const iconStyle: CSSProperties = {
     flexShrink: 0,
-    color: '#f9a825',
+    color: 'var(--doc-warning)',
   };
 
   return (

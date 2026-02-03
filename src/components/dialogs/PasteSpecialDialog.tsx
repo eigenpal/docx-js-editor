@@ -161,7 +161,7 @@ const PasteOptionButton: React.FC<PasteOptionButtonProps> = ({
         width: '100%',
         padding: '12px 16px',
         border: 'none',
-        background: isSelected ? '#e8f0fe' : 'transparent',
+        background: isSelected ? 'var(--doc-primary-light)' : 'transparent',
         cursor: 'pointer',
         textAlign: 'left',
         borderRadius: '4px',
@@ -176,8 +176,8 @@ const PasteOptionButton: React.FC<PasteOptionButtonProps> = ({
           width: '32px',
           height: '32px',
           borderRadius: '4px',
-          background: isSelected ? '#1a73e8' : '#f1f3f4',
-          color: isSelected ? '#fff' : '#5f6368',
+          background: isSelected ? 'var(--doc-primary)' : 'var(--doc-bg-hover)',
+          color: isSelected ? 'white' : 'var(--doc-text-muted)',
         }}
       >
         {getPasteOptionIcon(option.id)}
@@ -187,7 +187,7 @@ const PasteOptionButton: React.FC<PasteOptionButtonProps> = ({
           style={{
             fontSize: '14px',
             fontWeight: 500,
-            color: '#202124',
+            color: 'var(--doc-text)',
             marginBottom: '2px',
           }}
         >
@@ -196,7 +196,7 @@ const PasteOptionButton: React.FC<PasteOptionButtonProps> = ({
         <div
           style={{
             fontSize: '12px',
-            color: '#5f6368',
+            color: 'var(--doc-text-muted)',
           }}
         >
           {option.description}
@@ -205,7 +205,7 @@ const PasteOptionButton: React.FC<PasteOptionButtonProps> = ({
       <span
         style={{
           fontSize: '11px',
-          color: '#9aa0a6',
+          color: 'var(--doc-text-subtle)',
           fontFamily: 'monospace',
         }}
       >
@@ -347,8 +347,8 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
       top: y,
       left: x,
       width: dialogWidth,
-      background: '#fff',
-      border: '1px solid #dadce0',
+      background: 'white',
+      border: '1px solid var(--doc-border-light)',
       borderRadius: '8px',
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
       zIndex: 10001,
@@ -370,7 +370,7 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
       <div
         style={{
           padding: '12px 16px',
-          borderBottom: '1px solid #e0e0e0',
+          borderBottom: '1px solid var(--doc-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -380,7 +380,7 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
           style={{
             fontSize: '14px',
             fontWeight: 600,
-            color: '#202124',
+            color: 'var(--doc-text)',
           }}
         >
           Paste Special
@@ -399,7 +399,7 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
             background: 'transparent',
             cursor: 'pointer',
             borderRadius: '4px',
-            color: '#5f6368',
+            color: 'var(--doc-text-muted)',
           }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -420,7 +420,7 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
             style={{
               padding: '20px',
               textAlign: 'center',
-              color: '#5f6368',
+              color: 'var(--doc-text-muted)',
               fontSize: '13px',
             }}
           >
@@ -431,7 +431,7 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
             style={{
               padding: '20px',
               textAlign: 'center',
-              color: '#d93025',
+              color: 'var(--doc-error)',
               fontSize: '13px',
             }}
           >
@@ -457,13 +457,13 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
         <div
           style={{
             padding: '8px 16px 12px',
-            borderTop: '1px solid #e0e0e0',
+            borderTop: '1px solid var(--doc-border)',
           }}
         >
           <div
             style={{
               fontSize: '11px',
-              color: '#5f6368',
+              color: 'var(--doc-text-muted)',
               marginBottom: '4px',
             }}
           >
@@ -472,12 +472,12 @@ export const PasteSpecialDialog: React.FC<PasteSpecialDialogProps> = ({
           <div
             style={{
               fontSize: '12px',
-              color: '#202124',
+              color: 'var(--doc-text)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               padding: '6px 8px',
-              background: '#f8f9fa',
+              background: 'var(--doc-bg)',
               borderRadius: '4px',
             }}
           >

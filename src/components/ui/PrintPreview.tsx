@@ -201,7 +201,7 @@ export function PrintPreview({
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <PrintIcon />
             <span style={{ fontWeight: 500 }}>Print Preview</span>
-            <span style={{ color: '#666', fontSize: '14px' }}>
+            <span style={{ color: 'var(--doc-text-muted)', fontSize: '14px' }}>
               {totalPages} page{totalPages !== 1 ? 's' : ''}
             </span>
           </div>
@@ -451,7 +451,7 @@ function DefaultParagraphContent({ paragraph }: { paragraph: Paragraph }): React
 
 function DefaultTableContent({ table }: { table: Table }): React.ReactElement {
   return (
-    <div style={{ border: '1px solid #ccc', padding: '8px' }}>
+    <div style={{ border: '1px solid var(--doc-border)', padding: '8px' }}>
       [Table: {table.rows.length} rows]
     </div>
   );
@@ -503,11 +503,11 @@ export function PrintButton({
     gap: compact ? '4px' : '6px',
     padding: compact ? '4px 8px' : '6px 12px',
     fontSize: compact ? '13px' : '14px',
-    backgroundColor: '#ffffff',
-    border: '1px solid #d0d0d0',
+    backgroundColor: 'white',
+    border: '1px solid var(--doc-border)',
     borderRadius: '4px',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    color: disabled ? '#999' : '#333',
+    color: disabled ? 'var(--doc-text-muted)' : 'var(--doc-text)',
     opacity: disabled ? 0.6 : 1,
     transition: 'background-color 0.15s, border-color 0.15s',
     ...style,
@@ -672,7 +672,7 @@ const containerStyle: CSSProperties = {
   width: '90vw',
   maxWidth: '1200px',
   height: '90vh',
-  backgroundColor: '#f5f5f5',
+  backgroundColor: 'var(--doc-bg-muted)',
   borderRadius: '8px',
   display: 'flex',
   flexDirection: 'column',
@@ -685,8 +685,8 @@ const headerStyle: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: '12px 16px',
-  backgroundColor: '#ffffff',
-  borderBottom: '1px solid #e0e0e0',
+  backgroundColor: 'white',
+  borderBottom: '1px solid var(--doc-border)',
 };
 
 const contentStyle: CSSProperties = {
@@ -707,7 +707,7 @@ const emptyStateStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
 };
 
 const printButtonStyle: CSSProperties = {
@@ -715,8 +715,8 @@ const printButtonStyle: CSSProperties = {
   alignItems: 'center',
   gap: '6px',
   padding: '8px 16px',
-  backgroundColor: '#1a73e8',
-  color: '#ffffff',
+  backgroundColor: 'var(--doc-primary)',
+  color: 'white',
   border: 'none',
   borderRadius: '4px',
   fontSize: '14px',
@@ -734,7 +734,7 @@ const closeButtonStyle: CSSProperties = {
   border: 'none',
   borderRadius: '4px',
   cursor: 'pointer',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
 };
 
 const pageNumberStyle: CSSProperties = {
@@ -744,7 +744,7 @@ const pageNumberStyle: CSSProperties = {
   right: 0,
   textAlign: 'center',
   fontSize: '11px',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
 };
 
 // ============================================================================
