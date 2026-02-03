@@ -155,13 +155,14 @@ const PLUGIN_HOST_STYLES = `
   overflow: auto;
 }
 
-/* Overlay panels - positioned absolutely over the editor */
+/* Overlay panels - positioned absolutely over the editor, close to document */
 .plugin-panels-overlay-right {
   position: absolute;
   top: 0;
-  right: 0;
+  right: 50%;
+  margin-right: -530px; /* Position right next to the ~816px page width / 2 + small gap */
   bottom: 0;
-  width: 280px;
+  width: 200px;
   pointer-events: none;
   z-index: 100;
   overflow: visible;
@@ -169,43 +170,17 @@ const PLUGIN_HOST_STYLES = `
 
 .plugin-panel-overlay {
   position: sticky;
-  top: 130px; /* Below toolbar and ruler */
+  top: 130px;
   display: flex;
   flex-shrink: 0;
   pointer-events: auto;
   background: transparent;
   max-height: calc(100vh - 150px);
   overflow: visible;
-  padding-right: 8px;
 }
 
 .plugin-panel-overlay.collapsed {
-  width: 32px;
-}
-
-.plugin-panel-overlay .plugin-panel-toggle {
-  position: absolute;
-  left: -24px;
-  top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  background: #f1f3f4;
-  border: 1px solid #e9ecef;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  color: #6c757d;
-  z-index: 1;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.plugin-panel-overlay .plugin-panel-toggle:hover {
-  background: #e9ecef;
-  color: #495057;
+  display: none;
 }
 
 .plugin-panel-overlay-content {
