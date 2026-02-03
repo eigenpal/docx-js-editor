@@ -267,9 +267,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 5.1: Hit test pages
 
-- [ ] Create `src/layout-bridge/hitTest.ts`
-- [ ] Map click coordinates → page index
-- [ ] Account for page gaps
+- [x] Create `src/layout-bridge/hitTest.ts`
+- [x] Map click coordinates → page index
+- [x] Account for page gaps
 
 **SuperDoc reference (concept only):**
 
@@ -283,8 +283,8 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 5.2: Hit test fragments
 
-- [ ] Map click within page → fragment
-- [ ] Find fragment that contains the point
+- [x] Map click within page → fragment
+- [x] Find fragment that contains the point
 
 **Clean room implementation:**
 
@@ -293,9 +293,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 5.3: Map click to PM position
 
-- [ ] Create `src/layout-bridge/clickToPosition.ts`
-- [ ] Given fragment + local coordinates → PM position
-- [ ] Use character measurements to find exact position
+- [x] Create `src/layout-bridge/clickToPosition.ts`
+- [x] Given fragment + local coordinates → PM position
+- [x] Use character measurements to find exact position
 
 **SuperDoc reference (concept only):**
 

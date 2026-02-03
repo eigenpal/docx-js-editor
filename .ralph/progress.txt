@@ -750,3 +750,72 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 14:28] - Task 4.2: Created renderParagraph.ts (paragraph/line/run rendering)
 [2026-02-03 14:28] - Task 4.3: Created index.ts (LayoutPainter class)
 [2026-02-03 14:28] ========================================
+[2026-02-03 14:30] TASK: 5.1 Hit test pages
+[2026-02-03 14:30] STATUS: starting
+[2026-02-03 14:30] NOTES: Phase 5, Task 5.1 - Creating hit test functionality for click mapping
+[2026-02-03 14:30] STATUS: researching-superdoc
+[2026-02-03 14:30] NOTES: Reading SuperDoc hit test implementation
+[2026-02-03 14:35] NOTES: Read SuperDoc hitTestPage and hitTestFragment - key concepts:
+[2026-02-03 14:35] NOTES:   - hitTestPage: iterate pages, accumulate heights + gaps, find page containing Y
+[2026-02-03 14:35] NOTES:   - Fallback to nearest page if Y is in gap
+[2026-02-03 14:35] NOTES:   - hitTestFragment: sort fragments by Y then X, check point within fragment bounds
+[2026-02-03 14:35] NOTES:   - Calculate fragment height from lines, not total measure height
+[2026-02-03 14:35] NOTES:   - Return fragment, block, measure, pageIndex, pageY (local Y offset)
+[2026-02-03 14:36] STATUS: editing
+[2026-02-03 14:36] NOTES: Creating src/layout-bridge/hitTest.ts - clean room implementation
+[2026-02-03 14:40] STATUS: running
+[2026-02-03 14:40] NOTES: Typecheck passed
+[2026-02-03 14:40] STATUS: done
+[2026-02-03 14:40] NOTES: Created src/layout-bridge/hitTest.ts with:
+[2026-02-03 14:40] NOTES:   - hitTestPage(): maps Y coordinate to page, handles gaps, finds nearest page
+[2026-02-03 14:40] NOTES:   - hitTestFragment(): finds fragment at page-relative point
+[2026-02-03 14:40] NOTES:   - hitTestTableCell(): finds table cell at point
+[2026-02-03 14:40] NOTES:   - hitTest(): combined entry point for full hit testing
+[2026-02-03 14:40] NOTES:   - Utility functions: getPageTop, getTotalDocumentHeight, findNearestFragment
+
+[2026-02-03 14:45] TASK: 5.2 Hit test fragments
+[2026-02-03 14:45] STATUS: reviewing
+[2026-02-03 14:45] NOTES: hitTestFragment() already implemented in hitTest.ts as part of Task 5.1
+[2026-02-03 14:45] NOTES: Functionality includes:
+[2026-02-03 14:45] NOTES:   - hitTestFragment(): finds fragment containing point on page
+[2026-02-03 14:45] NOTES:   - Sorts fragments by Y then X for consistent hit testing
+[2026-02-03 14:45] NOTES:   - Handles paragraph, table, and image fragments
+[2026-02-03 14:45] NOTES:   - Returns FragmentHit with localX, localY for position mapping
+[2026-02-03 14:45] STATUS: done
+
+[2026-02-03 14:46] TASK: 5.3 Map click to PM position
+[2026-02-03 14:46] STATUS: starting
+[2026-02-03 14:46] NOTES: Creating src/layout-bridge/clickToPosition.ts
+[2026-02-03 14:46] STATUS: researching-superdoc
+[2026-02-03 14:47] NOTES: Read SuperDoc dom-mapping.ts and index.ts clickToPosition function
+[2026-02-03 14:47] NOTES: SuperDoc approach has two methods:
+[2026-02-03 14:47] NOTES:   1. DOM-based: Uses elementsFromPoint, reads data-pm-start/end from spans
+[2026-02-03 14:47] NOTES:   2. Geometry-based: Uses canvas measurement + line/character offset calculation
+[2026-02-03 14:48] NOTES: Key concepts from SuperDoc text-measurement.ts findCharacterAtX:
+[2026-02-03 14:48] NOTES:   - Slice runs for the line
+[2026-02-03 14:48] NOTES:   - Use canvas context to measure text widths
+[2026-02-03 14:48] NOTES:   - Handle alignment offset (center/right)
+[2026-02-03 14:48] NOTES:   - Handle justify extra spacing
+[2026-02-03 14:48] NOTES:   - Walk through runs, measuring character-by-character to find closest boundary
+[2026-02-03 14:48] NOTES:   - Return charOffset and pmPosition
+[2026-02-03 14:49] STATUS: editing
+[2026-02-03 14:49] NOTES: Creating clean room implementation based on understanding
+[2026-02-03 14:55] STATUS: testing
+[2026-02-03 14:55] NOTES: Typecheck passed
+[2026-02-03 14:55] STATUS: done
+[2026-02-03 14:55] NOTES: Created src/layout-bridge/clickToPosition.ts with:
+[2026-02-03 14:55] NOTES:   - clickToPosition(): main entry point, maps fragmentHit to PM position
+[2026-02-03 14:55] NOTES:   - clickToPositionInParagraph(): handles paragraph fragments
+[2026-02-03 14:55] NOTES:   - clickToPositionInTableCell(): handles table cells
+[2026-02-03 14:55] NOTES:   - findLineAtY(): finds line at Y coordinate within fragment
+[2026-02-03 14:55] NOTES:   - findCharacterInLine(): uses canvas measurement to find character at X
+[2026-02-03 14:55] NOTES:   - positionToX(): reverse mapping for caret positioning
+[2026-02-03 14:55] NOTES:   - getPositionRect(): gets caret rect at PM position
+
+[2026-02-03 14:56] ========================================
+[2026-02-03 14:56] PHASE 5 COMPLETE: Click-to-Position Mapping
+[2026-02-03 14:56] ========================================
+[2026-02-03 14:56] - Task 5.1: Created hitTest.ts (page/fragment hit testing)
+[2026-02-03 14:56] - Task 5.2: hitTestFragment implemented in hitTest.ts
+[2026-02-03 14:56] - Task 5.3: Created clickToPosition.ts (click to PM position mapping)
+[2026-02-03 14:56] ========================================
