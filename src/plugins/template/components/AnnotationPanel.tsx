@@ -205,7 +205,7 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
       case 'loopStart':
       case 'conditionalStart':
         return {
-          label: 'LOOP/IF',
+          label: 'LOOP / IF',
           className: 'section',
           description: 'Loop or conditional section',
         };
