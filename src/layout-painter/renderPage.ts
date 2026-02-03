@@ -5,8 +5,17 @@
  * Each page contains positioned fragments within a content area.
  */
 
-import type { Page, Fragment } from '../layout-engine/types';
+import type {
+  Page,
+  Fragment,
+  FlowBlock,
+  Measure,
+  ParagraphBlock,
+  ParagraphMeasure,
+  ParagraphFragment,
+} from '../layout-engine/types';
 import { renderFragment } from './renderFragment';
+import { renderParagraphFragment } from './renderParagraph';
 
 /**
  * CSS class names for page elements
@@ -31,6 +40,18 @@ export interface RenderContext {
 }
 
 /**
+ * Header/footer content for rendering
+ */
+export interface HeaderFooterContent {
+  /** Flow blocks for the header/footer content. */
+  blocks: FlowBlock[];
+  /** Measurements for the blocks. */
+  measures: Measure[];
+  /** Total height of the content. */
+  height: number;
+}
+
+/**
  * Options for rendering a page
  */
 export interface RenderPageOptions {
@@ -44,6 +65,14 @@ export interface RenderPageOptions {
   backgroundColor?: string;
   /** Drop shadow on pages */
   showShadow?: boolean;
+  /** Header content to render. */
+  headerContent?: HeaderFooterContent;
+  /** Footer content to render. */
+  footerContent?: HeaderFooterContent;
+  /** Distance from page top to header content. */
+  headerDistance?: number;
+  /** Distance from page bottom to footer content. */
+  footerDistance?: number;
 }
 
 /**
@@ -100,6 +129,61 @@ function applyFragmentStyles(element: HTMLElement, fragment: Fragment): void {
 }
 
 /**
+ * Render header or footer content
+ */
+function renderHeaderFooterContent(
+  content: HeaderFooterContent,
+  context: RenderContext,
+  options: RenderPageOptions
+): HTMLElement {
+  const doc = options.document ?? document;
+  const containerEl = doc.createElement('div');
+  containerEl.style.position = 'relative';
+
+  let cursorY = 0;
+
+  for (let i = 0; i < content.blocks.length; i++) {
+    const block = content.blocks[i];
+    const measure = content.measures[i];
+
+    if (block?.kind === 'paragraph' && measure?.kind === 'paragraph') {
+      const paragraphBlock = block as ParagraphBlock;
+      const paragraphMeasure = measure as ParagraphMeasure;
+
+      // Create a synthetic fragment for the paragraph
+      const syntheticFragment: ParagraphFragment = {
+        kind: 'paragraph',
+        blockId: paragraphBlock.id,
+        x: 0,
+        y: cursorY,
+        width: 500, // Will be overridden by container width
+        height: paragraphMeasure.totalHeight,
+        fromLine: 0,
+        toLine: paragraphMeasure.lines.length,
+      };
+
+      // Render paragraph fragment
+      const fragEl = renderParagraphFragment(
+        syntheticFragment,
+        paragraphBlock,
+        paragraphMeasure,
+        context,
+        { document: doc }
+      );
+
+      // Position the fragment
+      fragEl.style.position = 'relative';
+      fragEl.style.marginBottom = '0';
+
+      containerEl.appendChild(fragEl);
+      cursorY += paragraphMeasure.totalHeight;
+    }
+  }
+
+  return containerEl;
+}
+
+/**
  * Render a single page to DOM
  *
  * @param page - The page to render
@@ -141,6 +225,46 @@ export function renderPage(
   }
 
   pageEl.appendChild(contentEl);
+
+  // Render header if provided
+  if (options.headerContent && options.headerContent.blocks.length > 0) {
+    const headerDistance = options.headerDistance ?? page.margins.header ?? page.margins.top;
+    const headerEl = doc.createElement('div');
+    headerEl.className = PAGE_CLASS_NAMES.header;
+    headerEl.style.position = 'absolute';
+    headerEl.style.top = `${headerDistance}px`;
+    headerEl.style.left = `${page.margins.left}px`;
+    headerEl.style.right = `${page.margins.right}px`;
+    headerEl.style.width = `${page.size.w - page.margins.left - page.margins.right}px`;
+
+    const headerContentEl = renderHeaderFooterContent(
+      options.headerContent,
+      { ...context, section: 'header' },
+      options
+    );
+    headerEl.appendChild(headerContentEl);
+    pageEl.appendChild(headerEl);
+  }
+
+  // Render footer if provided
+  if (options.footerContent && options.footerContent.blocks.length > 0) {
+    const footerDistance = options.footerDistance ?? page.margins.footer ?? page.margins.bottom;
+    const footerEl = doc.createElement('div');
+    footerEl.className = PAGE_CLASS_NAMES.footer;
+    footerEl.style.position = 'absolute';
+    footerEl.style.bottom = `${footerDistance}px`;
+    footerEl.style.left = `${page.margins.left}px`;
+    footerEl.style.right = `${page.margins.right}px`;
+    footerEl.style.width = `${page.size.w - page.margins.left - page.margins.right}px`;
+
+    const footerContentEl = renderHeaderFooterContent(
+      options.footerContent,
+      { ...context, section: 'footer' },
+      options
+    );
+    footerEl.appendChild(footerContentEl);
+    pageEl.appendChild(footerEl);
+  }
 
   return pageEl;
 }

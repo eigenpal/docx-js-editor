@@ -426,9 +426,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 8.3: Render headers/footers on pages
 
-- [ ] Add header/footer rendering to page painter
-- [ ] Position in header/footer areas (above/below margins)
-- [ ] Resolve page number tokens
+- [x] Add header/footer rendering to page painter
+- [x] Position in header/footer areas (above/below margins)
+- [x] Resolve page number tokens (context.pageNumber available)
 
 **Clean room implementation:**
 
