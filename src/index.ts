@@ -1,5 +1,5 @@
 /**
- * @eigenpal/docx-editor
+ * @eigenpal/docx-js-editor
  *
  * A complete WYSIWYG DOCX editor with full Microsoft Word fidelity.
  *
@@ -16,7 +16,7 @@
  * CSS Styles:
  * For optimal cursor visibility and selection highlighting, import the editor styles:
  * ```
- * import '@eigenpal/docx-editor/styles/editor.css';
+ * import '@eigenpal/docx-js-editor/styles/editor.css';
  * ```
  */
 
@@ -24,7 +24,7 @@
 // VERSION
 // ============================================================================
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.0.1';
 
 // ============================================================================
 // MAIN COMPONENT
