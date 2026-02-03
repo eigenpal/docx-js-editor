@@ -18,9 +18,13 @@
 .prosemirror-editor .ProseMirror {
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  padding: 72px 72px;
-  min-height: 11in;
-  width: 8.5in;
+  /* Use CSS variables for page layout, with fallbacks */
+  width: var(--page-width, 8.5in);
+  min-height: var(--page-height, 11in);
+  padding-top: var(--margin-top, 72px);
+  padding-bottom: var(--margin-bottom, 72px);
+  padding-left: var(--margin-left, 72px);
+  padding-right: var(--margin-right, 72px);
   max-width: 100%;
   outline: none;
   /* Default font - will be overridden by inline styles from DOCX */
@@ -34,6 +38,8 @@
   /* Tab size for proper tab character rendering (0.5 inch = 48px at 96dpi) */
   tab-size: 48;
   -moz-tab-size: 48;
+  /* Ensure box-sizing includes padding in width calculation */
+  box-sizing: border-box;
 }
 
 /* Focus state */

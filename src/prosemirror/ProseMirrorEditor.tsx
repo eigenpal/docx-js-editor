@@ -20,8 +20,15 @@ import { toProseDoc, createEmptyDoc } from './conversion';
 import { fromProseDoc } from './conversion/fromProseDoc';
 import { createListKeymap } from './plugins/keymap';
 import { textFormattingToMarks } from './commands/formatting';
-import type { Document, Theme, TextFormatting, ParagraphFormatting } from '../types/document';
+import type {
+  Document,
+  Theme,
+  TextFormatting,
+  ParagraphFormatting,
+  SectionProperties,
+} from '../types/document';
 import type { SelectionContext } from '../types/agentApi';
+import { twipsToPixels } from '../utils/units';
 
 // Import ProseMirror CSS
 import 'prosemirror-view/style/prosemirror.css';
@@ -59,6 +66,10 @@ export interface ProseMirrorEditorProps {
   document: Document | null;
   /** Theme for styling */
   theme?: Theme | null;
+  /** Section properties for page layout (margins, size) */
+  sectionProperties?: SectionProperties | null;
+  /** Zoom level (1.0 = 100%) */
+  zoom?: number;
   /** Callback when document changes */
   onChange?: (document: Document) => void;
   /** Callback when selection changes */
@@ -274,11 +285,18 @@ function extractSelectionState(state: EditorState): SelectionState | null {
 /**
  * ProseMirror Editor Component
  */
+// Default page dimensions in twips (Letter size: 8.5" x 11")
+const DEFAULT_PAGE_WIDTH = 12240; // 8.5 inches
+const DEFAULT_PAGE_HEIGHT = 15840; // 11 inches
+const DEFAULT_MARGIN = 1440; // 1 inch
+
 export const ProseMirrorEditor = memo(
   forwardRef<ProseMirrorEditorRef, ProseMirrorEditorProps>(function ProseMirrorEditor(
     {
       document,
       theme: _theme,
+      sectionProperties,
+      zoom = 1,
       onChange,
       onSelectionChange,
       readOnly = false,
@@ -295,6 +313,14 @@ export const ProseMirrorEditor = memo(
 
     // Track document version to prevent circular updates
     const lastDocVersionRef = useRef<number>(0);
+
+    // Calculate page dimensions from section properties
+    const pageWidth = twipsToPixels(sectionProperties?.pageWidth ?? DEFAULT_PAGE_WIDTH) * zoom;
+    const pageHeight = twipsToPixels(sectionProperties?.pageHeight ?? DEFAULT_PAGE_HEIGHT) * zoom;
+    const marginTop = twipsToPixels(sectionProperties?.marginTop ?? DEFAULT_MARGIN) * zoom;
+    const marginBottom = twipsToPixels(sectionProperties?.marginBottom ?? DEFAULT_MARGIN) * zoom;
+    const marginLeft = twipsToPixels(sectionProperties?.marginLeft ?? DEFAULT_MARGIN) * zoom;
+    const marginRight = twipsToPixels(sectionProperties?.marginRight ?? DEFAULT_MARGIN) * zoom;
 
     // Helper to convert marks to TextFormatting for saving
     const marksToFormatting = useCallback(
@@ -612,6 +638,17 @@ export const ProseMirrorEditor = memo(
       []
     );
 
+    // CSS custom properties for page layout
+    const cssVariables = {
+      '--page-width': `${pageWidth}px`,
+      '--page-height': `${pageHeight}px`,
+      '--margin-top': `${marginTop}px`,
+      '--margin-bottom': `${marginBottom}px`,
+      '--margin-left': `${marginLeft}px`,
+      '--margin-right': `${marginRight}px`,
+      '--zoom': zoom,
+    } as React.CSSProperties;
+
     return (
       <div
         ref={containerRef}
@@ -620,6 +657,7 @@ export const ProseMirrorEditor = memo(
         style={{
           minHeight: '200px',
           outline: 'none',
+          ...cssVariables,
         }}
       />
     );

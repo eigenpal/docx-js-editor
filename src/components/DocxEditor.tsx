@@ -928,9 +928,19 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           style={containerStyle}
           data-testid="docx-editor"
         >
-          {/* Toolbar */}
+          {/* Toolbar - sticky at top */}
           {showToolbar && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div
+              style={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 100,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                backgroundColor: '#fff',
+              }}
+            >
               <Toolbar
                 currentFormatting={state.selectionFormatting}
                 onFormat={handleFormat}
@@ -960,14 +970,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                   compact
                 />
               )}
-            </div>
-          )}
 
-          {/* Main content area */}
-          <div style={mainContentStyle}>
-            {/* Editor */}
-            <div style={editorContainerStyle}>
-              {/* Horizontal Ruler */}
+              {/* Horizontal Ruler - sticky with toolbar */}
               {showRuler && (
                 <div
                   style={{
@@ -988,7 +992,13 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                   />
                 </div>
               )}
+            </div>
+          )}
 
+          {/* Main content area */}
+          <div style={mainContentStyle}>
+            {/* Editor */}
+            <div style={editorContainerStyle}>
               <div
                 style={{ flex: 1, overflow: 'auto', position: 'relative' }}
                 onMouseDown={(e) => {
@@ -1003,6 +1013,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 <ProseMirrorEditor
                   ref={editorRef}
                   document={history.state}
+                  sectionProperties={history.state?.package.document?.finalSectionProperties}
+                  zoom={state.zoom}
                   onChange={handleDocumentChange}
                   onSelectionChange={handleSelectionChange}
                   readOnly={readOnly}
