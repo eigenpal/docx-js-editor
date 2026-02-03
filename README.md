@@ -1,118 +1,293 @@
-# Eigenpal DOCX Editor — Ralph Loop Setup
+<p align="center">
+  <a href="https://github.com/eigenpal/docx-js-editor">
+    <img src="https://raw.githubusercontent.com/eigenpal/docx-js-editor/main/assets/logo.png" alt="DOCX JS Editor" width="600" />
+  </a>
+</p>
 
-Autonomous Claude Code loop (frankbria/ralph-claude-code) that builds the minimal DOCX editor iteratively.
+<p align="center">
+  <strong>A powerful WYSIWYG DOCX editor for the browser</strong>
+</p>
 
----
+<p align="center">
+  Edit Microsoft Word documents directly in your web app with pixel-perfect fidelity
+</p>
 
-## Prerequisites
+<p align="center">
+  <a href="https://www.npmjs.com/package/@eigenpal/docx-js-editor"><img src="https://img.shields.io/npm/v/@eigenpal/docx-js-editor.svg?style=flat-square&color=00C853" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@eigenpal/docx-js-editor"><img src="https://img.shields.io/npm/dm/@eigenpal/docx-js-editor.svg?style=flat-square&color=00C853" alt="npm downloads" /></a>
+  <a href="https://github.com/eigenpal/docx-js-editor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square&color=00C853" alt="license" /></a>
+</p>
 
-```bash
-# 1. Claude Code CLI
-curl -fsSL https://claude.ai/install.sh | bash
-claude   # authenticate once
+<br />
 
-# 2. Bun
-curl -fsSL https://bun.sh/install | bash
+## Why DOCX JS Editor?
 
-# 3. tmux (for ralph --monitor)
-# macOS: brew install tmux
-# Ubuntu: sudo apt install tmux
+Most document editors in the browser either lack features or produce inconsistent output. **DOCX JS Editor** is different:
 
-# 4. jq
-# macOS: brew install jq
-# Ubuntu: sudo apt install jq
-```
+- **True WYSIWYG** — What you see matches Microsoft Word exactly
+- **Full Round-Trip** — Open a DOCX, edit it, save it back — no data loss
+- **Production Ready** — Battle-tested with complex real-world documents
+- **Framework Agnostic** — Works with React, or use headless mode for any stack
 
----
+<br />
 
-## Phase 1: Install Ralph globally (one time)
+## Features
 
-```bash
-git clone https://github.com/frankbria/ralph-claude-code.git
-cd ralph-claude-code
-./install.sh
-# Adds ralph, ralph-monitor, ralph-setup, ralph-enable, etc. to PATH
-```
+<table>
+<tr>
+<td width="50%">
 
----
+**Text Formatting**
 
-## Phase 2: Set up the project
+- Bold, italic, underline, strikethrough
+- Superscript & subscript
+- Text color & highlighting
+- Any font family & size
 
-```bash
-mkdir eigenpal-docx-editor && cd eigenpal-docx-editor
-git init
+</td>
+<td width="50%">
 
-# Create the .ralph/ directory and copy files in:
-mkdir -p .ralph
+**Paragraph Formatting**
 
-# Copy these files from the download:
-#   .ralphrc          → project root
-#   prd.json          → project root          — full story details + acceptance criteria
-#   fix_plan.md       → .ralph/fix_plan.md    — the task checklist ralph iterates over
-#   CLAUDE.md         → .ralph/PROMPT.md      — the prompt fed to Claude each loop
+- Alignment (left, center, right, justify)
+- Line spacing & indentation
+- Bullet & numbered lists
+- Paragraph styles (Heading 1-6, etc.)
 
-cp fix_plan.md .ralph/fix_plan.md
-cp CLAUDE.md .ralph/PROMPT.md
+</td>
+</tr>
+<tr>
+<td width="50%">
 
-# Initial commit
-git add -A
-git commit -m "chore: ralph loop scaffold"
-```
+**Rich Content**
 
----
+- Tables with borders & shading
+- Images (inline & floating)
+- Hyperlinks with tooltips
+- Headers & footers
 
-## Phase 3: Run
+</td>
+<td width="50%">
 
-```bash
-# Recommended — launches ralph + live monitor in a tmux split
-ralph --monitor
+**Advanced**
 
-# Or run ralph alone (no live dashboard)
-ralph
-```
+- Theme colors & fonts
+- Word style system
+- Template variables `{{var}}`
+- Undo/redo history
 
----
+</td>
+</tr>
+</table>
 
-## How it works
+<br />
 
-Each iteration ralph spawns a fresh Claude Code session. Claude:
+## Quick Start
 
-1. Reads `.ralph/fix_plan.md`, finds the first unchecked task
-2. Reads `prd.json` for that task's full description and acceptance criteria
-3. Investigates `reference/superdoc` source for SuperDoc API details (not guessing)
-4. Implements the task, runs `bun build` to verify
-5. On success: checks off the task in `fix_plan.md`, commits, logs learnings to `progress.txt`
-6. Outputs a `RALPH_STATUS` block — ralph's exit detector reads `exit_signal: true` when all tasks are done
-
-Loop continues until all 6 tasks are checked off or ralph's circuit breaker triggers.
-
----
-
-## File layout
-
-```
-eigenpal-docx-editor/
-├── .ralphrc                  ← ralph config (tool permissions, timeouts, rate limits)
-├── prd.json                  ← 6 user stories with full descriptions + acceptance criteria
-├── progress.txt              ← auto-generated: learnings across iterations
-├── .ralph/
-│   ├── PROMPT.md             ← prompt fed to Claude each loop iteration
-│   ├── fix_plan.md           ← markdown checklist — ralph's task queue
-│   └── logs/                 ← ralph execution logs (auto-created)
-└── src/                      ← source code (built by Claude across iterations)
-```
-
----
-
-## After completion
+### Installation
 
 ```bash
-bun dev   # run the dev server
+npm install @eigenpal/docx-js-editor
 ```
 
-The app will have:
+### Basic Usage
 
-- A DOCX file loader (input + drag-and-drop)
-- A template variable panel (define `{name}` → `value` pairs)
-- A SuperDoc WYSIWYG viewer — fonts, styles, colors, tables, headers all preserved
-- Live re-render after template substitution, with full formatting fidelity surviving the round-trip
+```tsx
+import { DocxEditor } from '@eigenpal/docx-js-editor';
+import '@eigenpal/docx-js-editor/styles.css';
+
+function App() {
+  return <DocxEditor onDocumentChange={(doc) => console.log('Changed:', doc)} height="600px" />;
+}
+```
+
+### Load a DOCX File
+
+```tsx
+import { DocxEditor, parseDocx } from '@eigenpal/docx-js-editor';
+import '@eigenpal/docx-js-editor/styles.css';
+
+function App() {
+  const [document, setDocument] = useState(null);
+
+  const handleFile = async (e) => {
+    const file = e.target.files[0];
+    const buffer = await file.arrayBuffer();
+    const doc = await parseDocx(buffer);
+    setDocument(doc);
+  };
+
+  return (
+    <>
+      <input type="file" accept=".docx" onChange={handleFile} />
+      {document && <DocxEditor document={document} onDocumentChange={setDocument} />}
+    </>
+  );
+}
+```
+
+<br />
+
+## Headless Mode
+
+Parse and manipulate DOCX files without any UI — perfect for Node.js or serverless:
+
+```typescript
+import { parseDocx, serializeDocx } from '@eigenpal/docx-js-editor/headless';
+
+// Parse
+const buffer = await fetch('/doc.docx').then((r) => r.arrayBuffer());
+const document = await parseDocx(buffer);
+
+// Inspect
+console.log(document.body.content);
+
+// Modify & serialize
+const output = await serializeDocx(document);
+```
+
+<br />
+
+## Template Processing
+
+Built-in [docxtemplater](https://docxtemplater.com/) integration for mail merge and document generation:
+
+```typescript
+import { processTemplate, getTemplateTags } from '@eigenpal/docx-js-editor';
+
+// Discover all {{variables}} in a document
+const tags = await getTemplateTags(buffer);
+// → ['name', 'company', 'date']
+
+// Fill in the template
+const result = await processTemplate(buffer, {
+  name: 'John Doe',
+  company: 'Acme Inc',
+  date: '2024-01-15',
+});
+```
+
+<br />
+
+## Components
+
+### Main Editor
+
+```tsx
+<DocxEditor
+  document={document}
+  onDocumentChange={setDocument}
+  height="600px"
+  readOnly={false}
+  showToolbar={true}
+  zoom={100}
+/>
+```
+
+### Read-Only Viewer
+
+```tsx
+import { DocumentViewer } from '@eigenpal/docx-js-editor';
+
+<DocumentViewer document={document} zoom={100} />;
+```
+
+### UI Components
+
+All the building blocks you need for custom interfaces:
+
+| Component           | Description             |
+| ------------------- | ----------------------- |
+| `Toolbar`           | Full formatting toolbar |
+| `FontPicker`        | Font family dropdown    |
+| `FontSizePicker`    | Font size selector      |
+| `ColorPicker`       | Text & highlight colors |
+| `AlignmentButtons`  | Text alignment          |
+| `ListButtons`       | Bullet & number lists   |
+| `StylePicker`       | Paragraph styles        |
+| `TableToolbar`      | Table editing           |
+| `ZoomControl`       | Zoom slider             |
+| `FindReplaceDialog` | Search & replace        |
+
+<br />
+
+## Plugin System
+
+Extend the editor with custom functionality:
+
+```tsx
+import { PluginHost, type EditorPlugin } from '@eigenpal/docx-js-editor';
+
+const myPlugin: EditorPlugin = {
+  id: 'my-plugin',
+  name: 'My Plugin',
+  initialize: (context) => {
+    /* ... */
+  },
+  panel: MyPanel,
+};
+
+<PluginHost plugins={[myPlugin]}>
+  <DocxEditor document={document} />
+</PluginHost>;
+```
+
+<br />
+
+## MCP Server
+
+AI-powered editing via [Model Context Protocol](https://modelcontextprotocol.io/):
+
+```bash
+npx @eigenpal/docx-js-editor mcp
+```
+
+<br />
+
+## DOCX Format Support
+
+Full support for Office Open XML (ECMA-376):
+
+| Category       | Features                                          |
+| -------------- | ------------------------------------------------- |
+| **Text**       | All character formatting, fonts, colors, effects  |
+| **Paragraphs** | Alignment, spacing, indentation, borders, shading |
+| **Styles**     | Character, paragraph, and linked styles           |
+| **Tables**     | Merging, borders, shading, column widths          |
+| **Lists**      | Bullets, numbers, multi-level                     |
+| **Media**      | Inline images, floating images                    |
+| **Layout**     | Headers, footers, sections, page settings         |
+| **Advanced**   | Themes, bookmarks, hyperlinks, fields             |
+
+<br />
+
+## Browser Support
+
+| Chrome | Firefox | Safari | Edge |
+| :----: | :-----: | :----: | :--: |
+|  90+   |   90+   |  14+   | 90+  |
+
+<br />
+
+## Contributing
+
+We welcome contributions! See our [contributing guide](CONTRIBUTING.md) for details.
+
+```bash
+git clone https://github.com/eigenpal/docx-js-editor.git
+cd docx-js-editor
+bun install
+bun dev
+```
+
+<br />
+
+## License
+
+[MIT](LICENSE) © [EigenPal](https://github.com/eigenpal)
+
+<br />
+
+<p align="center">
+  <sub>Built with ❤️ by the EigenPal team</sub>
+</p>

@@ -1,6 +1,6 @@
 {
-  "name": "@eigenpal/docx-editor",
-  "version": "0.1.0",
+  "name": "@eigenpal/docx-js-editor",
+  "version": "0.0.1",
   "description": "A browser-based DOCX template editor with variable insertion support",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -38,7 +38,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsup && bun run build:css",
-    "build:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
+    "build:css": "tailwindcss -i ./src/styles/editor.css -o ./dist/styles.css --minify",
     "build:demo": "vite build",
     "test": "bun test",
     "test:watch": "bun test --watch",
@@ -124,6 +124,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/eigenpal/docx-editor.git"
+    "url": "https://github.com/eigenpal/docx-js-editor.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
