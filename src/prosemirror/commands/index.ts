@@ -26,6 +26,13 @@ export {
   getMarkAttr,
   createSetMarkCommand,
   createRemoveMarkCommand,
+  // Hyperlink commands
+  isHyperlinkActive,
+  getHyperlinkAttrs,
+  getSelectedText,
+  setHyperlink,
+  removeHyperlink,
+  insertHyperlink,
 } from './formatting';
 
 // Paragraph formatting
@@ -56,3 +63,28 @@ export {
   getStyleId,
 } from './paragraph';
 export type { ResolvedStyleAttrs } from './paragraph';
+
+// Table operations
+export {
+  isInTable,
+  getTableContext,
+  createTable,
+  insertTable,
+  addRowAbove,
+  addRowBelow,
+  deleteRow,
+  addColumnLeft,
+  addColumnRight,
+  deleteColumn,
+  deleteTable,
+  mergeCells,
+  splitCell,
+  setTableBorders,
+  removeTableBorders,
+  setAllTableBorders,
+  setOutsideTableBorders,
+  setInsideTableBorders,
+  setCellFillColor,
+  setTableBorderColor,
+} from './table';
+export type { TableContextInfo, BorderPreset } from './table';

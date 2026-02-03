@@ -49,6 +49,7 @@ import {
   type FindOptions,
   type FindResult,
 } from './dialogs/FindReplaceDialog';
+import { HyperlinkDialog, useHyperlinkDialog, type HyperlinkData } from './dialogs/HyperlinkDialog';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import { parseDocx } from '../docx/parser';
 import { onFontsLoaded, loadDocumentFonts } from '../utils/fontLoader';
@@ -83,6 +84,12 @@ import {
   clearFormatting,
   applyStyle,
   createStyleResolver,
+  // Hyperlink commands
+  getHyperlinkAttrs,
+  getSelectedText,
+  setHyperlink,
+  removeHyperlink,
+  insertHyperlink,
   // Table commands
   getTableContext,
   insertTable,
@@ -308,6 +315,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   // Find/Replace hook
   const findReplace = useFindReplace();
 
+  // Hyperlink dialog hook
+  const hyperlinkDialog = useHyperlinkDialog();
+
   // Parse document buffer
   useEffect(() => {
     if (!documentBuffer) {
@@ -403,6 +413,23 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           const selection = window.getSelection();
           const selectedText = selection && !selection.isCollapsed ? selection.toString() : '';
           findReplace.openReplace(selectedText);
+        } else if (e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          // Open hyperlink dialog
+          const view = editorRef.current?.getView();
+          if (view) {
+            const selectedText = getSelectedText(view.state);
+            const existingLink = getHyperlinkAttrs(view.state);
+            if (existingLink) {
+              hyperlinkDialog.openEdit({
+                url: existingLink.href,
+                displayText: selectedText,
+                tooltip: existingLink.tooltip,
+              });
+            } else {
+              hyperlinkDialog.openInsert(selectedText);
+            }
+          }
         }
       }
     };
@@ -411,7 +438,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [findReplace]);
+  }, [findReplace, hyperlinkDialog]);
 
   // Handle document change
   const handleDocumentChange = useCallback(
@@ -657,6 +684,22 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       clearFormatting(view.state, view.dispatch);
       return;
     }
+    if (action === 'insertLink') {
+      // Get the selected text for the hyperlink dialog
+      const selectedText = getSelectedText(view.state);
+      // Check if we're editing an existing link
+      const existingLink = getHyperlinkAttrs(view.state);
+      if (existingLink) {
+        hyperlinkDialog.openEdit({
+          url: existingLink.href,
+          displayText: selectedText,
+          tooltip: existingLink.tooltip,
+        });
+      } else {
+        hyperlinkDialog.openInsert(selectedText);
+      }
+      return;
+    }
 
     // Handle object-based actions
     if (typeof action === 'object') {
@@ -731,6 +774,45 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   const handleZoomChange = useCallback((zoom: number) => {
     setState((prev) => ({ ...prev, zoom }));
   }, []);
+
+  // Handle hyperlink dialog submit
+  const handleHyperlinkSubmit = useCallback(
+    (data: HyperlinkData) => {
+      const view = editorRef.current?.getView();
+      if (!view) return;
+
+      const url = data.url || '';
+      const tooltip = data.tooltip;
+
+      // Check if we have a selection
+      const { empty } = view.state.selection;
+
+      if (empty && data.displayText) {
+        // No selection but display text provided - insert new linked text
+        insertHyperlink(data.displayText, url, tooltip)(view.state, view.dispatch);
+      } else if (!empty) {
+        // Have selection - apply hyperlink to it
+        setHyperlink(url, tooltip)(view.state, view.dispatch);
+      } else if (data.displayText) {
+        // Empty selection but display text provided
+        insertHyperlink(data.displayText, url, tooltip)(view.state, view.dispatch);
+      }
+
+      hyperlinkDialog.close();
+      editorRef.current?.focus();
+    },
+    [hyperlinkDialog]
+  );
+
+  // Handle hyperlink removal
+  const handleHyperlinkRemove = useCallback(() => {
+    const view = editorRef.current?.getView();
+    if (!view) return;
+
+    removeHyperlink(view.state, view.dispatch);
+    hyperlinkDialog.close();
+    editorRef.current?.focus();
+  }, [hyperlinkDialog]);
 
   // Handle margin changes from rulers
   const handleLeftMarginChange = useCallback(
@@ -1293,6 +1375,17 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
             initialSearchText={findReplace.state.searchText}
             replaceMode={findReplace.state.replaceMode}
             currentResult={findResultRef.current}
+          />
+
+          {/* Hyperlink Dialog */}
+          <HyperlinkDialog
+            isOpen={hyperlinkDialog.state.isOpen}
+            onClose={hyperlinkDialog.close}
+            onSubmit={handleHyperlinkSubmit}
+            onRemove={hyperlinkDialog.state.isEditing ? handleHyperlinkRemove : undefined}
+            initialData={hyperlinkDialog.state.initialData}
+            selectedText={hyperlinkDialog.state.selectedText}
+            isEditing={hyperlinkDialog.state.isEditing}
           />
         </div>
       </ErrorBoundary>

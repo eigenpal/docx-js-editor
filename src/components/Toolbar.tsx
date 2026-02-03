@@ -23,6 +23,9 @@ import { MaterialSymbol } from './ui/MaterialSymbol';
 import { ZoomControl } from './ui/ZoomControl';
 import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
+import { TableGridPicker } from './ui/TableGridPicker';
+import { TableOptionsDropdown } from './ui/TableOptionsDropdown';
+import type { TableAction } from './ui/TableToolbar';
 import { cn } from '../lib/utils';
 
 // ============================================================================
@@ -80,6 +83,7 @@ export type FormattingAction =
   | 'numberedList'
   | 'indent'
   | 'outdent'
+  | 'insertLink'
   | { type: 'fontFamily'; value: string }
   | { type: 'fontSize'; value: number }
   | { type: 'textColor'; value: string }
@@ -148,6 +152,20 @@ export interface ToolbarProps {
   onZoomChange?: (zoom: number) => void;
   /** Callback to refocus the editor after toolbar interactions */
   onRefocusEditor?: () => void;
+  /** Callback when a table should be inserted */
+  onInsertTable?: (rows: number, columns: number) => void;
+  /** Whether to show table insert button (default: true) */
+  showTableInsert?: boolean;
+  /** Table context when cursor is in a table */
+  tableContext?: {
+    isInTable: boolean;
+    rowCount?: number;
+    columnCount?: number;
+    canSplitCell?: boolean;
+    hasMultiCellSelection?: boolean;
+  } | null;
+  /** Callback when a table action is triggered */
+  onTableAction?: (action: TableAction) => void;
 }
 
 /**
@@ -313,6 +331,10 @@ export function Toolbar({
   zoom,
   onZoomChange,
   onRefocusEditor,
+  onInsertTable,
+  showTableInsert = true,
+  tableContext,
+  onTableAction,
 }: ToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -353,9 +375,11 @@ export function Toolbar({
     (fontFamily: string) => {
       if (!disabled && onFormat) {
         onFormat({ type: 'fontFamily', value: fontFamily });
+        // Refocus editor after dropdown selection
+        requestAnimationFrame(() => onRefocusEditor?.());
       }
     },
-    [disabled, onFormat]
+    [disabled, onFormat, onRefocusEditor]
   );
 
   /**
@@ -365,9 +389,11 @@ export function Toolbar({
     (sizeInPoints: number) => {
       if (!disabled && onFormat) {
         onFormat({ type: 'fontSize', value: sizeInPoints });
+        // Refocus editor after dropdown selection
+        requestAnimationFrame(() => onRefocusEditor?.());
       }
     },
-    [disabled, onFormat]
+    [disabled, onFormat, onRefocusEditor]
   );
 
   /**
@@ -377,9 +403,11 @@ export function Toolbar({
     (color: string) => {
       if (!disabled && onFormat) {
         onFormat({ type: 'textColor', value: color });
+        // Refocus editor after color picker selection
+        requestAnimationFrame(() => onRefocusEditor?.());
       }
     },
-    [disabled, onFormat]
+    [disabled, onFormat, onRefocusEditor]
   );
 
   /**
@@ -389,9 +417,11 @@ export function Toolbar({
     (color: string) => {
       if (!disabled && onFormat) {
         onFormat({ type: 'highlightColor', value: color });
+        // Refocus editor after color picker selection
+        requestAnimationFrame(() => onRefocusEditor?.());
       }
     },
-    [disabled, onFormat]
+    [disabled, onFormat, onRefocusEditor]
   );
 
   /**
@@ -449,9 +479,11 @@ export function Toolbar({
     (twipsValue: number) => {
       if (!disabled && onFormat) {
         onFormat({ type: 'lineSpacing', value: twipsValue });
+        // Refocus editor after dropdown selection
+        requestAnimationFrame(() => onRefocusEditor?.());
       }
     },
-    [disabled, onFormat]
+    [disabled, onFormat, onRefocusEditor]
   );
 
   /**
@@ -461,9 +493,39 @@ export function Toolbar({
     (styleId: string) => {
       if (!disabled && onFormat) {
         onFormat({ type: 'applyStyle', value: styleId });
+        // Refocus editor after dropdown selection
+        requestAnimationFrame(() => onRefocusEditor?.());
       }
     },
-    [disabled, onFormat]
+    [disabled, onFormat, onRefocusEditor]
+  );
+
+  /**
+   * Handle table insert
+   */
+  const handleTableInsert = useCallback(
+    (rows: number, columns: number) => {
+      if (!disabled && onInsertTable) {
+        onInsertTable(rows, columns);
+        // Refocus editor after table insert
+        requestAnimationFrame(() => onRefocusEditor?.());
+      }
+    },
+    [disabled, onInsertTable, onRefocusEditor]
+  );
+
+  /**
+   * Handle table action
+   */
+  const handleTableAction = useCallback(
+    (action: TableAction) => {
+      if (!disabled && onTableAction) {
+        onTableAction(action);
+        // Refocus editor after table action
+        requestAnimationFrame(() => onRefocusEditor?.());
+      }
+    },
+    [disabled, onTableAction, onRefocusEditor]
   );
 
   /**
@@ -525,6 +587,10 @@ export function Toolbar({
           case 'j':
             event.preventDefault();
             handleAlignmentChange('both');
+            break;
+          case 'k':
+            event.preventDefault();
+            handleFormat('insertLink');
             break;
           // Undo/Redo handled by useHistory hook
         }
@@ -717,6 +783,14 @@ export function Toolbar({
             title="Text Highlight Color"
           />
         )}
+        <ToolbarButton
+          onClick={() => handleFormat('insertLink')}
+          disabled={disabled}
+          title="Insert link (Ctrl+K)"
+          ariaLabel="Insert link"
+        >
+          <MaterialSymbol name="link" size={ICON_SIZE} />
+        </ToolbarButton>
       </ToolbarGroup>
 
       {/* Superscript/Subscript Group */}
@@ -777,6 +851,29 @@ export function Toolbar({
               width={80}
             />
           )}
+        </ToolbarGroup>
+      )}
+
+      {/* Table Insert */}
+      {showTableInsert && onInsertTable && (
+        <ToolbarGroup label="Insert">
+          <TableGridPicker
+            onInsert={handleTableInsert}
+            disabled={disabled}
+            tooltip="Insert table"
+          />
+        </ToolbarGroup>
+      )}
+
+      {/* Table Options - shown when cursor is in a table */}
+      {tableContext?.isInTable && onTableAction && (
+        <ToolbarGroup label="Table">
+          <TableOptionsDropdown
+            onAction={handleTableAction}
+            disabled={disabled}
+            tableContext={tableContext}
+            tooltip="Table options"
+          />
         </ToolbarGroup>
       )}
 

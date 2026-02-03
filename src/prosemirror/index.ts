@@ -73,6 +73,13 @@ export {
   clearFormatting,
   isMarkActive,
   getMarkAttr,
+  // Hyperlink commands
+  isHyperlinkActive,
+  getHyperlinkAttrs,
+  getSelectedText,
+  setHyperlink,
+  removeHyperlink,
+  insertHyperlink,
   // Paragraph formatting
   setAlignment,
   alignLeft,

@@ -461,3 +461,150 @@ export function createSetMarkCommand(markType: MarkType, attrs?: Record<string, 
 export function createRemoveMarkCommand(markType: MarkType): Command {
   return removeMark(markType);
 }
+
+// ============================================================================
+// HYPERLINK COMMANDS
+// ============================================================================
+
+/**
+ * Check if a hyperlink mark is active in the current selection
+ */
+export function isHyperlinkActive(state: EditorState): boolean {
+  return isMarkActive(state, schema.marks.hyperlink);
+}
+
+/**
+ * Get current hyperlink attributes if cursor is in a hyperlink
+ */
+export function getHyperlinkAttrs(state: EditorState): { href: string; tooltip?: string } | null {
+  const { empty, $from, from, to } = state.selection;
+
+  if (empty) {
+    const marks = state.storedMarks || $from.marks();
+    for (const mark of marks) {
+      if (mark.type === schema.marks.hyperlink) {
+        return {
+          href: mark.attrs.href,
+          tooltip: mark.attrs.tooltip,
+        };
+      }
+    }
+    return null;
+  }
+
+  // Get from first text node in selection
+  let attrs: { href: string; tooltip?: string } | null = null;
+  state.doc.nodesBetween(from, to, (node) => {
+    if (node.isText && attrs === null) {
+      const mark = schema.marks.hyperlink.isInSet(node.marks);
+      if (mark) {
+        attrs = {
+          href: mark.attrs.href,
+          tooltip: mark.attrs.tooltip,
+        };
+        return false;
+      }
+    }
+    return true;
+  });
+
+  return attrs;
+}
+
+/**
+ * Get the selected text as a string
+ */
+export function getSelectedText(state: EditorState): string {
+  const { from, to, empty } = state.selection;
+  if (empty) return '';
+  return state.doc.textBetween(from, to, '');
+}
+
+/**
+ * Set hyperlink on selection
+ */
+export function setHyperlink(href: string, tooltip?: string): Command {
+  return (state, dispatch) => {
+    const { from, to, empty } = state.selection;
+
+    if (empty) {
+      // Cannot add hyperlink without selection
+      return false;
+    }
+
+    if (dispatch) {
+      const mark = schema.marks.hyperlink.create({
+        href,
+        tooltip: tooltip || null,
+      });
+      dispatch(state.tr.addMark(from, to, mark).scrollIntoView());
+    }
+
+    return true;
+  };
+}
+
+/**
+ * Remove hyperlink from selection
+ */
+export const removeHyperlink: Command = (state, dispatch) => {
+  const { from, to, empty } = state.selection;
+
+  if (empty) {
+    // Find the extent of the hyperlink at cursor
+    const $pos = state.selection.$from;
+    const marks = $pos.marks();
+    const linkMark = marks.find((m) => m.type === schema.marks.hyperlink);
+
+    if (!linkMark) return false;
+
+    // Find start and end of this hyperlink
+    let start = $pos.pos;
+    let end = $pos.pos;
+
+    // Search within the parent text node
+    const parent = $pos.parent;
+    parent.forEach((node, offset) => {
+      if (node.isText) {
+        const nodeStart = $pos.start() + offset;
+        const nodeEnd = nodeStart + node.nodeSize;
+
+        if (nodeStart <= $pos.pos && $pos.pos <= nodeEnd) {
+          const hasLink = node.marks.some((m) => m.type === schema.marks.hyperlink);
+          if (hasLink) {
+            start = Math.min(start, nodeStart);
+            end = Math.max(end, nodeEnd);
+          }
+        }
+      }
+    });
+
+    if (dispatch) {
+      dispatch(state.tr.removeMark(start, end, schema.marks.hyperlink).scrollIntoView());
+    }
+    return true;
+  }
+
+  if (dispatch) {
+    dispatch(state.tr.removeMark(from, to, schema.marks.hyperlink).scrollIntoView());
+  }
+
+  return true;
+};
+
+/**
+ * Insert text with hyperlink (when no text is selected)
+ */
+export function insertHyperlink(text: string, href: string, tooltip?: string): Command {
+  return (state, dispatch) => {
+    if (dispatch) {
+      const mark = schema.marks.hyperlink.create({
+        href,
+        tooltip: tooltip || null,
+      });
+      const textNode = state.schema.text(text, [mark]);
+      dispatch(state.tr.replaceSelectionWith(textNode, false).scrollIntoView());
+    }
+    return true;
+  };
+}
