@@ -155,27 +155,29 @@ const PLUGIN_HOST_STYLES = `
   overflow: auto;
 }
 
-/* Overlay panels - positioned absolutely over the editor, close to document */
+/* Overlay panels - positioned absolutely over the editor, outside the page */
 .plugin-panels-overlay-right {
   position: absolute;
   top: 0;
   right: 50%;
-  margin-right: -530px; /* Position right next to the ~816px page width / 2 + small gap */
+  margin-right: -600px; /* Position outside the ~816px page width / 2 + gap */
   bottom: 0;
-  width: 200px;
+  width: 220px;
   pointer-events: none;
   z-index: 100;
   overflow: visible;
 }
 
 .plugin-panel-overlay {
-  position: sticky;
-  top: 130px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-shrink: 0;
   pointer-events: auto;
   background: transparent;
-  max-height: calc(100vh - 150px);
   overflow: visible;
 }
 
@@ -186,6 +188,7 @@ const PLUGIN_HOST_STYLES = `
 .plugin-panel-overlay-content {
   flex: 1;
   overflow: visible;
+  position: relative;
 }
 `;
 
