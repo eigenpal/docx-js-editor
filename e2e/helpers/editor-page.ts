@@ -563,8 +563,8 @@ export class EditorPage {
    * Set font size
    */
   async setFontSize(size: number): Promise<void> {
-    // Click on font size picker trigger (uses Radix Select with aria-label)
-    const fontSizePicker = this.toolbar.locator('[aria-label="Select font size"]');
+    // Click on font size picker display button to open dropdown
+    const fontSizePicker = this.toolbar.locator('[data-testid="font-size-display"]');
     await fontSizePicker.click();
     // Wait for dropdown to open and select the size with exact text match
     await this.page.getByRole('option', { name: size.toString(), exact: true }).click();
@@ -894,24 +894,35 @@ export class EditorPage {
   // ============================================================================
 
   /**
-   * Insert a table with specified dimensions
+   * Insert a table with specified dimensions using the grid selector
    */
   async insertTable(rows: number, cols: number): Promise<void> {
-    // Open insert table dialog (usually via menu or button)
-    await this.page.locator('[aria-label="Insert table"]').click();
+    // Open table grid selector
+    await this.page.locator('[data-testid="toolbar-insert-table"]').click();
 
-    // Wait for dialog
-    await this.insertTableDialog.waitFor();
+    // Wait for grid to appear
+    await this.page.waitForSelector('.docx-table-grid', { state: 'visible', timeout: 5000 });
 
-    // Fill in dimensions
-    await this.page.locator('[data-testid="table-rows-input"]').fill(rows.toString());
-    await this.page.locator('[data-testid="table-cols-input"]').fill(cols.toString());
+    // Calculate grid cell index (row-major order, 5 columns per row)
+    // Grid uses 1-based indexing for rows and cols
+    const cellIndex = (rows - 1) * 5 + cols;
 
-    // Click insert
-    await this.page.locator('[data-testid="table-insert-button"]').click();
+    // Get the target cell - must HOVER first to set the hover state, then click
+    // The grid picker only inserts a table when hoverRows > 0 && hoverCols > 0
+    const targetCell = this.page.locator(`.docx-table-grid > div:nth-child(${cellIndex})`);
 
-    // Wait for dialog to close
-    await this.insertTableDialog.waitFor({ state: 'hidden' });
+    // Hover over the cell to set the hover state
+    await targetCell.hover();
+
+    // Small delay to ensure hover state is set
+    await this.page.waitForTimeout(100);
+
+    // Click on the target grid cell
+    await targetCell.click();
+
+    // Wait for table to be inserted (use generic table selector since prosemirror-tables
+    // column resizing plugin may override the table DOM and not include our docx-table class)
+    await this.page.waitForSelector('.ProseMirror table', { state: 'visible', timeout: 5000 });
   }
 
   /**
@@ -947,6 +958,175 @@ export class EditorPage {
     const rows = await table.locator('tr').count();
     const cols = await table.locator('tr').first().locator('td, th').count();
     return { rows, cols };
+  }
+
+  /**
+   * Open table options dropdown (must be in a table first)
+   */
+  async openTableOptions(): Promise<void> {
+    await this.page.locator('[data-testid="toolbar-table-options"]').click();
+    await this.page.waitForSelector('[role="menu"]', { state: 'visible', timeout: 5000 });
+  }
+
+  /**
+   * Click a table menu item
+   */
+  async clickTableMenuItem(itemName: string): Promise<void> {
+    await this.page.getByRole('menuitem', { name: itemName }).click();
+    // Wait for menu to close
+    await this.page.waitForTimeout(100);
+  }
+
+  /**
+   * Add a row above current cell
+   */
+  async addRowAbove(): Promise<void> {
+    await this.openTableOptions();
+    await this.clickTableMenuItem('Insert row above');
+  }
+
+  /**
+   * Add a row below current cell
+   */
+  async addRowBelow(): Promise<void> {
+    await this.openTableOptions();
+    await this.clickTableMenuItem('Insert row below');
+  }
+
+  /**
+   * Add a column to the left
+   */
+  async addColumnLeft(): Promise<void> {
+    await this.openTableOptions();
+    await this.clickTableMenuItem('Insert column left');
+  }
+
+  /**
+   * Add a column to the right
+   */
+  async addColumnRight(): Promise<void> {
+    await this.openTableOptions();
+    await this.clickTableMenuItem('Insert column right');
+  }
+
+  /**
+   * Delete current row
+   */
+  async deleteRow(): Promise<void> {
+    await this.openTableOptions();
+    await this.clickTableMenuItem('Delete row');
+  }
+
+  /**
+   * Delete current column
+   */
+  async deleteColumn(): Promise<void> {
+    await this.openTableOptions();
+    await this.clickTableMenuItem('Delete column');
+  }
+
+  /**
+   * Delete entire table
+   */
+  async deleteTable(): Promise<void> {
+    await this.openTableOptions();
+    await this.clickTableMenuItem('Delete table');
+  }
+
+  /**
+   * Set all borders on current cell
+   */
+  async setAllBorders(): Promise<void> {
+    await this.openTableOptions();
+    await this.clickTableMenuItem('All borders');
+  }
+
+  /**
+   * Remove borders from current cell
+   */
+  async removeBorders(): Promise<void> {
+    await this.openTableOptions();
+    await this.clickTableMenuItem('Remove borders');
+  }
+
+  /**
+   * Set cell fill color
+   */
+  async setCellFillColor(color: string): Promise<void> {
+    await this.openTableOptions();
+    // Click on cell fill color button
+    await this.page.getByRole('button', { name: 'Cell fill color' }).click();
+    // Wait for color picker to expand
+    await this.page.waitForTimeout(100);
+    // Click the color by title
+    await this.page.locator(`[title="${color}"]`).click();
+  }
+
+  /**
+   * Get cell background color
+   */
+  async getCellBackgroundColor(tableIndex: number, row: number, col: number): Promise<string> {
+    const table = this.page.locator('table').nth(tableIndex);
+    const cell = table.locator('tr').nth(row).locator('td, th').nth(col);
+    const style = await cell.getAttribute('style');
+    // Extract background-color from style
+    const match = style?.match(/background-color:\s*([^;]+)/);
+    return match ? match[1].trim() : '';
+  }
+
+  /**
+   * Check if cell has visible borders (not all set to 'none')
+   */
+  async cellHasBorders(tableIndex: number, row: number, col: number): Promise<boolean> {
+    const table = this.page.locator('table').nth(tableIndex);
+    const cell = table.locator('tr').nth(row).locator('td, th').nth(col);
+    const style = await cell.getAttribute('style');
+
+    if (!style) return false;
+
+    // Browser normalizes 'border: none' to 'border-style: none'
+    if (style.includes('border-style: none')) {
+      return false;
+    }
+
+    // Check if 'border: none' is explicitly set
+    if (style.includes('border: none')) {
+      return false;
+    }
+
+    // Check if all individual borders are set to none
+    const hasTopNone = style.includes('border-top: none');
+    const hasBottomNone = style.includes('border-bottom: none');
+    const hasLeftNone = style.includes('border-left: none');
+    const hasRightNone = style.includes('border-right: none');
+
+    // If all 4 borders are explicitly set to none, no borders
+    if (hasTopNone && hasBottomNone && hasLeftNone && hasRightNone) {
+      return false;
+    }
+
+    // Otherwise, check if there's any border definition (default or explicit)
+    return style.includes('border');
+  }
+
+  /**
+   * Save the document
+   */
+  async saveDocument(): Promise<void> {
+    // Wait for any pending changes
+    await this.page.waitForTimeout(200);
+    // Click save button
+    await this.page.locator('button:has-text("Save")').click();
+    // Wait for download or save confirmation
+    await this.page.waitForTimeout(500);
+  }
+
+  /**
+   * Click New button to create a new document
+   */
+  async newDocument(): Promise<void> {
+    await this.page.locator('button:has-text("New")').click();
+    await this.page.waitForTimeout(200);
   }
 
   // ============================================================================

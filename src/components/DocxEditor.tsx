@@ -26,7 +26,7 @@ import { Toolbar, type SelectionFormatting, type FormattingAction } from './Tool
 import { pointsToHalfPoints } from './ui/FontSizePicker';
 import { VariablePanel } from './VariablePanel';
 import { ErrorBoundary, ErrorProvider } from './ErrorBoundary';
-import { TableToolbar, type TableContext, type TableAction } from './ui/TableToolbar';
+import type { TableAction } from './ui/TableToolbar';
 import {
   PageNumberIndicator,
   type PageIndicatorPosition,
@@ -38,6 +38,7 @@ import {
   type PageNavigatorVariant,
 } from './ui/PageNavigator';
 import { HorizontalRuler } from './ui/HorizontalRuler';
+import { VerticalRuler } from './ui/VerticalRuler';
 import { PrintPreview, type PrintOptions } from './ui/PrintPreview';
 import {
   FindReplaceDialog,
@@ -60,6 +61,7 @@ import {
   ProseMirrorEditor,
   type ProseMirrorEditorRef,
   type SelectionState,
+  TextSelection,
   toggleBold,
   toggleItalic,
   toggleUnderline,
@@ -81,6 +83,23 @@ import {
   clearFormatting,
   applyStyle,
   createStyleResolver,
+  // Table commands
+  getTableContext,
+  insertTable,
+  addRowAbove,
+  addRowBelow,
+  deleteRow as pmDeleteRow,
+  addColumnLeft,
+  addColumnRight,
+  deleteColumn as pmDeleteColumn,
+  deleteTable as pmDeleteTable,
+  removeTableBorders,
+  setAllTableBorders,
+  setOutsideTableBorders,
+  setInsideTableBorders,
+  setCellFillColor,
+  setTableBorderColor,
+  type TableContextInfo,
 } from '../prosemirror';
 
 // ============================================================================
@@ -208,6 +227,8 @@ interface EditorState {
   totalPages: number;
   /** Whether print preview is open */
   isPrintPreviewOpen: boolean;
+  /** ProseMirror table context (for showing table toolbar) */
+  pmTableContext: TableContextInfo | null;
 }
 
 // ============================================================================
@@ -267,6 +288,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     currentPage: 1,
     totalPages: 1,
     isPrintPreviewOpen: false,
+    pmTableContext: null,
   });
 
   // History hook for undo/redo - start with null document
@@ -280,6 +302,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   const editorRef = useRef<ProseMirrorEditorRef>(null);
   const agentRef = useRef<DocumentAgent | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Save the last known selection for restoring after toolbar interactions
+  const lastSelectionRef = useRef<{ from: number; to: number } | null>(null);
 
   // Find/Replace hook
   const findReplace = useFindReplace();
@@ -401,10 +425,30 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   // Handle selection changes from ProseMirror
   const handleSelectionChange = useCallback(
     (selectionState: SelectionState | null) => {
+      // Save selection for restoring after toolbar interactions
+      const view = editorRef.current?.getView();
+      if (view) {
+        const { from, to } = view.state.selection;
+        // Only save non-empty selections (when text is actually selected)
+        if (from !== to) {
+          lastSelectionRef.current = { from, to };
+        }
+      }
+
+      // Also check table context from ProseMirror
+      let pmTableCtx: TableContextInfo | null = null;
+      if (view) {
+        pmTableCtx = getTableContext(view.state);
+        if (!pmTableCtx.isInTable) {
+          pmTableCtx = null;
+        }
+      }
+
       if (!selectionState) {
         setState((prev) => ({
           ...prev,
           selectionFormatting: {},
+          pmTableContext: pmTableCtx,
         }));
         return;
       }
@@ -449,6 +493,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       setState((prev) => ({
         ...prev,
         selectionFormatting: formatting,
+        pmTableContext: pmTableCtx,
       }));
 
       // Notify parent
@@ -466,10 +511,70 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     },
   });
 
-  // Handle table action from TableToolbar
+  // Handle table insert from toolbar
+  const handleInsertTable = useCallback((rows: number, columns: number) => {
+    const view = editorRef.current?.getView();
+    if (!view) return;
+    insertTable(rows, columns)(view.state, view.dispatch);
+    editorRef.current?.focus();
+  }, []);
+
+  // Handle table action from Toolbar - use ProseMirror commands
   const handleTableAction = useCallback(
-    (action: TableAction, _context: TableContext) => {
-      tableSelection.handleAction(action);
+    (action: TableAction) => {
+      const view = editorRef.current?.getView();
+      if (!view) return;
+
+      switch (action) {
+        case 'addRowAbove':
+          addRowAbove(view.state, view.dispatch);
+          break;
+        case 'addRowBelow':
+          addRowBelow(view.state, view.dispatch);
+          break;
+        case 'addColumnLeft':
+          addColumnLeft(view.state, view.dispatch);
+          break;
+        case 'addColumnRight':
+          addColumnRight(view.state, view.dispatch);
+          break;
+        case 'deleteRow':
+          pmDeleteRow(view.state, view.dispatch);
+          break;
+        case 'deleteColumn':
+          pmDeleteColumn(view.state, view.dispatch);
+          break;
+        case 'deleteTable':
+          pmDeleteTable(view.state, view.dispatch);
+          break;
+        // Border actions
+        case 'borderAll':
+          setAllTableBorders(view.state, view.dispatch);
+          break;
+        case 'borderOutside':
+          setOutsideTableBorders(view.state, view.dispatch);
+          break;
+        case 'borderInside':
+          setInsideTableBorders(view.state, view.dispatch);
+          break;
+        case 'borderNone':
+          removeTableBorders(view.state, view.dispatch);
+          break;
+        default:
+          // Handle complex actions (with parameters)
+          if (typeof action === 'object') {
+            if (action.type === 'cellFillColor') {
+              setCellFillColor(action.color)(view.state, view.dispatch);
+            } else if (action.type === 'borderColor') {
+              setTableBorderColor(action.color)(view.state, view.dispatch);
+            }
+          } else {
+            // Fallback to legacy table selection handler for other actions
+            tableSelection.handleAction(action);
+          }
+      }
+
+      editorRef.current?.focus();
     },
     [tableSelection]
   );
@@ -478,6 +583,28 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   const handleFormat = useCallback((action: FormattingAction) => {
     const view = editorRef.current?.getView();
     if (!view) return;
+
+    // Focus editor first to ensure we can dispatch commands
+    view.focus();
+
+    // Restore selection if it was lost during toolbar interaction
+    // This happens when user clicks on dropdown menus (font picker, style picker, etc.)
+    const { from, to } = view.state.selection;
+    const isEmptySelection = from === to;
+    const savedSelection = lastSelectionRef.current;
+
+    if (isEmptySelection && savedSelection && savedSelection.from !== savedSelection.to) {
+      // Selection was lost - restore it before applying the format
+      try {
+        const tr = view.state.tr.setSelection(
+          TextSelection.create(view.state.doc, savedSelection.from, savedSelection.to)
+        );
+        view.dispatch(tr);
+      } catch (e) {
+        // If restoration fails (e.g., positions are invalid after doc change), continue with current selection
+        console.warn('Could not restore selection:', e);
+      }
+    }
 
     // Handle simple toggle actions
     if (action === 'bold') {
@@ -604,6 +731,91 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   const handleZoomChange = useCallback((zoom: number) => {
     setState((prev) => ({ ...prev, zoom }));
   }, []);
+
+  // Handle margin changes from rulers
+  const handleLeftMarginChange = useCallback(
+    (marginTwips: number) => {
+      if (!history.state || readOnly) return;
+      const newDoc = {
+        ...history.state,
+        package: {
+          ...history.state.package,
+          document: {
+            ...history.state.package.document,
+            finalSectionProperties: {
+              ...history.state.package.document.finalSectionProperties,
+              marginLeft: marginTwips,
+            },
+          },
+        },
+      };
+      handleDocumentChange(newDoc);
+    },
+    [history.state, readOnly, handleDocumentChange]
+  );
+
+  const handleRightMarginChange = useCallback(
+    (marginTwips: number) => {
+      if (!history.state || readOnly) return;
+      const newDoc = {
+        ...history.state,
+        package: {
+          ...history.state.package,
+          document: {
+            ...history.state.package.document,
+            finalSectionProperties: {
+              ...history.state.package.document.finalSectionProperties,
+              marginRight: marginTwips,
+            },
+          },
+        },
+      };
+      handleDocumentChange(newDoc);
+    },
+    [history.state, readOnly, handleDocumentChange]
+  );
+
+  const handleTopMarginChange = useCallback(
+    (marginTwips: number) => {
+      if (!history.state || readOnly) return;
+      const newDoc = {
+        ...history.state,
+        package: {
+          ...history.state.package,
+          document: {
+            ...history.state.package.document,
+            finalSectionProperties: {
+              ...history.state.package.document.finalSectionProperties,
+              marginTop: marginTwips,
+            },
+          },
+        },
+      };
+      handleDocumentChange(newDoc);
+    },
+    [history.state, readOnly, handleDocumentChange]
+  );
+
+  const handleBottomMarginChange = useCallback(
+    (marginTwips: number) => {
+      if (!history.state || readOnly) return;
+      const newDoc = {
+        ...history.state,
+        package: {
+          ...history.state.package,
+          document: {
+            ...history.state.package.document,
+            finalSectionProperties: {
+              ...history.state.package.document.finalSectionProperties,
+              marginBottom: marginTwips,
+            },
+          },
+        },
+      };
+      handleDocumentChange(newDoc);
+    },
+    [history.state, readOnly, handleDocumentChange]
+  );
 
   // Handle page navigation (from PageNavigator)
   // TODO: Implement page navigation in ProseMirror
@@ -846,38 +1058,35 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     return extractVariableNames(history.state);
   }, [history.state]);
 
-  // Container styles
+  // Container styles - using overflow: auto so sticky toolbar works
   const containerStyle: CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
     width: '100%',
-    overflow: 'hidden',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--doc-bg-subtle)',
     ...style,
   };
 
   const mainContentStyle: CSSProperties = {
     display: 'flex',
     flex: 1,
-    overflow: 'hidden',
+    minHeight: 0, // Allow flex item to shrink below content size
     flexDirection: variablePanelPosition === 'left' ? 'row-reverse' : 'row',
   };
 
   const editorContainerStyle: CSSProperties = {
     flex: 1,
-    overflow: 'hidden',
+    overflow: 'auto', // This is the scroll container - sticky toolbar will stick to this
     position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
   };
 
   const variablePanelStyle: CSSProperties = {
     width: '300px',
-    borderLeft: variablePanelPosition === 'right' ? '1px solid #e0e0e0' : undefined,
-    borderRight: variablePanelPosition === 'left' ? '1px solid #e0e0e0' : undefined,
+    borderLeft: variablePanelPosition === 'right' ? '1px solid var(--doc-border)' : undefined,
+    borderRight: variablePanelPosition === 'left' ? '1px solid var(--doc-border)' : undefined,
     overflow: 'auto',
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
   };
 
   // Render loading state
@@ -928,59 +1137,78 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           style={containerStyle}
           data-testid="docx-editor"
         >
-          {/* Toolbar - sticky at top */}
-          {showToolbar && (
-            <div className="sticky top-0 z-50 flex flex-col gap-1 bg-white">
-              <Toolbar
-                currentFormatting={state.selectionFormatting}
-                onFormat={handleFormat}
-                onUndo={() => editorRef.current?.undo()}
-                onRedo={() => editorRef.current?.redo()}
-                canUndo={true}
-                canRedo={true}
-                disabled={readOnly}
-                documentStyles={history.state?.package.styles?.styles}
-                theme={history.state?.package.theme || theme}
-                showPrintButton={showPrintButton}
-                onPrint={handleOpenPrintPreview}
-                showZoomControl={showZoomControl}
-                zoom={state.zoom}
-                onZoomChange={handleZoomChange}
-                onRefocusEditor={() => editorRef.current?.focus()}
-              >
-                {toolbarExtra}
-              </Toolbar>
+          {/* Main content area */}
+          <div style={mainContentStyle}>
+            {/* Editor container - this is the scroll container */}
+            <div style={editorContainerStyle}>
+              {/* Toolbar - sticky at top of scroll container */}
+              {showToolbar && (
+                <div className="sticky top-0 z-50 flex flex-col gap-0 bg-white shadow-sm">
+                  <Toolbar
+                    currentFormatting={state.selectionFormatting}
+                    onFormat={handleFormat}
+                    onUndo={() => editorRef.current?.undo()}
+                    onRedo={() => editorRef.current?.redo()}
+                    canUndo={true}
+                    canRedo={true}
+                    disabled={readOnly}
+                    documentStyles={history.state?.package.styles?.styles}
+                    theme={history.state?.package.theme || theme}
+                    showPrintButton={showPrintButton}
+                    onPrint={handleOpenPrintPreview}
+                    showZoomControl={showZoomControl}
+                    zoom={state.zoom}
+                    onZoomChange={handleZoomChange}
+                    onRefocusEditor={() => editorRef.current?.focus()}
+                    onInsertTable={handleInsertTable}
+                    showTableInsert={true}
+                    tableContext={state.pmTableContext}
+                    onTableAction={handleTableAction}
+                  >
+                    {toolbarExtra}
+                  </Toolbar>
 
-              {/* Table Toolbar - shows when a table cell is selected */}
-              {tableSelection.tableContext && (
-                <TableToolbar
-                  context={tableSelection.tableContext}
-                  onAction={handleTableAction}
-                  disabled={readOnly}
-                  compact
-                />
+                  {/* Horizontal Ruler - sticky with toolbar */}
+                  {showRuler && (
+                    <div className="flex justify-center px-5 py-1 overflow-x-auto flex-shrink-0 bg-doc-bg">
+                      <HorizontalRuler
+                        sectionProps={history.state?.package.document?.finalSectionProperties}
+                        zoom={state.zoom}
+                        unit={rulerUnit}
+                        editable={!readOnly}
+                        onLeftMarginChange={handleLeftMarginChange}
+                        onRightMarginChange={handleRightMarginChange}
+                      />
+                    </div>
+                  )}
+                </div>
               )}
 
-              {/* Horizontal Ruler - sticky with toolbar */}
+              {/* Vertical Ruler - fixed on left edge */}
               {showRuler && (
-                <div className="flex justify-center bg-slate-100 px-5 py-1 border-b border-slate-300 overflow-auto flex-shrink-0">
-                  <HorizontalRuler
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    paddingTop: 20,
+                    zIndex: 10,
+                  }}
+                >
+                  <VerticalRuler
                     sectionProps={history.state?.package.document?.finalSectionProperties}
                     zoom={state.zoom}
                     unit={rulerUnit}
-                    editable={false}
+                    editable={!readOnly}
+                    onTopMarginChange={handleTopMarginChange}
+                    onBottomMarginChange={handleBottomMarginChange}
                   />
                 </div>
               )}
-            </div>
-          )}
 
-          {/* Main content area */}
-          <div style={mainContentStyle}>
-            {/* Editor */}
-            <div style={editorContainerStyle}>
+              {/* Editor content area */}
               <div
-                style={{ flex: 1, overflow: 'auto', position: 'relative' }}
+                style={{ position: 'relative' }}
                 onMouseDown={(e) => {
                   // Focus editor when clicking on the background area (not the editor itself)
                   // Using mouseDown for immediate response before focus can be lost
@@ -998,6 +1226,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                   onChange={handleDocumentChange}
                   onSelectionChange={handleSelectionChange}
                   readOnly={readOnly}
+                  autoFocus
                 />
 
                 {/* Page navigation / indicator */}
@@ -1087,15 +1316,15 @@ function DefaultLoadingIndicator(): React.ReactElement {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100%',
-        color: '#666',
+        color: 'var(--doc-text-muted)',
       }}
     >
       <div
         style={{
           width: '40px',
           height: '40px',
-          border: '3px solid #e0e0e0',
-          borderTop: '3px solid #1a73e8',
+          border: '3px solid var(--doc-border)',
+          borderTop: '3px solid var(--doc-primary)',
           borderRadius: '50%',
           animation: 'docx-spin 1s linear infinite',
         }}
@@ -1125,7 +1354,7 @@ function DefaultPlaceholder(): React.ReactElement {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100%',
-        color: '#999',
+        color: 'var(--doc-text-placeholder)',
       }}
     >
       <svg
@@ -1160,7 +1389,7 @@ function ParseError({ message }: { message: string }): React.ReactElement {
         textAlign: 'center',
       }}
     >
-      <div style={{ color: '#c5221f', marginBottom: '16px' }}>
+      <div style={{ color: 'var(--doc-error)', marginBottom: '16px' }}>
         <svg
           width="48"
           height="48"
@@ -1173,8 +1402,8 @@ function ParseError({ message }: { message: string }): React.ReactElement {
           <path d="M12 8v4M12 16v.01" />
         </svg>
       </div>
-      <h3 style={{ color: '#c5221f', marginBottom: '8px' }}>Failed to Load Document</h3>
-      <p style={{ color: '#666', maxWidth: '400px' }}>{message}</p>
+      <h3 style={{ color: 'var(--doc-error)', marginBottom: '8px' }}>Failed to Load Document</h3>
+      <p style={{ color: 'var(--doc-text-muted)', maxWidth: '400px' }}>{message}</p>
     </div>
   );
 }

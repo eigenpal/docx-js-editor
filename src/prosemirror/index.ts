@@ -37,6 +37,9 @@ export type {
   SelectionState,
 } from './ProseMirrorEditor';
 
+// Re-export TextSelection for restoring selections after toolbar interactions
+export { TextSelection } from 'prosemirror-state';
+
 // Plugins
 export {
   createKeymap,
@@ -90,4 +93,25 @@ export {
   applyStyle,
   clearStyle,
   getStyleId,
+  // Table operations
+  isInTable,
+  getTableContext,
+  insertTable,
+  addRowAbove,
+  addRowBelow,
+  deleteRow,
+  addColumnLeft,
+  addColumnRight,
+  deleteColumn,
+  deleteTable,
+  mergeCells,
+  splitCell,
+  setTableBorders,
+  removeTableBorders,
+  setAllTableBorders,
+  setOutsideTableBorders,
+  setInsideTableBorders,
+  setCellFillColor,
+  setTableBorderColor,
 } from './commands';
+export type { TableContextInfo, BorderPreset } from './commands';
