@@ -166,11 +166,31 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
     }
   }, [updatePositions, editorView, findScrollContainer]);
 
-  // Update on resize
+  // Update on window resize
   useEffect(() => {
     window.addEventListener('resize', updatePositions);
     return () => window.removeEventListener('resize', updatePositions);
   }, [updatePositions]);
+
+  // Update on editor DOM resize (handles zoom changes)
+  useEffect(() => {
+    if (!editorView) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(updatePositions);
+    });
+
+    // Observe the editor DOM element
+    resizeObserver.observe(editorView.dom);
+
+    // Also observe parent containers that might change with zoom
+    const parent = editorView.dom.parentElement;
+    if (parent) {
+      resizeObserver.observe(parent);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [editorView, updatePositions]);
 
   // Handle hover
   const handleHover = (elementId: string | undefined) => {
