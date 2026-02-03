@@ -459,12 +459,16 @@ export function measureSpace(formatting?: TextFormatting, theme?: Theme): number
 
 /**
  * Get line height for given formatting
+ *
+ * Note: The canvas fontBoundingBox already includes appropriate leading/ascent/descent.
+ * We should NOT add extra multipliers here as that causes lines to be spaced too far apart
+ * compared to how Word renders them.
  */
 export function getLineHeight(formatting?: TextFormatting, theme?: Theme): number {
   // Measure a typical line (capital M is good for this)
   const measurement = measureTextSync('M', formatting, theme);
-  // Return height with a bit of leading
-  return measurement.height * 1.15;
+  // Return the natural height - don't add extra leading as bounding box already includes it
+  return measurement.height;
 }
 
 /**

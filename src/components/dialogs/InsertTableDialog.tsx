@@ -70,7 +70,7 @@ const DIALOG_OVERLAY_STYLE: CSSProperties = {
 };
 
 const DIALOG_CONTENT_STYLE: CSSProperties = {
-  backgroundColor: '#ffffff',
+  backgroundColor: 'white',
   borderRadius: '8px',
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
   minWidth: '320px',
@@ -84,14 +84,14 @@ const DIALOG_HEADER_STYLE: CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '16px 20px',
-  borderBottom: '1px solid #e0e0e0',
+  borderBottom: '1px solid var(--doc-border)',
 };
 
 const DIALOG_TITLE_STYLE: CSSProperties = {
   margin: 0,
   fontSize: '18px',
   fontWeight: 600,
-  color: '#333',
+  color: 'var(--doc-text)',
 };
 
 const CLOSE_BUTTON_STYLE: CSSProperties = {
@@ -99,7 +99,7 @@ const CLOSE_BUTTON_STYLE: CSSProperties = {
   border: 'none',
   fontSize: '20px',
   cursor: 'pointer',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   padding: '4px 8px',
   lineHeight: 1,
 };
@@ -119,7 +119,7 @@ const GRID_STYLE: CSSProperties = {
   display: 'grid',
   gap: '2px',
   padding: '4px',
-  backgroundColor: '#f0f0f0',
+  backgroundColor: 'var(--doc-bg-hover)',
   borderRadius: '4px',
   cursor: 'pointer',
 };
@@ -127,23 +127,23 @@ const GRID_STYLE: CSSProperties = {
 const GRID_CELL_STYLE: CSSProperties = {
   width: '24px',
   height: '24px',
-  backgroundColor: '#fff',
-  border: '1px solid #d0d0d0',
+  backgroundColor: 'white',
+  border: '1px solid var(--doc-border-dark)',
   borderRadius: '2px',
   transition: 'background-color 0.1s, border-color 0.1s',
 };
 
 const GRID_CELL_SELECTED_STYLE: CSSProperties = {
   ...GRID_CELL_STYLE,
-  backgroundColor: '#1a73e8',
-  borderColor: '#1a73e8',
+  backgroundColor: 'var(--doc-primary)',
+  borderColor: 'var(--doc-primary)',
 };
 
 const GRID_LABEL_STYLE: CSSProperties = {
   marginTop: '8px',
   fontSize: '14px',
   fontWeight: 500,
-  color: '#333',
+  color: 'var(--doc-text)',
 };
 
 const SEPARATOR_STYLE: CSSProperties = {
@@ -151,14 +151,14 @@ const SEPARATOR_STYLE: CSSProperties = {
   alignItems: 'center',
   gap: '12px',
   margin: '16px 0',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   fontSize: '12px',
 };
 
 const SEPARATOR_LINE_STYLE: CSSProperties = {
   flex: 1,
   height: '1px',
-  backgroundColor: '#e0e0e0',
+  backgroundColor: 'var(--doc-border)',
 };
 
 const INPUT_ROW_STYLE: CSSProperties = {
@@ -171,14 +171,14 @@ const INPUT_ROW_STYLE: CSSProperties = {
 const LABEL_STYLE: CSSProperties = {
   fontSize: '14px',
   fontWeight: 500,
-  color: '#333',
+  color: 'var(--doc-text)',
   minWidth: '80px',
 };
 
 const INPUT_STYLE: CSSProperties = {
   width: '80px',
   padding: '8px 12px',
-  border: '1px solid #ccc',
+  border: '1px solid var(--doc-border-input)',
   borderRadius: '4px',
   fontSize: '14px',
   textAlign: 'center',
@@ -189,7 +189,7 @@ const DIALOG_FOOTER_STYLE: CSSProperties = {
   justifyContent: 'flex-end',
   gap: '12px',
   padding: '16px 20px',
-  borderTop: '1px solid #e0e0e0',
+  borderTop: '1px solid var(--doc-border)',
 };
 
 const BUTTON_BASE_STYLE: CSSProperties = {
@@ -203,21 +203,21 @@ const BUTTON_BASE_STYLE: CSSProperties = {
 
 const PRIMARY_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#1a73e8',
-  color: '#ffffff',
+  backgroundColor: 'var(--doc-primary)',
+  color: 'white',
 };
 
 const SECONDARY_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#f0f0f0',
-  color: '#333',
-  border: '1px solid #ccc',
+  backgroundColor: 'var(--doc-bg-hover)',
+  color: 'var(--doc-text)',
+  border: '1px solid var(--doc-border-input)',
 };
 
 const DISABLED_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#ccc',
-  color: '#666',
+  backgroundColor: 'var(--doc-border-input)',
+  color: 'var(--doc-text-muted)',
   cursor: 'not-allowed',
 };
 

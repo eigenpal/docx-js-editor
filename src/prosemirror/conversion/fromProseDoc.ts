@@ -580,15 +580,48 @@ function convertPMTableCell(node: PMNode): TableCell {
  * Convert ProseMirror table cell attrs to TableCellFormatting
  */
 function tableCellAttrsToFormatting(attrs: TableCellAttrs): TableCellFormatting | undefined {
+  // Check for any extended attrs (borders, borderColor are not in TableCellAttrs type but are set dynamically)
+  const extendedAttrs = attrs as TableCellAttrs & {
+    borders?: { top?: boolean; bottom?: boolean; left?: boolean; right?: boolean };
+    borderColor?: string;
+  };
+
   const hasFormatting =
     attrs.colspan > 1 ||
     attrs.rowspan > 1 ||
     attrs.width ||
     attrs.verticalAlign ||
-    attrs.backgroundColor;
+    attrs.backgroundColor ||
+    extendedAttrs.borders ||
+    extendedAttrs.borderColor;
 
   if (!hasFormatting) {
     return undefined;
+  }
+
+  // Convert PM borders to OOXML TableBorders format
+  let borders: TableCellFormatting['borders'] = undefined;
+  if (extendedAttrs.borders) {
+    const borderStyle = 'single';
+    const borderSize = 4; // 0.5pt in eighths of a point
+    // Default to black borders like Word
+    const borderColor = extendedAttrs.borderColor
+      ? { rgb: extendedAttrs.borderColor.replace(/^#/, '') }
+      : { rgb: '000000' };
+
+    borders = {};
+    if (extendedAttrs.borders.top) {
+      borders.top = { style: borderStyle, size: borderSize, color: borderColor };
+    }
+    if (extendedAttrs.borders.bottom) {
+      borders.bottom = { style: borderStyle, size: borderSize, color: borderColor };
+    }
+    if (extendedAttrs.borders.left) {
+      borders.left = { style: borderStyle, size: borderSize, color: borderColor };
+    }
+    if (extendedAttrs.borders.right) {
+      borders.right = { style: borderStyle, size: borderSize, color: borderColor };
+    }
   }
 
   return {
@@ -605,6 +638,7 @@ function tableCellAttrsToFormatting(attrs: TableCellAttrs): TableCellFormatting 
           fill: { rgb: attrs.backgroundColor },
         }
       : undefined,
+    borders,
   };
 }
 

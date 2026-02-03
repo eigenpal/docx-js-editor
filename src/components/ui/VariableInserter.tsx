@@ -92,7 +92,7 @@ const STYLES: Record<string, CSSProperties> = {
   input: {
     padding: '4px 8px',
     paddingLeft: '24px',
-    border: '1px solid #ccc',
+    border: '1px solid var(--doc-border)',
     borderRadius: '3px',
     fontSize: '12px',
     width: '140px',
@@ -107,13 +107,13 @@ const STYLES: Record<string, CSSProperties> = {
     fontSize: '11px',
   },
   inputFocused: {
-    borderColor: '#0078d4',
+    borderColor: 'var(--doc-primary)',
     boxShadow: '0 0 0 2px rgba(0, 120, 212, 0.2)',
   },
   inputDisabled: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--doc-bg-muted)',
     cursor: 'not-allowed',
-    color: '#999',
+    color: 'var(--doc-text-muted)',
   },
   bracketPrefix: {
     position: 'absolute',
@@ -135,7 +135,7 @@ const STYLES: Record<string, CSSProperties> = {
     padding: '4px 8px',
     border: 'none',
     borderRadius: '3px',
-    backgroundColor: '#0078d4',
+    backgroundColor: 'var(--doc-primary)',
     color: 'white',
     fontSize: '12px',
     cursor: 'pointer',
@@ -148,10 +148,10 @@ const STYLES: Record<string, CSSProperties> = {
     fontSize: '11px',
   },
   buttonHover: {
-    backgroundColor: '#106ebe',
+    backgroundColor: 'var(--doc-primary-dark)',
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: 'var(--doc-border)',
     cursor: 'not-allowed',
   },
   dropdown: {
@@ -160,7 +160,7 @@ const STYLES: Record<string, CSSProperties> = {
     left: '0',
     marginTop: '4px',
     backgroundColor: 'white',
-    border: '1px solid #ccc',
+    border: '1px solid var(--doc-border)',
     borderRadius: '4px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
     zIndex: 1000,
@@ -182,10 +182,10 @@ const STYLES: Record<string, CSSProperties> = {
     gap: '8px',
   },
   suggestionItemHover: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: 'var(--doc-bg-hover)',
   },
   suggestionItemSelected: {
-    backgroundColor: '#e6f0ff',
+    backgroundColor: 'var(--doc-primary-light)',
   },
   variableTag: {
     display: 'inline-block',
@@ -199,13 +199,13 @@ const STYLES: Record<string, CSSProperties> = {
   },
   noSuggestions: {
     padding: '8px 12px',
-    color: '#666',
+    color: 'var(--doc-text-muted)',
     fontSize: '12px',
     fontStyle: 'italic',
   },
   label: {
     fontSize: '11px',
-    color: '#666',
+    color: 'var(--doc-text-muted)',
     marginRight: '4px',
   },
 };
@@ -515,8 +515,8 @@ export function VariableButton({
     padding: '4px 8px',
     border: 'none',
     borderRadius: '3px',
-    backgroundColor: isHovered && !disabled ? '#e0e0e0' : 'transparent',
-    color: disabled ? '#aaa' : '#333',
+    backgroundColor: isHovered && !disabled ? 'var(--doc-bg-hover)' : 'transparent',
+    color: disabled ? 'var(--doc-text-muted)' : 'var(--doc-text)',
     fontSize: '12px',
     cursor: disabled ? 'not-allowed' : 'pointer',
     transition: 'background-color 0.15s',
@@ -558,7 +558,7 @@ export function VariableButton({
             marginTop: '4px',
             zIndex: 1000,
             backgroundColor: 'white',
-            border: '1px solid #ccc',
+            border: '1px solid var(--doc-border)',
             borderRadius: '4px',
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
             padding: '8px',
@@ -618,7 +618,9 @@ export function VariableContextMenuItem({
 
   return (
     <div className="docx-variable-context-menu" style={{ padding: '8px' }}>
-      <div style={{ marginBottom: '8px', fontSize: '12px', color: '#666' }}>Insert Variable</div>
+      <div style={{ marginBottom: '8px', fontSize: '12px', color: 'var(--doc-text-muted)' }}>
+        Insert Variable
+      </div>
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
         <span style={{ color: '#e4b416', fontWeight: 'bold' }}>{'{'}</span>
         <input
@@ -630,7 +632,7 @@ export function VariableContextMenuItem({
           style={{
             flex: 1,
             padding: '4px 6px',
-            border: '1px solid #ccc',
+            border: '1px solid var(--doc-border)',
             borderRadius: '3px',
             fontSize: '12px',
             outline: 'none',
@@ -642,7 +644,7 @@ export function VariableContextMenuItem({
           disabled={!inputValue.trim()}
           style={{
             padding: '4px 8px',
-            backgroundColor: inputValue.trim() ? '#0078d4' : '#ccc',
+            backgroundColor: inputValue.trim() ? 'var(--doc-primary)' : 'var(--doc-border)',
             color: 'white',
             border: 'none',
             borderRadius: '3px',
@@ -656,8 +658,14 @@ export function VariableContextMenuItem({
 
       {/* Show existing variables */}
       {existingVariables.length > 0 && (
-        <div style={{ marginTop: '8px', borderTop: '1px solid #eee', paddingTop: '8px' }}>
-          <div style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>
+        <div
+          style={{
+            marginTop: '8px',
+            borderTop: '1px solid var(--doc-border-light)',
+            paddingTop: '8px',
+          }}
+        >
+          <div style={{ fontSize: '11px', color: 'var(--doc-text-muted)', marginBottom: '4px' }}>
             Existing variables:
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>

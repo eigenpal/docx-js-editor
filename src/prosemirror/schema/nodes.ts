@@ -366,6 +366,8 @@ export interface TableCellAttrs {
   colspan: number;
   /** Row span */
   rowspan: number;
+  /** Column widths for prosemirror-tables resizing (array of pixel widths) */
+  colwidth?: number[] | null;
   /** Cell width (in twips) */
   width?: number;
   /** Cell width type */
@@ -413,7 +415,7 @@ export const table: NodeSpec = {
     }
 
     // Apply table width style
-    const styles: string[] = ['border-collapse: collapse', 'width: 100%'];
+    const styles: string[] = ['border-collapse: collapse', 'width: 100%', 'table-layout: fixed'];
     if (attrs.justification === 'center') {
       styles.push('margin-left: auto', 'margin-right: auto');
     } else if (attrs.justification === 'right') {
@@ -453,18 +455,22 @@ export const tableRow: NodeSpec = {
 
 /**
  * Table cell node - regular cell
+ * Content allows paragraphs and nested tables (valid in OOXML)
  */
 export const tableCell: NodeSpec = {
-  content: 'paragraph+',
+  content: '(paragraph | table)+',
   tableRole: 'cell',
   isolating: true,
   attrs: {
     colspan: { default: 1 },
     rowspan: { default: 1 },
+    colwidth: { default: null }, // Required for prosemirror-tables column resizing
     width: { default: null },
     widthType: { default: null },
     verticalAlign: { default: null },
     backgroundColor: { default: null },
+    borders: { default: null }, // { top?: boolean, bottom?: boolean, left?: boolean, right?: boolean }
+    borderColor: { default: null },
   },
   parseDOM: [
     {
@@ -493,8 +499,41 @@ export const tableCell: NodeSpec = {
       domAttrs.rowspan = String(attrs.rowspan);
     }
 
-    // Build style
-    const styles: string[] = ['border: 1px solid #d0d0d0', 'padding: 4px 8px'];
+    // Build style - text wrapping and overflow control are critical for table-layout: fixed
+    const styles: string[] = [
+      'padding: 4px 8px',
+      'word-wrap: break-word',
+      'overflow-wrap: break-word',
+      'overflow: hidden',
+    ];
+
+    // Handle cell width - colwidth takes priority (set by prosemirror-tables resizing)
+    if (attrs.colwidth && attrs.colwidth.length > 0) {
+      // colwidth is array of pixel widths for each column in the cell span
+      const totalWidth = attrs.colwidth.reduce((sum, w) => sum + w, 0);
+      styles.push(`width: ${totalWidth}px`);
+    } else if (attrs.width && attrs.widthType === 'pct') {
+      styles.push(`width: ${attrs.width}%`);
+    } else if (attrs.width) {
+      // Assume twips if not percentage
+      const widthPx = Math.round((attrs.width / 20) * 1.333);
+      styles.push(`width: ${widthPx}px`);
+    }
+
+    // Handle borders - default to black borders like Word
+    const borderColor = (attrs as any).borderColor ? `#${(attrs as any).borderColor}` : '#000000';
+    const borders = (attrs as any).borders;
+    if (borders) {
+      // Individual border control
+      styles.push(`border-top: ${borders.top ? '1px solid ' + borderColor : 'none'}`);
+      styles.push(`border-bottom: ${borders.bottom ? '1px solid ' + borderColor : 'none'}`);
+      styles.push(`border-left: ${borders.left ? '1px solid ' + borderColor : 'none'}`);
+      styles.push(`border-right: ${borders.right ? '1px solid ' + borderColor : 'none'}`);
+    } else {
+      // Default: all borders with black color (like Word)
+      styles.push(`border: 1px solid ${borderColor}`);
+    }
+
     if (attrs.verticalAlign) {
       domAttrs['data-valign'] = attrs.verticalAlign;
       styles.push(`vertical-align: ${attrs.verticalAlign}`);
@@ -511,18 +550,22 @@ export const tableCell: NodeSpec = {
 
 /**
  * Table header cell node
+ * Content allows paragraphs and nested tables (valid in OOXML)
  */
 export const tableHeader: NodeSpec = {
-  content: 'paragraph+',
+  content: '(paragraph | table)+',
   tableRole: 'header_cell',
   isolating: true,
   attrs: {
     colspan: { default: 1 },
     rowspan: { default: 1 },
+    colwidth: { default: null }, // Required for prosemirror-tables column resizing
     width: { default: null },
     widthType: { default: null },
     verticalAlign: { default: null },
     backgroundColor: { default: null },
+    borders: { default: null },
+    borderColor: { default: null },
   },
   parseDOM: [
     {
@@ -552,20 +595,55 @@ export const tableHeader: NodeSpec = {
     }
 
     // Build style - headers get bold and centered by default
+    // Text wrapping and overflow control are critical for table-layout: fixed
     const styles: string[] = [
-      'border: 1px solid #d0d0d0',
       'padding: 4px 8px',
       'font-weight: bold',
-      'background-color: #f5f5f5',
+      'word-wrap: break-word',
+      'overflow-wrap: break-word',
+      'overflow: hidden',
     ];
+
+    // Handle cell width - colwidth takes priority (set by prosemirror-tables resizing)
+    if (attrs.colwidth && attrs.colwidth.length > 0) {
+      // colwidth is array of pixel widths for each column in the cell span
+      const totalWidth = attrs.colwidth.reduce((sum, w) => sum + w, 0);
+      styles.push(`width: ${totalWidth}px`);
+    } else if (attrs.width && (attrs as any).widthType === 'pct') {
+      styles.push(`width: ${attrs.width}%`);
+    } else if (attrs.width) {
+      // Assume twips if not percentage
+      const widthPx = Math.round((attrs.width / 20) * 1.333);
+      styles.push(`width: ${widthPx}px`);
+    }
+
+    // Handle borders - default to black borders like Word
+    const borderColor = (attrs as any).borderColor ? `#${(attrs as any).borderColor}` : '#000000';
+    const borders = (attrs as any).borders;
+    if (borders) {
+      // Individual border control
+      styles.push(`border-top: ${borders.top ? '1px solid ' + borderColor : 'none'}`);
+      styles.push(`border-bottom: ${borders.bottom ? '1px solid ' + borderColor : 'none'}`);
+      styles.push(`border-left: ${borders.left ? '1px solid ' + borderColor : 'none'}`);
+      styles.push(`border-right: ${borders.right ? '1px solid ' + borderColor : 'none'}`);
+    } else {
+      // Default: all borders with black color (like Word)
+      styles.push(`border: 1px solid ${borderColor}`);
+    }
+
     if (attrs.verticalAlign) {
       domAttrs['data-valign'] = attrs.verticalAlign;
       styles.push(`vertical-align: ${attrs.verticalAlign}`);
     }
+
+    // Background color - default to light gray for headers
     if (attrs.backgroundColor) {
       domAttrs['data-bgcolor'] = attrs.backgroundColor;
       styles.push(`background-color: #${attrs.backgroundColor}`);
+    } else {
+      styles.push('background-color: #f5f5f5');
     }
+
     domAttrs.style = styles.join('; ');
 
     return ['th', domAttrs, 0];

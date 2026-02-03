@@ -14,6 +14,7 @@ import { EditorView } from 'prosemirror-view';
 import { history, undo, redo } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
 import { baseKeymap, toggleMark } from 'prosemirror-commands';
+import { columnResizing, tableEditing } from 'prosemirror-tables';
 
 import { schema } from './schema';
 import { toProseDoc, createEmptyDoc } from './conversion';
@@ -133,6 +134,13 @@ function createEditorState(document: Document | null, _readOnly: boolean): Edito
 
   const plugins = [
     history(),
+    // Table plugins - column resizing and table editing features
+    columnResizing({
+      handleWidth: 5, // Width of the resize handle in pixels
+      cellMinWidth: 25, // Minimum cell width in pixels
+      lastColumnResizable: true, // Allow resizing the last column
+    }),
+    tableEditing(), // Provides table-related key bindings and selection handling
     createListKeymap(), // Tab handling for lists, tables, and regular text
     keymap({
       'Mod-z': undo,

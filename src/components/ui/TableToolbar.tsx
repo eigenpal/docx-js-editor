@@ -14,6 +14,7 @@
 import React from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { Table, TableCell, TableRow } from '../../types/document';
+import { MaterialSymbol } from './MaterialSymbol';
 
 // ============================================================================
 // TYPES
@@ -39,7 +40,9 @@ export type TableAction =
   | 'borderTop'
   | 'borderBottom'
   | 'borderLeft'
-  | 'borderRight';
+  | 'borderRight'
+  | { type: 'cellFillColor'; color: string | null }
+  | { type: 'borderColor'; color: string };
 
 /**
  * Border style preset
@@ -138,277 +141,47 @@ export interface TableToolbarButtonProps {
 }
 
 // ============================================================================
-// ICONS
+// ICONS - Using Material Symbols
 // ============================================================================
 
-/**
- * Add Row Above Icon
- */
+const ICON_SIZE = 16;
+
 export function AddRowAboveIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="1"
-        y="6"
-        width="14"
-        height="9"
-        rx="1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
-      <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="5.5" y1="6" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="10.5" y1="6" x2="10.5" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="8" y1="1" x2="8" y2="5" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="6" y1="3" x2="10" y2="3" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
+  return <MaterialSymbol name="table_rows" size={ICON_SIZE} style={{ transform: 'scaleY(-1)' }} />;
 }
 
-/**
- * Add Row Below Icon
- */
 export function AddRowBelowIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="1"
-        y="1"
-        width="14"
-        height="9"
-        rx="1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
-      <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="5.5" y1="1" x2="5.5" y2="10" stroke="currentColor" strokeWidth="1" />
-      <line x1="10.5" y1="1" x2="10.5" y2="10" stroke="currentColor" strokeWidth="1" />
-      <line x1="8" y1="11" x2="8" y2="15" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="6" y1="13" x2="10" y2="13" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
+  return <MaterialSymbol name="table_rows" size={ICON_SIZE} />;
 }
 
-/**
- * Add Column Left Icon
- */
 export function AddColumnLeftIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="6"
-        y="1"
-        width="9"
-        height="14"
-        rx="1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
-      <line x1="10.5" y1="1" x2="10.5" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="6" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="6" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="1" y1="8" x2="5" y2="8" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="3" y1="6" x2="3" y2="10" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
+  return <MaterialSymbol name="view_column" size={ICON_SIZE} style={{ transform: 'scaleX(-1)' }} />;
 }
 
-/**
- * Add Column Right Icon
- */
 export function AddColumnRightIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="1"
-        y="1"
-        width="9"
-        height="14"
-        rx="1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
-      <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="1" y1="5.5" x2="10" y2="5.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="1" y1="10.5" x2="10" y2="10.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="11" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="13" y1="6" x2="13" y2="10" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
+  return <MaterialSymbol name="view_column" size={ICON_SIZE} />;
 }
 
-/**
- * Delete Row Icon
- */
 export function DeleteRowIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="1"
-        y="1"
-        width="14"
-        height="14"
-        rx="1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
-      <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="10.5" y1="1" x2="10.5" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="3" y1="8" x2="13" y2="8" stroke="#d32f2f" strokeWidth="2" />
-    </svg>
-  );
+  return <MaterialSymbol name="delete_sweep" size={ICON_SIZE} />;
 }
 
-/**
- * Delete Column Icon
- */
 export function DeleteColumnIcon(): React.ReactElement {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="1"
-        y="1"
-        width="14"
-        height="14"
-        rx="1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
-      <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="10.5" y1="1" x2="10.5" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="8" y1="3" x2="8" y2="13" stroke="#d32f2f" strokeWidth="2" />
-    </svg>
+    <MaterialSymbol name="delete_sweep" size={ICON_SIZE} style={{ transform: 'rotate(90deg)' }} />
   );
 }
 
-/**
- * Merge Cells Icon
- */
 export function MergeCellsIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="1"
-        y="1"
-        width="14"
-        height="14"
-        rx="1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
-      <line x1="1" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1" />
-      <line
-        x1="8"
-        y1="1"
-        x2="8"
-        y2="5"
-        stroke="currentColor"
-        strokeWidth="1"
-        strokeDasharray="2 1"
-      />
-      <line
-        x1="8"
-        y1="11"
-        x2="8"
-        y2="15"
-        stroke="currentColor"
-        strokeWidth="1"
-        strokeDasharray="2 1"
-      />
-      <path d="M5 4 L8 7 L11 4" stroke="currentColor" strokeWidth="1.5" fill="none" />
-      <path d="M5 12 L8 9 L11 12" stroke="currentColor" strokeWidth="1.5" fill="none" />
-    </svg>
-  );
+  return <MaterialSymbol name="call_merge" size={ICON_SIZE} />;
 }
 
-/**
- * Split Cell Icon
- */
 export function SplitCellIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="1"
-        y="1"
-        width="14"
-        height="14"
-        rx="1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
-      <line x1="8" y1="1" x2="8" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line
-        x1="1"
-        y1="8"
-        x2="5"
-        y2="8"
-        stroke="currentColor"
-        strokeWidth="1"
-        strokeDasharray="2 1"
-      />
-      <line
-        x1="11"
-        y1="8"
-        x2="15"
-        y2="8"
-        stroke="currentColor"
-        strokeWidth="1"
-        strokeDasharray="2 1"
-      />
-      <path
-        d="M4 5 L7 8 L4 11"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-        transform="rotate(180 5.5 8)"
-      />
-      <path
-        d="M12 5 L9 8 L12 11"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-        transform="rotate(180 10.5 8)"
-      />
-    </svg>
-  );
+  return <MaterialSymbol name="call_split" size={ICON_SIZE} />;
 }
 
-/**
- * Delete Table Icon
- */
 export function DeleteTableIcon(): React.ReactElement {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect
-        x="1"
-        y="1"
-        width="14"
-        height="14"
-        rx="1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
-      <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
-      <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="10.5" y1="1" x2="10.5" y2="15" stroke="currentColor" strokeWidth="1" />
-      <line x1="4" y1="4" x2="12" y2="12" stroke="#d32f2f" strokeWidth="2" />
-      <line x1="12" y1="4" x2="4" y2="12" stroke="#d32f2f" strokeWidth="2" />
-    </svg>
-  );
+  return <MaterialSymbol name="delete" size={ICON_SIZE} className="text-red-600" />;
 }
 
 // ============================================================================
@@ -421,9 +194,9 @@ const TOOLBAR_STYLES: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: '4px',
     padding: '4px 8px',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--doc-bg-subtle)',
     borderRadius: '4px',
-    border: '1px solid #e0e0e0',
+    border: '1px solid var(--doc-border)',
     fontSize: '12px',
   },
   containerCompact: {
@@ -443,7 +216,7 @@ const TOOLBAR_STYLES: Record<string, CSSProperties> = {
   separator: {
     width: '1px',
     height: '20px',
-    backgroundColor: '#d0d0d0',
+    backgroundColor: 'var(--doc-border-dark)',
     margin: '0 4px',
   },
   button: {
@@ -455,7 +228,7 @@ const TOOLBAR_STYLES: Record<string, CSSProperties> = {
     border: 'none',
     borderRadius: '3px',
     backgroundColor: 'transparent',
-    color: '#333',
+    color: 'var(--doc-text)',
     cursor: 'pointer',
     fontSize: '12px',
     lineHeight: '1',
@@ -465,19 +238,19 @@ const TOOLBAR_STYLES: Record<string, CSSProperties> = {
     padding: '3px 5px',
   },
   buttonHover: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: 'var(--doc-border)',
   },
   buttonDisabled: {
-    color: '#aaa',
+    color: 'var(--doc-text-subtle)',
     cursor: 'not-allowed',
   },
   buttonDelete: {
-    color: '#d32f2f',
+    color: 'var(--doc-error)',
   },
   label: {
     fontSize: '11px',
     fontWeight: 500,
-    color: '#666',
+    color: 'var(--doc-text-muted)',
     marginRight: '8px',
     whiteSpace: 'nowrap',
   },
@@ -505,7 +278,7 @@ export function TableToolbarButton({
 }: TableToolbarButtonProps): React.ReactElement {
   const [isHovered, setIsHovered] = React.useState(false);
 
-  const isDeleteAction = action.startsWith('delete');
+  const isDeleteAction = typeof action === 'string' && action.startsWith('delete');
 
   const buttonStyle: CSSProperties = {
     ...TOOLBAR_STYLES.button,
@@ -520,7 +293,7 @@ export function TableToolbarButton({
   return (
     <button
       type="button"
-      className={`docx-table-toolbar-button docx-table-toolbar-${action}`}
+      className={`docx-table-toolbar-button docx-table-toolbar-${typeof action === 'string' ? action : action.type}`}
       style={buttonStyle}
       disabled={disabled}
       onClick={onClick}
@@ -1196,11 +969,20 @@ export function splitCell(table: Table, rowIndex: number, columnIndex: number): 
   };
 }
 
+/** Simple (string) table actions */
+type SimpleTableAction = Exclude<TableAction, { type: string }>;
+
 /**
  * Get action label for display
  */
 export function getActionLabel(action: TableAction): string {
-  const labels: Record<TableAction, string> = {
+  if (typeof action === 'object') {
+    if (action.type === 'cellFillColor') return 'Cell Fill Color';
+    if (action.type === 'borderColor') return 'Border Color';
+    return 'Unknown Action';
+  }
+
+  const labels: Record<SimpleTableAction, string> = {
     addRowAbove: 'Insert Row Above',
     addRowBelow: 'Insert Row Below',
     addColumnLeft: 'Insert Column Left',
@@ -1226,7 +1008,10 @@ export function getActionLabel(action: TableAction): string {
  * Check if an action is a delete action
  */
 export function isDeleteAction(action: TableAction): boolean {
-  return action === 'deleteRow' || action === 'deleteColumn' || action === 'deleteTable';
+  return (
+    typeof action === 'string' &&
+    (action === 'deleteRow' || action === 'deleteColumn' || action === 'deleteTable')
+  );
 }
 
 /**

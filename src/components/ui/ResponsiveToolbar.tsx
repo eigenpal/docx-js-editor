@@ -302,8 +302,8 @@ const OverflowMenu: React.FC<OverflowMenuProps> = ({ items, isOpen, onClose, anc
         top: '100%',
         right: 0,
         marginTop: '4px',
-        backgroundColor: '#fff',
-        border: '1px solid #dadce0',
+        backgroundColor: 'white',
+        border: '1px solid var(--doc-border)',
         borderRadius: '8px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         padding: '8px',
@@ -340,8 +340,8 @@ export const ResponsiveToolbar: React.FC<ResponsiveToolbarProps> = ({
   className = '',
   style,
   height = 44,
-  backgroundColor = '#f8f9fa',
-  borderBottom = '1px solid #e0e0e0',
+  backgroundColor = 'var(--doc-toolbar-bg)',
+  borderBottom = '1px solid var(--doc-border)',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const overflowButtonRef = useRef<HTMLButtonElement>(null);
@@ -384,8 +384,8 @@ export const ResponsiveToolbar: React.FC<ResponsiveToolbarProps> = ({
         height: '32px',
         border: 'none',
         borderRadius: '4px',
-        backgroundColor: isOverflowOpen ? '#e8f0fe' : 'transparent',
-        color: '#5f6368',
+        backgroundColor: isOverflowOpen ? 'var(--doc-primary-light)' : 'transparent',
+        color: 'var(--doc-text-muted)',
         cursor: 'pointer',
         transition: 'background-color 0.15s ease',
       }}
@@ -427,7 +427,7 @@ export const ResponsiveToolbar: React.FC<ResponsiveToolbarProps> = ({
               style={{
                 width: '1px',
                 height: '24px',
-                backgroundColor: '#dadce0',
+                backgroundColor: 'var(--doc-border)',
                 margin: '0 4px',
               }}
             />
@@ -505,7 +505,7 @@ export const ToolbarGroup: React.FC<ToolbarGroupProps> = ({
           style={{
             width: '1px',
             height: '24px',
-            backgroundColor: '#dadce0',
+            backgroundColor: 'var(--doc-border)',
             margin: '0 4px',
           }}
         />

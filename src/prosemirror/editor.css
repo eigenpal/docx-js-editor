@@ -6,7 +6,7 @@
 
 /* Editor container */
 .prosemirror-editor {
-  background: #e8e8e8;
+  background: var(--doc-bg);
   padding: 20px;
   min-height: 100%;
   display: flex;
@@ -20,6 +20,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   /* Use CSS variables for page layout, with fallbacks */
   width: var(--page-width, 8.5in);
+  /* min-height creates a single page appearance */
   min-height: var(--page-height, 11in);
   padding-top: var(--margin-top, 72px);
   padding-bottom: var(--margin-bottom, 72px);
@@ -40,6 +41,74 @@
   -moz-tab-size: 48;
   /* Ensure box-sizing includes padding in width calculation */
   box-sizing: border-box;
+  /* Page break behavior - show page breaks visually */
+  position: relative;
+}
+
+/* ============================================================================
+   PAGE BREAK STYLES - Visual page boundaries like Word/Google Docs
+   ============================================================================ */
+
+/* Page break indicator - inserted by PageBreakPlugin */
+.prosemirror-editor .ProseMirror .docx-page-break {
+  display: block;
+  position: relative;
+  height: 40px;
+  margin: 0 calc(-1 * var(--margin-left, 72px));
+  margin-right: calc(-1 * var(--margin-right, 72px));
+  background: var(--doc-bg);
+  border: none;
+  pointer-events: none;
+}
+
+/* Top shadow of next page */
+.prosemirror-editor .ProseMirror .docx-page-break::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.08));
+}
+
+/* Bottom shadow of previous page */
+.prosemirror-editor .ProseMirror .docx-page-break::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(to top, transparent, rgba(0, 0, 0, 0.08));
+}
+
+/* Explicit page break (from DOCX pageBreakBefore) */
+.prosemirror-editor .ProseMirror [data-page-break-before='true'] {
+  break-before: page;
+}
+
+/* Page break dashed line indicator (alternative style) */
+.prosemirror-editor .ProseMirror .docx-page-break-line {
+  display: block;
+  position: relative;
+  height: 1px;
+  margin: 20px calc(-1 * var(--margin-left, 72px));
+  margin-right: calc(-1 * var(--margin-right, 72px));
+  border-top: 1px dashed var(--doc-border);
+}
+
+.prosemirror-editor .ProseMirror .docx-page-break-line::before {
+  content: 'Page Break';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--doc-bg);
+  padding: 0 8px;
+  font-size: 10px;
+  color: var(--doc-text-muted);
+  white-space: nowrap;
 }
 
 /* Focus state */
@@ -138,12 +207,12 @@
 
 /* Links */
 .prosemirror-editor .ProseMirror a {
-  color: #1a73e8;
+  color: var(--doc-link);
   text-decoration: underline;
 }
 
 .prosemirror-editor .ProseMirror a:hover {
-  color: #1557b0;
+  color: var(--doc-primary-hover);
 }
 
 /* Horizontal rule */
@@ -163,22 +232,26 @@
   border-collapse: collapse;
   width: 100%;
   margin: 12pt 0;
-  table-layout: auto;
+  table-layout: fixed; /* Critical for maintaining column widths */
 }
 
 /* Table cells */
 .prosemirror-editor .ProseMirror td.docx-table-cell,
 .prosemirror-editor .ProseMirror th.docx-table-header {
-  border: 1px solid #d0d0d0;
+  border: 1px solid var(--doc-border-dark);
   padding: 4px 8px;
   vertical-align: top;
   min-width: 20px;
+  /* Text wrapping for fixed table layout */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow: hidden;
 }
 
 /* Table header cells */
 .prosemirror-editor .ProseMirror th.docx-table-header {
   font-weight: bold;
-  background-color: #f5f5f5;
+  background-color: var(--doc-bg-subtle);
   text-align: left;
 }
 
@@ -219,6 +292,47 @@
 /* Nested tables */
 .prosemirror-editor .ProseMirror table table {
   margin: 4px 0;
+}
+
+/* ============================================================================
+   TABLE COLUMN RESIZE
+   ============================================================================ */
+
+/* Column resize handle - visible on hover */
+.prosemirror-editor .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: rgba(66, 133, 244, 0.5);
+  cursor: col-resize;
+  z-index: 20;
+}
+
+/* Make cells position relative for resize handle positioning */
+.prosemirror-editor .ProseMirror td.docx-table-cell,
+.prosemirror-editor .ProseMirror th.docx-table-header {
+  position: relative;
+}
+
+/* Cursor change when resizing */
+.prosemirror-editor .ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Hide resize handle when not hovering the table, show on hover */
+.prosemirror-editor .ProseMirror table:not(:hover) .column-resize-handle {
+  background-color: transparent;
+}
+
+.prosemirror-editor .ProseMirror table:hover .column-resize-handle {
+  background-color: rgba(66, 133, 244, 0.3);
+}
+
+/* Highlight resize handle on direct hover */
+.prosemirror-editor .ProseMirror .column-resize-handle:hover {
+  background-color: rgba(66, 133, 244, 0.7);
 }
 
 /* ============================================================================

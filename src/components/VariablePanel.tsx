@@ -75,8 +75,8 @@ export interface VariablePanelProps {
 
 const STYLES: Record<string, CSSProperties> = {
   panel: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #e0e0e0',
+    backgroundColor: 'white',
+    border: '1px solid var(--doc-border)',
     borderRadius: '8px',
     overflow: 'hidden',
     fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -87,20 +87,20 @@ const STYLES: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '12px 16px',
-    backgroundColor: '#f5f5f5',
-    borderBottom: '1px solid #e0e0e0',
+    backgroundColor: 'var(--doc-bg-subtle)',
+    borderBottom: '1px solid var(--doc-border)',
   },
   headerTitle: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
     fontWeight: 600,
-    color: '#333',
+    color: 'var(--doc-text)',
   },
   headerCount: {
     fontSize: '11px',
-    color: '#666',
-    backgroundColor: '#e0e0e0',
+    color: 'var(--doc-text-muted)',
+    backgroundColor: 'var(--doc-border)',
     padding: '2px 6px',
     borderRadius: '10px',
   },
@@ -114,7 +114,7 @@ const STYLES: Record<string, CSSProperties> = {
     border: 'none',
     backgroundColor: 'transparent',
     cursor: 'pointer',
-    color: '#666',
+    color: 'var(--doc-text-muted)',
     borderRadius: '4px',
     transition: 'background-color 0.15s',
   },
@@ -130,7 +130,7 @@ const STYLES: Record<string, CSSProperties> = {
   searchInput: {
     width: '100%',
     padding: '8px 12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--doc-border-input)',
     borderRadius: '4px',
     fontSize: '13px',
     outline: 'none',
@@ -154,42 +154,42 @@ const STYLES: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: '8px',
     fontSize: '12px',
-    color: '#555',
+    color: 'var(--doc-text-muted)',
   },
   variableName: {
     fontFamily: 'monospace',
     fontSize: '12px',
-    color: '#8b6914',
-    backgroundColor: '#fff8dc',
+    color: 'var(--doc-warning)',
+    backgroundColor: 'var(--doc-warning-bg)',
     padding: '2px 6px',
     borderRadius: '3px',
-    border: '1px solid #e4b416',
+    border: '1px solid var(--doc-warning)',
   },
   variableRequired: {
     fontSize: '10px',
-    color: '#d32f2f',
+    color: 'var(--doc-error)',
     fontWeight: 'bold',
   },
   variableDescription: {
     fontSize: '11px',
-    color: '#888',
+    color: 'var(--doc-text-subtle)',
     fontStyle: 'italic',
   },
   variableInput: {
     padding: '8px 10px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--doc-border-input)',
     borderRadius: '4px',
     fontSize: '13px',
     outline: 'none',
     transition: 'border-color 0.15s, box-shadow 0.15s',
   },
   variableInputFocused: {
-    borderColor: '#0078d4',
-    boxShadow: '0 0 0 2px rgba(0, 120, 212, 0.2)',
+    borderColor: 'var(--doc-primary)',
+    boxShadow: '0 0 0 2px rgba(26, 115, 232, 0.2)',
   },
   variableInputFilled: {
-    borderColor: '#28a745',
-    backgroundColor: '#f8fff8',
+    borderColor: 'var(--doc-success)',
+    backgroundColor: 'var(--doc-success-bg)',
   },
   footer: {
     display: 'flex',
@@ -197,12 +197,12 @@ const STYLES: Record<string, CSSProperties> = {
     justifyContent: 'space-between',
     gap: '8px',
     padding: '12px 16px',
-    borderTop: '1px solid #e0e0e0',
-    backgroundColor: '#fafafa',
+    borderTop: '1px solid var(--doc-border)',
+    backgroundColor: 'var(--doc-bg-input)',
   },
   footerStats: {
     fontSize: '11px',
-    color: '#888',
+    color: 'var(--doc-text-subtle)',
   },
   footerButtons: {
     display: 'flex',
@@ -218,12 +218,12 @@ const STYLES: Record<string, CSSProperties> = {
     transition: 'background-color 0.15s, opacity 0.15s',
   },
   buttonPrimary: {
-    backgroundColor: '#0078d4',
+    backgroundColor: 'var(--doc-primary)',
     color: 'white',
   },
   buttonSecondary: {
-    backgroundColor: '#e0e0e0',
-    color: '#333',
+    backgroundColor: 'var(--doc-border)',
+    color: 'var(--doc-text)',
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -236,7 +236,7 @@ const STYLES: Record<string, CSSProperties> = {
     justifyContent: 'center',
     padding: '32px 16px',
     textAlign: 'center',
-    color: '#888',
+    color: 'var(--doc-text-subtle)',
   },
   emptyIcon: {
     marginBottom: '12px',
@@ -245,12 +245,12 @@ const STYLES: Record<string, CSSProperties> = {
   emptyTitle: {
     fontSize: '14px',
     fontWeight: 500,
-    color: '#666',
+    color: 'var(--doc-text-muted)',
     marginBottom: '4px',
   },
   emptyMessage: {
     fontSize: '12px',
-    color: '#999',
+    color: 'var(--doc-text-placeholder)',
   },
 };
 
@@ -560,8 +560,22 @@ function VariableIcon(): React.ReactElement {
 function EmptyVariablesIcon(): React.ReactElement {
   return (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="8" y="12" width="32" height="24" rx="2" stroke="#ccc" strokeWidth="2" fill="none" />
-      <path d="M14 20H34M14 26H28" stroke="#ccc" strokeWidth="2" strokeLinecap="round" />
+      <rect
+        x="8"
+        y="12"
+        width="32"
+        height="24"
+        rx="2"
+        stroke="var(--doc-border)"
+        strokeWidth="2"
+        fill="none"
+      />
+      <path
+        d="M14 20H34M14 26H28"
+        stroke="var(--doc-border)"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

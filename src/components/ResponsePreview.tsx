@@ -112,10 +112,10 @@ const LoadingSpinner = () => (
     xmlns="http://www.w3.org/2000/svg"
     style={{ animation: 'spin 1s linear infinite' }}
   >
-    <circle cx="10" cy="10" r="8" stroke="#e0e0e0" strokeWidth="2" fill="none" />
+    <circle cx="10" cy="10" r="8" stroke="var(--doc-border)" strokeWidth="2" fill="none" />
     <path
       d="M10 2a8 8 0 018 8"
-      stroke="#1a73e8"
+      stroke="var(--doc-primary)"
       strokeWidth="2"
       strokeLinecap="round"
       fill="none"
@@ -333,8 +333,8 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
     width: '400px',
     maxWidth: '90vw',
     maxHeight: '80vh',
-    background: '#fff',
-    border: '1px solid #dadce0',
+    background: 'white',
+    border: '1px solid var(--doc-border-light)',
     borderRadius: '8px',
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
     zIndex: 10000,
@@ -361,7 +361,9 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
           }}
         >
           <LoadingSpinner />
-          <div style={{ color: '#5f6368', fontSize: '14px' }}>{getActionLabel(action)}...</div>
+          <div style={{ color: 'var(--doc-text-muted)', fontSize: '14px' }}>
+            {getActionLabel(action)}...
+          </div>
         </div>
       </div>
     );
@@ -379,9 +381,9 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
           <div
             style={{
               padding: '12px',
-              background: '#fce8e6',
+              background: 'var(--doc-error-bg)',
               borderRadius: '4px',
-              color: '#c5221f',
+              color: 'var(--doc-error)',
               fontSize: '13px',
               marginBottom: '16px',
             }}
@@ -398,9 +400,9 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
                   alignItems: 'center',
                   gap: '4px',
                   padding: '8px 16px',
-                  border: '1px solid #dadce0',
+                  border: '1px solid var(--doc-border-light)',
                   borderRadius: '4px',
-                  background: '#fff',
+                  background: 'white',
                   cursor: 'pointer',
                   fontSize: '13px',
                 }}
@@ -416,7 +418,7 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
                 padding: '8px 16px',
                 border: 'none',
                 borderRadius: '4px',
-                background: '#e0e0e0',
+                background: 'var(--doc-border)',
                 cursor: 'pointer',
                 fontSize: '13px',
               }}
@@ -440,13 +442,13 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
       <div
         style={{
           padding: '12px 16px',
-          borderBottom: '1px solid #e0e0e0',
+          borderBottom: '1px solid var(--doc-border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
         }}
       >
-        <div style={{ fontWeight: 500, fontSize: '14px', color: '#202124' }}>
+        <div style={{ fontWeight: 500, fontSize: '14px', color: 'var(--doc-text)' }}>
           {getActionLabel(action)} Result
         </div>
         <button
@@ -458,7 +460,7 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
             border: 'none',
             background: 'transparent',
             cursor: 'pointer',
-            color: '#5f6368',
+            color: 'var(--doc-text-muted)',
           }}
           title="Close (Esc)"
         >
@@ -476,7 +478,7 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
       >
         {isEditing ? (
           <div>
-            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>
+            <div style={{ marginBottom: '8px', fontSize: '12px', color: 'var(--doc-text-muted)' }}>
               Edit the result before accepting:
             </div>
             <textarea
@@ -487,7 +489,7 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
                 width: '100%',
                 minHeight: '120px',
                 padding: '12px',
-                border: '1px solid #1a73e8',
+                border: '1px solid var(--doc-primary)',
                 borderRadius: '4px',
                 fontSize: '14px',
                 lineHeight: 1.6,
@@ -498,26 +500,32 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
           </div>
         ) : showDiff ? (
           <div>
-            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>Changes:</div>
+            <div style={{ marginBottom: '8px', fontSize: '12px', color: 'var(--doc-text-muted)' }}>
+              Changes:
+            </div>
             <DiffView original={originalText} modified={newText} />
           </div>
         ) : (
           <div>
-            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>Original:</div>
+            <div style={{ marginBottom: '8px', fontSize: '12px', color: 'var(--doc-text-muted)' }}>
+              Original:
+            </div>
             <div
               style={{
                 padding: '8px 12px',
-                background: '#f5f5f5',
+                background: 'var(--doc-bg-subtle)',
                 borderRadius: '4px',
                 marginBottom: '16px',
                 textDecoration: 'line-through',
-                color: '#9e9e9e',
+                color: 'var(--doc-text-placeholder)',
                 fontSize: '13px',
               }}
             >
               {originalText}
             </div>
-            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#5f6368' }}>New:</div>
+            <div style={{ marginBottom: '8px', fontSize: '12px', color: 'var(--doc-text-muted)' }}>
+              New:
+            </div>
             <div
               style={{
                 padding: '8px 12px',
@@ -538,10 +546,10 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
             style={{
               marginTop: '16px',
               padding: '8px 12px',
-              background: '#fff8e1',
+              background: 'var(--doc-warning-bg)',
               borderRadius: '4px',
               fontSize: '12px',
-              color: '#f9a825',
+              color: 'var(--doc-warning)',
             }}
           >
             {response.warnings.map((warning, index) => (
@@ -555,7 +563,7 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
       <div
         style={{
           padding: '12px 16px',
-          borderTop: '1px solid #e0e0e0',
+          borderTop: '1px solid var(--doc-border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -571,12 +579,12 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
                 alignItems: 'center',
                 gap: '4px',
                 padding: '6px 12px',
-                border: '1px solid #dadce0',
+                border: '1px solid var(--doc-border-light)',
                 borderRadius: '4px',
-                background: '#fff',
+                background: 'white',
                 cursor: 'pointer',
                 fontSize: '12px',
-                color: '#5f6368',
+                color: 'var(--doc-text-muted)',
               }}
             >
               <EditIcon />
@@ -589,12 +597,12 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
               onClick={handleCancelEdit}
               style={{
                 padding: '6px 12px',
-                border: '1px solid #dadce0',
+                border: '1px solid var(--doc-border-light)',
                 borderRadius: '4px',
-                background: '#fff',
+                background: 'white',
                 cursor: 'pointer',
                 fontSize: '12px',
-                color: '#5f6368',
+                color: 'var(--doc-text-muted)',
               }}
             >
               Cancel Edit
@@ -610,12 +618,12 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
               alignItems: 'center',
               gap: '4px',
               padding: '8px 16px',
-              border: '1px solid #dadce0',
+              border: '1px solid var(--doc-border-light)',
               borderRadius: '4px',
-              background: '#fff',
+              background: 'white',
               cursor: 'pointer',
               fontSize: '13px',
-              color: '#5f6368',
+              color: 'var(--doc-text-muted)',
             }}
           >
             <XIcon />
@@ -631,10 +639,10 @@ export const ResponsePreview: React.FC<ResponsePreviewProps> = ({
               padding: '8px 16px',
               border: 'none',
               borderRadius: '4px',
-              background: '#1a73e8',
+              background: 'var(--doc-primary)',
               cursor: 'pointer',
               fontSize: '13px',
-              color: '#fff',
+              color: 'white',
             }}
           >
             <CheckIcon />

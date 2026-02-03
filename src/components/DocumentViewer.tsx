@@ -206,7 +206,7 @@ export function DocumentViewer({
     width: '100%',
     height: '100%',
     overflow: 'auto',
-    backgroundColor: '#e0e0e0',
+    backgroundColor: 'var(--doc-bg)',
     padding: `${pageGap}px`,
     boxSizing: 'border-box',
     ...additionalStyle,
@@ -346,7 +346,7 @@ function PageWrapper({
             left: '50%',
             transform: 'translateX(-50%)',
             fontSize: '12px',
-            color: '#666',
+            color: 'var(--doc-text-muted)',
             whiteSpace: 'nowrap',
           }}
         >
@@ -374,7 +374,7 @@ function DefaultLoadingIndicator(): React.ReactElement {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100%',
-        color: '#666',
+        color: 'var(--doc-text-muted)',
       }}
     >
       <div
@@ -382,8 +382,8 @@ function DefaultLoadingIndicator(): React.ReactElement {
         style={{
           width: '40px',
           height: '40px',
-          border: '3px solid #e0e0e0',
-          borderTop: '3px solid #666',
+          border: '3px solid var(--doc-border)',
+          borderTop: '3px solid var(--doc-text-muted)',
           borderRadius: '50%',
           animation: 'docx-spin 1s linear infinite',
         }}
@@ -414,7 +414,7 @@ function DefaultPlaceholder(): React.ReactElement {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100%',
-        color: '#999',
+        color: 'var(--doc-text-placeholder)',
       }}
     >
       <svg

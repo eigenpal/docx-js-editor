@@ -62,17 +62,13 @@ const DEFAULT_MARGIN_TWIPS = 1440; // 1 inch
 const TWIPS_PER_INCH = 1440;
 const TWIPS_PER_CM = 567;
 
-// Ruler styling
-const RULER_HEIGHT = 24;
-const RULER_BG_COLOR = '#f8f8f8';
-const RULER_BORDER_COLOR = '#d0d0d0';
-const RULER_TEXT_COLOR = '#666666';
-const RULER_TICK_COLOR = '#888888';
-const CONTENT_AREA_COLOR = '#ffffff';
-const MARGIN_AREA_COLOR = '#e8e8e8';
-const MARKER_COLOR = '#666666';
-const MARKER_HOVER_COLOR = '#1a73e8';
-const MARKER_ACTIVE_COLOR = '#1557b0';
+// Ruler styling - Google Docs style (transparent background)
+const RULER_HEIGHT = 20;
+const RULER_TEXT_COLOR = 'var(--doc-text-muted)';
+const RULER_TICK_COLOR = 'var(--doc-text-subtle)';
+const MARKER_COLOR = 'var(--doc-primary)';
+const MARKER_HOVER_COLOR = 'var(--doc-primary)';
+const MARKER_ACTIVE_COLOR = 'var(--doc-primary-hover)';
 
 // ============================================================================
 // MAIN COMPONENT
@@ -109,9 +105,6 @@ export function HorizontalRuler({
   const leftMarginPx = twipsToPixels(leftMarginTwips) * zoom;
   const rightMarginPx = twipsToPixels(rightMarginTwips) * zoom;
   const firstLineIndentPx = twipsToPixels(firstLineIndent) * zoom;
-
-  // Content area width (between margins)
-  const contentWidthPx = pageWidthPx - leftMarginPx - rightMarginPx;
 
   // Handle drag start
   const handleDragStart = useCallback(
@@ -190,48 +183,16 @@ export function HorizontalRuler({
   // Generate tick marks
   const ticks = generateTicks(pageWidthTwips, zoom, unit);
 
-  // Ruler container style
+  // Ruler container style - transparent like Google Docs
   const rulerStyle: CSSProperties = {
     position: 'relative',
     width: formatPx(pageWidthPx),
     height: RULER_HEIGHT,
-    backgroundColor: RULER_BG_COLOR,
-    borderBottom: `1px solid ${RULER_BORDER_COLOR}`,
-    overflow: 'hidden',
+    backgroundColor: 'transparent',
+    overflow: 'visible',
     userSelect: 'none',
     cursor: dragging ? 'ew-resize' : 'default',
     ...style,
-  };
-
-  // Margin area styles
-  const leftMarginStyle: CSSProperties = {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: formatPx(leftMarginPx),
-    height: '100%',
-    backgroundColor: MARGIN_AREA_COLOR,
-    borderRight: `1px solid ${RULER_BORDER_COLOR}`,
-  };
-
-  const rightMarginStyle: CSSProperties = {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: formatPx(rightMarginPx),
-    height: '100%',
-    backgroundColor: MARGIN_AREA_COLOR,
-    borderLeft: `1px solid ${RULER_BORDER_COLOR}`,
-  };
-
-  // Content area style
-  const contentAreaStyle: CSSProperties = {
-    position: 'absolute',
-    top: 0,
-    left: formatPx(leftMarginPx),
-    width: formatPx(contentWidthPx),
-    height: '100%',
-    backgroundColor: CONTENT_AREA_COLOR,
   };
 
   return (
@@ -244,13 +205,6 @@ export function HorizontalRuler({
       aria-valuemin={0}
       aria-valuemax={pageWidthTwips}
     >
-      {/* Margin areas (gray) */}
-      <div className="docx-ruler-margin-left" style={leftMarginStyle} />
-      <div className="docx-ruler-margin-right" style={rightMarginStyle} />
-
-      {/* Content area (white) */}
-      <div className="docx-ruler-content-area" style={contentAreaStyle} />
-
       {/* Tick marks */}
       <div
         className="docx-ruler-ticks"

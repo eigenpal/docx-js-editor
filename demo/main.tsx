@@ -143,6 +143,7 @@ function DemoApp() {
           onError={handleError}
           onFontsLoaded={handleFontsLoaded}
           showToolbar={true}
+          showRuler={true}
           showVariablePanel={true}
           showZoomControl={true}
           initialZoom={1.0}
@@ -161,7 +162,8 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    minHeight: '100vh',
+    height: '100vh', // Fixed height to enable internal scrolling
+    overflow: 'hidden', // Prevent outer scroll
     background: '#f8fafc',
   },
   header: {

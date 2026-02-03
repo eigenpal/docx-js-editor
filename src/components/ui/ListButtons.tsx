@@ -112,18 +112,18 @@ const BUTTON_STYLE: CSSProperties = {
   backgroundColor: 'transparent',
   cursor: 'pointer',
   transition: 'background-color 0.1s',
-  color: '#5f6368',
+  color: 'var(--doc-text-muted)',
 };
 
 const BUTTON_HOVER_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  backgroundColor: 'rgba(0, 0, 0, 0.06)',
+  backgroundColor: 'var(--doc-bg-hover)',
 };
 
 const BUTTON_ACTIVE_STYLE: CSSProperties = {
   ...BUTTON_STYLE,
-  backgroundColor: '#e8f0fe',
-  color: '#1967d2',
+  backgroundColor: 'var(--doc-primary-light)',
+  color: 'var(--doc-primary)',
 };
 
 const BUTTON_DISABLED_STYLE: CSSProperties = {
@@ -141,7 +141,7 @@ const COMPACT_BUTTON_STYLE: CSSProperties = {
 const SEPARATOR_STYLE: CSSProperties = {
   width: '1px',
   height: '20px',
-  backgroundColor: '#e0e0e0',
+  backgroundColor: 'var(--doc-border)',
   margin: '0 6px',
 };
 

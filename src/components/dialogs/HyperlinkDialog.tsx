@@ -88,7 +88,7 @@ const DIALOG_OVERLAY_STYLE: CSSProperties = {
 };
 
 const DIALOG_CONTENT_STYLE: CSSProperties = {
-  backgroundColor: '#ffffff',
+  backgroundColor: 'white',
   borderRadius: '8px',
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
   minWidth: '400px',
@@ -102,14 +102,14 @@ const DIALOG_HEADER_STYLE: CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '16px 20px',
-  borderBottom: '1px solid #e0e0e0',
+  borderBottom: '1px solid var(--doc-border)',
 };
 
 const DIALOG_TITLE_STYLE: CSSProperties = {
   margin: 0,
   fontSize: '18px',
   fontWeight: 600,
-  color: '#333',
+  color: 'var(--doc-text)',
 };
 
 const CLOSE_BUTTON_STYLE: CSSProperties = {
@@ -117,7 +117,7 @@ const CLOSE_BUTTON_STYLE: CSSProperties = {
   border: 'none',
   fontSize: '20px',
   cursor: 'pointer',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   padding: '4px 8px',
   lineHeight: 1,
 };
@@ -135,13 +135,13 @@ const LABEL_STYLE: CSSProperties = {
   marginBottom: '6px',
   fontSize: '14px',
   fontWeight: 500,
-  color: '#333',
+  color: 'var(--doc-text)',
 };
 
 const INPUT_STYLE: CSSProperties = {
   width: '100%',
   padding: '10px 12px',
-  border: '1px solid #ccc',
+  border: '1px solid var(--doc-border-input)',
   borderRadius: '4px',
   fontSize: '14px',
   boxSizing: 'border-box',
@@ -150,7 +150,7 @@ const INPUT_STYLE: CSSProperties = {
 
 const INPUT_ERROR_STYLE: CSSProperties = {
   ...INPUT_STYLE,
-  borderColor: '#dc3545',
+  borderColor: 'var(--doc-error)',
 };
 
 const SELECT_STYLE: CSSProperties = {
@@ -159,20 +159,20 @@ const SELECT_STYLE: CSSProperties = {
 };
 
 const ERROR_TEXT_STYLE: CSSProperties = {
-  color: '#dc3545',
+  color: 'var(--doc-error)',
   fontSize: '12px',
   marginTop: '4px',
 };
 
 const HINT_TEXT_STYLE: CSSProperties = {
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   fontSize: '12px',
   marginTop: '4px',
 };
 
 const TAB_CONTAINER_STYLE: CSSProperties = {
   display: 'flex',
-  borderBottom: '1px solid #e0e0e0',
+  borderBottom: '1px solid var(--doc-border)',
   marginBottom: '16px',
 };
 
@@ -182,15 +182,15 @@ const TAB_BUTTON_STYLE: CSSProperties = {
   background: 'none',
   cursor: 'pointer',
   fontSize: '14px',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   borderBottom: '2px solid transparent',
   marginBottom: '-1px',
 };
 
 const TAB_BUTTON_ACTIVE_STYLE: CSSProperties = {
   ...TAB_BUTTON_STYLE,
-  color: '#0563C1',
-  borderBottomColor: '#0563C1',
+  color: 'var(--doc-link)',
+  borderBottomColor: 'var(--doc-link)',
   fontWeight: 500,
 };
 
@@ -199,7 +199,7 @@ const DIALOG_FOOTER_STYLE: CSSProperties = {
   justifyContent: 'flex-end',
   gap: '12px',
   padding: '16px 20px',
-  borderTop: '1px solid #e0e0e0',
+  borderTop: '1px solid var(--doc-border)',
 };
 
 const BUTTON_BASE_STYLE: CSSProperties = {
@@ -213,27 +213,27 @@ const BUTTON_BASE_STYLE: CSSProperties = {
 
 const PRIMARY_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#0563C1',
-  color: '#ffffff',
+  backgroundColor: 'var(--doc-link)',
+  color: 'white',
 };
 
 const SECONDARY_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#f0f0f0',
-  color: '#333',
-  border: '1px solid #ccc',
+  backgroundColor: 'var(--doc-bg-hover)',
+  color: 'var(--doc-text)',
+  border: '1px solid var(--doc-border-input)',
 };
 
 const DANGER_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#dc3545',
-  color: '#ffffff',
+  backgroundColor: 'var(--doc-error)',
+  color: 'white',
 };
 
 const DISABLED_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#ccc',
-  color: '#666',
+  backgroundColor: 'var(--doc-border-input)',
+  color: 'var(--doc-text-muted)',
   cursor: 'not-allowed',
 };
 

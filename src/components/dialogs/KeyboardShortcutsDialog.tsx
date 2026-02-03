@@ -468,7 +468,7 @@ const ShortcutItem: React.FC<ShortcutItemProps> = ({ shortcut }) => {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '8px 0',
-        borderBottom: '1px solid #f0f0f0',
+        borderBottom: '1px solid var(--doc-border-light)',
       }}
     >
       <div style={{ flex: 1 }}>
@@ -476,7 +476,7 @@ const ShortcutItem: React.FC<ShortcutItemProps> = ({ shortcut }) => {
           style={{
             fontSize: '13px',
             fontWeight: 500,
-            color: '#202124',
+            color: 'var(--doc-text)',
           }}
         >
           {shortcut.name}
@@ -484,7 +484,7 @@ const ShortcutItem: React.FC<ShortcutItemProps> = ({ shortcut }) => {
         <div
           style={{
             fontSize: '11px',
-            color: '#5f6368',
+            color: 'var(--doc-text-muted)',
             marginTop: '2px',
           }}
         >
@@ -505,10 +505,10 @@ const ShortcutItem: React.FC<ShortcutItemProps> = ({ shortcut }) => {
             padding: '4px 8px',
             fontSize: '12px',
             fontFamily: 'monospace',
-            color: '#202124',
-            backgroundColor: '#f1f3f4',
+            color: 'var(--doc-text)',
+            backgroundColor: 'var(--doc-bg-hover)',
             borderRadius: '4px',
-            border: '1px solid #dadce0',
+            border: '1px solid var(--doc-border-light)',
             boxShadow: '0 1px 1px rgba(0,0,0,0.1)',
           }}
         >
@@ -516,7 +516,7 @@ const ShortcutItem: React.FC<ShortcutItemProps> = ({ shortcut }) => {
         </kbd>
         {formattedAltKeys && (
           <>
-            <span style={{ color: '#9aa0a6', fontSize: '11px' }}>or</span>
+            <span style={{ color: 'var(--doc-text-subtle)', fontSize: '11px' }}>or</span>
             <kbd
               style={{
                 display: 'inline-flex',
@@ -524,10 +524,10 @@ const ShortcutItem: React.FC<ShortcutItemProps> = ({ shortcut }) => {
                 padding: '4px 8px',
                 fontSize: '12px',
                 fontFamily: 'monospace',
-                color: '#202124',
-                backgroundColor: '#f1f3f4',
+                color: 'var(--doc-text)',
+                backgroundColor: 'var(--doc-bg-hover)',
                 borderRadius: '4px',
-                border: '1px solid #dadce0',
+                border: '1px solid var(--doc-border-light)',
                 boxShadow: '0 1px 1px rgba(0,0,0,0.1)',
               }}
             >
@@ -672,7 +672,7 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
           width: '600px',
           maxWidth: '90vw',
           maxHeight: '80vh',
-          backgroundColor: '#fff',
+          backgroundColor: 'white',
           borderRadius: '12px',
           boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)',
           display: 'flex',
@@ -689,7 +689,7 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '16px 20px',
-            borderBottom: '1px solid #e0e0e0',
+            borderBottom: '1px solid var(--doc-border)',
           }}
         >
           <h2
@@ -697,7 +697,7 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
               margin: 0,
               fontSize: '18px',
               fontWeight: 600,
-              color: '#202124',
+              color: 'var(--doc-text)',
             }}
           >
             Keyboard Shortcuts
@@ -716,7 +716,7 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
               background: 'transparent',
               cursor: 'pointer',
               borderRadius: '50%',
-              color: '#5f6368',
+              color: 'var(--doc-text-muted)',
             }}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -732,7 +732,7 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
 
         {/* Search */}
         {showSearch && (
-          <div style={{ padding: '12px 20px', borderBottom: '1px solid #e0e0e0' }}>
+          <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--doc-border)' }}>
             <input
               ref={searchInputRef}
               type="text"
@@ -743,7 +743,7 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
                 width: '100%',
                 padding: '10px 12px',
                 fontSize: '14px',
-                border: '1px solid #dadce0',
+                border: '1px solid var(--doc-border-light)',
                 borderRadius: '6px',
                 outline: 'none',
               }}
@@ -764,7 +764,7 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
               style={{
                 textAlign: 'center',
                 padding: '32px',
-                color: '#5f6368',
+                color: 'var(--doc-text-muted)',
               }}
             >
               No shortcuts found matching "{searchQuery}"
@@ -777,7 +777,7 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
                     margin: '0 0 12px 0',
                     fontSize: '13px',
                     fontWeight: 600,
-                    color: '#1a73e8',
+                    color: 'var(--doc-primary)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                   }}
@@ -798,10 +798,10 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
         <div
           style={{
             padding: '12px 20px',
-            borderTop: '1px solid #e0e0e0',
-            backgroundColor: '#f8f9fa',
+            borderTop: '1px solid var(--doc-border)',
+            backgroundColor: 'var(--doc-bg)',
             fontSize: '12px',
-            color: '#5f6368',
+            color: 'var(--doc-text-muted)',
             textAlign: 'center',
           }}
         >
@@ -809,9 +809,9 @@ export const KeyboardShortcutsDialog: React.FC<KeyboardShortcutsDialogProps> = (
           <kbd
             style={{
               padding: '2px 6px',
-              backgroundColor: '#fff',
+              backgroundColor: 'white',
               borderRadius: '4px',
-              border: '1px solid #dadce0',
+              border: '1px solid var(--doc-border-light)',
             }}
           >
             Esc

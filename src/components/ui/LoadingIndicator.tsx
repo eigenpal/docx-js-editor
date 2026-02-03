@@ -110,7 +110,7 @@ const SIZE_CONFIG: Record<LoadingSize, { size: number; strokeWidth: number; font
   large: { size: 48, strokeWidth: 4, fontSize: 14 },
 };
 
-const DEFAULT_COLOR = '#1a73e8';
+const DEFAULT_COLOR = 'var(--doc-primary)';
 const MIN_LOADING_DURATION = 300; // Minimum ms to show loading to prevent flash
 
 // ============================================================================
@@ -385,7 +385,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
         <div
           style={{
             fontSize: sizeConfig.fontSize,
-            color: overlay ? '#fff' : '#5f6368',
+            color: overlay ? 'white' : 'var(--doc-text-muted)',
             textAlign: 'center',
           }}
         >

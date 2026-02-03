@@ -77,7 +77,7 @@ const DIALOG_OVERLAY_STYLE: CSSProperties = {
 };
 
 const DIALOG_CONTENT_STYLE: CSSProperties = {
-  backgroundColor: '#ffffff',
+  backgroundColor: 'white',
   borderRadius: '8px',
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
   minWidth: '450px',
@@ -93,14 +93,14 @@ const DIALOG_HEADER_STYLE: CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '16px 20px',
-  borderBottom: '1px solid #e0e0e0',
+  borderBottom: '1px solid var(--doc-border)',
 };
 
 const DIALOG_TITLE_STYLE: CSSProperties = {
   margin: 0,
   fontSize: '18px',
   fontWeight: 600,
-  color: '#333',
+  color: 'var(--doc-text)',
 };
 
 const CLOSE_BUTTON_STYLE: CSSProperties = {
@@ -108,7 +108,7 @@ const CLOSE_BUTTON_STYLE: CSSProperties = {
   border: 'none',
   fontSize: '20px',
   cursor: 'pointer',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   padding: '4px 8px',
   lineHeight: 1,
 };
@@ -118,7 +118,7 @@ const DIALOG_BODY_STYLE: CSSProperties = {
 };
 
 const DROP_ZONE_STYLE: CSSProperties = {
-  border: '2px dashed #ccc',
+  border: '2px dashed var(--doc-border-input)',
   borderRadius: '8px',
   padding: '40px 20px',
   textAlign: 'center',
@@ -129,15 +129,15 @@ const DROP_ZONE_STYLE: CSSProperties = {
 
 const DROP_ZONE_ACTIVE_STYLE: CSSProperties = {
   ...DROP_ZONE_STYLE,
-  borderColor: '#1a73e8',
-  backgroundColor: '#f0f7ff',
+  borderColor: 'var(--doc-primary)',
+  backgroundColor: 'var(--doc-primary-light)',
 };
 
 const DROP_ZONE_WITH_IMAGE_STYLE: CSSProperties = {
   ...DROP_ZONE_STYLE,
   padding: '20px',
   borderStyle: 'solid',
-  borderColor: '#1a73e8',
+  borderColor: 'var(--doc-primary)',
 };
 
 const PREVIEW_CONTAINER_STYLE: CSSProperties = {
@@ -157,19 +157,19 @@ const PREVIEW_IMAGE_STYLE: CSSProperties = {
 
 const DROP_ZONE_ICON_STYLE: CSSProperties = {
   fontSize: '48px',
-  color: '#999',
+  color: 'var(--doc-text-placeholder)',
   marginBottom: '12px',
 };
 
 const DROP_ZONE_TEXT_STYLE: CSSProperties = {
   fontSize: '14px',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   marginBottom: '8px',
 };
 
 const DROP_ZONE_SUBTEXT_STYLE: CSSProperties = {
   fontSize: '12px',
-  color: '#999',
+  color: 'var(--doc-text-placeholder)',
 };
 
 const FORM_GROUP_STYLE: CSSProperties = {
@@ -181,13 +181,13 @@ const LABEL_STYLE: CSSProperties = {
   marginBottom: '6px',
   fontSize: '14px',
   fontWeight: 500,
-  color: '#333',
+  color: 'var(--doc-text)',
 };
 
 const INPUT_STYLE: CSSProperties = {
   width: '100%',
   padding: '10px 12px',
-  border: '1px solid #ccc',
+  border: '1px solid var(--doc-border-input)',
   borderRadius: '4px',
   fontSize: '14px',
   boxSizing: 'border-box',
@@ -202,7 +202,7 @@ const SIZE_ROW_STYLE: CSSProperties = {
 const SIZE_INPUT_STYLE: CSSProperties = {
   width: '100px',
   padding: '8px 12px',
-  border: '1px solid #ccc',
+  border: '1px solid var(--doc-border-input)',
   borderRadius: '4px',
   fontSize: '14px',
   textAlign: 'center',
@@ -210,23 +210,23 @@ const SIZE_INPUT_STYLE: CSSProperties = {
 
 const LOCK_BUTTON_STYLE: CSSProperties = {
   padding: '6px 10px',
-  border: '1px solid #ccc',
+  border: '1px solid var(--doc-border-input)',
   borderRadius: '4px',
-  backgroundColor: '#fff',
+  backgroundColor: 'white',
   cursor: 'pointer',
   fontSize: '16px',
 };
 
 const LOCK_BUTTON_ACTIVE_STYLE: CSSProperties = {
   ...LOCK_BUTTON_STYLE,
-  backgroundColor: '#1a73e8',
-  borderColor: '#1a73e8',
-  color: '#fff',
+  backgroundColor: 'var(--doc-primary)',
+  borderColor: 'var(--doc-primary)',
+  color: 'white',
 };
 
 const FILE_INFO_STYLE: CSSProperties = {
   fontSize: '12px',
-  color: '#666',
+  color: 'var(--doc-text-muted)',
   marginTop: '8px',
   textAlign: 'center',
 };
@@ -236,7 +236,7 @@ const DIALOG_FOOTER_STYLE: CSSProperties = {
   justifyContent: 'flex-end',
   gap: '12px',
   padding: '16px 20px',
-  borderTop: '1px solid #e0e0e0',
+  borderTop: '1px solid var(--doc-border)',
 };
 
 const BUTTON_BASE_STYLE: CSSProperties = {
@@ -250,21 +250,21 @@ const BUTTON_BASE_STYLE: CSSProperties = {
 
 const PRIMARY_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#1a73e8',
-  color: '#ffffff',
+  backgroundColor: 'var(--doc-primary)',
+  color: 'white',
 };
 
 const SECONDARY_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#f0f0f0',
-  color: '#333',
-  border: '1px solid #ccc',
+  backgroundColor: 'var(--doc-bg-subtle)',
+  color: 'var(--doc-text)',
+  border: '1px solid var(--doc-border-input)',
 };
 
 const DISABLED_BUTTON_STYLE: CSSProperties = {
   ...BUTTON_BASE_STYLE,
-  backgroundColor: '#ccc',
-  color: '#666',
+  backgroundColor: 'var(--doc-border-input)',
+  color: 'var(--doc-text-muted)',
   cursor: 'not-allowed',
 };
 
@@ -278,9 +278,30 @@ const DISABLED_BUTTON_STYLE: CSSProperties = {
 function ImageIcon(): React.ReactElement {
   return (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="6" y="10" width="36" height="28" rx="2" stroke="#999" strokeWidth="2" fill="none" />
-      <circle cx="16" cy="20" r="4" stroke="#999" strokeWidth="2" fill="none" />
-      <path d="M6 32L16 24L26 34L36 22L42 28" stroke="#999" strokeWidth="2" fill="none" />
+      <rect
+        x="6"
+        y="10"
+        width="36"
+        height="28"
+        rx="2"
+        stroke="var(--doc-text-placeholder)"
+        strokeWidth="2"
+        fill="none"
+      />
+      <circle
+        cx="16"
+        cy="20"
+        r="4"
+        stroke="var(--doc-text-placeholder)"
+        strokeWidth="2"
+        fill="none"
+      />
+      <path
+        d="M6 32L16 24L26 34L36 22L42 28"
+        stroke="var(--doc-text-placeholder)"
+        strokeWidth="2"
+        fill="none"
+      />
     </svg>
   );
 }
@@ -656,7 +677,7 @@ export function InsertImageDialog({
                   marginLeft: '8px',
                   background: 'none',
                   border: 'none',
-                  color: '#1a73e8',
+                  color: 'var(--doc-primary)',
                   cursor: 'pointer',
                   fontSize: '12px',
                 }}
@@ -670,7 +691,7 @@ export function InsertImageDialog({
           {error && (
             <div
               style={{
-                color: '#dc3545',
+                color: 'var(--doc-error)',
                 fontSize: '14px',
                 marginBottom: '16px',
                 textAlign: 'center',
@@ -686,7 +707,7 @@ export function InsertImageDialog({
               <div style={FORM_GROUP_STYLE}>
                 <label style={LABEL_STYLE}>Dimensions</label>
                 <div style={SIZE_ROW_STYLE}>
-                  <span style={{ fontSize: '14px', color: '#666' }}>Width:</span>
+                  <span style={{ fontSize: '14px', color: 'var(--doc-text-muted)' }}>Width:</span>
                   <input
                     type="number"
                     value={width}
@@ -695,7 +716,7 @@ export function InsertImageDialog({
                     max={maxWidth}
                     style={SIZE_INPUT_STYLE}
                   />
-                  <span style={{ fontSize: '14px', color: '#666' }}>px</span>
+                  <span style={{ fontSize: '14px', color: 'var(--doc-text-muted)' }}>px</span>
                   <button
                     type="button"
                     onClick={() => setAspectLocked(!aspectLocked)}
@@ -704,7 +725,7 @@ export function InsertImageDialog({
                   >
                     <LockIcon locked={aspectLocked} />
                   </button>
-                  <span style={{ fontSize: '14px', color: '#666' }}>Height:</span>
+                  <span style={{ fontSize: '14px', color: 'var(--doc-text-muted)' }}>Height:</span>
                   <input
                     type="number"
                     value={height}
@@ -713,7 +734,7 @@ export function InsertImageDialog({
                     max={maxHeight}
                     style={SIZE_INPUT_STYLE}
                   />
-                  <span style={{ fontSize: '14px', color: '#666' }}>px</span>
+                  <span style={{ fontSize: '14px', color: 'var(--doc-text-muted)' }}>px</span>
                 </div>
               </div>
 

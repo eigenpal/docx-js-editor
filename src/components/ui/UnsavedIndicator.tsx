@@ -98,8 +98,8 @@ export interface UseUnsavedChangesReturn {
 // CONSTANTS
 // ============================================================================
 
-const DEFAULT_UNSAVED_COLOR = '#ea4335'; // Google red
-const DEFAULT_SAVED_COLOR = '#34a853'; // Google green
+const DEFAULT_UNSAVED_COLOR = 'var(--doc-error)'; // Unsaved state
+const DEFAULT_SAVED_COLOR = 'var(--doc-success)'; // Saved state
 const DEFAULT_WARNING_MESSAGE = 'You have unsaved changes. Are you sure you want to leave?';
 
 // ============================================================================
@@ -211,7 +211,7 @@ const getIndicatorStyles = (
         fontSize: '11px',
         fontWeight: 500,
         backgroundColor: hasUnsavedChanges ? unsavedColor : savedColor,
-        color: '#fff',
+        color: 'white',
       };
 
     case 'text':
