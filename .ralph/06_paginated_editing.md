@@ -212,9 +212,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 3.3: Add measurement cache
 
-- [ ] Create `src/layout-bridge/measuring/cache.ts`
-- [ ] Cache measurements by block content hash
-- [ ] Invalidate on font/width changes
+- [x] Create `src/layout-bridge/measuring/cache.ts`
+- [x] Cache measurements by block content hash
+- [x] Invalidate on font/width changes
 
 **Clean room implementation:**
 

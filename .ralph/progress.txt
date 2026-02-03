@@ -637,3 +637,27 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 14:08] STATUS: running
 [2026-02-03 14:08] NOTES: Typecheck passed
 [2026-02-03 14:08] STATUS: done
+
+[2026-02-03 14:09] TASK: 3.3 Add measurement cache
+[2026-02-03 14:09] STATUS: starting
+[2026-02-03 14:09] NOTES: Phase 3, Task 3.3 - Caching measurements by block content hash
+[2026-02-03 14:09] STATUS: researching-superdoc
+[2026-02-03 14:10] NOTES: Read SuperDoc measurementCache.ts and fontMetricsCache.ts
+[2026-02-03 14:10] NOTES: Key concepts:
+[2026-02-03 14:10] NOTES:   - LRU cache strategy with simple Map
+[2026-02-03 14:10] NOTES:   - makeKey() creates cache key from text + font + letterSpacing
+[2026-02-03 14:10] NOTES:   - evictIfNeeded() removes oldest entries when over maxSize
+[2026-02-03 14:10] NOTES:   - MAX_CACHE_SIZE defaults to 5000 for text, 1000 for font metrics
+[2026-02-03 14:10] NOTES:   - Cache invalidation functions: clear(), setCacheSize()
+[2026-02-03 14:11] STATUS: editing
+[2026-02-03 14:12] NOTES: Created src/layout-bridge/measuring/cache.ts
+[2026-02-03 14:12] NOTES: Features:
+[2026-02-03 14:12] NOTES:   - TextWidthCache: LRU cache for text measurements (5000 entries)
+[2026-02-03 14:12] NOTES:   - FontMetricsCache: LRU cache for font metrics (1000 entries)
+[2026-02-03 14:12] NOTES:   - ParagraphMeasureCache: LRU cache for paragraph layouts (1000 entries)
+[2026-02-03 14:12] NOTES:   - hashParagraphBlock(): creates cache key from block content
+[2026-02-03 14:12] NOTES:   - clearAllCaches(): invalidates all caches at once
+[2026-02-03 14:12] NOTES: Created src/layout-bridge/measuring/index.ts (barrel exports)
+[2026-02-03 14:13] STATUS: running
+[2026-02-03 14:13] NOTES: Typecheck passed
+[2026-02-03 14:13] STATUS: done
