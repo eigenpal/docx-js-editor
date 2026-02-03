@@ -1562,6 +1562,8 @@ export interface ListRendering {
   numId: number;
   /** Whether this is a bullet or numbered list */
   isBullet: boolean;
+  /** Number format type (decimal, lowerRoman, upperRoman, etc.) */
+  numFmt?: NumberFormat;
 }
 
 /**

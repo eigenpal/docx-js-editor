@@ -334,13 +334,13 @@ export const ProseMirrorEditor = memo(
     // Track document version to prevent circular updates
     const lastDocVersionRef = useRef<number>(0);
 
-    // Calculate page dimensions from section properties
-    const pageWidth = twipsToPixels(sectionProperties?.pageWidth ?? DEFAULT_PAGE_WIDTH) * zoom;
-    const pageHeight = twipsToPixels(sectionProperties?.pageHeight ?? DEFAULT_PAGE_HEIGHT) * zoom;
-    const marginTop = twipsToPixels(sectionProperties?.marginTop ?? DEFAULT_MARGIN) * zoom;
-    const marginBottom = twipsToPixels(sectionProperties?.marginBottom ?? DEFAULT_MARGIN) * zoom;
-    const marginLeft = twipsToPixels(sectionProperties?.marginLeft ?? DEFAULT_MARGIN) * zoom;
-    const marginRight = twipsToPixels(sectionProperties?.marginRight ?? DEFAULT_MARGIN) * zoom;
+    // Calculate page dimensions from section properties (without zoom - zoom is applied via CSS transform)
+    const pageWidth = twipsToPixels(sectionProperties?.pageWidth ?? DEFAULT_PAGE_WIDTH);
+    const pageHeight = twipsToPixels(sectionProperties?.pageHeight ?? DEFAULT_PAGE_HEIGHT);
+    const marginTop = twipsToPixels(sectionProperties?.marginTop ?? DEFAULT_MARGIN);
+    const marginBottom = twipsToPixels(sectionProperties?.marginBottom ?? DEFAULT_MARGIN);
+    const marginLeft = twipsToPixels(sectionProperties?.marginLeft ?? DEFAULT_MARGIN);
+    const marginRight = twipsToPixels(sectionProperties?.marginRight ?? DEFAULT_MARGIN);
 
     // Helper to convert marks to TextFormatting for saving
     const marksToFormatting = useCallback(
@@ -661,7 +661,7 @@ export const ProseMirrorEditor = memo(
       []
     );
 
-    // CSS custom properties for page layout
+    // CSS custom properties for page layout (at natural 100% size)
     const cssVariables = {
       '--page-width': `${pageWidth}px`,
       '--page-height': `${pageHeight}px`,
@@ -669,20 +669,51 @@ export const ProseMirrorEditor = memo(
       '--margin-bottom': `${marginBottom}px`,
       '--margin-left': `${marginLeft}px`,
       '--margin-right': `${marginRight}px`,
-      '--zoom': zoom,
     } as React.CSSProperties;
 
     return (
       <div
-        ref={containerRef}
-        className={`prosemirror-editor ${className}`}
-        data-placeholder={placeholder}
+        className={`prosemirror-editor-wrapper ${className}`}
         style={{
           minHeight: '200px',
           outline: 'none',
-          ...cssVariables,
+          overflow: 'auto',
+          // Background for the area around the page
+          background: 'var(--doc-bg)',
+          padding: '20px',
         }}
-      />
+      >
+        {/*
+          Zoom container: This wrapper is sized to match the SCALED dimensions
+          so that scrolling works correctly when zoomed in/out.
+        */}
+        <div
+          className="prosemirror-zoom-container"
+          style={{
+            // Width/height after scaling - for proper scroll area
+            width: `${pageWidth * zoom}px`,
+            minHeight: `${pageHeight * zoom}px`,
+            margin: '0 auto',
+            position: 'relative',
+          }}
+        >
+          {/*
+            The actual editor: sized at 100% (unscaled), then CSS transform
+            scales everything visually - text, borders, images, etc.
+          */}
+          <div
+            ref={containerRef}
+            className="prosemirror-editor"
+            data-placeholder={placeholder}
+            style={{
+              ...cssVariables,
+              // Apply visual zoom via CSS transform
+              transform: zoom !== 1 ? `scale(${zoom})` : undefined,
+              transformOrigin: 'top left',
+            }}
+          />
+        </div>
+      </div>
     );
   })
 );

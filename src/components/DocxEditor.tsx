@@ -948,11 +948,34 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     onPrint?.();
   }, [onPrint]);
 
-  // Handle direct print (opens system print dialog for current view)
-  const handleDirectPrint = useCallback(() => {
-    window.print();
-    onPrint?.();
-  }, [onPrint]);
+  // Handle direct print - saves DOCX for printing in Word
+  const handleDirectPrint = useCallback(async () => {
+    if (!agentRef.current) return;
+
+    try {
+      // Generate DOCX buffer
+      const buffer = await agentRef.current.toBuffer();
+
+      // Create blob and download link
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'print-document.docx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      onPrint?.();
+    } catch (error) {
+      onError?.(
+        error instanceof Error ? error : new Error('Failed to prepare document for printing')
+      );
+    }
+  }, [onPrint, onError]);
 
   // ============================================================================
   // FIND/REPLACE HANDLERS
@@ -1243,7 +1266,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                     documentStyles={history.state?.package.styles?.styles}
                     theme={history.state?.package.theme || theme}
                     showPrintButton={showPrintButton}
-                    onPrint={handleOpenPrintPreview}
+                    onPrint={handleDirectPrint}
                     showZoomControl={showZoomControl}
                     zoom={state.zoom}
                     onZoomChange={handleZoomChange}
