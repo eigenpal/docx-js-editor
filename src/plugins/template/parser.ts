@@ -109,18 +109,63 @@ export function parseText(
 
 /**
  * Parse all template elements from a ProseMirror document.
+ * Collects all text with positions, then parses tags that may span text nodes.
  */
 export function parseDocument(doc: ProseMirrorNode): TemplateElement[] {
-  const elements: TemplateElement[] = [];
+  // Collect all text content with position mapping
+  const textParts: { text: string; pos: number }[] = [];
 
-  // Walk the document tree
   doc.descendants((node, pos) => {
     if (node.isText && node.text) {
-      const nodeElements = parseText(node.text, pos, 0);
-      elements.push(...nodeElements);
+      textParts.push({ text: node.text, pos });
     }
-    return true; // Continue traversing
+    return true;
   });
+
+  // Build combined text and position map
+  let combinedText = '';
+  const positionMap: number[] = []; // Maps combined text index to doc position
+
+  for (const part of textParts) {
+    for (let i = 0; i < part.text.length; i++) {
+      positionMap.push(part.pos + i);
+    }
+    combinedText += part.text;
+  }
+
+  // Parse tags from combined text
+  const elements: TemplateElement[] = [];
+  let match: RegExpExecArray | null;
+
+  TAG_REGEX.lastIndex = 0;
+
+  while ((match = TAG_REGEX.exec(combinedText)) !== null) {
+    const [rawTag, prefix, name] = match;
+    const textFrom = match.index;
+    const textTo = textFrom + rawTag.length;
+
+    // Map back to document positions
+    const from = positionMap[textFrom];
+    const to = positionMap[textTo - 1] + 1;
+
+    const isClosingTag = prefix === '/';
+    const type = getElementType(prefix, name, isClosingTag);
+    const path = parsePath(name);
+
+    const element: TemplateElement = {
+      id: generateId(),
+      type,
+      rawTag,
+      name,
+      path,
+      from,
+      to,
+      scopeDepth: 0,
+      isValid: true,
+    };
+
+    elements.push(element);
+  }
 
   // Sort by position
   elements.sort((a, b) => a.from - b.from);
