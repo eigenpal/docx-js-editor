@@ -239,9 +239,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 4.2: Create fragment renderers
 
-- [ ] Create `src/layout-painter/renderParagraph.ts`
-- [ ] Render paragraph fragment (subset of lines) to DOM
-- [ ] Apply text formatting to runs
+- [x] Create `src/layout-painter/renderParagraph.ts`
+- [x] Render paragraph fragment (subset of lines) to DOM
+- [x] Apply text formatting to runs
 
 **Clean room implementation:**
 
@@ -251,9 +251,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 4.3: Create painter class
 
-- [ ] Create `src/layout-painter/index.ts`
-- [ ] Paint Layout → DOM with reconciliation
-- [ ] Only update changed pages/fragments
+- [x] Create `src/layout-painter/index.ts`
+- [x] Paint Layout → DOM with reconciliation
+- [x] Only update changed pages/fragments
 
 **Clean room implementation:**
 

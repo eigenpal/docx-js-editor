@@ -700,3 +700,53 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 14:19] STATUS: running
 [2026-02-03 14:19] NOTES: Typecheck passed
 [2026-02-03 14:19] STATUS: done
+
+[2026-02-03 14:20] TASK: 4.2 Create fragment renderers
+[2026-02-03 14:20] STATUS: starting
+[2026-02-03 14:20] NOTES: Phase 4, Task 4.2 - Rendering paragraph fragments with lines/runs
+[2026-02-03 14:20] STATUS: researching-superdoc
+[2026-02-03 14:21] NOTES: Read SuperDoc renderLine and applyRunStyles - key concepts:
+[2026-02-03 14:21] NOTES:   - renderLine: creates div with lineHeight, iterates runs
+[2026-02-03 14:21] NOTES:   - Handles text-align: center, right, justify (via word-spacing)
+[2026-02-03 14:21] NOTES:   - applyRunStyles: fontFamily, fontSize, bold, italic, color
+[2026-02-03 14:21] NOTES:   - letterSpacing, highlight (backgroundColor), underline, strike
+[2026-02-03 14:21] NOTES:   - textDecorationLine for multiple decorations
+[2026-02-03 14:21] NOTES:   - PM positions stored in data-pm-start, data-pm-end
+[2026-02-03 14:22] STATUS: editing
+[2026-02-03 14:23] NOTES: Created src/layout-painter/renderParagraph.ts
+[2026-02-03 14:23] NOTES: Features:
+[2026-02-03 14:23] NOTES:   - renderParagraphFragment(): main entry point
+[2026-02-03 14:23] NOTES:   - renderLine(): creates div with lineHeight, alignment
+[2026-02-03 14:23] NOTES:   - sliceRunsForLine(): extracts runs for a specific line
+[2026-02-03 14:23] NOTES:   - renderRun(): dispatches to text/tab/image/lineBreak renderers
+[2026-02-03 14:23] NOTES:   - applyRunStyles(): fontFamily, fontSize, bold, italic, color, etc.
+[2026-02-03 14:23] NOTES:   - Supports underline, strike, superscript, subscript
+[2026-02-03 14:23] NOTES:   - PM positions stored as data attributes
+[2026-02-03 14:24] STATUS: running
+[2026-02-03 14:24] NOTES: Typecheck passed
+[2026-02-03 14:24] STATUS: done
+
+[2026-02-03 14:25] TASK: 4.3 Create painter class
+[2026-02-03 14:25] STATUS: starting
+[2026-02-03 14:25] NOTES: Phase 4, Task 4.3 - Creating main painter with reconciliation
+[2026-02-03 14:25] STATUS: editing
+[2026-02-03 14:26] NOTES: Created src/layout-painter/index.ts
+[2026-02-03 14:26] NOTES: Features:
+[2026-02-03 14:26] NOTES:   - LayoutPainter class with mount/unmount/paint methods
+[2026-02-03 14:26] NOTES:   - BlockLookup support for full fragment rendering
+[2026-02-03 14:26] NOTES:   - renderPageWithLookup: creates page with content area
+[2026-02-03 14:26] NOTES:   - renderFragmentWithLookup: uses block/measure for paragraph rendering
+[2026-02-03 14:26] NOTES:   - Page state tracking for future reconciliation
+[2026-02-03 14:26] NOTES:   - scrollToPage() for navigation
+[2026-02-03 14:26] NOTES:   - Exports: createPainter factory function
+[2026-02-03 14:27] STATUS: running
+[2026-02-03 14:27] NOTES: Typecheck passed
+[2026-02-03 14:27] STATUS: done
+
+[2026-02-03 14:28] ========================================
+[2026-02-03 14:28] PHASE 4 COMPLETE: DOM Painter
+[2026-02-03 14:28] ========================================
+[2026-02-03 14:28] - Task 4.1: Created renderPage.ts (page rendering)
+[2026-02-03 14:28] - Task 4.2: Created renderParagraph.ts (paragraph/line/run rendering)
+[2026-02-03 14:28] - Task 4.3: Created index.ts (LayoutPainter class)
+[2026-02-03 14:28] ========================================
