@@ -513,6 +513,8 @@ function mergeTextFormatting(
   if (source.fontSize !== undefined) result.fontSize = source.fontSize;
   if (source.fontFamily !== undefined) result.fontFamily = source.fontFamily;
   if (source.vertAlign !== undefined) result.vertAlign = source.vertAlign;
+  if (source.allCaps !== undefined) result.allCaps = source.allCaps;
+  if (source.smallCaps !== undefined) result.smallCaps = source.smallCaps;
 
   return result;
 }
@@ -804,6 +806,16 @@ function textFormattingToMarks(
     marks.push(schema.mark('superscript'));
   } else if (formatting.vertAlign === 'subscript') {
     marks.push(schema.mark('subscript'));
+  }
+
+  // All caps (w:caps)
+  if (formatting.allCaps) {
+    marks.push(schema.mark('allCaps'));
+  }
+
+  // Small caps (w:smallCaps)
+  if (formatting.smallCaps) {
+    marks.push(schema.mark('smallCaps'));
   }
 
   return marks;

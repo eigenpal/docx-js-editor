@@ -342,6 +342,36 @@ export const hyperlink: MarkSpec = {
 };
 
 /**
+ * All caps mark (w:caps) - transforms text to uppercase
+ */
+export const allCaps: MarkSpec = {
+  parseDOM: [
+    {
+      style: 'text-transform',
+      getAttrs: (value) => (value === 'uppercase' ? {} : false),
+    },
+  ],
+  toDOM() {
+    return ['span', { style: 'text-transform: uppercase' }, 0];
+  },
+};
+
+/**
+ * Small caps mark (w:smallCaps) - displays lowercase as smaller capitals
+ */
+export const smallCaps: MarkSpec = {
+  parseDOM: [
+    {
+      style: 'font-variant',
+      getAttrs: (value) => (value === 'small-caps' ? {} : false),
+    },
+  ],
+  toDOM() {
+    return ['span', { style: 'font-variant: small-caps' }, 0];
+  },
+};
+
+/**
  * Footnote reference mark - displays as superscript number
  */
 export const footnoteRef: MarkSpec = {
@@ -389,6 +419,8 @@ export const marks = {
   fontFamily,
   superscript,
   subscript,
+  allCaps,
+  smallCaps,
   hyperlink,
   footnoteRef,
 };

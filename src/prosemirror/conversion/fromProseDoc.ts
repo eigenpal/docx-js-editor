@@ -461,6 +461,14 @@ function marksToTextFormatting(marks: readonly Mark[]): TextFormatting {
         formatting.vertAlign = 'subscript';
         break;
 
+      case 'allCaps':
+        formatting.allCaps = true;
+        break;
+
+      case 'smallCaps':
+        formatting.smallCaps = true;
+        break;
+
       // hyperlink is handled separately
     }
   }

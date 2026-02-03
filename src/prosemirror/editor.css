@@ -515,3 +515,17 @@
   white-space: nowrap;
   overflow: hidden;
 }
+
+/* ============================================================================
+   TEXT TRANSFORM STYLES - All caps, small caps
+   ============================================================================ */
+
+/* All caps (w:caps) - transforms text to uppercase */
+.prosemirror-editor .ProseMirror .docx-run-all-caps {
+  text-transform: uppercase;
+}
+
+/* Small caps (w:smallCaps) - displays lowercase as smaller capitals */
+.prosemirror-editor .ProseMirror .docx-run-small-caps {
+  font-variant: small-caps;
+}
