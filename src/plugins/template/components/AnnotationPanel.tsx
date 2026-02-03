@@ -133,14 +133,14 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
     grouped.sort((a, b) => a.top - b.top);
 
     // Adjust positions to prevent overlaps
-    const minGap = 8; // Minimum gap between cards
+    const minGap = 4; // Minimum gap between cards
     for (let i = 1; i < grouped.length; i++) {
       const prev = grouped[i - 1];
       const curr = grouped[i];
       // Calculate previous card height: base height + nested variables
-      const baseHeight = prev.nestedVariables.length > 0 ? 60 : 28;
+      const baseHeight = prev.nestedVariables.length > 0 ? 50 : 24;
       const nestedHeight =
-        prev.nestedVariables.length > 0 ? Math.ceil(prev.nestedVariables.length / 3) * 26 : 0;
+        prev.nestedVariables.length > 0 ? Math.ceil(prev.nestedVariables.length / 3) * 22 : 0;
       const prevHeight = baseHeight + nestedHeight + minGap;
       if (curr.top < prev.top + prevHeight) {
         curr.top = prev.top + prevHeight;
