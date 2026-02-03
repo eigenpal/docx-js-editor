@@ -140,9 +140,9 @@ WYSIWYG Editor is licensed under **AGPL-3.0**. We use it ONLY to understand conc
 
 ### Task 2.1: Create PM adapter
 
-- [ ] Create `src/layout-bridge/toFlowBlocks.ts`
-- [ ] Convert ProseMirror doc → FlowBlock array
-- [ ] Track pmStart/pmEnd positions for each block
+- [x] Create `src/layout-bridge/toFlowBlocks.ts`
+- [x] Convert ProseMirror doc → FlowBlock array
+- [x] Track pmStart/pmEnd positions for each block
 
 **WYSIWYG Editor reference (concept only):**
 
@@ -157,9 +157,9 @@ WYSIWYG Editor is licensed under **AGPL-3.0**. We use it ONLY to understand conc
 
 ### Task 2.2: Convert paragraph nodes
 
-- [ ] Convert PM paragraph → ParagraphBlock with runs
-- [ ] Extract formatting from marks into run properties
-- [ ] Handle inline content (text, images, tabs)
+- [x] Convert PM paragraph → ParagraphBlock with runs
+- [x] Extract formatting from marks into run properties
+- [x] Handle inline content (text, images, tabs)
 
 **Clean room implementation:**
 
@@ -169,8 +169,8 @@ WYSIWYG Editor is licensed under **AGPL-3.0**. We use it ONLY to understand conc
 
 ### Task 2.3: Convert table nodes
 
-- [ ] Convert PM table → TableBlock with rows/cells
-- [ ] Handle cell content (can contain paragraphs)
+- [x] Convert PM table → TableBlock with rows/cells
+- [x] Handle cell content (can contain paragraphs)
 
 **Clean room implementation:**
 
