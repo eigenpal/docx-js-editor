@@ -227,9 +227,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 4.1: Create page renderer
 
-- [ ] Create `src/layout-painter/renderPage.ts`
-- [ ] Render single page as DOM element
-- [ ] Position fragments absolutely within content area
+- [x] Create `src/layout-painter/renderPage.ts`
+- [x] Render single page as DOM element
+- [x] Position fragments absolutely within content area
 
 **Clean room implementation:**
 
