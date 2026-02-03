@@ -164,7 +164,7 @@ const PLUGIN_HOST_STYLES = `
   bottom: 0;
   width: 220px;
   pointer-events: none;
-  z-index: 100;
+  z-index: 10;
   overflow: visible;
   clip: unset;
 }

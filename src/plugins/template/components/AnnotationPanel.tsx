@@ -204,10 +204,14 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
     switch (el.type) {
       case 'loopStart':
       case 'conditionalStart':
-        return { label: '#', className: 'section', description: 'Section block' };
+        return {
+          label: 'LOOP/IF',
+          className: 'section',
+          description: 'Loop or conditional section',
+        };
       case 'invertedStart':
         return {
-          label: '^',
+          label: 'IF NOT',
           className: 'inverted',
           description: 'Inverted section (shows when falsy)',
         };
@@ -215,7 +219,7 @@ export function AnnotationPanel({ editorView, pluginState, selectRange }: Annota
       case 'nestedVariable':
         return { label: '', className: 'variable', description: 'Variable' };
       case 'rawVariable':
-        return { label: '@', className: 'raw', description: 'Raw HTML' };
+        return { label: 'HTML', className: 'raw', description: 'Raw HTML' };
       default:
         return { label: '', className: 'variable', description: '' };
     }
