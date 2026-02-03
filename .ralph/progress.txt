@@ -1068,3 +1068,37 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 17:06] NOTES:   - Header/Footer Margin Inflation (3 tests)
 [2026-02-03 17:06] NOTES:     * Header height inflates top margin
 [2026-02-03 17:06] NOTES:     * Footer height inflates bottom margin
+[2026-02-03 17:07] NOTES: Committed to main branch - 3 files changed, 866 insertions
+
+[2026-02-03 17:08] NEXT: Task 9.2 - Performance baseline
+
+[2026-02-03 17:15] TASK: 9.2 Performance baseline
+[2026-02-03 17:15] STATUS: starting
+[2026-02-03 17:15] NOTES: Phase 9, Task 9.2 - Measuring layout time for 10-page document
+[2026-02-03 17:15] STATUS: researching-superdoc
+[2026-02-03 17:18] NOTES: Read SuperDoc performance.bench.ts and performance.test.ts
+[2026-02-03 17:18] NOTES: Key concepts from SuperDoc:
+[2026-02-03 17:18] NOTES:   - Uses performance.now() for timing measurements
+[2026-02-03 17:18] NOTES:   - Calculates P50, P90, P95, P99 percentiles
+[2026-02-03 17:18] NOTES:   - Measures initial layout time for various document sizes (1, 10, 25, 50 pages)
+[2026-02-03 17:18] NOTES:   - Measures incremental layout (typing latency) as rerender time
+[2026-02-03 17:18] NOTES:   - Tests include cache hit rate validation
+[2026-02-03 17:18] NOTES:   - Targets: <500ms for 50-page initial, <16ms typing latency (P95)
+[2026-02-03 17:19] STATUS: editing
+[2026-02-03 17:19] NOTES: Creating performance benchmark file
+
+[2026-02-03 17:25] STATUS: testing
+[2026-02-03 17:25] NOTES: All 8 performance tests pass!
+[2026-02-03 17:25] NOTES: Performance results:
+[2026-02-03 17:25] NOTES:   - 10-page layout: 0.08ms median (target: <100ms) ✅
+[2026-02-03 17:25] NOTES:   - Incremental update: 0.05ms median (target: <50ms) ✅
+[2026-02-03 17:25] NOTES:   - Layout scaling: Linear, ~0.1µs per paragraph
+[2026-02-03 17:25] NOTES:   - Empty document: <0.001ms
+[2026-02-03 17:25] NOTES:   - Single paragraph: ~0.001ms
+[2026-02-03 17:25] NOTES:   - KeepNext chains (100): 0.07ms
+[2026-02-03 17:25] NOTES:   - Explicit page breaks: 0.003ms
+[2026-02-03 17:26] STATUS: done
+[2026-02-03 17:26] NOTES: Created src/layout-engine/performance.test.ts with:
+[2026-02-03 17:26] NOTES:   - Initial Layout tests (10-page document, scaling)
+[2026-02-03 17:26] NOTES:   - Incremental Update tests (single char, paragraph insert)
+[2026-02-03 17:26] NOTES:   - Edge Cases (empty doc, single para, keepNext, page breaks)

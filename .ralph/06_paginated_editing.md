@@ -448,9 +448,9 @@ SuperDoc is licensed under **AGPL-3.0**. We use it ONLY to understand concepts.
 
 ### Task 9.2: Performance baseline
 
-- [ ] Measure layout time for 10-page document
-- [ ] Measure repaint time after single character edit
-- [ ] Target: <100ms for layout, <50ms for incremental update
+- [x] Measure layout time for 10-page document
+- [x] Measure repaint time after single character edit
+- [x] Target: <100ms for layout, <50ms for incremental update
 
 ### Task 9.3: Replace DocumentViewer with PagedEditor
 
