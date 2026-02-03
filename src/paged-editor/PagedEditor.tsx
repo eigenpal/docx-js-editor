@@ -541,6 +541,55 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
       setIsFocused(false);
     }, []);
 
+    /**
+     * Handle keyboard events on container.
+     * Most keyboard handling is done by ProseMirror, but we intercept
+     * specific keys for navigation and ensure focus stays on hidden PM.
+     */
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+      // Ensure hidden PM is focused if user types
+      if (!hiddenPMRef.current?.isFocused()) {
+        hiddenPMRef.current?.focus();
+        setIsFocused(true);
+      }
+
+      // Arrow keys with no modifiers - handle scrolling when at document bounds
+      if (
+        ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown'].includes(e.key) &&
+        !e.metaKey &&
+        !e.ctrlKey
+      ) {
+        // Let PM handle the cursor movement first
+        // If PM doesn't handle it (at bounds), the container will scroll
+      }
+
+      // Cmd/Ctrl+Home - scroll to top and move cursor to start
+      if (e.key === 'Home' && (e.metaKey || e.ctrlKey)) {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = 0;
+        }
+      }
+
+      // Cmd/Ctrl+End - scroll to bottom and move cursor to end
+      if (e.key === 'End' && (e.metaKey || e.ctrlKey)) {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = containerRef.current.scrollHeight;
+        }
+      }
+    }, []);
+
+    /**
+     * Handle mousedown on container to prepare for click handling.
+     * This ensures the editor captures focus before the click event.
+     */
+    const handleMouseDown = useCallback(() => {
+      // Focus hidden PM immediately on mousedown for better responsiveness
+      if (!hiddenPMRef.current?.isFocused()) {
+        hiddenPMRef.current?.focus();
+        setIsFocused(true);
+      }
+    }, []);
+
     // =========================================================================
     // Initial Layout
     // =========================================================================
@@ -658,6 +707,8 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         tabIndex={0}
         onFocus={handleContainerFocus}
         onBlur={handleContainerBlur}
+        onKeyDown={handleKeyDown}
+        onMouseDown={handleMouseDown}
       >
         {/* Hidden ProseMirror for keyboard input */}
         <HiddenProseMirror
