@@ -716,7 +716,7 @@ export {
 // PLUGINS
 // ============================================================================
 
-// Template Plugin
+// Template Plugin (Editor UI)
 export {
   templatePlugin,
   createPlugin as createTemplatePlugin,
@@ -731,3 +731,19 @@ export {
   type TemplateTag,
   type TagType,
 } from './plugins/template';
+
+// ============================================================================
+// CORE PLUGIN SYSTEM
+// ============================================================================
+
+export {
+  pluginRegistry,
+  PluginRegistry,
+  registerPlugins,
+  docxtemplaterPlugin,
+  type CorePlugin,
+  type McpToolDefinition,
+  type McpToolHandler,
+  type McpToolResult,
+  type McpSession,
+} from './core-plugins';

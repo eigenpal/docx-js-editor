@@ -42,6 +42,8 @@ import type {
   ApplyVariablesCommand,
 } from '../types/agentApi';
 
+import { pluginRegistry } from '../core-plugins/registry';
+
 // ============================================================================
 // MAIN EXECUTOR
 // ============================================================================
@@ -50,11 +52,23 @@ import type {
  * Execute an agent command on a document
  * Returns a new document with the command applied (immutable)
  *
+ * Dispatch order:
+ * 1. Try plugin handlers first (allows plugins to override built-in commands)
+ * 2. Fall back to built-in handlers
+ *
  * @param doc - The document to modify
  * @param command - The command to execute
  * @returns New document with command applied
  */
 export function executeCommand(doc: Document, command: AgentCommand): Document {
+  // Try plugin handlers first
+  const pluginHandler = pluginRegistry.getCommandHandler(command.type);
+  if (pluginHandler) {
+    // Plugin commands use a more flexible type
+    return pluginHandler(doc, command as unknown as import('../core-plugins/types').PluginCommand);
+  }
+
+  // Fall back to built-in handlers
   switch (command.type) {
     case 'insertText':
       return executeInsertText(doc, command);

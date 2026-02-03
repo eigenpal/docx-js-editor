@@ -12,7 +12,25 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./headless": {
+      "types": "./dist/headless.d.ts",
+      "import": "./dist/headless.js",
+      "require": "./dist/headless.cjs"
+    },
+    "./core-plugins": {
+      "types": "./dist/core-plugins.d.ts",
+      "import": "./dist/core-plugins.js",
+      "require": "./dist/core-plugins.cjs"
+    },
+    "./mcp": {
+      "types": "./dist/mcp.d.ts",
+      "import": "./dist/mcp.js",
+      "require": "./dist/mcp.cjs"
+    },
     "./styles.css": "./dist/styles.css"
+  },
+  "bin": {
+    "docx-editor-mcp": "./dist/mcp-cli.js"
   },
   "files": [
     "dist"
@@ -39,6 +57,14 @@
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.1.15",
