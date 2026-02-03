@@ -999,3 +999,25 @@ Tests: All 27 formatting tests pass (no regressions)
 [2026-02-03 16:28] NOTES:   - layoutDocument calculates max header/footer heights
 [2026-02-03 16:28] NOTES:   - effectiveTopMargin = max(baseTop, headerDistance + headerHeight)
 [2026-02-03 16:28] NOTES:   - effectiveBottomMargin = max(baseBottom, footerDistance + footerHeight)
+
+[2026-02-03 16:30] TASK: 8.3 Render headers/footers on pages
+[2026-02-03 16:30] STATUS: starting
+[2026-02-03 16:30] STATUS: researching-wysiwyg-editor
+[2026-02-03 16:35] NOTES: Searched WYSIWYG Editor painters for header/footer rendering
+[2026-02-03 16:35] NOTES: Key concepts from WYSIWYG Editor:
+[2026-02-03 16:35] NOTES:   - Headers/footers are converted to FlowBlocks
+[2026-02-03 16:35] NOTES:   - Measured with same measureBlock as body content
+[2026-02-03 16:35] NOTES:   - Laid out with layoutHeaderFooter
+[2026-02-03 16:35] NOTES:   - Resulting fragments rendered in header/footer areas of page
+[2026-02-03 16:35] NOTES:   - Page number tokens resolved during layout
+[2026-02-03 16:36] STATUS: editing
+[2026-02-03 16:36] NOTES: Adding header/footer rendering to renderPage.ts
+[2026-02-03 16:45] STATUS: testing
+[2026-02-03 16:45] NOTES: Typecheck passed
+[2026-02-03 16:45] STATUS: done
+[2026-02-03 16:45] NOTES: Added header/footer rendering to renderPage.ts:
+[2026-02-03 16:45] NOTES:   - HeaderFooterContent type for blocks + measures + height
+[2026-02-03 16:45] NOTES:   - renderHeaderFooterContent helper function
+[2026-02-03 16:45] NOTES:   - renderPage now accepts headerContent/footerContent options
+[2026-02-03 16:45] NOTES:   - Headers positioned at headerDistance from top
+[2026-02-03 16:45] NOTES:   - Footers positioned at footerDistance from bottom
