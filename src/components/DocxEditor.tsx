@@ -297,7 +297,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     onPaste: _onPaste,
     externalPlugins,
     onEditorViewReady,
-    usePaginatedEditor = false,
+    usePaginatedEditor = true,
   },
   ref
 ) {

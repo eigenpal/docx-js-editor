@@ -5,9 +5,8 @@
  * This is more accurate than geometry-based calculation because it uses
  * the browser's own text rendering with document.elementsFromPoint().
  *
- * This approach follows SuperDoc's pattern of tagging DOM elements with
- * data-pm-start and data-pm-end attributes, then using binary search
- * to find exact character positions.
+ * DOM elements are tagged with data-pm-start and data-pm-end attributes,
+ * enabling binary search to find exact character positions.
  */
 
 /**

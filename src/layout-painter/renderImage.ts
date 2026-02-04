@@ -89,6 +89,11 @@ export function renderImageFragment(
   imgEl.style.objectFit = 'contain';
   imgEl.style.display = 'block';
 
+  // Apply transform if present (rotation, flip)
+  if (block.transform) {
+    imgEl.style.transform = block.transform;
+  }
+
   // Prevent dragging
   imgEl.draggable = false;
 

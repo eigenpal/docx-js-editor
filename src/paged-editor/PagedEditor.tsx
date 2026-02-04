@@ -174,7 +174,7 @@ const containerStyles: CSSProperties = {
   width: '100%',
   height: '100%',
   overflow: 'auto',
-  backgroundColor: '#f0f0f0',
+  backgroundColor: 'var(--doc-bg, #f8f9fa)',
 };
 
 const viewportStyles: CSSProperties = {
@@ -221,15 +221,22 @@ function getPageSize(sectionProps: SectionProperties | null | undefined): {
  * Extract margins from section properties or use defaults.
  */
 function getMargins(sectionProps: SectionProperties | null | undefined): PageMargins {
+  const top = sectionProps?.marginTop ? twipsToPixels(sectionProps.marginTop) : DEFAULT_MARGINS.top;
+  const bottom = sectionProps?.marginBottom
+    ? twipsToPixels(sectionProps.marginBottom)
+    : DEFAULT_MARGINS.bottom;
+
   return {
-    top: sectionProps?.marginTop ? twipsToPixels(sectionProps.marginTop) : DEFAULT_MARGINS.top,
+    top,
     right: sectionProps?.marginRight
       ? twipsToPixels(sectionProps.marginRight)
       : DEFAULT_MARGINS.right,
-    bottom: sectionProps?.marginBottom
-      ? twipsToPixels(sectionProps.marginBottom)
-      : DEFAULT_MARGINS.bottom,
+    bottom,
     left: sectionProps?.marginLeft ? twipsToPixels(sectionProps.marginLeft) : DEFAULT_MARGINS.left,
+    // Header/footer distances - where the header/footer content starts
+    // Default to 0.5 inch (48px at 96 DPI) if not specified
+    header: sectionProps?.headerDistance ? twipsToPixels(sectionProps.headerDistance) : 48,
+    footer: sectionProps?.footerDistance ? twipsToPixels(sectionProps.footerDistance) : 48,
   };
 }
 
@@ -395,6 +402,37 @@ function convertDocumentRunsToFlowRuns(content: unknown[]): Run[] {
           runs.push({
             kind: 'lineBreak',
           });
+        } else if (rc.type === 'drawing' && rc.image) {
+          // Handle images/drawings
+          const image = rc.image as Record<string, unknown>;
+          const size = image.size as { width: number; height: number } | undefined;
+          // EMU to pixels: 1 inch = 914400 EMU, 1 inch = 96 pixels
+          const emuToPixels = (emu: number) => Math.round((emu / 914400) * 96);
+          const widthPx = size?.width ? emuToPixels(size.width) : 100;
+          const heightPx = size?.height ? emuToPixels(size.height) : 100;
+
+          // Check for position (floating/anchored images)
+          const position = image.position as
+            | {
+                horizontal?: { relativeTo?: string; posOffset?: number; align?: string };
+                vertical?: { relativeTo?: string; posOffset?: number; align?: string };
+              }
+            | undefined;
+
+          runs.push({
+            kind: 'image',
+            src: (image.src as string) || '',
+            width: widthPx,
+            height: heightPx,
+            alt: (image.alt as string) || undefined,
+            // Include position for floating images
+            position: position
+              ? {
+                  horizontal: position.horizontal,
+                  vertical: position.vertical,
+                }
+              : undefined,
+          } as Run);
         }
       }
     }
@@ -643,11 +681,16 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         setMeasures(newMeasures);
 
         // Step 3: Layout blocks onto pages
+        // Use document margins directly for WYSIWYG fidelity (matches Word behavior)
         const newLayout = layoutDocument(newBlocks, newMeasures, {
           pageSize,
           margins,
         });
         setLayout(newLayout);
+
+        // Step 3.5: Prepare header/footer content for rendering
+        const headerContentForRender = convertHeaderFooterToContent(headerContent, contentWidth);
+        const footerContentForRender = convertHeaderFooterToContent(footerContent, contentWidth);
 
         // Step 4: Paint to DOM
         if (pagesContainerRef.current && painterRef.current) {
@@ -662,11 +705,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
           }
           painterRef.current.setBlockLookup(blockLookup);
 
-          // Convert header/footer content for rendering
-          const headerContentForRender = convertHeaderFooterToContent(headerContent, contentWidth);
-          const footerContentForRender = convertHeaderFooterToContent(footerContent, contentWidth);
-
-          // Render pages to container
+          // Render pages to container (using header/footer content computed above)
           renderPages(newLayout.pages, pagesContainerRef.current, {
             pageGap,
             showShadow: true,
@@ -699,7 +738,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     );
 
     /**
-     * Get caret position using DOM-based measurement (like SuperDoc).
+     * Get caret position using DOM-based measurement.
      * This uses the browser's text rendering to get precise pixel positions.
      */
     const getCaretFromDom = useCallback((pmPos: number): CaretPosition | null => {

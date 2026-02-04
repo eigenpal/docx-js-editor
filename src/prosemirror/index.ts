@@ -30,7 +30,7 @@ export { StyleResolver, createStyleResolver } from './styles';
 export type { ResolvedParagraphStyle } from './styles';
 
 // Editor component
-export { ProseMirrorEditor } from './ProseMirrorEditor';
+export { ProseMirrorEditor, extractSelectionState } from './ProseMirrorEditor';
 export type {
   ProseMirrorEditorProps,
   ProseMirrorEditorRef,

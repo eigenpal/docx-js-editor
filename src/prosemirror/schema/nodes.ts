@@ -118,10 +118,12 @@ export interface ImageAttrs {
  * Helper to convert paragraph attrs to DOM style
  */
 function paragraphAttrsToDOMStyle(attrs: ParagraphAttrs): string {
-  // For list items, calculate the correct indentation based on level
-  // Each level indents 0.5 inch (720 twips) more
+  // For list items, use explicit indentation from numbering definition if available,
+  // otherwise fall back to calculated indentation based on level
   let indentLeft = attrs.indentLeft;
-  if (attrs.numPr?.numId) {
+  if (attrs.numPr?.numId && indentLeft == null) {
+    // Fallback: calculate indentation based on level
+    // Each level indents 0.5 inch (720 twips) more
     const level = attrs.numPr.ilvl ?? 0;
     // Base indentation: 0.5 inch (720 twips) per level
     // Level 0 = 720 twips (48px), Level 1 = 1440 twips (96px), etc.

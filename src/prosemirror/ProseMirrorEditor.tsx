@@ -173,7 +173,7 @@ function createEditorState(
 /**
  * Extract selection state from editor state
  */
-function extractSelectionState(state: EditorState): SelectionState | null {
+export function extractSelectionState(state: EditorState): SelectionState | null {
   const { selection, doc } = state;
   const { from, to, empty } = selection;
 

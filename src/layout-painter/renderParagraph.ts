@@ -261,9 +261,9 @@ function getLeaderChar(leader: string): string | null {
 }
 
 /**
- * Render an inline image run
+ * Render an inline image run (flows with text)
  */
-function renderImageRun(run: ImageRun, doc: Document): HTMLElement {
+function renderInlineImageRun(run: ImageRun, doc: Document): HTMLElement {
   const img = doc.createElement('img');
   img.className = `${PARAGRAPH_CLASS_NAMES.run} ${PARAGRAPH_CLASS_NAMES.image}`;
 
@@ -287,7 +287,7 @@ function renderImageRun(run: ImageRun, doc: Document): HTMLElement {
 }
 
 /**
- * Render a floating image
+ * Render a floating image (text wraps around it)
  */
 function renderFloatingImage(run: ImageRun, doc: Document): HTMLElement {
   const container = doc.createElement('span');
@@ -304,34 +304,76 @@ function renderFloatingImage(run: ImageRun, doc: Document): HTMLElement {
     img.style.transform = run.transform;
   }
 
-  // Determine float direction from horizontal position
-  const hAlign = run.position?.horizontal?.align;
-  const hRelative = run.position?.horizontal?.relativeTo;
+  // Use cssFloat from the preserved attributes
+  const cssFloat = run.cssFloat;
 
-  if (hAlign === 'right' || hRelative === 'rightMargin') {
+  if (cssFloat === 'right') {
     container.style.cssFloat = 'right';
-    container.style.marginLeft = '12px';
-    container.style.marginBottom = '6px';
-  } else if (hAlign === 'left' || hRelative === 'leftMargin' || hRelative === 'column') {
+    container.style.marginLeft = `${run.distLeft ?? 12}px`;
+    container.style.marginBottom = `${run.distBottom ?? 6}px`;
+    container.style.marginTop = `${run.distTop ?? 0}px`;
+  } else if (cssFloat === 'left') {
     container.style.cssFloat = 'left';
-    container.style.marginRight = '12px';
-    container.style.marginBottom = '6px';
-  } else if (hAlign === 'center') {
-    // Centered images become block-level
-    container.style.display = 'block';
-    container.style.textAlign = 'center';
-    container.style.marginBottom = '6px';
+    container.style.marginRight = `${run.distRight ?? 12}px`;
+    container.style.marginBottom = `${run.distBottom ?? 6}px`;
+    container.style.marginTop = `${run.distTop ?? 0}px`;
   } else {
-    // Default to left float for other positioning
+    // Default to left float if wrapType is square/tight/through
     container.style.cssFloat = 'left';
-    container.style.marginRight = '12px';
-    container.style.marginBottom = '6px';
+    container.style.marginRight = `${run.distRight ?? 12}px`;
+    container.style.marginBottom = `${run.distBottom ?? 6}px`;
   }
 
   applyPmPositions(container, run.pmStart, run.pmEnd);
   container.appendChild(img);
 
   return container;
+}
+
+/**
+ * Render a block image (on its own line, like topAndBottom)
+ */
+function renderBlockImage(run: ImageRun, doc: Document): HTMLElement {
+  const container = doc.createElement('div');
+  container.className = 'layout-block-image';
+  container.style.display = 'block';
+  container.style.textAlign = 'center';
+  container.style.marginTop = `${run.distTop ?? 6}px`;
+  container.style.marginBottom = `${run.distBottom ?? 6}px`;
+
+  const img = doc.createElement('img');
+  img.src = run.src;
+  img.width = run.width;
+  img.height = run.height;
+  if (run.alt) {
+    img.alt = run.alt;
+  }
+  if (run.transform) {
+    img.style.transform = run.transform;
+  }
+
+  applyPmPositions(container, run.pmStart, run.pmEnd);
+  container.appendChild(img);
+
+  return container;
+}
+
+/**
+ * Render an image run based on its display mode
+ */
+function renderImageRun(run: ImageRun, doc: Document): HTMLElement {
+  const displayMode = run.displayMode;
+  const wrapType = run.wrapType;
+
+  // Determine rendering based on display mode and wrap type
+  if (displayMode === 'float' || (wrapType && ['square', 'tight', 'through'].includes(wrapType))) {
+    return renderFloatingImage(run, doc);
+  } else if (displayMode === 'block' || wrapType === 'topAndBottom') {
+    return renderBlockImage(run, doc);
+  } else {
+    // Default: inline
+    return renderInlineImageRun(run, doc);
+  }
 }
 
 /**
@@ -660,13 +702,19 @@ export function renderLine(
       currentX += measureText(run.text, fontSize, fontFamily);
     } else if (isImageRun(run)) {
       // Skip floating images - they're rendered separately at paragraph level
-      if (run.position) {
+      const isFloating =
+        run.displayMode === 'float' ||
+        (run.wrapType && ['square', 'tight', 'through'].includes(run.wrapType));
+      if (isFloating) {
         continue;
       }
-      // Inline image - render in the text flow
+      // Inline or block image - render in the text flow
       const runEl = renderImageRun(run, doc);
       lineEl.appendChild(runEl);
-      currentX += run.width;
+      // Block images don't contribute to horizontal position
+      if (run.displayMode !== 'block' && run.wrapType !== 'topAndBottom') {
+        currentX += run.width;
+      }
     } else if (isLineBreakRun(run)) {
       const runEl = renderLineBreakRun(run, doc);
       lineEl.appendChild(runEl);
@@ -731,8 +779,14 @@ export function renderParagraphFragment(
   // They need to be rendered before text content so text can flow around them
   const floatingImages: ImageRun[] = [];
   for (const run of block.runs) {
-    if (isImageRun(run) && run.position) {
-      floatingImages.push(run);
+    if (isImageRun(run)) {
+      // Check if this is a floating image based on displayMode or wrapType
+      const isFloating =
+        run.displayMode === 'float' ||
+        (run.wrapType && ['square', 'tight', 'through'].includes(run.wrapType));
+      if (isFloating) {
+        floatingImages.push(run);
+      }
     }
   }
 

@@ -149,6 +149,11 @@ function paragraphFormattingToAttrs(
     attrs.shading = formatting?.shading ?? stylePpr?.shading;
     attrs.tabs = formatting?.tabs ?? stylePpr?.tabs;
 
+    // Page break control
+    attrs.pageBreakBefore = formatting?.pageBreakBefore ?? stylePpr?.pageBreakBefore;
+    attrs.keepNext = formatting?.keepNext ?? stylePpr?.keepNext;
+    attrs.keepLines = formatting?.keepLines ?? stylePpr?.keepLines;
+
     // If style defines numPr but inline doesn't, use style's numPr
     if (!formatting?.numPr && stylePpr?.numPr) {
       attrs.numPr = stylePpr.numPr;
@@ -167,6 +172,11 @@ function paragraphFormattingToAttrs(
     attrs.borders = formatting?.borders;
     attrs.shading = formatting?.shading;
     attrs.tabs = formatting?.tabs;
+
+    // Page break control
+    attrs.pageBreakBefore = formatting?.pageBreakBefore;
+    attrs.keepNext = formatting?.keepNext;
+    attrs.keepLines = formatting?.keepLines;
   }
 
   return attrs;
@@ -200,7 +210,62 @@ function resolveTableStyleConditional(
  * we use the grid column widths to set cell widths. This ensures tables
  * preserve their layout when opened from DOCX files.
  */
+/**
+ * Calculate rowSpan values from vMerge attributes.
+ * OOXML uses vMerge="restart" to start a vertical merge and vMerge="continue" for cells that should be merged.
+ * This function converts that to rowSpan values and marks which cells should be skipped.
+ */
+function calculateRowSpans(table: Table): Map<string, { rowSpan: number; skip: boolean }> {
+  const result = new Map<string, { rowSpan: number; skip: boolean }>();
+  const numRows = table.rows.length;
+
+  // Track active vertical merges per column (stores the row index where merge started)
+  const activeMerges = new Map<number, number>();
+
+  // Process each row
+  for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+    const row = table.rows[rowIndex];
+    let colIndex = 0;
+
+    for (let cellIndex = 0; cellIndex < row.cells.length; cellIndex++) {
+      const cell = row.cells[cellIndex];
+      const colspan = cell.formatting?.gridSpan ?? 1;
+      const vMerge = cell.formatting?.vMerge;
+      const key = `${rowIndex}-${colIndex}`;
+
+      if (vMerge === 'restart') {
+        // Start of a new vertical merge
+        activeMerges.set(colIndex, rowIndex);
+        result.set(key, { rowSpan: 1, skip: false });
+      } else if (vMerge === 'continue') {
+        // Continuation of a merge - this cell should be skipped
+        const startRow = activeMerges.get(colIndex);
+        if (startRow !== undefined) {
+          // Increment rowSpan of the starting cell
+          const startKey = `${startRow}-${colIndex}`;
+          const startCell = result.get(startKey);
+          if (startCell) {
+            startCell.rowSpan++;
+          }
+        }
+        result.set(key, { rowSpan: 1, skip: true });
+      } else {
+        // No vMerge - clear any active merge for this column
+        activeMerges.delete(colIndex);
+        result.set(key, { rowSpan: 1, skip: false });
+      }
+
+      colIndex += colspan;
+    }
+  }
+
+  return result;
+}
+
 function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode {
+  // Calculate rowSpan values from vMerge
+  const rowSpanMap = calculateRowSpans(table);
+
   // Get column widths from table grid
   const columnWidths = table.columnWidths;
 
@@ -271,7 +336,8 @@ function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode
       conditionalStyle,
       resolvedTableBorders, // Pass resolved table borders (own or from style)
       rowIndex,
-      totalRows
+      totalRows,
+      rowSpanMap
     );
   });
 
@@ -290,7 +356,8 @@ function convertTableRow(
   conditionalStyle?: { tcPr?: TableCellFormatting; rPr?: TextFormatting },
   tableBorders?: TableBorders,
   rowIndex?: number,
-  totalRows?: number
+  totalRows?: number,
+  rowSpanMap?: Map<string, { rowSpan: number; skip: boolean }>
 ): PMNode {
   const attrs: TableRowAttrs = {
     height: row.formatting?.height?.value,
@@ -304,8 +371,18 @@ function convertTableRow(
 
   // Track column index for mapping to columnWidths (accounting for colspan)
   let colIndex = 0;
-  const cells = row.cells.map((cell, cellIndex) => {
+  const cells: PMNode[] = [];
+
+  for (let cellIndex = 0; cellIndex < row.cells.length; cellIndex++) {
+    const cell = row.cells[cellIndex];
     const colspan = cell.formatting?.gridSpan ?? 1;
+
+    // Check if this cell should be skipped (it's a vMerge continue cell)
+    const rowSpanKey = `${rowIndex ?? 0}-${colIndex}`;
+    const rowSpanInfo = rowSpanMap?.get(rowSpanKey);
+    const shouldSkip = rowSpanInfo?.skip ?? false;
+    const calculatedRowSpan = rowSpanInfo?.rowSpan ?? 1;
+
     // Calculate the width for this cell from columnWidths if cell doesn't have own width
     let gridWidth: number | undefined;
     if (columnWidths && totalWidth && totalWidth > 0) {
@@ -319,23 +396,31 @@ function convertTableRow(
     }
     colIndex += colspan;
 
+    // Skip cells that are part of a vertical merge (vMerge="continue")
+    if (shouldSkip) {
+      continue;
+    }
+
     // Determine cell position for table border application
     const isFirstCol = cellIndex === 0;
     const isLastCol = cellIndex === numCells - 1;
 
-    return convertTableCell(
-      cell,
-      styleResolver,
-      isHeaderRow,
-      gridWidth,
-      conditionalStyle,
-      tableBorders,
-      isFirstRow,
-      isLastRow,
-      isFirstCol,
-      isLastCol
+    cells.push(
+      convertTableCell(
+        cell,
+        styleResolver,
+        isHeaderRow,
+        gridWidth,
+        conditionalStyle,
+        tableBorders,
+        isFirstRow,
+        isLastRow,
+        isFirstCol,
+        isLastCol,
+        calculatedRowSpan
+      )
     );
-  });
+  }
 
   return schema.node('tableRow', attrs, cells);
 }
@@ -353,14 +438,13 @@ function convertTableCell(
   isFirstRow?: boolean,
   isLastRow?: boolean,
   isFirstCol?: boolean,
-  isLastCol?: boolean
+  isLastCol?: boolean,
+  calculatedRowSpan?: number
 ): PMNode {
   const formatting = cell.formatting;
 
-  // Handle vertical merge - skip 'continue' cells, they're merged into 'restart'
-  // For now, we just render them as regular cells since proper vMerge requires
-  // tracking state across rows. A future enhancement could handle this properly.
-  const rowspan = 1; // Would need to calculate from vMerge tracking
+  // Use the pre-calculated rowSpan from vMerge analysis
+  const rowspan = calculatedRowSpan ?? 1;
 
   // Determine width: prefer cell's own width, fall back to grid width
   let width = formatting?.width?.value;

@@ -30,6 +30,8 @@ export type RunFormatting = {
   letterSpacing?: number;
   superscript?: boolean;
   subscript?: boolean;
+  /** Hyperlink info if this run is a link */
+  hyperlink?: { href: string; tooltip?: string };
 };
 
 /**
@@ -55,6 +57,22 @@ export type TabRun = RunFormatting & {
 };
 
 /**
+ * Position data for floating/anchored images.
+ */
+export type ImageRunPosition = {
+  horizontal?: {
+    relativeTo?: string;
+    posOffset?: number;
+    align?: string;
+  };
+  vertical?: {
+    relativeTo?: string;
+    posOffset?: number;
+    align?: string;
+  };
+};
+
+/**
  * An inline image run.
  */
 export type ImageRun = {
@@ -63,6 +81,21 @@ export type ImageRun = {
   width: number;
   height: number;
   alt?: string;
+  /** CSS transform string (rotation, flip) */
+  transform?: string;
+  /** Position for floating/anchored images */
+  position?: ImageRunPosition;
+  /** Wrap type from DOCX (inline, square, tight, through, topAndBottom, etc.) */
+  wrapType?: string;
+  /** Display mode for CSS rendering */
+  displayMode?: 'inline' | 'block' | 'float';
+  /** CSS float direction */
+  cssFloat?: 'left' | 'right' | 'none';
+  /** Wrap distances in pixels */
+  distTop?: number;
+  distBottom?: number;
+  distLeft?: number;
+  distRight?: number;
   pmStart?: number;
   pmEnd?: number;
 };
@@ -243,6 +276,8 @@ export type TableBlock = {
   id: BlockId;
   rows: TableRow[];
   columnWidths?: number[];
+  /** Table horizontal alignment */
+  justification?: 'left' | 'center' | 'right';
   pmStart?: number;
   pmEnd?: number;
 };
@@ -257,6 +292,8 @@ export type ImageBlock = {
   width: number;
   height: number;
   alt?: string;
+  /** CSS transform string (rotation, flip) */
+  transform?: string;
   anchor?: {
     isAnchored?: boolean;
     offsetH?: number;

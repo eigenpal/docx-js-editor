@@ -304,6 +304,20 @@ function buildMediaMap(raw: RawDocxContent, _rels: RelationshipMap): Map<string,
 /**
  * Parse headers and footers from raw content
  */
+/**
+ * Case-insensitive lookup in a Map
+ * ZIP files may have inconsistent casing for paths/filenames
+ */
+function getMapCaseInsensitive<T>(map: Map<string, T>, targetKey: string): T | undefined {
+  const lowerTarget = targetKey.toLowerCase();
+  for (const [key, value] of map.entries()) {
+    if (key.toLowerCase() === lowerTarget) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
 function parseHeadersAndFooters(
   raw: RawDocxContent,
   styles: StyleMap | null,
@@ -322,27 +336,47 @@ function parseHeadersAndFooters(
   for (const [rId, rel] of rels.entries()) {
     if (rel.type === RELATIONSHIP_TYPES.header && rel.target) {
       // Get the header XML for this relationship
+      // Use case-insensitive lookup since ZIP files may have inconsistent casing
       const filename = rel.target.split('/').pop() || rel.target;
-      const headerXml = raw.headers.get(filename);
+      const headerXml = getMapCaseInsensitive(raw.headers, filename);
 
       if (headerXml) {
+        // Get header-specific relationships (e.g., word/_rels/header1.xml.rels)
+        const headerRelsPath = `word/_rels/${filename}.rels`;
+        const headerRelsXml = getMapCaseInsensitive(raw.allXml, headerRelsPath);
+        const headerRels = headerRelsXml ? parseRelationships(headerRelsXml) : rels;
+
         const header = parseHeader(
           headerXml,
           'default', // We'll update this based on sectPr references
           styles,
           theme,
           numbering,
-          rels,
+          headerRels,
           media
         );
         headers.set(rId, header);
       }
     } else if (rel.type === RELATIONSHIP_TYPES.footer && rel.target) {
+      // Use case-insensitive lookup since ZIP files may have inconsistent casing
       const filename = rel.target.split('/').pop() || rel.target;
-      const footerXml = raw.footers.get(filename);
+      const footerXml = getMapCaseInsensitive(raw.footers, filename);
 
       if (footerXml) {
-        const footer = parseFooter(footerXml, 'default', styles, theme, numbering, rels, media);
+        // Get footer-specific relationships (e.g., word/_rels/footer1.xml.rels)
+        const footerRelsPath = `word/_rels/${filename}.rels`;
+        const footerRelsXml = getMapCaseInsensitive(raw.allXml, footerRelsPath);
+        const footerRels = footerRelsXml ? parseRelationships(footerRelsXml) : rels;
+
+        const footer = parseFooter(
+          footerXml,
+          'default',
+          styles,
+          theme,
+          numbering,
+          footerRels,
+          media
+        );
         footers.set(rId, footer);
       }
     }

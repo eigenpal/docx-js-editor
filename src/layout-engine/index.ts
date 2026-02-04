@@ -86,46 +86,16 @@ export function layoutDocument(
     footer: options.margins?.footer ?? options.margins?.bottom ?? DEFAULT_MARGINS.bottom,
   };
 
-  // Calculate effective margins based on header/footer content heights
-  // effectiveTopMargin = max(baseTopMargin, headerDistance + headerContentHeight)
-  // effectiveBottomMargin = max(baseBottomMargin, footerDistance + footerContentHeight)
-  const headerHeights = options.headerContentHeights ?? {};
-  const footerHeights = options.footerContentHeights ?? {};
-  // Options for per-page margin calculation (kept for future use)
+  // Use document margins directly for WYSIWYG fidelity
+  // Word uses fixed margins from the document - body content always starts at marginTop
+  // If header content extends below marginTop, it overlaps (this matches Word behavior)
+  // Note: headerContentHeights are still available for future use (e.g., warnings)
+  void options.headerContentHeights;
+  void options.footerContentHeights;
   void options.titlePage;
   void options.evenAndOddHeaders;
 
-  // Calculate maximum effective margins (conservative approach)
-  // This ensures all pages have enough space for headers/footers
-  // A more advanced implementation would use per-page margins
-  const maxHeaderHeight = Math.max(
-    headerHeights.default ?? 0,
-    headerHeights.first ?? 0,
-    headerHeights.even ?? 0,
-    headerHeights.odd ?? 0
-  );
-  const maxFooterHeight = Math.max(
-    footerHeights.default ?? 0,
-    footerHeights.first ?? 0,
-    footerHeights.even ?? 0,
-    footerHeights.odd ?? 0
-  );
-
-  const effectiveTopMargin =
-    maxHeaderHeight > 0
-      ? Math.max(baseMargins.top, baseMargins.header + maxHeaderHeight)
-      : baseMargins.top;
-
-  const effectiveBottomMargin =
-    maxFooterHeight > 0
-      ? Math.max(baseMargins.bottom, baseMargins.footer + maxFooterHeight)
-      : baseMargins.bottom;
-
-  const margins = {
-    ...baseMargins,
-    top: effectiveTopMargin,
-    bottom: effectiveBottomMargin,
-  };
+  const margins = { ...baseMargins };
 
   // Calculate content width
   const contentWidth = pageSize.w - margins.left - margins.right;
@@ -367,10 +337,18 @@ function layoutTable(
     const isFirstFragment = currentRowIndex === 0;
     const isLastFragment = currentRowIndex + fittingRows >= rows.length;
 
+    // Calculate x position based on table justification
+    let x = paginator.getColumnX(state.columnIndex);
+    if (block.justification === 'center') {
+      x = x + (paginator.columnWidth - measure.totalWidth) / 2;
+    } else if (block.justification === 'right') {
+      x = x + paginator.columnWidth - measure.totalWidth;
+    }
+
     const fragment: TableFragment = {
       kind: 'table',
       blockId: block.id,
-      x: paginator.getColumnX(state.columnIndex),
+      x,
       y: 0, // Will be set by addFragment
       width: measure.totalWidth,
       height: rowsHeight,

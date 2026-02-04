@@ -526,9 +526,24 @@ function resolveImageData(
   const normalizedPath = normalizeMediaPath(targetPath);
   const filename = targetPath.split('/').pop();
 
-  // Try to find the media file
+  // Case-insensitive lookup helper for media map
+  const findMediaCaseInsensitive = (
+    map: Map<string, MediaFile>,
+    searchPath: string
+  ): MediaFile | undefined => {
+    const lowerPath = searchPath.toLowerCase();
+    for (const [key, value] of map.entries()) {
+      if (key.toLowerCase() === lowerPath) {
+        return value;
+      }
+    }
+    return undefined;
+  };
+
+  // Try to find the media file (case-insensitive)
   if (media) {
-    const mediaFile = media.get(normalizedPath);
+    // Try normalized path first
+    const mediaFile = findMediaCaseInsensitive(media, normalizedPath);
     if (mediaFile) {
       return {
         src: mediaFile.dataUrl || mediaFile.base64, // Use data URL or base64
@@ -539,11 +554,22 @@ function resolveImageData(
 
     // Try without word/ prefix
     const altPath = targetPath.replace(/^\/+/, '');
-    const altMediaFile = media.get(altPath);
+    const altMediaFile = findMediaCaseInsensitive(media, altPath);
     if (altMediaFile) {
       return {
         src: altMediaFile.dataUrl || altMediaFile.base64,
         mimeType: altMediaFile.mimeType,
+        filename,
+      };
+    }
+
+    // Try with word/ prefix added
+    const withWordPrefix = `word/${altPath}`;
+    const prefixedMediaFile = findMediaCaseInsensitive(media, withWordPrefix);
+    if (prefixedMediaFile) {
+      return {
+        src: prefixedMediaFile.dataUrl || prefixedMediaFile.base64,
+        mimeType: prefixedMediaFile.mimeType,
         filename,
       };
     }

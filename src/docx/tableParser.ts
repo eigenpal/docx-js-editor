@@ -737,7 +737,7 @@ function parseCellContent(
 
     if (localName === 'p') {
       // Parse paragraph
-      const para = parseParagraph(child, styles, theme, numbering, rels);
+      const para = parseParagraph(child, styles, theme, numbering, rels, media);
       content.push(para);
     } else if (localName === 'tbl') {
       // Parse nested table (recursive)

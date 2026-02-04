@@ -141,7 +141,8 @@ export class LayoutPainter {
     this.container.style.alignItems = 'center';
     this.container.style.gap = `${pageGap}px`;
     this.container.style.padding = `${pageGap}px`;
-    this.container.style.backgroundColor = this.options.containerBackground ?? '#e0e0e0';
+    this.container.style.backgroundColor =
+      this.options.containerBackground ?? 'var(--doc-bg, #f8f9fa)';
     this.container.style.minHeight = '100%';
   }
 
