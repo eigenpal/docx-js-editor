@@ -31,7 +31,13 @@ export {
 } from './measureContainer';
 
 // Paragraph measurement
-export { measureParagraph, measureParagraphs, getRunCharWidths } from './measureParagraph';
+export {
+  measureParagraph,
+  measureParagraphs,
+  getRunCharWidths,
+  type FloatingImageZone,
+  type MeasureParagraphOptions,
+} from './measureParagraph';
 
 // Caching utilities
 export {

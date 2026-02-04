@@ -235,3 +235,8 @@
 [2026-02-04 21:15] NOTES: Per-line text wrapping working - lines overlapping images have 114px margins
 [2026-02-04 21:15] NOTES: Lines below images return to full width (per-line margin calculation like SuperDoc)
 [2026-02-04 21:15] STATUS: done
+[2026-02-04 13:33] STATUS: editing
+[2026-02-04 13:33] NOTES: Fixed floating image line offset - added leftOffset/rightOffset to MeasuredLine type, updated measureParagraph to store offsets, updated renderParagraphFragment to apply marginLeft/marginRight
+[2026-02-04 13:33] NOTES: Fixed paragraph border-bottom padding (2px -> 6px) to clear text descenders
+[2026-02-04 13:34] STATUS: done
+[2026-02-04 13:34] NOTES: Committed fix for floating image text wrapping - f2cd5f0

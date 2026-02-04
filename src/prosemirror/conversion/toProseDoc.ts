@@ -755,6 +755,32 @@ function convertImage(image: Image): PMNode {
   const distLeft = image.wrap.distL ? emuToPixels(image.wrap.distL) : undefined;
   const distRight = image.wrap.distR ? emuToPixels(image.wrap.distR) : undefined;
 
+  // Build position data for floating images
+  let position:
+    | {
+        horizontal?: { relativeTo?: string; posOffset?: number; align?: string };
+        vertical?: { relativeTo?: string; posOffset?: number; align?: string };
+      }
+    | undefined;
+  if (image.position) {
+    position = {
+      horizontal: image.position.horizontal
+        ? {
+            relativeTo: image.position.horizontal.relativeTo,
+            posOffset: image.position.horizontal.posOffset,
+            align: image.position.horizontal.alignment,
+          }
+        : undefined,
+      vertical: image.position.vertical
+        ? {
+            relativeTo: image.position.vertical.relativeTo,
+            posOffset: image.position.vertical.posOffset,
+            align: image.position.vertical.alignment,
+          }
+        : undefined,
+    };
+  }
+
   return schema.node('image', {
     src: image.src || '',
     alt: image.alt,
@@ -770,6 +796,7 @@ function convertImage(image: Image): PMNode {
     distBottom: distBottom,
     distLeft: distLeft,
     distRight: distRight,
+    position: position,
   });
 }
 
