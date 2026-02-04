@@ -38,6 +38,8 @@ export interface RenderContext {
   totalPages: number;
   /** Which section is being rendered */
   section: 'body' | 'header' | 'footer';
+  /** Content width in pixels (page width minus margins) - used for justify */
+  contentWidth?: number;
 }
 
 /**
@@ -92,6 +94,12 @@ function applyPageStyles(
   element.style.height = `${height}px`;
   element.style.backgroundColor = options.backgroundColor ?? '#ffffff';
   element.style.overflow = 'hidden';
+
+  // Set default font styles (matches Word default: 11pt Calibri)
+  // Individual runs will override these with their own font settings
+  element.style.fontFamily = 'Calibri, "Segoe UI", Arial, sans-serif';
+  element.style.fontSize = '11pt';
+  element.style.color = '#000000';
 
   if (options.showBorders) {
     element.style.border = '1px solid #ccc';
@@ -220,6 +228,9 @@ export function renderPage(
   contentEl.className = PAGE_CLASS_NAMES.content;
   applyContentAreaStyles(contentEl, page);
 
+  // Calculate content width for justify alignment
+  const contentWidth = page.size.w - page.margins.left - page.margins.right;
+
   // Render each fragment
   for (const fragment of page.fragments) {
     let fragmentEl: HTMLElement;
@@ -236,7 +247,7 @@ export function renderPage(
           fragment as ParagraphFragment,
           blockData.block as ParagraphBlock,
           blockData.measure as ParagraphMeasure,
-          { ...context, section: 'body' },
+          { ...context, section: 'body', contentWidth },
           { document: doc }
         );
       } else {

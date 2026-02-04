@@ -103,6 +103,42 @@ export type ParagraphIndent = {
 };
 
 /**
+ * Tab stop alignment types
+ */
+export type TabAlignment = 'start' | 'end' | 'center' | 'decimal' | 'bar' | 'clear';
+
+/**
+ * Tab stop definition
+ */
+export type TabStop = {
+  /** Tab alignment mode */
+  val: TabAlignment;
+  /** Position in twips from left margin */
+  pos: number;
+  /** Optional leader character */
+  leader?: 'none' | 'dot' | 'hyphen' | 'underscore';
+};
+
+/**
+ * Border specification for paragraphs.
+ */
+export type BorderStyle = {
+  style?: string;
+  width?: number; // in pixels
+  color?: string; // CSS color
+};
+
+/**
+ * Paragraph borders.
+ */
+export type ParagraphBorders = {
+  top?: BorderStyle;
+  bottom?: BorderStyle;
+  left?: BorderStyle;
+  right?: BorderStyle;
+};
+
+/**
  * Paragraph block attributes.
  */
 export type ParagraphAttrs = {
@@ -113,6 +149,9 @@ export type ParagraphAttrs = {
   keepLines?: boolean;
   pageBreakBefore?: boolean;
   styleId?: string;
+  borders?: ParagraphBorders;
+  shading?: string; // CSS background color
+  tabs?: TabStop[]; // Custom tab stops
 };
 
 /**

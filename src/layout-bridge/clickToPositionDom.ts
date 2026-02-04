@@ -66,6 +66,15 @@ function findPositionInSpan(spanEl: HTMLElement, clientX: number, _clientY: numb
   const pmStart = Number(spanEl.dataset.pmStart);
   const pmEnd = Number(spanEl.dataset.pmEnd);
 
+  // Special handling for tab spans - they have a visual width but only contain NBSP
+  // Clicking anywhere on a tab should position cursor at start or end based on click position
+  if (spanEl.classList.contains('layout-run-tab')) {
+    const rect = spanEl.getBoundingClientRect();
+    const midpoint = (rect.left + rect.right) / 2;
+    // Click in left half -> start of tab, right half -> end of tab
+    return clientX < midpoint ? pmStart : pmEnd;
+  }
+
   const textNode = spanEl.firstChild;
   if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
     // No text content - return start position
@@ -318,6 +327,28 @@ export function getCaretPositionFromDom(
     const pmStart = Number(spanEl.dataset.pmStart);
     const pmEnd = Number(spanEl.dataset.pmEnd);
 
+    // Special handling for tab spans - use exclusive end to avoid boundary conflicts
+    // Tab at [5,6) means position 6 belongs to the next run, not the tab
+    if (spanEl.classList.contains('layout-run-tab')) {
+      if (pmPos >= pmStart && pmPos < pmEnd) {
+        const spanRect = spanEl.getBoundingClientRect();
+        const pageEl = spanEl.closest('.layout-page') as HTMLElement | null;
+        const pageIndex = pageEl ? Number(pageEl.dataset.pageNumber || 1) - 1 : 0;
+        const lineEl = spanEl.closest('.layout-line');
+        const lineHeight = lineEl ? (lineEl as HTMLElement).offsetHeight : 16;
+
+        // Position caret at start of tab (only position within tab)
+        return {
+          x: spanRect.left - overlayRect.left,
+          y: spanRect.top - overlayRect.top,
+          height: lineHeight,
+          pageIndex,
+        };
+      }
+      continue; // Skip to next span
+    }
+
+    // For text runs, use inclusive range
     if (pmPos >= pmStart && pmPos <= pmEnd) {
       const textNode = spanEl.firstChild;
       if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {

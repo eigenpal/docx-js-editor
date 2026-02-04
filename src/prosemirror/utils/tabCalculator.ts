@@ -116,6 +116,20 @@ export function computeTabStops(context: TabContext): TabStop[] {
   // Build result starting with explicit stops
   const stops = [...validExplicitStops];
 
+  // For hanging indent paragraphs (where leftIndent > 0 and no explicit stops before it),
+  // add the leftIndent position as an implicit tab stop.
+  // This is standard Word behavior: tabs jump to the left margin for alignment.
+  if (leftIndent > 0 && !validExplicitStops.some((s) => s.pos <= leftIndent)) {
+    const hasLeftIndentClear = clearPositions.some((p) => Math.abs(p - leftIndent) < 20);
+    if (!hasLeftIndentClear) {
+      stops.push({
+        val: 'start',
+        pos: leftIndent,
+        leader: 'none',
+      });
+    }
+  }
+
   // Generate default stops at regular intervals
   // Start from leftIndent and go up to ~10 inches
   const startPos = maxExplicit > 0 ? Math.max(maxExplicit, leftIndent) : leftIndent;
@@ -129,8 +143,10 @@ export function computeTabStops(context: TabContext): TabStop[] {
     const hasExplicitStop = validExplicitStops.some((s) => Math.abs(s.pos - pos) < 20);
     // Skip if there's a clear stop at this position
     const hasClearStop = clearPositions.some((clearPos) => Math.abs(clearPos - pos) < 20);
+    // Skip if at leftIndent (already added above)
+    const isAtLeftIndent = leftIndent > 0 && Math.abs(pos - leftIndent) < 20;
 
-    if (!hasExplicitStop && !hasClearStop) {
+    if (!hasExplicitStop && !hasClearStop && !isAtLeftIndent) {
       stops.push({
         val: 'start',
         pos,

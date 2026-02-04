@@ -40,8 +40,8 @@ export type ToFlowBlocksOptions = {
   defaultSize?: number;
 };
 
-const DEFAULT_FONT = 'Times New Roman';
-const DEFAULT_SIZE = 12; // points
+const DEFAULT_FONT = 'Calibri';
+const DEFAULT_SIZE = 11; // points (Word 2007+ default)
 
 /**
  * Convert twips to pixels (1 twip = 1/20 point, 1 point = 1.333px at 96 DPI).
@@ -200,9 +200,21 @@ function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksO
 function convertParagraphAttrs(pmAttrs: PMParagraphAttrs): ParagraphAttrs {
   const attrs: ParagraphAttrs = {};
 
-  // Alignment
+  // Alignment - map DOCX values to CSS-compatible values
+  // DOCX uses 'both' for justify, 'distribute' for distributed justify
   if (pmAttrs.alignment) {
-    attrs.alignment = pmAttrs.alignment as 'left' | 'center' | 'right' | 'justify';
+    const align = pmAttrs.alignment;
+    if (align === 'both' || align === 'distribute') {
+      attrs.alignment = 'justify';
+    } else if (align === 'left') {
+      attrs.alignment = 'left';
+    } else if (align === 'center') {
+      attrs.alignment = 'center';
+    } else if (align === 'right') {
+      attrs.alignment = 'right';
+    }
+    // Other DOCX alignments (mediumKashida, highKashida, lowKashida, thaiDistribute, justify)
+    // default to no alignment set (inherits from style or defaults to left)
   }
 
   // Spacing
@@ -256,7 +268,87 @@ function convertParagraphAttrs(pmAttrs: PMParagraphAttrs): ParagraphAttrs {
     attrs.styleId = pmAttrs.styleId;
   }
 
+  // Borders
+  if (pmAttrs.borders) {
+    const borders = pmAttrs.borders;
+    attrs.borders = {};
+
+    const convertBorder = (border: typeof borders.top) => {
+      if (!border || border.style === 'none' || border.style === 'nil') {
+        return undefined;
+      }
+      // Convert size from eighths of a point to pixels
+      // 1 point = 1.333px at 96 DPI, size is in eighths of a point
+      const widthPx = border.size ? Math.max(1, Math.ceil((border.size / 8) * 1.333)) : 1;
+      // Convert color
+      let color = '#000000';
+      if (border.color?.rgb) {
+        color = `#${border.color.rgb}`;
+      }
+      return {
+        style: border.style || 'single',
+        width: widthPx,
+        color,
+      };
+    };
+
+    if (borders.top) attrs.borders.top = convertBorder(borders.top);
+    if (borders.bottom) attrs.borders.bottom = convertBorder(borders.bottom);
+    if (borders.left) attrs.borders.left = convertBorder(borders.left);
+    if (borders.right) attrs.borders.right = convertBorder(borders.right);
+
+    // Only include if at least one border is set
+    if (
+      !attrs.borders.top &&
+      !attrs.borders.bottom &&
+      !attrs.borders.left &&
+      !attrs.borders.right
+    ) {
+      delete attrs.borders;
+    }
+  }
+
+  // Shading (background color)
+  if (pmAttrs.shading?.fill?.rgb) {
+    attrs.shading = `#${pmAttrs.shading.fill.rgb}`;
+  }
+
+  // Tab stops
+  if (pmAttrs.tabs && pmAttrs.tabs.length > 0) {
+    attrs.tabs = pmAttrs.tabs.map((tab) => ({
+      val: mapTabAlignment(tab.alignment),
+      pos: tab.position,
+      leader: tab.leader as 'none' | 'dot' | 'hyphen' | 'underscore' | undefined,
+    }));
+  }
+
   return attrs;
+}
+
+/**
+ * Map document TabStopAlignment to layout engine TabAlignment
+ */
+function mapTabAlignment(
+  align: 'left' | 'center' | 'right' | 'decimal' | 'bar' | 'clear' | 'num'
+): 'start' | 'end' | 'center' | 'decimal' | 'bar' | 'clear' {
+  switch (align) {
+    case 'left':
+      return 'start';
+    case 'right':
+      return 'end';
+    case 'center':
+      return 'center';
+    case 'decimal':
+      return 'decimal';
+    case 'bar':
+      return 'bar';
+    case 'clear':
+      return 'clear';
+    case 'num':
+      return 'start'; // Number tab treated as left-aligned
+    default:
+      return 'start';
+  }
 }
 
 /**

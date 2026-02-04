@@ -437,6 +437,27 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         const pmStart = Number(spanEl.dataset.pmStart);
         const pmEnd = Number(spanEl.dataset.pmEnd);
 
+        // Special handling for tab spans - use exclusive end to avoid boundary conflicts
+        // Tab at [5,6) means position 6 belongs to the next run, not the tab
+        if (spanEl.classList.contains('layout-run-tab')) {
+          if (pmPos >= pmStart && pmPos < pmEnd) {
+            const spanRect = spanEl.getBoundingClientRect();
+            const pageEl = spanEl.closest('.layout-page');
+            const pageIndex = pageEl ? Number((pageEl as HTMLElement).dataset.pageNumber) - 1 : 0;
+            const lineEl = spanEl.closest('.layout-line');
+            const lineHeight = lineEl ? (lineEl as HTMLElement).offsetHeight : 16;
+
+            return {
+              x: spanRect.left - overlayRect.left,
+              y: spanRect.top - overlayRect.top,
+              height: lineHeight,
+              pageIndex,
+            };
+          }
+          continue; // Skip to next span
+        }
+
+        // For text runs, use inclusive range
         if (pmPos >= pmStart && pmPos <= pmEnd && span.firstChild?.nodeType === Node.TEXT_NODE) {
           const textNode = span.firstChild as Text;
           const charIndex = Math.min(pmPos - pmStart, textNode.length);
@@ -557,7 +578,27 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
               const pmEnd = Number(spanEl.dataset.pmEnd);
 
               // Check if this span overlaps with selection
-              if (pmEnd > from && pmStart < to && span.firstChild?.nodeType === Node.TEXT_NODE) {
+              if (pmEnd > from && pmStart < to) {
+                // Special handling for tab spans - highlight the full visual width
+                if (spanEl.classList.contains('layout-run-tab')) {
+                  const spanRect = spanEl.getBoundingClientRect();
+                  const pageEl = spanEl.closest('.layout-page');
+                  const pageIndex = pageEl
+                    ? Number((pageEl as HTMLElement).dataset.pageNumber) - 1
+                    : 0;
+
+                  domRects.push({
+                    x: spanRect.left - overlayRect.left,
+                    y: spanRect.top - overlayRect.top,
+                    width: spanRect.width,
+                    height: spanRect.height,
+                    pageIndex,
+                  });
+                  continue;
+                }
+
+                if (span.firstChild?.nodeType !== Node.TEXT_NODE) continue;
+
                 const textNode = span.firstChild as Text;
                 const ownerDoc = spanEl.ownerDocument;
                 if (!ownerDoc) continue;
@@ -808,15 +849,55 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         if (e.detail === 2 && hiddenPMRef.current) {
           const pmPos = getPositionFromMouse(e.clientX, e.clientY);
           if (pmPos !== null) {
-            // Let ProseMirror handle word selection via double-click
-            // The hidden editor will receive focus and process it
+            const view = hiddenPMRef.current.getView();
+            if (view) {
+              const { doc } = view.state;
+              const $pos = doc.resolve(pmPos);
+              const parent = $pos.parent;
+
+              // Find word boundaries
+              if (parent.isTextblock) {
+                const text = parent.textContent;
+                const offset = $pos.parentOffset;
+
+                // Find word start (go back until whitespace/punctuation)
+                let start = offset;
+                while (start > 0 && /\w/.test(text[start - 1])) {
+                  start--;
+                }
+
+                // Find word end (go forward until whitespace/punctuation)
+                let end = offset;
+                while (end < text.length && /\w/.test(text[end])) {
+                  end++;
+                }
+
+                // Convert to absolute positions
+                const absStart = $pos.start() + start;
+                const absEnd = $pos.start() + end;
+
+                if (absStart < absEnd) {
+                  hiddenPMRef.current.setSelection(absStart, absEnd);
+                }
+              }
+            }
           }
         }
         // Triple-click for paragraph selection
         if (e.detail === 3 && hiddenPMRef.current) {
           const pmPos = getPositionFromMouse(e.clientX, e.clientY);
           if (pmPos !== null) {
-            // Let ProseMirror handle paragraph selection
+            const view = hiddenPMRef.current.getView();
+            if (view) {
+              const { doc } = view.state;
+              const $pos = doc.resolve(pmPos);
+
+              // Find paragraph start and end
+              const paragraphStart = $pos.start($pos.depth);
+              const paragraphEnd = $pos.end($pos.depth);
+
+              hiddenPMRef.current.setSelection(paragraphStart, paragraphEnd);
+            }
           }
         }
       },
