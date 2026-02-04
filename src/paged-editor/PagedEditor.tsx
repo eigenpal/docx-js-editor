@@ -41,6 +41,7 @@ import type {
   ParagraphBlock,
   TableBlock,
   ImageBlock,
+  ImageRun,
   PageMargins,
   Run,
   RunFormatting,
@@ -49,7 +50,7 @@ import type {
 
 // Layout bridge
 import { toFlowBlocks } from '../layout-bridge/toFlowBlocks';
-import { measureParagraph } from '../layout-bridge/measuring';
+import { measureParagraph, type FloatingImageZone } from '../layout-bridge/measuring';
 import { hitTestFragment } from '../layout-bridge/hitTest';
 import { clickToPosition } from '../layout-bridge/clickToPosition';
 import { clickToPositionDom } from '../layout-bridge/clickToPositionDom';
@@ -241,12 +242,140 @@ function getMargins(sectionProps: SectionProperties | null | undefined): PageMar
 }
 
 /**
+ * Check if an image run is a floating image (should affect text wrapping)
+ */
+function isFloatingImageRun(run: ImageRun): boolean {
+  const wrapType = run.wrapType;
+  const displayMode = run.displayMode;
+
+  // Floating images have specific wrap types that allow text to flow around them
+  if (wrapType && ['square', 'tight', 'through'].includes(wrapType)) {
+    return true;
+  }
+
+  // Or explicit float display mode
+  if (displayMode === 'float') {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * EMU to pixels conversion
+ */
+function emuToPixels(emu: number | undefined): number {
+  if (emu === undefined) return 0;
+  return Math.round((emu * 96) / 914400);
+}
+
+/**
+ * Extract floating image exclusion zones from all blocks.
+ * Called before measurement to determine line width reductions.
+ *
+ * For images with vertical align="top" relative to margin, they're at Y=0.
+ * The exclusion zones define the areas where text lines need reduced widths.
+ */
+/**
+ * Extended floating zone info that includes anchor block index
+ */
+interface FloatingZoneWithAnchor extends FloatingImageZone {
+  /** Block index where this floating image is anchored */
+  anchorBlockIndex: number;
+}
+
+function extractFloatingZones(blocks: FlowBlock[], contentWidth: number): FloatingZoneWithAnchor[] {
+  const zones: FloatingZoneWithAnchor[] = [];
+
+  for (let blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
+    const block = blocks[blockIndex];
+    if (block.kind !== 'paragraph') continue;
+
+    const paragraphBlock = block as ParagraphBlock;
+
+    for (const run of paragraphBlock.runs) {
+      if (run.kind !== 'image') continue;
+      const imgRun = run as ImageRun;
+
+      if (!isFloatingImageRun(imgRun)) continue;
+
+      // Calculate Y position based on vertical alignment
+      let topY = 0;
+      const position = imgRun.position;
+      const distTop = imgRun.distTop ?? 0;
+      const distBottom = imgRun.distBottom ?? 0;
+      const distLeft = imgRun.distLeft ?? 12;
+      const distRight = imgRun.distRight ?? 12;
+
+      if (position?.vertical) {
+        const v = position.vertical;
+        if (v.align === 'top' && v.relativeTo === 'margin') {
+          // Image at top of content area
+          topY = 0;
+        } else if (v.posOffset !== undefined) {
+          topY = emuToPixels(v.posOffset);
+        }
+        // Other cases (paragraph-relative) are harder to handle without knowing paragraph positions
+      }
+
+      const bottomY = topY + imgRun.height;
+
+      // Calculate margins based on horizontal position
+      let leftMargin = 0;
+      let rightMargin = 0;
+
+      if (position?.horizontal) {
+        const h = position.horizontal;
+        if (h.align === 'left') {
+          // Image on left - text needs left margin
+          leftMargin = imgRun.width + distRight;
+        } else if (h.align === 'right') {
+          // Image on right - text needs right margin
+          rightMargin = imgRun.width + distLeft;
+        } else if (h.posOffset !== undefined) {
+          const x = emuToPixels(h.posOffset);
+          if (x < contentWidth / 2) {
+            leftMargin = x + imgRun.width + distRight;
+          } else {
+            rightMargin = contentWidth - x + distLeft;
+          }
+        }
+      } else if (imgRun.cssFloat === 'left') {
+        leftMargin = imgRun.width + distRight;
+      } else if (imgRun.cssFloat === 'right') {
+        rightMargin = imgRun.width + distLeft;
+      }
+
+      if (leftMargin > 0 || rightMargin > 0) {
+        zones.push({
+          leftMargin,
+          rightMargin,
+          topY: topY - distTop,
+          bottomY: bottomY + distBottom,
+          anchorBlockIndex: blockIndex,
+        });
+      }
+    }
+  }
+
+  return zones;
+}
+
+/**
  * Measure a block based on its type.
  */
-function measureBlock(block: FlowBlock, contentWidth: number): Measure {
+function measureBlock(
+  block: FlowBlock,
+  contentWidth: number,
+  floatingZones?: FloatingImageZone[],
+  cumulativeY?: number
+): Measure {
   switch (block.kind) {
     case 'paragraph':
-      return measureParagraph(block as ParagraphBlock, contentWidth);
+      return measureParagraph(block as ParagraphBlock, contentWidth, {
+        floatingZones,
+        paragraphYOffset: cumulativeY ?? 0,
+      });
 
     case 'table': {
       // Simple table measure - calculate dimensions with proper column handling
@@ -338,10 +467,52 @@ function measureBlock(block: FlowBlock, contentWidth: number): Measure {
 }
 
 /**
- * Measure all blocks.
+ * Measure all blocks with floating image support.
+ *
+ * Pre-scans all blocks to find floating images and creates exclusion zones.
+ * Then measures each block, passing the zones so paragraphs can calculate
+ * per-line widths based on vertical overlap with floating images.
  */
 function measureBlocks(blocks: FlowBlock[], contentWidth: number): Measure[] {
-  return blocks.map((block) => measureBlock(block, contentWidth));
+  // Pre-extract floating image exclusion zones with anchor block indices
+  const floatingZonesWithAnchors = extractFloatingZones(blocks, contentWidth);
+
+  // Find the anchor block indices where floating zones become active
+  const anchorIndices = new Set(floatingZonesWithAnchors.map((z) => z.anchorBlockIndex));
+
+  // Convert to plain FloatingImageZone for measureParagraph
+  const floatingZones: FloatingImageZone[] = floatingZonesWithAnchors.map((z) => ({
+    leftMargin: z.leftMargin,
+    rightMargin: z.rightMargin,
+    topY: z.topY,
+    bottomY: z.bottomY,
+  }));
+
+  // Track cumulative Y position for floating zone overlap calculation
+  // This resets when we reach a block with page-level floating images
+  let cumulativeY = 0;
+  let zonesActive = false;
+
+  return blocks.map((block, blockIndex) => {
+    // Check if this block is an anchor for floating images
+    // If so, reset cumulative Y so zones apply from this point
+    if (anchorIndices.has(blockIndex)) {
+      cumulativeY = 0;
+      zonesActive = true;
+    }
+
+    // Only pass zones if they're active (we've reached or passed an anchor block)
+    const activeZones = zonesActive ? floatingZones : undefined;
+
+    const measure = measureBlock(block, contentWidth, activeZones, cumulativeY);
+
+    // Update cumulative Y for next block
+    if ('totalHeight' in measure) {
+      cumulativeY += measure.totalHeight;
+    }
+
+    return measure;
+  });
 }
 
 /**
