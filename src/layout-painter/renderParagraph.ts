@@ -538,7 +538,7 @@ export function renderLine(
   // is done during measurement. Text that doesn't fit will overflow visibly
   // rather than causing paragraph overlap.
   lineEl.style.whiteSpace = 'nowrap';
-  lineEl.style.overflow = 'hidden'; // Clip overflow to prevent visual issues
+  lineEl.style.overflow = 'visible'; // Allow text to render fully (don't clip descenders)
 
   // Build tab context if we have tab runs - also create for text measurement
   const hasTabRuns = runsForLine.some(isTabRun);
