@@ -46,7 +46,11 @@ function getLabel(type: TagType): string {
   }
 }
 
-export function AnnotationPanel({ editorView, pluginState }: AnnotationPanelProps) {
+export function AnnotationPanel({
+  editorView,
+  pluginState,
+  renderedDomContext,
+}: AnnotationPanelProps) {
   const tags = pluginState?.tags ?? [];
   const hoveredId = pluginState?.hoveredId;
   const selectedId = pluginState?.selectedId;
@@ -55,45 +59,50 @@ export function AnnotationPanel({ editorView, pluginState }: AnnotationPanelProp
   const containerRef = useRef<HTMLDivElement>(null);
   const chipRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const lastMeasuredTagsKey = useRef<string>('');
+  const rafRef = useRef<number | null>(null);
+  const panelTopRef = useRef<number>(0);
 
   // Filter to show only variables and section starts (not ends or vars inside sections)
   const visibleTags = useMemo(() => {
     return tags.filter((t) => t.type !== 'sectionEnd' && !t.insideSection);
   }, [tags]);
 
-  // Find scroll container
-  const findScrollContainer = useCallback((el: HTMLElement | null): HTMLElement | null => {
-    if (!el) return null;
-    let current = el.parentElement;
-    while (current) {
-      const style = window.getComputedStyle(current);
-      if (style.overflow === 'auto' || style.overflowY === 'auto') return current;
-      current = current.parentElement;
-    }
-    return null;
-  }, []);
-
-  // Update positions
+  // Calculate positions using viewport-relative coordinates
+  // This gets called on scroll with RAF debouncing for smooth performance
   const updatePositions = useCallback(() => {
-    if (!editorView || visibleTags.length === 0) {
+    if (visibleTags.length === 0) {
       setPositions([]);
       return;
     }
 
-    const panel = containerRef.current;
-    if (!panel) return;
+    if (!renderedDomContext) {
+      setPositions([]);
+      return;
+    }
 
-    const panelRect = panel.getBoundingClientRect();
+    // Get panel container's top position for relative positioning
+    const panelContainer = containerRef.current;
+    const panelTop = panelContainer?.getBoundingClientRect().top ?? 0;
+    panelTopRef.current = panelTop;
+
     const newPositions: TagPosition[] = [];
 
+    // Get the scroll container's viewport position to calculate true viewport Y
+    const scrollContainer = renderedDomContext.pagesContainer.parentElement;
+    const scrollContainerTop = scrollContainer?.getBoundingClientRect().top ?? 0;
+
     for (const tag of visibleTags) {
-      try {
-        const coords = editorView.coordsAtPos(tag.from);
-        if (coords) {
-          newPositions.push({ tag, top: coords.top - panelRect.top });
-        }
-      } catch {
-        // Position might be invalid
+      // Get viewport-relative coordinates using the range API
+      const rects = renderedDomContext.getRectsForRange(tag.from, tag.from + 1);
+      if (rects.length > 0) {
+        // Get container offset (pagesContainer relative to scroll container)
+        const containerOffset = renderedDomContext.getContainerOffset();
+        // Calculate true viewport Y: position within pages + offset to scroll container + scroll container's viewport position
+        const viewportY =
+          (rects[0].y + containerOffset.y) * renderedDomContext.zoom + scrollContainerTop;
+        // Convert to panel-relative coordinates
+        const panelRelativeTop = viewportY - panelTop;
+        newPositions.push({ tag, top: panelRelativeTop });
       }
     }
 
@@ -105,13 +114,12 @@ export function AnnotationPanel({ editorView, pluginState }: AnnotationPanelProp
       const prev = newPositions[i - 1];
       const curr = newPositions[i];
 
-      // Use measured height if available, otherwise estimate conservatively
+      // Use measured height if available, otherwise estimate
       const prevChipEl = chipRefs.current.get(prev.tag.id);
-      let prevHeight = 32; // default for simple chip
+      let prevHeight = 32;
       if (prevChipEl) {
         prevHeight = prevChipEl.offsetHeight;
       } else if (prev.tag.nestedVars && prev.tag.nestedVars.length > 0) {
-        // Conservative estimate: each nested var gets its own row
         prevHeight = 32 + 10 + prev.tag.nestedVars.length * 26;
       }
 
@@ -121,35 +129,23 @@ export function AnnotationPanel({ editorView, pluginState }: AnnotationPanelProp
     }
 
     setPositions(newPositions);
-  }, [editorView, visibleTags]);
+  }, [visibleTags, renderedDomContext]);
 
-  // Update on scroll
+  // Update positions when tags or context change (not on scroll!)
   useEffect(() => {
     updatePositions();
-    if (editorView) {
-      const scrollContainer = findScrollContainer(editorView.dom);
-      if (scrollContainer) {
-        const onScroll = () => requestAnimationFrame(updatePositions);
-        scrollContainer.addEventListener('scroll', onScroll);
-        return () => scrollContainer.removeEventListener('scroll', onScroll);
-      }
-    }
-  }, [updatePositions, editorView, findScrollContainer]);
-
-  // Update on resize
-  useEffect(() => {
-    window.addEventListener('resize', updatePositions);
-    return () => window.removeEventListener('resize', updatePositions);
   }, [updatePositions]);
 
-  // ResizeObserver for zoom
+  // ResizeObserver for zoom/layout changes only
   useEffect(() => {
-    if (!editorView) return;
-    const observer = new ResizeObserver(() => requestAnimationFrame(updatePositions));
-    observer.observe(editorView.dom);
-    if (editorView.dom.parentElement) observer.observe(editorView.dom.parentElement);
+    if (!renderedDomContext) return;
+
+    const observer = new ResizeObserver(() => {
+      requestAnimationFrame(updatePositions);
+    });
+    observer.observe(renderedDomContext.pagesContainer);
     return () => observer.disconnect();
-  }, [editorView, updatePositions]);
+  }, [renderedDomContext, updatePositions]);
 
   // Second pass: recalculate once after initial render to use measured heights
   useEffect(() => {
@@ -158,10 +154,36 @@ export function AnnotationPanel({ editorView, pluginState }: AnnotationPanelProp
       const timer = setTimeout(() => {
         lastMeasuredTagsKey.current = tagsKey;
         updatePositions();
-      }, 100);
+      }, 50);
       return () => clearTimeout(timer);
     }
-  }, [visibleTags]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [visibleTags, updatePositions]);
+
+  // Update positions on scroll using RAF for smooth performance
+  useEffect(() => {
+    if (!renderedDomContext) return;
+
+    // Find the scroll container directly by class name
+    const scrollContainer = document.querySelector('.paged-editor') as HTMLElement | null;
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      if (rafRef.current) return; // Skip if already scheduled
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        updatePositions();
+      });
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      scrollContainer.removeEventListener('scroll', handleScroll);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [renderedDomContext, updatePositions]); // Run when context is available
 
   const handleHover = (id: string | undefined) => {
     if (editorView) setHoveredElement(editorView, id);
@@ -257,6 +279,7 @@ export const ANNOTATION_PANEL_STYLES = `
   overflow: visible;
   min-height: 100%;
   pointer-events: none;
+  will-change: transform;
 }
 
 .template-panel-annotations > * {

@@ -80,6 +80,8 @@ import type {
   SectionProperties,
   HeaderFooter,
 } from '../types/document';
+import type { RenderedDomContext } from '../plugin-api/types';
+import { createRenderedDomContext } from '../plugin-api/RenderedDomContext';
 
 // =============================================================================
 // TYPES
@@ -112,6 +114,10 @@ export interface PagedEditorProps {
   externalPlugins?: Plugin[];
   /** Callback when editor is ready. */
   onReady?: (ref: PagedEditorRef) => void;
+  /** Callback when rendered DOM context is ready. */
+  onRenderedDomContextReady?: (context: RenderedDomContext) => void;
+  /** Plugin overlays to render inside the viewport. */
+  pluginOverlays?: React.ReactNode;
   /** Custom class name. */
   className?: string;
   /** Custom styles. */
@@ -192,6 +198,17 @@ const pagesContainerStyles: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
+};
+
+const pluginOverlaysStyles: CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  pointerEvents: 'none',
+  overflow: 'visible',
+  zIndex: 5,
 };
 
 // =============================================================================
@@ -782,6 +799,8 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
       onSelectionChange,
       externalPlugins = EMPTY_PLUGINS,
       onReady,
+      onRenderedDomContextReady,
+      pluginOverlays,
       className,
       style,
     } = props;
@@ -891,6 +910,12 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
               ? twipsToPixels(sectionProperties.footerDistance)
               : undefined,
           } as RenderPageOptions & { pageGap?: number; blockLookup?: BlockLookup });
+
+          // Create and expose RenderedDomContext after DOM is painted
+          if (onRenderedDomContextReady) {
+            const domContext = createRenderedDomContext(pagesContainerRef.current, zoom);
+            onRenderedDomContextReady(domContext);
+          }
         }
 
         // Signal layout is complete for this epoch
@@ -901,10 +926,12 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         pageSize,
         margins,
         pageGap,
+        zoom,
         syncCoordinator,
         headerContent,
         footerContent,
         sectionProperties,
+        onRenderedDomContextReady,
       ]
     );
 
@@ -1639,6 +1666,13 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
             isFocused={isFocused}
             pageGap={pageGap}
           />
+
+          {/* Plugin overlays (highlights, annotations) */}
+          {pluginOverlays && (
+            <div className="paged-editor__plugin-overlays" style={pluginOverlaysStyles}>
+              {pluginOverlays}
+            </div>
+          )}
         </div>
       </div>
     );

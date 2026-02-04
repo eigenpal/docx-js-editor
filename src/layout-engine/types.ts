@@ -35,11 +35,21 @@ export type RunFormatting = {
 };
 
 /**
+ * Hyperlink information for a run.
+ */
+export type HyperlinkInfo = {
+  href: string;
+  tooltip?: string;
+};
+
+/**
  * A text run within a paragraph.
  */
 export type TextRun = RunFormatting & {
   kind: 'text';
   text: string;
+  /** Hyperlink information if this run is a link. */
+  hyperlink?: HyperlinkInfo;
   /** Absolute ProseMirror position (inclusive) of first character. */
   pmStart?: number;
   /** Absolute ProseMirror position (exclusive) after last character. */

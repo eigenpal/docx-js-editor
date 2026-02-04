@@ -113,6 +113,9 @@ import {
 // Paginated editor
 import { PagedEditor, type PagedEditorRef } from '../paged-editor/PagedEditor';
 
+// Plugin API types
+import type { RenderedDomContext } from '../plugin-api/types';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -199,6 +202,16 @@ export interface DocxEditorProps {
    * When disabled (default), uses standard ProseMirror editor.
    */
   usePaginatedEditor?: boolean;
+  /**
+   * Callback when rendered DOM context is ready (for plugin overlays).
+   * Used by PluginHost to get access to the rendered page DOM for positioning.
+   */
+  onRenderedDomContextReady?: (context: RenderedDomContext) => void;
+  /**
+   * Plugin overlays to render inside the editor viewport.
+   * Passed from PluginHost to render plugin-specific overlays.
+   */
+  pluginOverlays?: ReactNode;
 }
 
 /**
@@ -298,6 +311,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     externalPlugins,
     onEditorViewReady,
     usePaginatedEditor = true,
+    onRenderedDomContextReady,
+    pluginOverlays,
   },
   ref
 ) {
@@ -1459,6 +1474,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                     onReady={(ref) => {
                       onEditorViewReady?.(ref.getView()!);
                     }}
+                    onRenderedDomContextReady={onRenderedDomContextReady}
+                    pluginOverlays={pluginOverlays}
                   />
                 ) : (
                   <ProseMirrorEditor
