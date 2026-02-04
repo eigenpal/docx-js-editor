@@ -39,7 +39,6 @@ import type {
   FlowBlock,
   Measure,
   ParagraphBlock,
-  ParagraphMeasure,
   TableBlock,
   ImageBlock,
   PageMargins,
@@ -266,15 +265,7 @@ function measureBlock(block: FlowBlock, contentWidth: number): Measure {
             columnIndex += colSpan;
 
             return {
-              blocks: cell.blocks.map((b) =>
-                b.kind === 'paragraph'
-                  ? measureParagraph(b as ParagraphBlock, cellWidth)
-                  : {
-                      kind: 'paragraph' as const,
-                      lines: [],
-                      totalHeight: 0,
-                    }
-              ),
+              blocks: cell.blocks.map((b) => measureBlock(b, cellWidth)),
               width: cellWidth,
               height: 0, // Calculated below
               colSpan: cell.colSpan,
@@ -289,7 +280,11 @@ function measureBlock(block: FlowBlock, contentWidth: number): Measure {
       for (const row of rows) {
         let maxHeight = 0;
         for (const cell of row.cells) {
-          cell.height = cell.blocks.reduce((h, m) => h + (m as ParagraphMeasure).totalHeight, 0);
+          cell.height = cell.blocks.reduce((h, m) => {
+            // Get height from any measure type (paragraph or table)
+            if ('totalHeight' in m) return h + m.totalHeight;
+            return h;
+          }, 0);
           maxHeight = Math.max(maxHeight, cell.height);
         }
         row.height = maxHeight;

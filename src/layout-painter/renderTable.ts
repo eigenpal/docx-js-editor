@@ -39,7 +39,7 @@ export interface RenderTableFragmentOptions {
 }
 
 /**
- * Render cell content (paragraphs, etc.)
+ * Render cell content (paragraphs and nested tables)
  */
 function renderCellContent(
   cell: TableCell,
@@ -86,10 +86,88 @@ function renderCellContent(
       fragEl.style.position = 'relative';
       contentEl.appendChild(fragEl);
       cursorY += paragraphMeasure.totalHeight;
+    } else if (block?.kind === 'table' && measure?.kind === 'table') {
+      // Nested table - render inline
+      const tableBlock = block as TableBlock;
+      const tableMeasure = measure as TableMeasure;
+
+      const nestedTableEl = renderNestedTable(tableBlock, tableMeasure, context, doc);
+      nestedTableEl.style.position = 'relative';
+      nestedTableEl.style.marginTop = `${cursorY}px`;
+      contentEl.appendChild(nestedTableEl);
+      cursorY += tableMeasure.totalHeight;
     }
   }
 
   return contentEl;
+}
+
+/**
+ * Render a nested table (within a cell)
+ */
+function renderNestedTable(
+  block: TableBlock,
+  measure: TableMeasure,
+  context: RenderContext,
+  doc: Document
+): HTMLElement {
+  const tableEl = doc.createElement('div');
+  tableEl.className = `${TABLE_CLASS_NAMES.table} layout-nested-table`;
+
+  // Positioning (relative, not absolute)
+  tableEl.style.position = 'relative';
+  tableEl.style.width = `${measure.totalWidth}px`;
+
+  // Store metadata
+  tableEl.dataset.blockId = String(block.id);
+
+  if (block.pmStart !== undefined) {
+    tableEl.dataset.pmStart = String(block.pmStart);
+  }
+  if (block.pmEnd !== undefined) {
+    tableEl.dataset.pmEnd = String(block.pmEnd);
+  }
+
+  // Render all rows
+  let y = 0;
+  for (let rowIndex = 0; rowIndex < block.rows.length; rowIndex++) {
+    const row = block.rows[rowIndex];
+    const rowMeasure = measure.rows[rowIndex];
+
+    if (!row || !rowMeasure) continue;
+
+    const rowEl = renderTableRow(row, rowMeasure, rowIndex, y, measure.columnWidths, context, doc);
+    tableEl.appendChild(rowEl);
+    y += rowMeasure.height;
+  }
+
+  tableEl.style.height = `${y}px`;
+
+  return tableEl;
+}
+
+/**
+ * Apply a single border to an element.
+ */
+function applyBorder(
+  el: HTMLElement,
+  side: 'top' | 'right' | 'bottom' | 'left',
+  border: { width?: number; color?: string; style?: string } | undefined
+): void {
+  const styleProp = `border${side.charAt(0).toUpperCase() + side.slice(1)}` as
+    | 'borderTop'
+    | 'borderRight'
+    | 'borderBottom'
+    | 'borderLeft';
+
+  if (!border || border.style === 'none' || border.width === 0) {
+    el.style[styleProp] = 'none';
+  } else {
+    const width = border.width ?? 1;
+    const color = border.color ?? '#000000';
+    const style = border.style ?? 'solid';
+    el.style[styleProp] = `${width}px ${style} ${color}`;
+  }
 }
 
 /**
@@ -113,11 +191,19 @@ function renderTableCell(
   cellEl.style.width = `${cellMeasure.width}px`;
   cellEl.style.height = `${rowHeight}px`;
   cellEl.style.overflow = 'hidden';
-
-  // Default cell styling (can be overridden by cell properties)
-  cellEl.style.border = '1px solid #000';
   cellEl.style.boxSizing = 'border-box';
   cellEl.style.padding = '2px 4px';
+
+  // Apply borders - use cell borders if available, otherwise default
+  if (cell.borders) {
+    applyBorder(cellEl, 'top', cell.borders.top);
+    applyBorder(cellEl, 'right', cell.borders.right);
+    applyBorder(cellEl, 'bottom', cell.borders.bottom);
+    applyBorder(cellEl, 'left', cell.borders.left);
+  } else {
+    // Default border if no borders specified
+    cellEl.style.border = '1px solid #000';
+  }
 
   // Background color
   if (cell.background) {
@@ -186,7 +272,11 @@ function renderTableRow(
   rowEl.dataset.rowIndex = String(rowIndex);
 
   // Render cells
+  // Track actual column index separately from cell index
+  // because cells with colSpan > 1 span multiple columns
   let x = 0;
+  let columnIndex = 0;
+
   for (let cellIndex = 0; cellIndex < row.cells.length; cellIndex++) {
     const cell = row.cells[cellIndex];
     const cellMeasure = rowMeasure.cells[cellIndex];
@@ -195,13 +285,17 @@ function renderTableRow(
 
     const cellEl = renderTableCell(cell, cellMeasure, x, rowMeasure.height, context, doc);
     cellEl.dataset.cellIndex = String(cellIndex);
+    cellEl.dataset.columnIndex = String(columnIndex);
     rowEl.appendChild(cellEl);
 
-    // Move x by cell width (accounting for colSpan)
+    // Move x by the width of columns this cell spans
     const colSpan = cell.colSpan ?? 1;
-    for (let c = 0; c < colSpan && cellIndex + c < columnWidths.length; c++) {
-      x += columnWidths[cellIndex + c] ?? 0;
+    for (let c = 0; c < colSpan && columnIndex + c < columnWidths.length; c++) {
+      x += columnWidths[columnIndex + c] ?? 0;
     }
+
+    // Advance column index by colSpan
+    columnIndex += colSpan;
   }
 
   return rowEl;
