@@ -277,9 +277,61 @@ function renderImageRun(run: ImageRun, doc: Document): HTMLElement {
     img.style.transform = run.transform;
   }
 
+  // Inline images should flow with text
+  img.style.display = 'inline';
+  img.style.verticalAlign = 'middle';
+
   applyPmPositions(img, run.pmStart, run.pmEnd);
 
   return img;
+}
+
+/**
+ * Render a floating image
+ */
+function renderFloatingImage(run: ImageRun, doc: Document): HTMLElement {
+  const container = doc.createElement('span');
+  container.className = 'layout-floating-image';
+
+  const img = doc.createElement('img');
+  img.src = run.src;
+  img.width = run.width;
+  img.height = run.height;
+  if (run.alt) {
+    img.alt = run.alt;
+  }
+  if (run.transform) {
+    img.style.transform = run.transform;
+  }
+
+  // Determine float direction from horizontal position
+  const hAlign = run.position?.horizontal?.align;
+  const hRelative = run.position?.horizontal?.relativeTo;
+
+  if (hAlign === 'right' || hRelative === 'rightMargin') {
+    container.style.cssFloat = 'right';
+    container.style.marginLeft = '12px';
+    container.style.marginBottom = '6px';
+  } else if (hAlign === 'left' || hRelative === 'leftMargin' || hRelative === 'column') {
+    container.style.cssFloat = 'left';
+    container.style.marginRight = '12px';
+    container.style.marginBottom = '6px';
+  } else if (hAlign === 'center') {
+    // Centered images become block-level
+    container.style.display = 'block';
+    container.style.textAlign = 'center';
+    container.style.marginBottom = '6px';
+  } else {
+    // Default to left float for other positioning
+    container.style.cssFloat = 'left';
+    container.style.marginRight = '12px';
+    container.style.marginBottom = '6px';
+  }
+
+  applyPmPositions(container, run.pmStart, run.pmEnd);
+  container.appendChild(img);
+
+  return container;
 }
 
 /**
@@ -607,6 +659,11 @@ export function renderLine(
       const fontFamily = run.fontFamily || 'Calibri';
       currentX += measureText(run.text, fontSize, fontFamily);
     } else if (isImageRun(run)) {
+      // Skip floating images - they're rendered separately at paragraph level
+      if (run.position) {
+        continue;
+      }
+      // Inline image - render in the text flow
       const runEl = renderImageRun(run, doc);
       lineEl.appendChild(runEl);
       currentX += run.width;
@@ -668,6 +725,21 @@ export function renderParagraphFragment(
   }
   if (fragment.continuesOnNext) {
     fragmentEl.dataset.continuesOnNext = 'true';
+  }
+
+  // Extract and render floating images first
+  // They need to be rendered before text content so text can flow around them
+  const floatingImages: ImageRun[] = [];
+  for (const run of block.runs) {
+    if (isImageRun(run) && run.position) {
+      floatingImages.push(run);
+    }
+  }
+
+  // Render floating images at the start of the paragraph
+  for (const floatImg of floatingImages) {
+    const floatEl = renderFloatingImage(floatImg, doc);
+    fragmentEl.appendChild(floatEl);
   }
 
   // Get the lines for this fragment
