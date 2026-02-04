@@ -287,17 +287,17 @@ function renderInlineImageRun(run: ImageRun, doc: Document): HTMLElement {
 }
 
 /**
- * Render a floating image (positioned at page margins)
+ * Render a floating image (positioned at left/right of paragraph)
  *
- * Since our layout uses absolute positioning, CSS float doesn't work well.
- * Instead, we position floating images absolutely at the left/right margins
- * outside the text content area.
+ * Floating images are positioned absolutely within the paragraph fragment.
+ * Text content is given margin to make room for the image.
  */
 function renderFloatingImage(run: ImageRun, doc: Document, side: 'left' | 'right'): HTMLElement {
   const container = doc.createElement('div');
   container.className = 'layout-floating-image';
   container.style.position = 'absolute';
   container.style.zIndex = '1';
+  container.style.top = `${run.distTop ?? 0}px`;
 
   const img = doc.createElement('img');
   img.src = run.src;
@@ -310,15 +310,11 @@ function renderFloatingImage(run: ImageRun, doc: Document, side: 'left' | 'right
     img.style.transform = run.transform;
   }
 
-  // Position at left or right margin (outside the content area)
+  // Position at left or right edge of paragraph
   if (side === 'right') {
-    // Position to the right of the content area
-    container.style.right = `-${run.width + (run.distRight ?? 12)}px`;
-    container.style.top = `${run.distTop ?? 0}px`;
+    container.style.right = `${run.distRight ?? 0}px`;
   } else {
-    // Position to the left of the content area
-    container.style.left = `-${run.width + (run.distLeft ?? 12)}px`;
-    container.style.top = `${run.distTop ?? 0}px`;
+    container.style.left = `${run.distLeft ?? 0}px`;
   }
 
   applyPmPositions(container, run.pmStart, run.pmEnd);
@@ -760,6 +756,7 @@ export function renderParagraphFragment(
 
   const fragmentEl = doc.createElement('div');
   fragmentEl.className = PARAGRAPH_CLASS_NAMES.fragment;
+  fragmentEl.style.position = 'relative'; // For absolute positioning of floating images
 
   // Store block and fragment metadata
   fragmentEl.dataset.blockId = String(fragment.blockId);
@@ -775,9 +772,11 @@ export function renderParagraphFragment(
     fragmentEl.dataset.continuesOnNext = 'true';
   }
 
-  // Extract and render floating images first
-  // They need to be rendered before text content so text can flow around them
+  // Extract floating images and calculate space needed for text wrapping
   const floatingImages: ImageRun[] = [];
+  let leftFloatWidth = 0;
+  let rightFloatWidth = 0;
+
   for (const run of block.runs) {
     if (isImageRun(run)) {
       // Check if this is a floating image based on displayMode or wrapType
@@ -786,13 +785,32 @@ export function renderParagraphFragment(
         (run.wrapType && ['square', 'tight', 'through'].includes(run.wrapType));
       if (isFloating) {
         floatingImages.push(run);
+        // Track space needed on each side for text wrapping
+        const imgSpace = run.width + (run.distLeft ?? 12) + (run.distRight ?? 12);
+        if (run.cssFloat === 'right') {
+          rightFloatWidth = Math.max(rightFloatWidth, imgSpace);
+        } else {
+          leftFloatWidth = Math.max(leftFloatWidth, imgSpace);
+        }
       }
     }
   }
 
-  // Render floating images - positioned absolutely at margins
+  // Create a content wrapper for text that wraps around floating images
+  const contentWrapper = doc.createElement('div');
+  contentWrapper.className = 'layout-paragraph-content';
+  contentWrapper.style.position = 'relative';
+
+  // Add padding to make room for floating images
+  if (leftFloatWidth > 0) {
+    contentWrapper.style.marginLeft = `${leftFloatWidth}px`;
+  }
+  if (rightFloatWidth > 0) {
+    contentWrapper.style.marginRight = `${rightFloatWidth}px`;
+  }
+
+  // Render floating images - positioned absolutely outside content area
   for (const floatImg of floatingImages) {
-    // Determine which side based on cssFloat
     const side = floatImg.cssFloat === 'right' ? 'right' : 'left';
     const floatEl = renderFloatingImage(floatImg, doc, side);
     fragmentEl.appendChild(floatEl);
@@ -1000,7 +1018,17 @@ export function renderParagraphFragment(
       lineEl.insertBefore(marker, lineEl.firstChild);
     }
 
-    fragmentEl.appendChild(lineEl);
+    // Append to content wrapper if we have floating images, otherwise directly to fragment
+    if (floatingImages.length > 0) {
+      contentWrapper.appendChild(lineEl);
+    } else {
+      fragmentEl.appendChild(lineEl);
+    }
+  }
+
+  // If we have floating images, append the content wrapper
+  if (floatingImages.length > 0) {
+    fragmentEl.appendChild(contentWrapper);
   }
 
   return fragmentEl;
