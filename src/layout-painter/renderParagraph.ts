@@ -640,10 +640,20 @@ export function renderParagraphFragment(
           return 'dashed';
         case 'thick':
           return 'solid';
+        case 'wave':
+          return 'wavy';
+        case 'dashSmallGap':
+          return 'dashed';
+        case 'nil':
+        case 'none':
+          return 'none';
         default:
           return 'solid';
       }
     };
+
+    // Ensure box-sizing is set for proper border calculations
+    fragmentEl.style.boxSizing = 'border-box';
 
     if (borders.top) {
       fragmentEl.style.borderTop = `${borders.top.width}px ${borderStyleToCss(borders.top.style)} ${borders.top.color}`;
@@ -656,6 +666,16 @@ export function renderParagraphFragment(
     }
     if (borders.right) {
       fragmentEl.style.borderRight = `${borders.right.width}px ${borderStyleToCss(borders.right.style)} ${borders.right.color}`;
+    }
+
+    // Add small padding inside borders for text not to touch the border
+    // This is standard Word behavior
+    const hasBorder = borders.top || borders.bottom || borders.left || borders.right;
+    if (hasBorder) {
+      fragmentEl.style.paddingLeft = borders.left ? '4px' : '0';
+      fragmentEl.style.paddingRight = borders.right ? '4px' : '0';
+      fragmentEl.style.paddingTop = borders.top ? '2px' : '0';
+      fragmentEl.style.paddingBottom = borders.bottom ? '2px' : '0';
     }
   }
 
