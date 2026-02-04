@@ -1026,10 +1026,9 @@ export function renderParagraphFragment(
 /**
  * Render a list marker element
  *
- * The marker is rendered as an inline-block that fills the hanging indent area.
- * - Marker box width = hanging indent
- * - Text aligns left within the box
- * - Small padding separates marker from following text
+ * The marker is rendered as an inline-block with a consistent space after it.
+ * For short markers, the box fills the hanging indent area.
+ * For long markers (like "1.1.1"), we ensure minimum spacing after the text.
  */
 function renderListMarker(
   marker: string,
@@ -1039,17 +1038,18 @@ function renderListMarker(
   const span = doc.createElement('span');
   span.className = 'layout-list-marker';
   span.style.display = 'inline-block';
-  span.textContent = marker;
+
+  // Add the marker text with a trailing space for consistent separation
+  // The tab character after the marker in Word provides this spacing
+  span.textContent = marker + '\u00A0'; // Non-breaking space ensures gap
 
   // The marker box should fill the hanging indent space
-  // with a small gap before the text
   const hanging = indent?.hanging ?? 24; // Default 24px if not specified
-  const gap = 8; // Small gap between marker and text
 
-  span.style.width = `${hanging - gap}px`;
-  span.style.paddingRight = `${gap}px`;
-  span.style.textAlign = 'left'; // Left-align marker text within box
-  span.style.boxSizing = 'content-box';
+  // Use min-width so short markers fill the space, but long markers can extend
+  span.style.minWidth = `${hanging}px`;
+  span.style.textAlign = 'right'; // Right-align so marker stays close to text
+  span.style.boxSizing = 'border-box';
 
   return span;
 }
