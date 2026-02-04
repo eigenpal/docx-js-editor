@@ -97,9 +97,12 @@ export function resetCanvasContext(): void {
 /**
  * Build a CSS font string from styling properties
  *
+ * Font sizes are in points and need to be converted to pixels for canvas.
+ * 1pt = 96/72 px ≈ 1.333px at standard web DPI.
+ *
  * @example
- * buildFontString({ fontFamily: "Arial", fontSize: 16, bold: true })
- * // Returns: "bold 16px Arial"
+ * buildFontString({ fontFamily: "Arial", fontSize: 12, bold: true })
+ * // Returns: "bold 16px Arial" (12pt = 16px)
  */
 export function buildFontString(style: FontStyle): string {
   const parts: string[] = [];
@@ -107,8 +110,10 @@ export function buildFontString(style: FontStyle): string {
   if (style.italic) parts.push('italic');
   if (style.bold) parts.push('bold');
 
-  const fontSize = style.fontSize ?? DEFAULT_FONT_SIZE;
-  parts.push(`${fontSize}px`);
+  // Convert points to pixels for canvas measurement
+  const fontSizePt = style.fontSize ?? DEFAULT_FONT_SIZE;
+  const fontSizePx = ptToPx(fontSizePt);
+  parts.push(`${fontSizePx}px`);
 
   const fontFamily = style.fontFamily ?? DEFAULT_FONT_FAMILY;
   parts.push(fontFamily);
@@ -156,12 +161,15 @@ export function getFontMetrics(style: FontStyle): FontMetrics {
   }
 
   // Fallback: ratio-based approximation
-  const ascent = fontSize * DEFAULT_ASCENT_RATIO;
-  const descent = fontSize * DEFAULT_DESCENT_RATIO;
-  const lineHeight = fontSize * DEFAULT_LINE_HEIGHT_MULTIPLIER;
+  // Convert font size from points to pixels for metrics calculation
+  // (canvas metrics are in pixels, so fallback should match)
+  const fontSizePx = ptToPx(fontSize);
+  const ascent = fontSizePx * DEFAULT_ASCENT_RATIO;
+  const descent = fontSizePx * DEFAULT_DESCENT_RATIO;
+  const lineHeight = fontSizePx * DEFAULT_LINE_HEIGHT_MULTIPLIER;
 
   return {
-    fontSize,
+    fontSize, // Keep in points for reference
     ascent,
     descent,
     lineHeight,

@@ -21,6 +21,7 @@ import {
   measureTextWidth,
   measureRun,
   getFontMetrics,
+  ptToPx,
   type FontStyle,
   type FontMetrics,
 } from './measureContainer';
@@ -72,6 +73,10 @@ function runToFontStyle(run: TextRun | TabRun): FontStyle {
 
 /**
  * Calculate typography metrics from font size and spacing settings
+ *
+ * @param fontSize - Font size in points
+ * @param spacing - Paragraph spacing settings
+ * @param metrics - Pre-calculated font metrics (in pixels)
  */
 function calculateTypographyMetrics(
   fontSize: number,
@@ -79,8 +84,10 @@ function calculateTypographyMetrics(
   metrics?: FontMetrics | null
 ): LineTypography {
   // Use provided metrics or calculate from font size
-  const ascent = metrics?.ascent ?? fontSize * 0.8;
-  const descent = metrics?.descent ?? fontSize * 0.2;
+  // When calculating from fontSize (points), convert to pixels first
+  const fontSizePx = ptToPx(fontSize);
+  const ascent = metrics?.ascent ?? fontSizePx * 0.8;
+  const descent = metrics?.descent ?? fontSizePx * 0.2;
   const baseLineHeight = ascent + descent;
 
   // Apply line spacing rules
