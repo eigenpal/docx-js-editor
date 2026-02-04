@@ -77,9 +77,21 @@ export type LineBreakRun = {
 };
 
 /**
+ * A field run (PAGE, NUMPAGES, etc.) that gets substituted at render time.
+ */
+export type FieldRun = RunFormatting & {
+  kind: 'field';
+  fieldType: 'PAGE' | 'NUMPAGES' | 'DATE' | 'TIME' | 'OTHER';
+  /** Fallback text if field can't be resolved */
+  fallback?: string;
+  pmStart?: number;
+  pmEnd?: number;
+};
+
+/**
  * Union of all run types.
  */
-export type Run = TextRun | TabRun | ImageRun | LineBreakRun;
+export type Run = TextRun | TabRun | ImageRun | LineBreakRun | FieldRun;
 
 /**
  * Paragraph spacing configuration.
@@ -139,6 +151,14 @@ export type ParagraphBorders = {
 };
 
 /**
+ * List numbering properties for a paragraph.
+ */
+export type ListNumPr = {
+  numId?: number;
+  ilvl?: number;
+};
+
+/**
  * Paragraph block attributes.
  */
 export type ParagraphAttrs = {
@@ -152,6 +172,10 @@ export type ParagraphAttrs = {
   borders?: ParagraphBorders;
   shading?: string; // CSS background color
   tabs?: TabStop[]; // Custom tab stops
+  // List properties
+  numPr?: ListNumPr;
+  listMarker?: string; // Pre-computed marker text (e.g., "1.", "•", "a)")
+  listIsBullet?: boolean;
 };
 
 /**
@@ -169,6 +193,25 @@ export type ParagraphBlock = {
 };
 
 /**
+ * Cell border specification for rendering.
+ */
+export type CellBorderSpec = {
+  width?: number; // pixels
+  color?: string; // CSS color
+  style?: string; // CSS border-style (solid, dashed, dotted, double)
+};
+
+/**
+ * Cell borders (all four sides).
+ */
+export type CellBorders = {
+  top?: CellBorderSpec;
+  bottom?: CellBorderSpec;
+  left?: CellBorderSpec;
+  right?: CellBorderSpec;
+};
+
+/**
  * A table cell with content.
  */
 export type TableCell = {
@@ -179,6 +222,7 @@ export type TableCell = {
   width?: number;
   verticalAlign?: 'top' | 'center' | 'bottom';
   background?: string;
+  borders?: CellBorders;
 };
 
 /**

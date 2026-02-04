@@ -9,12 +9,14 @@ import type {
   ParagraphBlock,
   ParagraphMeasure,
   ParagraphFragment,
+  ParagraphIndent,
   MeasuredLine,
   Run,
   TextRun,
   TabRun,
   ImageRun,
   LineBreakRun,
+  FieldRun,
   TabStop,
 } from '../layout-engine/types';
 import type { RenderContext } from './renderPage';
@@ -71,6 +73,13 @@ function isImageRun(run: Run): run is ImageRun {
  */
 function isLineBreakRun(run: Run): run is LineBreakRun {
   return run.kind === 'lineBreak';
+}
+
+/**
+ * Check if run is a field run
+ */
+function isFieldRun(run: Run): run is FieldRun {
+  return run.kind === 'field';
 }
 
 /**
@@ -253,9 +262,45 @@ function renderLineBreakRun(run: LineBreakRun, doc: Document): HTMLElement {
 }
 
 /**
+ * Render a field run (PAGE, NUMPAGES, etc.)
+ * Substitutes the field with actual values from context.
+ */
+function renderFieldRun(run: FieldRun, doc: Document, context: RenderContext): HTMLElement {
+  let text = run.fallback ?? '';
+
+  switch (run.fieldType) {
+    case 'PAGE':
+      text = String(context.pageNumber);
+      break;
+    case 'NUMPAGES':
+      text = String(context.totalPages);
+      break;
+    // DATE, TIME, and OTHER fields use fallback
+  }
+
+  // Create a text run with the resolved value
+  const resolvedRun: TextRun = {
+    kind: 'text',
+    text,
+    bold: run.bold,
+    italic: run.italic,
+    underline: run.underline,
+    strike: run.strike,
+    color: run.color,
+    highlight: run.highlight,
+    fontFamily: run.fontFamily,
+    fontSize: run.fontSize,
+    pmStart: run.pmStart,
+    pmEnd: run.pmEnd,
+  };
+
+  return renderTextRun(resolvedRun, doc);
+}
+
+/**
  * Render a single run (for non-tab runs)
  */
-function renderRun(run: Run, doc: Document): HTMLElement {
+function renderRun(run: Run, doc: Document, context?: RenderContext): HTMLElement {
   if (isTextRun(run)) {
     return renderTextRun(run, doc);
   }
@@ -269,6 +314,9 @@ function renderRun(run: Run, doc: Document): HTMLElement {
   }
   if (isLineBreakRun(run)) {
     return renderLineBreakRun(run, doc);
+  }
+  if (isFieldRun(run) && context) {
+    return renderFieldRun(run, doc, context);
   }
 
   // Fallback for unknown run types
@@ -332,6 +380,8 @@ interface RenderLineOptions {
   paragraphEndsWithLineBreak: boolean;
   /** Tab stops from paragraph attributes */
   tabStops?: TabStop[];
+  /** Render context for field substitution */
+  context?: RenderContext;
   /** Left indent in pixels */
   leftIndentPx?: number;
   /** First line indent in pixels (positive) or hanging indent (negative) */
@@ -514,9 +564,20 @@ export function renderLine(
     } else if (isLineBreakRun(run)) {
       const runEl = renderLineBreakRun(run, doc);
       lineEl.appendChild(runEl);
+    } else if (isFieldRun(run) && options?.context) {
+      // Render field run with context for PAGE/NUMPAGES substitution
+      const runEl = renderFieldRun(run, doc, options.context);
+      lineEl.appendChild(runEl);
+      // Estimate field text width for tab calculations
+      let fieldText = run.fallback ?? '';
+      if (run.fieldType === 'PAGE') fieldText = String(options.context.pageNumber);
+      else if (run.fieldType === 'NUMPAGES') fieldText = String(options.context.totalPages);
+      const fontSize = run.fontSize || 11;
+      const fontFamily = run.fontFamily || 'Calibri';
+      currentX += measureText(fieldText, fontSize, fontFamily);
     } else {
       // Fallback for unknown run types
-      const runEl = renderRun(run, doc);
+      const runEl = renderRun(run, doc, options?.context);
       lineEl.appendChild(runEl);
     }
   }
@@ -538,7 +599,7 @@ export function renderParagraphFragment(
   fragment: ParagraphFragment,
   block: ParagraphBlock,
   measure: ParagraphMeasure,
-  _context: RenderContext,
+  context: RenderContext,
   options: RenderParagraphOptions = {}
 ): HTMLElement {
   const doc = options.document ?? document;
@@ -721,9 +782,44 @@ export function renderParagraphFragment(
       tabStops: block.attrs?.tabs,
       leftIndentPx: indentLeft,
       firstLineIndentPx: isFirstLine ? firstLineIndentPx : 0,
+      context,
     });
+
+    // Add list marker to first line
+    if (isFirstLine && block.attrs?.listMarker) {
+      const marker = renderListMarker(block.attrs.listMarker, indent, doc);
+      // Insert marker at the start of the line
+      lineEl.insertBefore(marker, lineEl.firstChild);
+    }
+
     fragmentEl.appendChild(lineEl);
   }
 
   return fragmentEl;
+}
+
+/**
+ * Render a list marker element
+ */
+function renderListMarker(
+  marker: string,
+  indent: ParagraphIndent | undefined,
+  doc: Document
+): HTMLElement {
+  const span = doc.createElement('span');
+  span.className = 'layout-list-marker';
+  span.textContent = marker + '\u00A0'; // Add non-breaking space after marker
+
+  // Position the marker in the hanging indent area
+  span.style.display = 'inline-block';
+
+  // For hanging indent, the marker appears in the outdented area
+  if (indent?.hanging && indent.hanging > 0) {
+    // Position marker at the negative indent
+    span.style.width = `${indent.hanging}px`;
+    span.style.marginLeft = `-${indent.hanging}px`;
+    span.style.textAlign = 'left';
+  }
+
+  return span;
 }

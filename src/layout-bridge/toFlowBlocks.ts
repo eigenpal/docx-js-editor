@@ -324,6 +324,31 @@ function convertParagraphAttrs(pmAttrs: PMParagraphAttrs): ParagraphAttrs {
     }));
   }
 
+  // Page break control
+  if (pmAttrs.pageBreakBefore) {
+    attrs.pageBreakBefore = true;
+  }
+  if (pmAttrs.keepNext) {
+    attrs.keepNext = true;
+  }
+  if (pmAttrs.keepLines) {
+    attrs.keepLines = true;
+  }
+
+  // List properties
+  if (pmAttrs.numPr) {
+    attrs.numPr = {
+      numId: pmAttrs.numPr.numId,
+      ilvl: pmAttrs.numPr.ilvl,
+    };
+  }
+  if (pmAttrs.listMarker) {
+    attrs.listMarker = pmAttrs.listMarker;
+  }
+  if (pmAttrs.listIsBullet != null) {
+    attrs.listIsBullet = pmAttrs.listIsBullet;
+  }
+
   return attrs;
 }
 
