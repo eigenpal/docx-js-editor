@@ -221,3 +221,17 @@
 [2026-02-04 11:35] NOTES: 3. renderParagraph.ts - Changed line white-space to 'pre' to prevent internal wrapping
 [2026-02-04 11:35] NOTES: Root cause: font fallback mismatch between Canvas measurement and DOM rendering
 [2026-02-04 11:35] STATUS: testing
+[2026-02-04 13:03] TASK: Fix floating image rendering
+[2026-02-04 13:03] STATUS: implementing
+[2026-02-04 13:03] NOTES: Implemented page-level floating image positioning
+[2026-02-04 13:03] NOTES: - Added extractFloatingImagesFromParagraph() to collect floats from all paragraphs
+[2026-02-04 13:03] NOTES: - Added calculateExclusionZones() to compute text wrapping areas
+[2026-02-04 13:03] NOTES: - Added renderFloatingImagesLayer() for page-level image rendering
+[2026-02-04 13:03] NOTES: - Updated renderParagraphFragment to accept floatingMargins from page
+[2026-02-04 13:03] NOTES: Typecheck passes - testing with demo.docx
+[2026-02-04 21:15] STATUS: fixed
+[2026-02-04 21:15] NOTES: Added position attribute to ProseMirror image schema (was missing from attrs)
+[2026-02-04 21:15] NOTES: Both floating arrows now correctly positioned at top of content area (y=0)
+[2026-02-04 21:15] NOTES: Per-line text wrapping working - lines overlapping images have 114px margins
+[2026-02-04 21:15] NOTES: Lines below images return to full width (per-line margin calculation like WYSIWYG Editor)
+[2026-02-04 21:15] STATUS: done
