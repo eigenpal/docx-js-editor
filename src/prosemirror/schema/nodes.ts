@@ -74,6 +74,11 @@ export interface ParagraphAttrs {
   // Tab stops
   tabs?: TabStop[];
 
+  // Page break control
+  pageBreakBefore?: boolean;
+  keepNext?: boolean;
+  keepLines?: boolean;
+
   // Default text formatting for empty paragraphs (persists when navigating away)
   // Maps to OOXML pPr/rPr (paragraph's default run properties)
   defaultTextFormatting?: TextFormatting;
@@ -237,6 +242,11 @@ export const paragraph: NodeSpec = {
 
     // Tab stops
     tabs: { default: null },
+
+    // Page break control
+    pageBreakBefore: { default: null },
+    keepNext: { default: null },
+    keepLines: { default: null },
 
     // Default text formatting for empty paragraphs (persists when navigating away)
     defaultTextFormatting: { default: null },
