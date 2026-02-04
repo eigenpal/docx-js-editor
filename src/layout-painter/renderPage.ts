@@ -16,10 +16,14 @@ import type {
   TableBlock,
   TableMeasure,
   TableFragment,
+  ImageBlock,
+  ImageMeasure,
+  ImageFragment,
 } from '../layout-engine/types';
 import { renderFragment } from './renderFragment';
 import { renderParagraphFragment } from './renderParagraph';
 import { renderTableFragment } from './renderTable';
+import { renderImageFragment } from './renderImage';
 import type { BlockLookup } from './index';
 
 /**
@@ -265,6 +269,18 @@ export function renderPage(
           fragment as TableFragment,
           blockData.block as TableBlock,
           blockData.measure as TableMeasure,
+          fragmentContext,
+          { document: doc }
+        );
+      } else if (
+        fragment.kind === 'image' &&
+        blockData?.block.kind === 'image' &&
+        blockData?.measure.kind === 'image'
+      ) {
+        fragmentEl = renderImageFragment(
+          fragment as ImageFragment,
+          blockData.block as ImageBlock,
+          blockData.measure as ImageMeasure,
           fragmentContext,
           { document: doc }
         );
