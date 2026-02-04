@@ -171,9 +171,10 @@ function createEditorState(
 }
 
 /**
- * Extract selection state from editor state
+ * Extract selection state from editor state.
+ * Exported for use by PagedEditor integration in DocxEditor.
  */
-function extractSelectionState(state: EditorState): SelectionState | null {
+export function extractSelectionState(state: EditorState): SelectionState | null {
   const { selection, doc } = state;
   const { from, to, empty } = selection;
 

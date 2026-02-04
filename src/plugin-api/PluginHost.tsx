@@ -193,6 +193,31 @@ const PLUGIN_HOST_STYLES = `
   position: relative;
   clip: unset;
 }
+
+/* Plugin overlay container for rendering highlights/decorations */
+.plugin-overlays-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 5;
+}
+
+.plugin-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.plugin-overlay > * {
+  pointer-events: auto;
+}
 `;
 
 /**
@@ -211,9 +236,16 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
   // Editor view reference
   const [editorView, setEditorView] = useState<EditorView | null>(null);
 
+  // Rendered DOM context (received from PagedEditor)
+  const [renderedDomContext, setRenderedDomContext] = useState<
+    import('./types').RenderedDomContext | null
+  >(null);
+
   // Plugin states (map of pluginId -> state)
   const pluginStatesRef = useRef<Map<string, unknown>>(new Map());
-  const [, forceUpdate] = useState({});
+  // State version counter - incremented when plugin states change, used as dependency for overlays
+  const [stateVersion, setStateVersion] = useState(0);
+  const forceUpdate = useCallback(() => setStateVersion((v) => v + 1), []);
 
   // Panel collapsed states
   const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(() => {
@@ -244,7 +276,7 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
         pluginStatesRef.current.set(plugin.id, plugin.initialize(editorView));
       }
     }
-    forceUpdate({});
+    forceUpdate();
   }, [plugins, editorView]);
 
   // Inject base PluginHost styles
@@ -296,22 +328,39 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
           }
         }
       }
-      forceUpdate({});
+      forceUpdate();
     };
 
     // Initial state update
     updatePluginStates();
 
-    // Listen for editor updates via focus/blur and input events
+    // Listen for editor updates via DOM events
     const editorDom = editorView.dom;
     editorDom.addEventListener('input', updatePluginStates);
     editorDom.addEventListener('focus', updatePluginStates);
     editorDom.addEventListener('click', updatePluginStates);
 
+    // Debounced update for transactions (hover/select from panels)
+    let pendingUpdate: number | null = null;
+    const debouncedUpdate = () => {
+      if (pendingUpdate) cancelAnimationFrame(pendingUpdate);
+      pendingUpdate = requestAnimationFrame(updatePluginStates);
+    };
+
+    // Wrap dispatch to catch hover/select transactions from panels
+    const originalDispatch = editorView.dispatch.bind(editorView);
+    editorView.dispatch = (tr) => {
+      originalDispatch(tr);
+      // Update on non-doc-changing transactions (hover/select) or after doc changes
+      debouncedUpdate();
+    };
+
     return () => {
       editorDom.removeEventListener('input', updatePluginStates);
       editorDom.removeEventListener('focus', updatePluginStates);
       editorDom.removeEventListener('click', updatePluginStates);
+      if (pendingUpdate) cancelAnimationFrame(pendingUpdate);
+      editorView.dispatch = originalDispatch;
     };
   }, [editorView, plugins]);
 
@@ -360,7 +409,7 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
   // Set plugin state helper
   const setPluginState = useCallback(<T,>(pluginId: string, state: T) => {
     pluginStatesRef.current.set(pluginId, state);
-    forceUpdate({});
+    forceUpdate();
   }, []);
 
   // Refresh all plugin states
@@ -375,7 +424,7 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
         }
       }
     }
-    forceUpdate({});
+    forceUpdate();
   }, [editorView, plugins]);
 
   // Expose ref methods
@@ -414,10 +463,44 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
     });
   }, []);
 
+  // Generate overlay elements for plugins that have renderOverlay
+  const pluginOverlays = useMemo(() => {
+    if (!renderedDomContext) return null;
+
+    const overlays = plugins
+      .filter((plugin) => plugin.renderOverlay)
+      .map((plugin) => {
+        const pluginState = pluginStatesRef.current.get(plugin.id);
+        return (
+          <div key={`overlay-${plugin.id}`} className="plugin-overlay" data-plugin-id={plugin.id}>
+            {plugin.renderOverlay!(renderedDomContext, pluginState, editorView)}
+          </div>
+        );
+      });
+
+    return overlays.length > 0 ? overlays : null;
+  }, [renderedDomContext, plugins, stateVersion, editorView]);
+
+  // Callback to receive rendered DOM context from editor
+  const handleRenderedDomContextReady = useCallback(
+    (context: import('./types').RenderedDomContext) => {
+      setRenderedDomContext(context);
+      // Call original callback if any
+      const originalCallback = (children.props as Record<string, unknown>)
+        ?.onRenderedDomContextReady;
+      if (typeof originalCallback === 'function') {
+        originalCallback(context);
+      }
+    },
+    [children.props]
+  );
+
   // Clone the child editor with additional props
   const editorElement = useMemo(() => {
     return cloneElement(children, {
       externalPlugins: externalProseMirrorPlugins,
+      pluginOverlays,
+      onRenderedDomContextReady: handleRenderedDomContextReady,
       onEditorViewReady: (view: EditorView) => {
         setEditorView(view);
         // Call original callback if any
@@ -427,7 +510,7 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
         }
       },
     });
-  }, [children, externalProseMirrorPlugins]);
+  }, [children, externalProseMirrorPlugins, pluginOverlays, handleRenderedDomContextReady]);
 
   // Group plugins by panel position
   const pluginsByPosition = useMemo(() => {
@@ -500,6 +583,7 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
               selectRange={selectRange}
               pluginState={pluginState}
               panelWidth={size}
+              renderedDomContext={renderedDomContext ?? null}
             />
           </div>
         )}
@@ -546,6 +630,7 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
               selectRange={selectRange}
               pluginState={pluginState}
               panelWidth={size}
+              renderedDomContext={renderedDomContext ?? null}
             />
           </div>
         )}

@@ -27,7 +27,12 @@ export type {
   PluginContext,
   PluginHostProps,
   PluginHostRef,
+  RenderedDomContext,
+  PositionCoordinates,
 } from './types';
 
 // Components
 export { PluginHost, PLUGIN_HOST_STYLES } from './PluginHost';
+
+// Rendered DOM Context
+export { createRenderedDomContext, RenderedDomContextImpl } from './RenderedDomContext';

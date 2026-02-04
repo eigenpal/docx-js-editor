@@ -33,11 +33,21 @@ export type RunFormatting = {
 };
 
 /**
+ * Hyperlink information for a run.
+ */
+export type HyperlinkInfo = {
+  href: string;
+  tooltip?: string;
+};
+
+/**
  * A text run within a paragraph.
  */
 export type TextRun = RunFormatting & {
   kind: 'text';
   text: string;
+  /** Hyperlink information if this run is a link. */
+  hyperlink?: HyperlinkInfo;
   /** Absolute ProseMirror position (inclusive) of first character. */
   pmStart?: number;
   /** Absolute ProseMirror position (exclusive) after last character. */
@@ -55,6 +65,23 @@ export type TabRun = RunFormatting & {
 };
 
 /**
+ * Image position offset configuration for floating/anchored images.
+ */
+export type ImagePositionOffset = {
+  relativeTo?: string;
+  posOffset?: number;
+  align?: string;
+};
+
+/**
+ * Image position configuration for floating/anchored images.
+ */
+export type ImagePosition = {
+  horizontal?: ImagePositionOffset;
+  vertical?: ImagePositionOffset;
+};
+
+/**
  * An inline image run.
  */
 export type ImageRun = {
@@ -63,6 +90,10 @@ export type ImageRun = {
   width: number;
   height: number;
   alt?: string;
+  /** CSS transform for the image (e.g., rotation). */
+  transform?: string;
+  /** Position configuration for floating/anchored images. */
+  position?: ImagePosition;
   pmStart?: number;
   pmEnd?: number;
 };

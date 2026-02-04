@@ -23,15 +23,23 @@
  * ```
  */
 
-import type { EditorPlugin } from '../../plugin-api/types';
+import React from 'react';
+import { TextSelection } from 'prosemirror-state';
+import type { EditorPlugin, RenderedDomContext } from '../../plugin-api/types';
 import type { EditorView } from 'prosemirror-view';
 import type { TemplateTag } from './prosemirror-plugin';
 import {
   createTemplatePlugin,
   templatePluginKey,
+  setHoveredElement,
+  setSelectedElement,
   TEMPLATE_DECORATION_STYLES,
 } from './prosemirror-plugin';
 import { AnnotationPanel, ANNOTATION_PANEL_STYLES } from './components/AnnotationPanel';
+import {
+  TemplateHighlightOverlay,
+  TEMPLATE_HIGHLIGHT_OVERLAY_STYLES,
+} from './components/TemplateHighlightOverlay';
 
 /**
  * Plugin state interface
@@ -97,9 +105,44 @@ export function createPlugin(
       };
     },
 
+    renderOverlay: (
+      context: RenderedDomContext,
+      state: TemplatePluginState | undefined,
+      editorView: EditorView | null
+    ): React.ReactNode => {
+      if (!state || state.tags.length === 0) {
+        return null;
+      }
+
+      return React.createElement(TemplateHighlightOverlay, {
+        context,
+        tags: state.tags,
+        hoveredId: state.hoveredId,
+        selectedId: state.selectedId,
+        onHover: (id: string | undefined) => {
+          if (editorView) setHoveredElement(editorView, id);
+        },
+        onSelect: (id: string) => {
+          if (editorView) {
+            setSelectedElement(editorView, id);
+            // Find the tag and scroll to it
+            const tag = state.tags.find((t) => t.id === id);
+            if (tag) {
+              const tr = editorView.state.tr.setSelection(
+                TextSelection.near(editorView.state.doc.resolve(tag.from))
+              );
+              editorView.dispatch(tr);
+              editorView.focus();
+            }
+          }
+        },
+      });
+    },
+
     styles: `
 ${TEMPLATE_DECORATION_STYLES}
 ${ANNOTATION_PANEL_STYLES}
+${TEMPLATE_HIGHLIGHT_OVERLAY_STYLES}
 `,
   };
 }
