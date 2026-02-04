@@ -88,12 +88,17 @@ function findBlockById(blocks: FlowBlock[], blockId: BlockId): number {
 
 /**
  * Calculate the PM range for a line.
+ * Note: ProseMirror positions include node boundaries:
+ * - blockPmStart is the position of the paragraph node itself
+ * - The actual text content starts at blockPmStart + 1 (after the opening tag)
  */
 function computeLinePmRange(
   block: ParagraphBlock,
   line: MeasuredLine
 ): { pmStart: number | undefined; pmEnd: number | undefined } {
   const blockPmStart = block.pmStart ?? 0;
+  // Text content starts after the paragraph's opening tag
+  const contentStart = blockPmStart + 1;
 
   // Calculate character offset to line start
   let charOffset = 0;
@@ -111,13 +116,13 @@ function computeLinePmRange(
       }
     } else if (runIndex === line.fromRun) {
       charOffset += line.fromChar;
-      pmStart = blockPmStart + charOffset;
+      pmStart = contentStart + charOffset;
       break;
     }
   }
 
   if (pmStart === undefined) {
-    pmStart = blockPmStart;
+    pmStart = contentStart;
   }
 
   // Calculate line length

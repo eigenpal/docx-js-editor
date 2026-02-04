@@ -50,6 +50,7 @@ import { toFlowBlocks } from '../layout-bridge/toFlowBlocks';
 import { measureParagraph } from '../layout-bridge/measuring';
 import { hitTestFragment } from '../layout-bridge/hitTest';
 import { clickToPosition } from '../layout-bridge/clickToPosition';
+import { clickToPositionDom } from '../layout-bridge/clickToPositionDom';
 import {
   selectionToRects,
   getCaretPosition,
@@ -340,6 +341,10 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     const [selectionRects, setSelectionRects] = useState<SelectionRect[]>([]);
     const [caretPosition, setCaretPosition] = useState<CaretPosition | null>(null);
 
+    // Drag selection state
+    const isDraggingRef = useRef(false);
+    const dragAnchorRef = useRef<number | null>(null);
+
     // Compute page size and margins
     const pageSize = useMemo(() => getPageSize(sectionProperties), [sectionProperties]);
     const margins = useMemo(() => getMargins(sectionProperties), [sectionProperties]);
@@ -411,6 +416,86 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     );
 
     /**
+     * Get caret position using DOM-based measurement (like SuperDoc).
+     * This uses the browser's text rendering to get precise pixel positions.
+     */
+    const getCaretFromDom = useCallback((pmPos: number): CaretPosition | null => {
+      if (!pagesContainerRef.current) return null;
+
+      const overlay = pagesContainerRef.current.parentElement?.querySelector(
+        '[data-testid="selection-overlay"]'
+      );
+      if (!overlay) return null;
+
+      const overlayRect = overlay.getBoundingClientRect();
+
+      // Find spans with PM position data
+      const spans = pagesContainerRef.current.querySelectorAll('span[data-pm-start][data-pm-end]');
+
+      for (const span of Array.from(spans)) {
+        const spanEl = span as HTMLElement;
+        const pmStart = Number(spanEl.dataset.pmStart);
+        const pmEnd = Number(spanEl.dataset.pmEnd);
+
+        if (pmPos >= pmStart && pmPos <= pmEnd && span.firstChild?.nodeType === Node.TEXT_NODE) {
+          const textNode = span.firstChild as Text;
+          const charIndex = Math.min(pmPos - pmStart, textNode.length);
+
+          // Create a range at the exact character position
+          const ownerDoc = spanEl.ownerDocument;
+          if (!ownerDoc) continue;
+          const range = ownerDoc.createRange();
+          range.setStart(textNode, charIndex);
+          range.setEnd(textNode, charIndex);
+
+          const rangeRect = range.getBoundingClientRect();
+
+          // Find which page this span is on
+          const pageEl = spanEl.closest('.layout-page');
+          const pageIndex = pageEl ? Number((pageEl as HTMLElement).dataset.pageNumber) - 1 : 0;
+
+          // Get line height from the line element or use default
+          const lineEl = spanEl.closest('.layout-line');
+          const lineHeight = lineEl ? (lineEl as HTMLElement).offsetHeight : 16;
+
+          return {
+            x: rangeRect.left - overlayRect.left,
+            y: rangeRect.top - overlayRect.top,
+            height: lineHeight,
+            pageIndex,
+          };
+        }
+      }
+
+      // Fallback: try to find position in empty paragraphs (they have empty runs)
+      const emptyRuns = pagesContainerRef.current.querySelectorAll('.layout-empty-run');
+      for (const emptyRun of Array.from(emptyRuns)) {
+        const paragraph = emptyRun.closest('.layout-paragraph') as HTMLElement;
+        if (!paragraph) continue;
+
+        const pmStart = Number(paragraph.dataset.pmStart);
+        const pmEnd = Number(paragraph.dataset.pmEnd);
+
+        if (pmPos >= pmStart && pmPos <= pmEnd) {
+          const runRect = emptyRun.getBoundingClientRect();
+          const pageEl = paragraph.closest('.layout-page');
+          const pageIndex = pageEl ? Number((pageEl as HTMLElement).dataset.pageNumber) - 1 : 0;
+          const lineEl = emptyRun.closest('.layout-line');
+          const lineHeight = lineEl ? (lineEl as HTMLElement).offsetHeight : 16;
+
+          return {
+            x: runRect.left - overlayRect.left,
+            y: runRect.top - overlayRect.top,
+            height: lineHeight,
+            pageIndex,
+          };
+        }
+      }
+
+      return null;
+    }, []);
+
+    /**
      * Update selection overlay from PM selection.
      */
     const updateSelectionOverlay = useCallback(
@@ -421,13 +506,115 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
 
         // Collapsed selection - show caret
         if (from === to) {
-          const caret = getCaretPosition(layout, blocks, measures, from);
-          setCaretPosition(caret);
+          // Use DOM-based caret positioning for accuracy
+          const domCaret = getCaretFromDom(from);
+          if (domCaret) {
+            setCaretPosition(domCaret);
+          } else {
+            // Fallback to layout-based calculation if DOM not ready
+            const overlay = pagesContainerRef.current?.parentElement?.querySelector(
+              '[data-testid="selection-overlay"]'
+            );
+            const firstPage = pagesContainerRef.current?.querySelector('.layout-page');
+
+            if (overlay && firstPage) {
+              const overlayRect = overlay.getBoundingClientRect();
+              const pageRect = firstPage.getBoundingClientRect();
+              const caret = getCaretPosition(layout, blocks, measures, from);
+
+              if (caret) {
+                setCaretPosition({
+                  ...caret,
+                  x: caret.x + (pageRect.left - overlayRect.left),
+                  y: caret.y + (pageRect.top - overlayRect.top),
+                });
+              } else {
+                setCaretPosition(null);
+              }
+            } else {
+              setCaretPosition(null);
+            }
+          }
           setSelectionRects([]);
         } else {
-          // Range selection - show highlight rectangles
-          const rects = selectionToRects(layout, blocks, measures, from, to);
-          setSelectionRects(rects);
+          // Range selection - show highlight rectangles using DOM-based approach
+          const overlay = pagesContainerRef.current?.parentElement?.querySelector(
+            '[data-testid="selection-overlay"]'
+          );
+
+          if (overlay && pagesContainerRef.current) {
+            const overlayRect = overlay.getBoundingClientRect();
+            const domRects: SelectionRect[] = [];
+
+            // Find spans that intersect with the selection range
+            const spans = pagesContainerRef.current.querySelectorAll(
+              'span[data-pm-start][data-pm-end]'
+            );
+
+            for (const span of Array.from(spans)) {
+              const spanEl = span as HTMLElement;
+              const pmStart = Number(spanEl.dataset.pmStart);
+              const pmEnd = Number(spanEl.dataset.pmEnd);
+
+              // Check if this span overlaps with selection
+              if (pmEnd > from && pmStart < to && span.firstChild?.nodeType === Node.TEXT_NODE) {
+                const textNode = span.firstChild as Text;
+                const ownerDoc = spanEl.ownerDocument;
+                if (!ownerDoc) continue;
+
+                // Calculate the character range within this span
+                const startChar = Math.max(0, from - pmStart);
+                const endChar = Math.min(textNode.length, to - pmStart);
+
+                if (startChar < endChar) {
+                  const range = ownerDoc.createRange();
+                  range.setStart(textNode, startChar);
+                  range.setEnd(textNode, endChar);
+
+                  // Get all client rects for this range (handles line wraps)
+                  const clientRects = range.getClientRects();
+                  for (const rect of Array.from(clientRects)) {
+                    const pageEl = spanEl.closest('.layout-page');
+                    const pageIndex = pageEl
+                      ? Number((pageEl as HTMLElement).dataset.pageNumber) - 1
+                      : 0;
+
+                    domRects.push({
+                      x: rect.left - overlayRect.left,
+                      y: rect.top - overlayRect.top,
+                      width: rect.width,
+                      height: rect.height,
+                      pageIndex,
+                    });
+                  }
+                }
+              }
+            }
+
+            if (domRects.length > 0) {
+              setSelectionRects(domRects);
+            } else {
+              // Fallback to layout-based calculation
+              const firstPage = pagesContainerRef.current.querySelector('.layout-page');
+              if (firstPage) {
+                const pageRect = firstPage.getBoundingClientRect();
+                const pageOffsetX = pageRect.left - overlayRect.left;
+                const pageOffsetY = pageRect.top - overlayRect.top;
+
+                const rects = selectionToRects(layout, blocks, measures, from, to);
+                const adjustedRects = rects.map((rect) => ({
+                  ...rect,
+                  x: rect.x + pageOffsetX,
+                  y: rect.y + pageOffsetY,
+                }));
+                setSelectionRects(adjustedRects);
+              } else {
+                setSelectionRects([]);
+              }
+            }
+          } else {
+            setSelectionRects([]);
+          }
           setCaretPosition(null);
         }
 
@@ -436,7 +623,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
           onSelectionChange(from, to);
         }
       },
-      [layout, blocks, measures, pageGap, onSelectionChange]
+      [layout, blocks, measures, getCaretFromDom, onSelectionChange]
     );
 
     // =========================================================================
@@ -478,14 +665,20 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     );
 
     /**
-     * Handle click on pages container - map to PM position.
+     * Get PM position from mouse coordinates using DOM-based detection.
+     * Falls back to geometry-based calculation if DOM mapping fails.
      */
-    const handlePagesClick = useCallback(
-      (e: React.MouseEvent) => {
-        if (!layout || !pagesContainerRef.current || !hiddenPMRef.current) return;
+    const getPositionFromMouse = useCallback(
+      (clientX: number, clientY: number): number | null => {
+        if (!pagesContainerRef.current || !layout) return null;
 
-        // Find the page element that was clicked
-        // Pages are rendered with class 'layout-page' and are centered in the container
+        // Try DOM-based click mapping first (most accurate)
+        const domPos = clickToPositionDom(pagesContainerRef.current, clientX, clientY, zoom);
+        if (domPos !== null) {
+          return domPos;
+        }
+
+        // Fallback to geometry-based mapping
         const pageElements = pagesContainerRef.current.querySelectorAll('.layout-page');
         let clickedPageIndex = -1;
         let pageRect: DOMRect | null = null;
@@ -494,10 +687,10 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
           const pageEl = pageElements[i];
           const rect = pageEl.getBoundingClientRect();
           if (
-            e.clientX >= rect.left &&
-            e.clientX <= rect.right &&
-            e.clientY >= rect.top &&
-            e.clientY <= rect.bottom
+            clientX >= rect.left &&
+            clientX <= rect.right &&
+            clientY >= rect.top &&
+            clientY <= rect.bottom
           ) {
             clickedPageIndex = i;
             pageRect = rect;
@@ -506,61 +699,128 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         }
 
         if (clickedPageIndex < 0 || !pageRect) {
-          // Clicked outside all pages - position at end of document
-          const view = hiddenPMRef.current.getView();
-          if (view) {
-            const endPos = view.state.doc.content.size - 1;
-            hiddenPMRef.current.setSelection(Math.max(0, endPos));
-          }
-          hiddenPMRef.current.focus();
-          setIsFocused(true);
-          return;
+          return null;
         }
 
-        // Get click position relative to the page element (not the container)
-        const pageX = (e.clientX - pageRect.left) / zoom;
-        const pageY = (e.clientY - pageRect.top) / zoom;
+        const pageX = (clientX - pageRect.left) / zoom;
+        const pageY = (clientY - pageRect.top) / zoom;
 
-        // Get the page from layout
         const page = layout.pages[clickedPageIndex];
-        if (!page) return;
+        if (!page) return null;
 
-        // Create a page hit result
         const pageHit = {
           pageIndex: clickedPageIndex,
           page,
           pageY,
         };
 
-        // Hit test fragment within page using page-relative coordinates
         const fragmentHit = hitTestFragment(pageHit, blocks, measures, {
           x: pageX,
           y: pageY,
         });
 
-        if (!fragmentHit) {
-          // Clicked on empty page area - position at end of document
+        if (!fragmentHit) return null;
+
+        return clickToPosition(fragmentHit);
+      },
+      [layout, blocks, measures, zoom]
+    );
+
+    /**
+     * Handle mousedown on pages - start selection or drag.
+     */
+    const handlePagesMouseDown = useCallback(
+      (e: React.MouseEvent) => {
+        if (!hiddenPMRef.current || e.button !== 0) return; // Only handle left click
+
+        e.preventDefault(); // Prevent native text selection
+
+        const pmPos = getPositionFromMouse(e.clientX, e.clientY);
+
+        if (pmPos !== null) {
+          // Start dragging
+          isDraggingRef.current = true;
+          dragAnchorRef.current = pmPos;
+
+          // Set initial selection (collapsed)
+          hiddenPMRef.current.setSelection(pmPos);
+        } else {
+          // Clicked outside content - move to end
           const view = hiddenPMRef.current.getView();
           if (view) {
-            const endPos = view.state.doc.content.size - 1;
-            hiddenPMRef.current.setSelection(Math.max(0, endPos));
+            const endPos = Math.max(0, view.state.doc.content.size - 1);
+            hiddenPMRef.current.setSelection(endPos);
+            dragAnchorRef.current = endPos;
+            isDraggingRef.current = true;
           }
-          hiddenPMRef.current.focus();
-          setIsFocused(true);
-          return;
-        }
-
-        // Map click to PM position
-        const pmPosition = clickToPosition(fragmentHit);
-        if (pmPosition !== null) {
-          hiddenPMRef.current.setSelection(pmPosition);
         }
 
         // Focus the hidden editor
         hiddenPMRef.current.focus();
         setIsFocused(true);
       },
-      [layout, blocks, measures, zoom]
+      [getPositionFromMouse]
+    );
+
+    /**
+     * Handle mousemove - extend selection during drag.
+     */
+    const handleMouseMove = useCallback(
+      (e: MouseEvent) => {
+        if (!isDraggingRef.current || dragAnchorRef.current === null) return;
+        if (!hiddenPMRef.current || !pagesContainerRef.current) return;
+
+        const pmPos = getPositionFromMouse(e.clientX, e.clientY);
+        if (pmPos === null) return;
+
+        // Set selection from anchor to current position
+        const anchor = dragAnchorRef.current;
+        hiddenPMRef.current.setSelection(anchor, pmPos);
+      },
+      [getPositionFromMouse]
+    );
+
+    /**
+     * Handle mouseup - end drag selection.
+     */
+    const handleMouseUp = useCallback(() => {
+      isDraggingRef.current = false;
+      // Keep dragAnchorRef for potential shift-click extension
+    }, []);
+
+    // Add global mouse event listeners for drag selection
+    useEffect(() => {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }, [handleMouseMove, handleMouseUp]);
+
+    /**
+     * Handle click on pages container (for double-click word selection).
+     */
+    const handlePagesClick = useCallback(
+      (e: React.MouseEvent) => {
+        // Double-click for word selection
+        if (e.detail === 2 && hiddenPMRef.current) {
+          const pmPos = getPositionFromMouse(e.clientX, e.clientY);
+          if (pmPos !== null) {
+            // Let ProseMirror handle word selection via double-click
+            // The hidden editor will receive focus and process it
+          }
+        }
+        // Triple-click for paragraph selection
+        if (e.detail === 3 && hiddenPMRef.current) {
+          const pmPos = getPositionFromMouse(e.clientX, e.clientY);
+          if (pmPos !== null) {
+            // Let ProseMirror handle paragraph selection
+          }
+        }
+      },
+      [getPositionFromMouse]
     );
 
     /**
@@ -621,11 +881,10 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     }, []);
 
     /**
-     * Handle mousedown on container to prepare for click handling.
-     * This ensures the editor captures focus before the click event.
+     * Handle mousedown on container (outside pages).
      */
-    const handleMouseDown = useCallback(() => {
-      // Focus hidden PM immediately on mousedown for better responsiveness
+    const handleContainerMouseDown = useCallback(() => {
+      // Focus hidden PM if clicking outside pages area
       if (!hiddenPMRef.current?.isFocused()) {
         hiddenPMRef.current?.focus();
         setIsFocused(true);
@@ -699,6 +958,17 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
       [layout, runLayoutPipeline]
     );
 
+    // Update selection overlay when layout changes
+    // This is needed because handleEditorViewReady calls runLayoutPipeline which
+    // sets layout asynchronously, so updateSelectionOverlay would return early
+    // if layout is still null. This effect ensures we update once layout is ready.
+    useEffect(() => {
+      const state = hiddenPMRef.current?.getState();
+      if (layout && state) {
+        updateSelectionOverlay(state);
+      }
+    }, [layout, updateSelectionOverlay]);
+
     // Notify when ready
     useEffect(() => {
       if (onReady && hiddenPMRef.current) {
@@ -750,7 +1020,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         onFocus={handleContainerFocus}
         onBlur={handleContainerBlur}
         onKeyDown={handleKeyDown}
-        onMouseDown={handleMouseDown}
+        onMouseDown={handleContainerMouseDown}
       >
         {/* Hidden ProseMirror for keyboard input */}
         <HiddenProseMirror
@@ -779,6 +1049,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
             ref={pagesContainerRef}
             className="paged-editor__pages"
             style={pagesContainerStyles}
+            onMouseDown={handlePagesMouseDown}
             onClick={handlePagesClick}
             aria-hidden="true" // Visual only, PM provides semantic content
           />

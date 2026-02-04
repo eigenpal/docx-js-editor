@@ -344,6 +344,7 @@ function EditorWrapper({
       showZoomControl={true}
       initialZoom={1.0}
       variablePanelPosition="right"
+      usePaginatedEditor={true}
     />
   );
 
