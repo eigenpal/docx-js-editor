@@ -128,6 +128,18 @@ function renderNestedTable(
     tableEl.dataset.pmEnd = String(block.pmEnd);
   }
 
+  // Build row Y positions for rowSpan height calculation
+  const rowYPositions: number[] = [];
+  let yPos = 0;
+  for (let i = 0; i < measure.rows.length; i++) {
+    rowYPositions.push(yPos);
+    yPos += measure.rows[i]?.height ?? 0;
+  }
+  rowYPositions.push(yPos);
+
+  // Track spanning cells across rows
+  const spanningCells = new Map<string, SpanningCell>();
+
   // Render all rows
   let y = 0;
   for (let rowIndex = 0; rowIndex < block.rows.length; rowIndex++) {
@@ -136,7 +148,17 @@ function renderNestedTable(
 
     if (!row || !rowMeasure) continue;
 
-    const rowEl = renderTableRow(row, rowMeasure, rowIndex, y, measure.columnWidths, context, doc);
+    const rowEl = renderTableRow(
+      row,
+      rowMeasure,
+      rowIndex,
+      y,
+      measure.columnWidths,
+      context,
+      doc,
+      spanningCells,
+      rowYPositions
+    );
     tableEl.appendChild(rowEl);
     y += rowMeasure.height;
   }
@@ -194,16 +216,14 @@ function renderTableCell(
   cellEl.style.boxSizing = 'border-box';
   cellEl.style.padding = '2px 4px';
 
-  // Apply borders - use cell borders if available, otherwise default
+  // Apply borders - use cell borders if available, otherwise no border
   if (cell.borders) {
     applyBorder(cellEl, 'top', cell.borders.top);
     applyBorder(cellEl, 'right', cell.borders.right);
     applyBorder(cellEl, 'bottom', cell.borders.bottom);
     applyBorder(cellEl, 'left', cell.borders.left);
-  } else {
-    // Default border if no borders specified
-    cellEl.style.border = '1px solid #000';
   }
+  // No default border - cells without explicit borders should be borderless
 
   // Background color
   if (cell.background) {
@@ -247,7 +267,21 @@ function renderTableCell(
 }
 
 /**
- * Render a table row
+ * Track cells that span multiple rows
+ */
+type SpanningCell = {
+  cell: TableCell;
+  cellMeasure: TableCellMeasure;
+  columnIndex: number;
+  startRow: number;
+  rowSpan: number;
+  colSpan: number;
+  x: number;
+  totalHeight: number;
+};
+
+/**
+ * Render a table row with rowSpan support
  */
 function renderTableRow(
   row: TableBlock['rows'][number],
@@ -256,7 +290,9 @@ function renderTableRow(
   y: number,
   columnWidths: number[],
   context: RenderContext,
-  doc: Document
+  doc: Document,
+  spanningCells?: Map<string, SpanningCell>,
+  rowYPositions?: number[]
 ): HTMLElement {
   const rowEl = doc.createElement('div');
   rowEl.className = TABLE_CLASS_NAMES.row;
@@ -271,11 +307,30 @@ function renderTableRow(
   // Data attributes
   rowEl.dataset.rowIndex = String(rowIndex);
 
+  // Build set of columns occupied by spanning cells from previous rows
+  const occupiedColumns = new Set<number>();
+  if (spanningCells) {
+    for (const [, spanCell] of spanningCells) {
+      // Check if this spanning cell covers the current row
+      if (spanCell.startRow < rowIndex && spanCell.startRow + spanCell.rowSpan > rowIndex) {
+        for (let c = 0; c < spanCell.colSpan; c++) {
+          occupiedColumns.add(spanCell.columnIndex + c);
+        }
+      }
+    }
+  }
+
   // Render cells
   // Track actual column index separately from cell index
   // because cells with colSpan > 1 span multiple columns
   let x = 0;
   let columnIndex = 0;
+
+  // Skip columns occupied by spanning cells
+  while (occupiedColumns.has(columnIndex)) {
+    x += columnWidths[columnIndex] ?? 0;
+    columnIndex++;
+  }
 
   for (let cellIndex = 0; cellIndex < row.cells.length; cellIndex++) {
     const cell = row.cells[cellIndex];
@@ -283,19 +338,61 @@ function renderTableRow(
 
     if (!cell || !cellMeasure) continue;
 
-    const cellEl = renderTableCell(cell, cellMeasure, x, rowMeasure.height, context, doc);
+    const colSpan = cell.colSpan ?? 1;
+    const rowSpan = cell.rowSpan ?? 1;
+
+    // Calculate cell height - for spanning cells, use total height of spanned rows
+    let cellHeight = rowMeasure.height;
+    if (rowSpan > 1 && rowYPositions) {
+      cellHeight = 0;
+      for (let r = rowIndex; r < rowIndex + rowSpan && r < rowYPositions.length - 1; r++) {
+        cellHeight += (rowYPositions[r + 1] ?? 0) - (rowYPositions[r] ?? 0);
+      }
+      // Fallback if rowYPositions doesn't have enough entries
+      if (cellHeight === 0) {
+        cellHeight = rowMeasure.height * rowSpan;
+      }
+    }
+
+    const cellEl = renderTableCell(cell, cellMeasure, x, cellHeight, context, doc);
     cellEl.dataset.cellIndex = String(cellIndex);
     cellEl.dataset.columnIndex = String(columnIndex);
+
+    // Store rowSpan info for styling
+    if (rowSpan > 1) {
+      cellEl.dataset.rowSpan = String(rowSpan);
+    }
+
     rowEl.appendChild(cellEl);
 
+    // Track this cell as spanning if it spans multiple rows
+    if (rowSpan > 1 && spanningCells) {
+      const key = `${rowIndex}-${columnIndex}`;
+      spanningCells.set(key, {
+        cell,
+        cellMeasure,
+        columnIndex,
+        startRow: rowIndex,
+        rowSpan,
+        colSpan,
+        x,
+        totalHeight: cellHeight,
+      });
+    }
+
     // Move x by the width of columns this cell spans
-    const colSpan = cell.colSpan ?? 1;
     for (let c = 0; c < colSpan && columnIndex + c < columnWidths.length; c++) {
       x += columnWidths[columnIndex + c] ?? 0;
     }
 
     // Advance column index by colSpan
     columnIndex += colSpan;
+
+    // Skip columns occupied by spanning cells
+    while (occupiedColumns.has(columnIndex)) {
+      x += columnWidths[columnIndex] ?? 0;
+      columnIndex++;
+    }
   }
 
   return rowEl;
@@ -341,6 +438,18 @@ export function renderTableFragment(
     tableEl.dataset.pmEnd = String(fragment.pmEnd);
   }
 
+  // Build row Y positions for rowSpan height calculation
+  const rowYPositions: number[] = [];
+  let yPos = 0;
+  for (let i = 0; i < measure.rows.length; i++) {
+    rowYPositions.push(yPos);
+    yPos += measure.rows[i]?.height ?? 0;
+  }
+  rowYPositions.push(yPos); // Add final position for height calculation
+
+  // Track spanning cells across rows
+  const spanningCells = new Map<string, SpanningCell>();
+
   // Render rows from fragment.fromRow to fragment.toRow
   let y = 0;
   for (let rowIndex = fragment.fromRow; rowIndex < fragment.toRow; rowIndex++) {
@@ -349,7 +458,17 @@ export function renderTableFragment(
 
     if (!row || !rowMeasure) continue;
 
-    const rowEl = renderTableRow(row, rowMeasure, rowIndex, y, measure.columnWidths, context, doc);
+    const rowEl = renderTableRow(
+      row,
+      rowMeasure,
+      rowIndex,
+      y,
+      measure.columnWidths,
+      context,
+      doc,
+      spanningCells,
+      rowYPositions
+    );
 
     tableEl.appendChild(rowEl);
     y += rowMeasure.height;

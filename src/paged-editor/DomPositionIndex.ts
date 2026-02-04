@@ -4,8 +4,6 @@
  * Provides fast, indexed lookups for click-to-position mapping.
  * Caches page, fragment, and run positions for O(log n) lookups
  * instead of O(n) DOM traversal.
- *
- * Based on SuperDoc's DomPositionIndex pattern.
  */
 
 /**

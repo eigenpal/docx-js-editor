@@ -19,12 +19,36 @@ import type {
   ImageBlock,
   ImageMeasure,
   ImageFragment,
+  ImageRun,
 } from '../layout-engine/types';
 import { renderFragment } from './renderFragment';
-import { renderParagraphFragment } from './renderParagraph';
+import { renderParagraphFragment, type FloatingImageInfo } from './renderParagraph';
 import { renderTableFragment } from './renderTable';
 import { renderImageFragment } from './renderImage';
 import type { BlockLookup } from './index';
+
+/**
+ * Page-level floating image that has been extracted from paragraphs.
+ * These are positioned absolutely within the page's content area.
+ */
+interface PageFloatingImage {
+  src: string;
+  width: number;
+  height: number;
+  alt?: string;
+  transform?: string;
+  /** Which side: 'left' for left margin, 'right' for right margin */
+  side: 'left' | 'right';
+  /** X position relative to content area (0 = left edge of content) */
+  x: number;
+  /** Y position relative to content area (0 = top of content) */
+  y: number;
+  /** Wrap distances */
+  distTop: number;
+  distBottom: number;
+  distLeft: number;
+  distRight: number;
+}
 
 /**
  * CSS class names for page elements
@@ -161,6 +185,209 @@ function applyFragmentStyles(
 function emuToPixels(emu: number | undefined): number {
   if (emu === undefined) return 0;
   return Math.round((emu * 96) / 914400);
+}
+
+/**
+ * Check if an image run is a floating image (should be positioned at page level)
+ */
+function isFloatingImageRun(run: ImageRun): boolean {
+  const wrapType = run.wrapType;
+  const displayMode = run.displayMode;
+
+  // Floating images have specific wrap types that allow text to flow around them
+  if (wrapType && ['square', 'tight', 'through'].includes(wrapType)) {
+    return true;
+  }
+
+  // Or explicit float display mode
+  if (displayMode === 'float') {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Extract floating images from a paragraph block and determine their page-level positions.
+ * Returns extracted images and info for the paragraph about space reserved.
+ */
+function extractFloatingImagesFromParagraph(
+  block: ParagraphBlock,
+  fragmentY: number, // Y position of the paragraph fragment on the page (relative to content area)
+  contentWidth: number // Width of the content area
+): PageFloatingImage[] {
+  const floatingImages: PageFloatingImage[] = [];
+
+  for (const run of block.runs) {
+    if (run.kind !== 'image') continue;
+    const imgRun = run as ImageRun;
+
+    if (!isFloatingImageRun(imgRun)) continue;
+
+    // Determine position based on image attributes
+    const position = imgRun.position;
+    const distTop = imgRun.distTop ?? 0;
+    const distBottom = imgRun.distBottom ?? 0;
+    const distLeft = imgRun.distLeft ?? 12;
+    const distRight = imgRun.distRight ?? 12;
+
+    // Determine horizontal position (left or right side)
+    let side: 'left' | 'right' = 'left';
+    let x = 0;
+
+    if (position?.horizontal) {
+      const h = position.horizontal;
+      if (h.align === 'right') {
+        side = 'right';
+        // Position from right edge of content
+        x = contentWidth - imgRun.width;
+      } else if (h.align === 'left') {
+        side = 'left';
+        x = 0;
+      } else if (h.align === 'center') {
+        side = 'left'; // Treat centered as left-aligned for simplicity
+        x = (contentWidth - imgRun.width) / 2;
+      } else if (h.posOffset !== undefined) {
+        // Explicit offset from margin
+        x = emuToPixels(h.posOffset);
+        side = x > contentWidth / 2 ? 'right' : 'left';
+      }
+    } else if (imgRun.cssFloat === 'right') {
+      side = 'right';
+      x = contentWidth - imgRun.width;
+    }
+
+    // Determine vertical position
+    let y = 0;
+
+    if (position?.vertical) {
+      const v = position.vertical;
+      if (v.align === 'top') {
+        // Align to top of margin area
+        y = 0;
+      } else if (v.align === 'bottom') {
+        // Would need page height - not supported, use paragraph position
+        y = fragmentY;
+      } else if (v.posOffset !== undefined) {
+        y = emuToPixels(v.posOffset);
+      } else {
+        // Default to paragraph position
+        y = fragmentY;
+      }
+
+      // Check relativeTo for positioning context
+      if (v.relativeTo === 'margin' && (v.align === 'top' || v.posOffset !== undefined)) {
+        // Already in content-relative coordinates (margin = content area)
+      } else if (v.relativeTo === 'paragraph') {
+        // Add fragment Y offset
+        y = fragmentY + y;
+      }
+    } else {
+      // Default: position at paragraph
+      y = fragmentY;
+    }
+
+    floatingImages.push({
+      src: imgRun.src,
+      width: imgRun.width,
+      height: imgRun.height,
+      alt: imgRun.alt,
+      transform: imgRun.transform,
+      side,
+      x,
+      y,
+      distTop,
+      distBottom,
+      distLeft,
+      distRight,
+    });
+  }
+
+  return floatingImages;
+}
+
+/**
+ * Calculate exclusion zones for floating images on a page.
+ * Used to determine which paragraphs need margin adjustments.
+ */
+function calculateExclusionZones(
+  floatingImages: PageFloatingImage[],
+  contentWidth: number
+): FloatingImageInfo[] {
+  const result: FloatingImageInfo[] = [];
+
+  // Track the max extent on each side
+  let leftExtent = 0;
+  let rightExtent = 0;
+  let topBound = Infinity;
+  let bottomBound = 0;
+
+  for (const img of floatingImages) {
+    const imgLeft = img.x - img.distLeft;
+    const imgRight = img.x + img.width + img.distRight;
+    const imgTop = img.y - img.distTop;
+    const imgBottom = img.y + img.height + img.distBottom;
+
+    if (img.side === 'left') {
+      leftExtent = Math.max(leftExtent, imgRight);
+    } else {
+      rightExtent = Math.max(rightExtent, contentWidth - imgLeft);
+    }
+
+    topBound = Math.min(topBound, imgTop);
+    bottomBound = Math.max(bottomBound, imgBottom);
+  }
+
+  // Create a single exclusion zone that covers all floating images
+  if (leftExtent > 0 || rightExtent > 0) {
+    result.push({
+      leftMargin: leftExtent,
+      rightMargin: rightExtent,
+      topY: topBound === Infinity ? 0 : topBound,
+      bottomY: bottomBound,
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Render floating images into a page-level layer
+ */
+function renderFloatingImagesLayer(
+  floatingImages: PageFloatingImage[],
+  doc: Document
+): HTMLElement {
+  const layer = doc.createElement('div');
+  layer.className = 'layout-floating-images-layer';
+  layer.style.position = 'absolute';
+  layer.style.top = '0';
+  layer.style.left = '0';
+  layer.style.right = '0';
+  layer.style.bottom = '0';
+  layer.style.pointerEvents = 'none'; // Allow clicks to pass through
+  layer.style.zIndex = '10';
+
+  for (const floatImg of floatingImages) {
+    const container = doc.createElement('div');
+    container.className = 'layout-page-floating-image';
+    container.style.position = 'absolute';
+    container.style.pointerEvents = 'auto'; // Make images clickable
+    container.style.top = `${floatImg.y}px`;
+    container.style.left = `${floatImg.x}px`;
+
+    const img = doc.createElement('img');
+    img.src = floatImg.src;
+    img.width = floatImg.width;
+    img.height = floatImg.height;
+    if (floatImg.alt) img.alt = floatImg.alt;
+    if (floatImg.transform) img.style.transform = floatImg.transform;
+
+    container.appendChild(img);
+    layer.appendChild(container);
+  }
+
+  return layer;
 }
 
 /**
@@ -353,10 +580,42 @@ export function renderPage(
   // Calculate content width for justify alignment
   const contentWidth = page.size.w - page.margins.left - page.margins.right;
 
-  // Render each fragment
+  // PHASE 1: Extract all floating images from paragraphs on this page
+  const allFloatingImages: PageFloatingImage[] = [];
+
+  for (const fragment of page.fragments) {
+    if (fragment.kind === 'paragraph' && options.blockLookup) {
+      const blockData = options.blockLookup.get(String(fragment.blockId));
+      if (blockData?.block.kind === 'paragraph') {
+        const paragraphBlock = blockData.block as ParagraphBlock;
+        // Fragment Y is relative to page top, we need it relative to content area
+        const contentRelativeY = fragment.y - page.margins.top;
+        const extracted = extractFloatingImagesFromParagraph(
+          paragraphBlock,
+          contentRelativeY,
+          contentWidth
+        );
+        allFloatingImages.push(...extracted);
+      }
+    }
+  }
+
+  // PHASE 2: Calculate exclusion zones from all floating images
+  const exclusionZones = calculateExclusionZones(allFloatingImages, contentWidth);
+
+  // PHASE 3: Render floating images in a page-level layer
+  if (allFloatingImages.length > 0) {
+    const floatingLayer = renderFloatingImagesLayer(allFloatingImages, doc);
+    contentEl.appendChild(floatingLayer);
+  }
+
+  // PHASE 4: Render each fragment with floating image awareness
   for (const fragment of page.fragments) {
     let fragmentEl: HTMLElement;
     const fragmentContext = { ...context, section: 'body' as const, contentWidth };
+
+    // Calculate fragment's Y position relative to content area (for per-line margin calculation)
+    const fragmentContentY = fragment.y - page.margins.top;
 
     // If we have block lookup, try to render full content based on fragment type
     if (options.blockLookup && fragment.blockId) {
@@ -372,7 +631,11 @@ export function renderPage(
           blockData.block as ParagraphBlock,
           blockData.measure as ParagraphMeasure,
           fragmentContext,
-          { document: doc }
+          {
+            document: doc,
+            floatingImageInfo: exclusionZones.length > 0 ? exclusionZones : undefined,
+            fragmentContentY: fragmentContentY,
+          }
         );
       } else if (
         fragment.kind === 'table' &&
@@ -415,8 +678,14 @@ export function renderPage(
 
   // Render header if provided
   if (options.headerContent && options.headerContent.blocks.length > 0) {
-    const headerDistance = options.headerDistance ?? page.margins.header ?? page.margins.top;
+    // Default header distance is 0.5 inch (48px) from page top if not specified
+    const defaultHeaderDistance = 48;
+    const headerDistance = options.headerDistance ?? page.margins.header ?? defaultHeaderDistance;
     const headerContentWidth = page.size.w - page.margins.left - page.margins.right;
+    // Calculate max header height (from header distance to top margin)
+    // Ensure at least some height even if margins are weird
+    const maxHeaderHeight = Math.max(page.margins.top - headerDistance, 48);
+
     const headerEl = doc.createElement('div');
     headerEl.className = PAGE_CLASS_NAMES.header;
     headerEl.style.position = 'absolute';
@@ -424,6 +693,9 @@ export function renderPage(
     headerEl.style.left = `${page.margins.left}px`;
     headerEl.style.right = `${page.margins.right}px`;
     headerEl.style.width = `${headerContentWidth}px`;
+    // Clip header content to prevent overflow into body area
+    headerEl.style.maxHeight = `${maxHeaderHeight}px`;
+    headerEl.style.overflow = 'hidden';
 
     const headerContentEl = renderHeaderFooterContent(
       options.headerContent,
@@ -436,8 +708,13 @@ export function renderPage(
 
   // Render footer if provided
   if (options.footerContent && options.footerContent.blocks.length > 0) {
-    const footerDistance = options.footerDistance ?? page.margins.footer ?? page.margins.bottom;
+    // Default footer distance is 0.5 inch (48px) from page bottom if not specified
+    const defaultFooterDistance = 48;
+    const footerDistance = options.footerDistance ?? page.margins.footer ?? defaultFooterDistance;
     const footerContentWidth = page.size.w - page.margins.left - page.margins.right;
+    // Calculate max footer height (from footer distance to bottom margin)
+    const maxFooterHeight = Math.max(page.margins.bottom - footerDistance, 48);
+
     const footerEl = doc.createElement('div');
     footerEl.className = PAGE_CLASS_NAMES.footer;
     footerEl.style.position = 'absolute';
@@ -445,6 +722,9 @@ export function renderPage(
     footerEl.style.left = `${page.margins.left}px`;
     footerEl.style.right = `${page.margins.right}px`;
     footerEl.style.width = `${footerContentWidth}px`;
+    // Clip footer content to prevent overflow into body area
+    footerEl.style.maxHeight = `${maxFooterHeight}px`;
+    footerEl.style.overflow = 'hidden';
 
     const footerContentEl = renderHeaderFooterContent(
       options.footerContent,

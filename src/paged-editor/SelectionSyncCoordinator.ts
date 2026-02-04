@@ -3,8 +3,6 @@
  *
  * Ensures selection rendering only happens when layout is current.
  * Uses epoch-based synchronization to prevent stale cursor positions.
- *
- * Based on SuperDoc's SelectionSyncCoordinator pattern.
  */
 
 type RenderCallback = () => void;

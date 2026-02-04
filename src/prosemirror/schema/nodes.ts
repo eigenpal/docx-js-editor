@@ -85,6 +85,22 @@ export interface ParagraphAttrs {
 }
 
 /**
+ * Image position for floating images (horizontal and vertical positioning)
+ */
+export interface ImagePositionAttrs {
+  horizontal?: {
+    relativeTo?: string;
+    posOffset?: number; // In EMU
+    align?: string;
+  };
+  vertical?: {
+    relativeTo?: string;
+    posOffset?: number; // In EMU
+    align?: string;
+  };
+}
+
+/**
  * Image node attributes
  */
 export interface ImageAttrs {
@@ -112,16 +128,20 @@ export interface ImageAttrs {
   distLeft?: number;
   /** Distance from text right (pixels) */
   distRight?: number;
+  /** Position for floating images (horizontal and vertical alignment) */
+  position?: ImagePositionAttrs;
 }
 
 /**
  * Helper to convert paragraph attrs to DOM style
  */
 function paragraphAttrsToDOMStyle(attrs: ParagraphAttrs): string {
-  // For list items, calculate the correct indentation based on level
-  // Each level indents 0.5 inch (720 twips) more
+  // For list items, use explicit indentation from numbering definition if available,
+  // otherwise fall back to calculated indentation based on level
   let indentLeft = attrs.indentLeft;
-  if (attrs.numPr?.numId) {
+  if (attrs.numPr?.numId && indentLeft == null) {
+    // Fallback: calculate indentation based on level
+    // Each level indents 0.5 inch (720 twips) more
     const level = attrs.numPr.ilvl ?? 0;
     // Base indentation: 0.5 inch (720 twips) per level
     // Level 0 = 720 twips (48px), Level 1 = 1440 twips (96px), etc.
@@ -348,6 +368,7 @@ export const image: NodeSpec = {
     distBottom: { default: null },
     distLeft: { default: null },
     distRight: { default: null },
+    position: { default: null },
   },
   parseDOM: [
     {

@@ -185,7 +185,7 @@ function parseHeaderFooterContent(
 
     // Parse paragraphs
     if (name === 'w:p' || name.endsWith(':p')) {
-      const paragraph = parseParagraph(el, styles, theme, numbering, rels);
+      const paragraph = parseParagraph(el, styles, theme, numbering, rels, media);
       content.push(paragraph);
     }
     // Parse tables

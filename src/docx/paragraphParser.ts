@@ -770,14 +770,30 @@ function parseParagraphContents(
       case 'permStart':
       case 'permEnd':
       case 'customXml':
-      case 'sdt':
+        // Skip these elements
+        break;
+
+      case 'sdt': {
+        // Structured document tag - extract content from sdtContent
+        const sdtContent = (child.elements ?? []).find(
+          (el: XmlElement) =>
+            el.type === 'element' &&
+            (el.name === 'w:sdtContent' || el.name?.endsWith(':sdtContent'))
+        );
+        if (sdtContent) {
+          // Recursively parse the content inside SDT
+          const sdtParsed = parseParagraphContents(sdtContent, styles, theme, null, rels, media);
+          contents.push(...sdtParsed);
+        }
+        break;
+      }
+
       case 'smartTag':
       case 'del':
       case 'ins':
       case 'moveTo':
       case 'moveFrom':
-        // Track changes / structured document tags - skip for now
-        // These would need special handling for revision mode
+        // Track changes - skip for now (would need revision mode)
         break;
 
       case 'commentRangeStart':
@@ -870,6 +886,26 @@ export function parseParagraph(
           isBullet: level.numFmt === 'bullet',
           numFmt: level.numFmt,
         };
+
+        // Apply level's paragraph properties (indentation)
+        // For list items, the numbering definition's indentation should control
+        // the layout, so we override paragraph-level indentation with level's
+        if (level.pPr) {
+          if (!paragraph.formatting) {
+            paragraph.formatting = {};
+          }
+          // Apply level indent - this overrides any paragraph-level indent
+          // since list indentation should come from the numbering definition
+          if (level.pPr.indentLeft !== undefined) {
+            paragraph.formatting.indentLeft = level.pPr.indentLeft;
+          }
+          if (level.pPr.indentFirstLine !== undefined) {
+            paragraph.formatting.indentFirstLine = level.pPr.indentFirstLine;
+          }
+          if (level.pPr.hangingIndent !== undefined) {
+            paragraph.formatting.hangingIndent = level.pPr.hangingIndent;
+          }
+        }
       }
     }
   }

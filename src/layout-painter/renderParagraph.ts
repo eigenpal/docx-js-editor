@@ -40,11 +40,36 @@ export const PARAGRAPH_CLASS_NAMES = {
 };
 
 /**
+ * Info about page-level floating images that affect text layout.
+ * Passed from renderPage to renderParagraph to apply proper margins.
+ */
+export interface FloatingImageInfo {
+  /** Left margin to reserve for floating images (pixels) */
+  leftMargin: number;
+  /** Right margin to reserve for floating images (pixels) */
+  rightMargin: number;
+  /** Top Y position where this zone starts (content-relative) */
+  topY: number;
+  /** Bottom Y position where this zone ends (content-relative) */
+  bottomY: number;
+}
+
+// NOTE: Per-line floating margin calculation has been disabled.
+// Text wrapping around floating images requires passing exclusion zones
+// to the MEASUREMENT phase so lines can be broken at reduced widths.
+// Currently, floating images render at page level and text flows under them.
+// TODO: Implement measurement-time floating image support for proper text wrapping.
+
+/**
  * Options for rendering a paragraph
  */
 export interface RenderParagraphOptions {
   /** Document to create elements in */
   document?: Document;
+  /** Page-level floating image info for text wrapping (exclusion zones) */
+  floatingImageInfo?: FloatingImageInfo[];
+  /** Fragment's Y position relative to content area (for per-line margin calculation) */
+  fragmentContentY?: number;
 }
 
 /**
@@ -261,9 +286,9 @@ function getLeaderChar(leader: string): string | null {
 }
 
 /**
- * Render an inline image run
+ * Render an inline image run (flows with text)
  */
-function renderImageRun(run: ImageRun, doc: Document): HTMLElement {
+function renderInlineImageRun(run: ImageRun, doc: Document): HTMLElement {
   const img = doc.createElement('img');
   img.className = `${PARAGRAPH_CLASS_NAMES.run} ${PARAGRAPH_CLASS_NAMES.image}`;
 
@@ -277,9 +302,62 @@ function renderImageRun(run: ImageRun, doc: Document): HTMLElement {
     img.style.transform = run.transform;
   }
 
+  // Inline images should flow with text
+  img.style.display = 'inline';
+  img.style.verticalAlign = 'middle';
+
   applyPmPositions(img, run.pmStart, run.pmEnd);
 
   return img;
+}
+
+/**
+ * Render a block image (on its own line, like topAndBottom)
+ */
+function renderBlockImage(run: ImageRun, doc: Document): HTMLElement {
+  const container = doc.createElement('div');
+  container.className = 'layout-block-image';
+  container.style.display = 'block';
+  container.style.textAlign = 'center';
+  container.style.marginTop = `${run.distTop ?? 6}px`;
+  container.style.marginBottom = `${run.distBottom ?? 6}px`;
+
+  const img = doc.createElement('img');
+  img.src = run.src;
+  img.width = run.width;
+  img.height = run.height;
+  if (run.alt) {
+    img.alt = run.alt;
+  }
+  if (run.transform) {
+    img.style.transform = run.transform;
+  }
+
+  applyPmPositions(container, run.pmStart, run.pmEnd);
+  container.appendChild(img);
+
+  return container;
+}
+
+/**
+ * Render an image run based on its display mode
+ * Note: Floating images (square/tight/through) are handled separately at paragraph level,
+ * not through this function. If they reach here, render as block.
+ */
+function renderImageRun(run: ImageRun, doc: Document): HTMLElement {
+  const displayMode = run.displayMode;
+  const wrapType = run.wrapType;
+
+  // Floating images should be handled at paragraph level, not here
+  // If they reach here (e.g., during line rendering), render as block
+  if (displayMode === 'float' || (wrapType && ['square', 'tight', 'through'].includes(wrapType))) {
+    return renderBlockImage(run, doc);
+  } else if (displayMode === 'block' || wrapType === 'topAndBottom') {
+    return renderBlockImage(run, doc);
+  } else {
+    // Default: inline
+    return renderInlineImageRun(run, doc);
+  }
 }
 
 /**
@@ -419,6 +497,8 @@ interface RenderLineOptions {
   leftIndentPx?: number;
   /** First line indent in pixels (positive) or hanging indent (negative) */
   firstLineIndentPx?: number;
+  /** Line-specific floating image margins (calculated per-line based on Y overlap) */
+  floatingMargins?: { leftMargin: number; rightMargin: number };
 }
 
 /**
@@ -540,6 +620,18 @@ export function renderLine(
   lineEl.style.whiteSpace = 'nowrap';
   lineEl.style.overflow = 'visible'; // Allow text to render fully (don't clip descenders)
 
+  // NOTE: Per-line floating image margins are NOT applied here because:
+  // 1. Text was already measured and line-broken at full paragraph width
+  // 2. Applying margins at render time would push content without re-wrapping
+  // 3. This causes text overflow and paragraph overlapping
+  //
+  // Proper text wrapping around floating images requires:
+  // - Passing floating image info to measureParagraph
+  // - Re-calculating line widths based on vertical overlap
+  // - This is a significant architectural change (TODO)
+  //
+  // For now, floating images render at page level and text flows under them.
+
   // Build tab context if we have tab runs - also create for text measurement
   const hasTabRuns = runsForLine.some(isTabRun);
   let tabContext: TabContext | undefined;
@@ -607,9 +699,20 @@ export function renderLine(
       const fontFamily = run.fontFamily || 'Calibri';
       currentX += measureText(run.text, fontSize, fontFamily);
     } else if (isImageRun(run)) {
+      // Skip floating images - they're rendered separately at paragraph level
+      const isFloating =
+        run.displayMode === 'float' ||
+        (run.wrapType && ['square', 'tight', 'through'].includes(run.wrapType));
+      if (isFloating) {
+        continue;
+      }
+      // Inline or block image - render in the text flow
       const runEl = renderImageRun(run, doc);
       lineEl.appendChild(runEl);
-      currentX += run.width;
+      // Block images don't contribute to horizontal position
+      if (run.displayMode !== 'block' && run.wrapType !== 'topAndBottom') {
+        currentX += run.width;
+      }
     } else if (isLineBreakRun(run)) {
       const runEl = renderLineBreakRun(run, doc);
       lineEl.appendChild(runEl);
@@ -655,6 +758,7 @@ export function renderParagraphFragment(
 
   const fragmentEl = doc.createElement('div');
   fragmentEl.className = PARAGRAPH_CLASS_NAMES.fragment;
+  fragmentEl.style.position = 'relative'; // For absolute positioning of floating images
 
   // Store block and fragment metadata
   fragmentEl.dataset.blockId = String(fragment.blockId);
@@ -669,6 +773,26 @@ export function renderParagraphFragment(
   if (fragment.continuesOnNext) {
     fragmentEl.dataset.continuesOnNext = 'true';
   }
+
+  // NOTE: Floating image exclusion zones (options.floatingImageInfo) and
+  // fragment Y position (options.fragmentContentY) are accepted but not used.
+  // Text wrapping around floating images is not yet implemented at measurement time.
+  // Floating images skip during inline rendering - they're rendered at page level.
+  for (const run of block.runs) {
+    if (isImageRun(run)) {
+      const isFloating =
+        run.displayMode === 'float' ||
+        (run.wrapType && ['square', 'tight', 'through'].includes(run.wrapType));
+      if (isFloating) {
+        // Skip floating images - they're rendered at page level
+        continue;
+      }
+    }
+  }
+
+  // NOTE: Floating images are no longer rendered here - they're rendered
+  // at page level in renderPage.ts for proper cross-paragraph positioning
+  // Per-line margins are calculated below during line rendering
 
   // Get the lines for this fragment
   const lines = measure.lines.slice(fragment.fromLine, fragment.toLine);
@@ -765,12 +889,14 @@ export function renderParagraphFragment(
 
     // Add small padding inside borders for text not to touch the border
     // This is standard Word behavior
+    // Bottom padding needs to be larger to clear text descenders
     const hasBorder = borders.top || borders.bottom || borders.left || borders.right;
     if (hasBorder) {
       fragmentEl.style.paddingLeft = borders.left ? '4px' : '0';
       fragmentEl.style.paddingRight = borders.right ? '4px' : '0';
       fragmentEl.style.paddingTop = borders.top ? '2px' : '0';
-      fragmentEl.style.paddingBottom = borders.bottom ? '2px' : '0';
+      // Use larger bottom padding to ensure border is below text descenders
+      fragmentEl.style.paddingBottom = borders.bottom ? '6px' : '0';
     }
   }
 
@@ -799,7 +925,9 @@ export function renderParagraphFragment(
     firstLineIndentPx = indent.firstLine; // Positive because first line is indented right
   }
 
-  // Render each line
+  // Render each line with per-line floating margin calculation (SuperDoc approach)
+  let cumulativeLineY = 0; // Track Y position within the fragment
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     // Calculate the actual line index in the full paragraph
@@ -808,8 +936,12 @@ export function renderParagraphFragment(
     // First line of the paragraph (not just this fragment)
     const isFirstLine = lineIndex === 0 && !fragment.continuesFromPrev;
 
+    // Get per-line floating margins from measurement phase
+    const lineLeftOffset = line.leftOffset ?? 0;
+    const lineRightOffset = line.rightOffset ?? 0;
+
     const lineEl = renderLine(block, line, alignment, doc, {
-      availableWidth,
+      availableWidth: availableWidth - lineLeftOffset - lineRightOffset,
       isLastLine,
       isFirstLine,
       paragraphEndsWithLineBreak,
@@ -817,7 +949,19 @@ export function renderParagraphFragment(
       leftIndentPx: indentLeft,
       firstLineIndentPx: isFirstLine ? firstLineIndentPx : 0,
       context,
+      floatingMargins: { leftMargin: lineLeftOffset, rightMargin: lineRightOffset },
     });
+
+    // Apply left offset from floating images (lines start after the floating image)
+    if (lineLeftOffset > 0) {
+      lineEl.style.marginLeft = `${lineLeftOffset}px`;
+    }
+    if (lineRightOffset > 0) {
+      lineEl.style.marginRight = `${lineRightOffset}px`;
+    }
+
+    // Update cumulative Y for next line
+    cumulativeLineY += line.lineHeight;
 
     // Apply line-level indentation (SuperDoc approach)
     // Indentation is applied per-line for correct text wrapping
@@ -872,6 +1016,7 @@ export function renderParagraphFragment(
       lineEl.insertBefore(marker, lineEl.firstChild);
     }
 
+    // Append line directly to fragment (per-line margins are applied in renderLine)
     fragmentEl.appendChild(lineEl);
   }
 
@@ -881,10 +1026,9 @@ export function renderParagraphFragment(
 /**
  * Render a list marker element
  *
- * The marker is rendered as an inline-block that fills the hanging indent area.
- * - Marker box width = hanging indent
- * - Text aligns left within the box
- * - Small padding separates marker from following text
+ * The marker is rendered as an inline-block with a consistent space after it.
+ * For short markers, the box fills the hanging indent area.
+ * For long markers (like "1.1.1"), we ensure minimum spacing after the text.
  */
 function renderListMarker(
   marker: string,
@@ -894,17 +1038,18 @@ function renderListMarker(
   const span = doc.createElement('span');
   span.className = 'layout-list-marker';
   span.style.display = 'inline-block';
-  span.textContent = marker;
+
+  // Add the marker text with a trailing space for consistent separation
+  // The tab character after the marker in Word provides this spacing
+  span.textContent = marker + '\u00A0'; // Non-breaking space ensures gap
 
   // The marker box should fill the hanging indent space
-  // with a small gap before the text
   const hanging = indent?.hanging ?? 24; // Default 24px if not specified
-  const gap = 8; // Small gap between marker and text
 
-  span.style.width = `${hanging - gap}px`;
-  span.style.paddingRight = `${gap}px`;
-  span.style.textAlign = 'left'; // Left-align marker text within box
-  span.style.boxSizing = 'content-box';
+  // Use min-width so short markers fill the space, but long markers can extend
+  span.style.minWidth = `${hanging}px`;
+  span.style.textAlign = 'right'; // Right-align so marker stays close to text
+  span.style.boxSizing = 'border-box';
 
   return span;
 }

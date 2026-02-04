@@ -3,8 +3,6 @@
  *
  * Centralized input handling for all pointer events.
  * Provides single source of truth for click, drag, and focus management.
- *
- * Based on SuperDoc's EditorInputManager pattern.
  */
 
 import type { DomPositionIndex } from './DomPositionIndex';

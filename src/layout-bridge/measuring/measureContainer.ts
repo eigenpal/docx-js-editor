@@ -16,8 +16,8 @@ const PX_PER_INCH = 96; // Standard CSS/DOM DPI
 const TWIPS_PER_PX = TWIPS_PER_INCH / PX_PER_INCH; // 15 twips per pixel
 
 // Default typography values
-const DEFAULT_FONT_SIZE = 12; // 12pt
-const DEFAULT_FONT_FAMILY = 'Arial';
+const DEFAULT_FONT_SIZE = 11; // 11pt (Word 2007+ default)
+const DEFAULT_FONT_FAMILY = 'Calibri';
 const DEFAULT_LINE_HEIGHT_MULTIPLIER = 1.15; // Word single spacing
 const DEFAULT_ASCENT_RATIO = 0.8;
 const DEFAULT_DESCENT_RATIO = 0.2;
@@ -95,14 +95,23 @@ export function resetCanvasContext(): void {
 }
 
 /**
+ * Default font fallback chain - must match what renderPage.ts uses
+ * This ensures Canvas measurement matches actual DOM rendering.
+ */
+const FONT_FALLBACK = '"Segoe UI", Arial, sans-serif';
+
+/**
  * Build a CSS font string from styling properties
  *
  * Font sizes are in points and need to be converted to pixels for canvas.
  * 1pt = 96/72 px ≈ 1.333px at standard web DPI.
  *
+ * IMPORTANT: Uses the same font fallback chain as renderPage.ts to ensure
+ * Canvas measurements match actual DOM rendering widths.
+ *
  * @example
  * buildFontString({ fontFamily: "Arial", fontSize: 12, bold: true })
- * // Returns: "bold 16px Arial" (12pt = 16px)
+ * // Returns: "bold 16px Arial, "Segoe UI", Arial, sans-serif" (12pt = 16px)
  */
 export function buildFontString(style: FontStyle): string {
   const parts: string[] = [];
@@ -115,8 +124,11 @@ export function buildFontString(style: FontStyle): string {
   const fontSizePx = ptToPx(fontSizePt);
   parts.push(`${fontSizePx}px`);
 
+  // Use the same font fallback chain as the renderer to ensure
+  // measurements match actual rendering
   const fontFamily = style.fontFamily ?? DEFAULT_FONT_FAMILY;
-  parts.push(fontFamily);
+  const fontName = fontFamily.includes(' ') ? `"${fontFamily}"` : fontFamily;
+  parts.push(`${fontName}, ${FONT_FALLBACK}`);
 
   return parts.join(' ');
 }
@@ -131,7 +143,13 @@ export function getFontMetrics(style: FontStyle): FontMetrics {
   const fontSize = style.fontSize ?? DEFAULT_FONT_SIZE;
   const fontFamily = style.fontFamily ?? DEFAULT_FONT_FAMILY;
 
-  // Try to get precise metrics from canvas
+  // Convert font size from points to pixels
+  const fontSizePx = ptToPx(fontSize);
+
+  // Try to get precise metrics from canvas for ascent/descent (baseline positioning)
+  let ascent = fontSizePx * DEFAULT_ASCENT_RATIO;
+  let descent = fontSizePx * DEFAULT_DESCENT_RATIO;
+
   try {
     const ctx = getCanvasContext();
     ctx.font = buildFontString(style);
@@ -144,28 +162,16 @@ export function getFontMetrics(style: FontStyle): FontMetrics {
       typeof metrics.actualBoundingBoxAscent === 'number' &&
       typeof metrics.actualBoundingBoxDescent === 'number'
     ) {
-      const ascent = metrics.actualBoundingBoxAscent;
-      const descent = metrics.actualBoundingBoxDescent;
-      const lineHeight = (ascent + descent) * DEFAULT_LINE_HEIGHT_MULTIPLIER;
-
-      return {
-        fontSize,
-        ascent,
-        descent,
-        lineHeight,
-        fontFamily,
-      };
+      ascent = metrics.actualBoundingBoxAscent;
+      descent = metrics.actualBoundingBoxDescent;
     }
   } catch {
-    // Fall through to approximation
+    // Use fallback ratio-based values
   }
 
-  // Fallback: ratio-based approximation
-  // Convert font size from points to pixels for metrics calculation
-  // (canvas metrics are in pixels, so fallback should match)
-  const fontSizePx = ptToPx(fontSize);
-  const ascent = fontSizePx * DEFAULT_ASCENT_RATIO;
-  const descent = fontSizePx * DEFAULT_DESCENT_RATIO;
+  // Line height should be based on fontSizePx (em-box) to match CSS rendering,
+  // not on actualBoundingBox (ink bounding box) which is often smaller.
+  // This ensures our layout matches what the browser actually renders.
   const lineHeight = fontSizePx * DEFAULT_LINE_HEIGHT_MULTIPLIER;
 
   return {

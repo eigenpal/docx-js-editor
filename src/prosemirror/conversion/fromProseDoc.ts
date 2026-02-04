@@ -591,10 +591,12 @@ function convertPMTableCell(node: PMNode): TableCell {
  * Convert ProseMirror table cell attrs to TableCellFormatting
  */
 function tableCellAttrsToFormatting(attrs: TableCellAttrs): TableCellFormatting | undefined {
-  // Check for any extended attrs (borders, borderColor are not in TableCellAttrs type but are set dynamically)
+  // Check for any extended attrs (borders, borderColors, borderWidths are not in TableCellAttrs type but are set dynamically)
   const extendedAttrs = attrs as TableCellAttrs & {
     borders?: { top?: boolean; bottom?: boolean; left?: boolean; right?: boolean };
     borderColor?: string;
+    borderColors?: { top?: string; bottom?: string; left?: string; right?: string };
+    borderWidths?: { top?: number; bottom?: number; left?: number; right?: number };
   };
 
   const hasFormatting =
@@ -604,34 +606,64 @@ function tableCellAttrsToFormatting(attrs: TableCellAttrs): TableCellFormatting 
     attrs.verticalAlign ||
     attrs.backgroundColor ||
     extendedAttrs.borders ||
-    extendedAttrs.borderColor;
+    extendedAttrs.borderColor ||
+    extendedAttrs.borderColors;
 
   if (!hasFormatting) {
     return undefined;
   }
 
   // Convert PM borders to OOXML TableBorders format
+  // Only create borders if they were explicitly set (from original DOCX or user-created table)
   let borders: TableCellFormatting['borders'] = undefined;
   if (extendedAttrs.borders) {
     const borderStyle = 'single';
-    const borderSize = 4; // 0.5pt in eighths of a point
-    // Default to black borders like Word
-    const borderColor = extendedAttrs.borderColor
-      ? { rgb: extendedAttrs.borderColor.replace(/^#/, '') }
-      : { rgb: '000000' };
+    // Default size (4 = 0.5pt in eighths of a point), but use stored widths if available
+    const defaultBorderSize = 4;
+
+    // Helper to get color for a border side
+    // Priority: per-side color > single color > undefined (no default black)
+    const getColorForSide = (side: 'top' | 'bottom' | 'left' | 'right') => {
+      const sideColor = extendedAttrs.borderColors?.[side];
+      if (sideColor) return { rgb: sideColor.replace(/^#/, '') };
+      if (extendedAttrs.borderColor) return { rgb: extendedAttrs.borderColor.replace(/^#/, '') };
+      // Don't default to black - only set color if explicitly specified
+      return undefined;
+    };
+
+    // Helper to get width for a border side
+    const getWidthForSide = (side: 'top' | 'bottom' | 'left' | 'right') => {
+      return extendedAttrs.borderWidths?.[side] ?? defaultBorderSize;
+    };
 
     borders = {};
     if (extendedAttrs.borders.top) {
-      borders.top = { style: borderStyle, size: borderSize, color: borderColor };
+      borders.top = {
+        style: borderStyle,
+        size: getWidthForSide('top'),
+        color: getColorForSide('top'),
+      };
     }
     if (extendedAttrs.borders.bottom) {
-      borders.bottom = { style: borderStyle, size: borderSize, color: borderColor };
+      borders.bottom = {
+        style: borderStyle,
+        size: getWidthForSide('bottom'),
+        color: getColorForSide('bottom'),
+      };
     }
     if (extendedAttrs.borders.left) {
-      borders.left = { style: borderStyle, size: borderSize, color: borderColor };
+      borders.left = {
+        style: borderStyle,
+        size: getWidthForSide('left'),
+        color: getColorForSide('left'),
+      };
     }
     if (extendedAttrs.borders.right) {
-      borders.right = { style: borderStyle, size: borderSize, color: borderColor };
+      borders.right = {
+        style: borderStyle,
+        size: getWidthForSide('right'),
+        color: getColorForSide('right'),
+      };
     }
   }
 

@@ -47,6 +47,7 @@ import {
   parseNumericAttribute,
   type XmlElement,
 } from './xmlParser';
+import { resolveThemeFontRef } from './themeParser';
 
 /**
  * Style map keyed by styleId
@@ -58,7 +59,7 @@ export type StyleMap = Map<string, Style>;
  */
 function parseRunProperties(
   rPr: XmlElement | null,
-  _theme: Theme | null
+  theme: Theme | null
 ): TextFormatting | undefined {
   if (!rPr) return undefined;
 
@@ -173,7 +174,7 @@ function parseRunProperties(
       cs: getAttribute(rFonts, 'w', 'cs') ?? undefined,
     };
 
-    // Theme font references
+    // Theme font references - resolve to actual font names
     const asciiTheme = getAttribute(rFonts, 'w', 'asciiTheme');
     if (asciiTheme) {
       formatting.fontFamily.asciiTheme = asciiTheme as TextFormatting['fontFamily'] extends {
@@ -181,18 +182,31 @@ function parseRunProperties(
       }
         ? T
         : never;
+      // Also resolve the actual font name for convenience
+      if (theme && !formatting.fontFamily.ascii) {
+        formatting.fontFamily.ascii = resolveThemeFontRef(theme, asciiTheme);
+      }
     }
     const hAnsiTheme = getAttribute(rFonts, 'w', 'hAnsiTheme');
     if (hAnsiTheme) {
       formatting.fontFamily.hAnsiTheme = hAnsiTheme;
+      if (theme && !formatting.fontFamily.hAnsi) {
+        formatting.fontFamily.hAnsi = resolveThemeFontRef(theme, hAnsiTheme);
+      }
     }
     const eastAsiaTheme = getAttribute(rFonts, 'w', 'eastAsiaTheme');
     if (eastAsiaTheme) {
       formatting.fontFamily.eastAsiaTheme = eastAsiaTheme;
+      if (theme && !formatting.fontFamily.eastAsia) {
+        formatting.fontFamily.eastAsia = resolveThemeFontRef(theme, eastAsiaTheme);
+      }
     }
     const csTheme = getAttribute(rFonts, 'w', 'cstheme');
     if (csTheme) {
       formatting.fontFamily.csTheme = csTheme;
+      if (theme && !formatting.fontFamily.cs) {
+        formatting.fontFamily.cs = resolveThemeFontRef(theme, csTheme);
+      }
     }
   }
 

@@ -132,6 +132,15 @@ function extractRunFormatting(marks: readonly Mark[]): RunFormatting {
       case 'subscript':
         formatting.subscript = true;
         break;
+
+      case 'hyperlink': {
+        const attrs = mark.attrs as { href: string; tooltip?: string };
+        formatting.hyperlink = {
+          href: attrs.href,
+          tooltip: attrs.tooltip,
+        };
+        break;
+      }
     }
   }
 
@@ -178,7 +187,7 @@ function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksO
       };
       runs.push(run);
     } else if (child.type.name === 'image') {
-      // Inline image
+      // Image within paragraph
       const attrs = child.attrs;
       const run: ImageRun = {
         kind: 'image',
@@ -186,6 +195,17 @@ function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksO
         width: (attrs.width as number) || 100,
         height: (attrs.height as number) || 100,
         alt: attrs.alt as string | undefined,
+        transform: attrs.transform as string | undefined,
+        // Preserve wrap attributes for proper rendering
+        wrapType: attrs.wrapType as string | undefined,
+        displayMode: attrs.displayMode as 'inline' | 'block' | 'float' | undefined,
+        cssFloat: attrs.cssFloat as 'left' | 'right' | 'none' | undefined,
+        distTop: attrs.distTop as number | undefined,
+        distBottom: attrs.distBottom as number | undefined,
+        distLeft: attrs.distLeft as number | undefined,
+        distRight: attrs.distRight as number | undefined,
+        // Preserve position for page-level floating image positioning
+        position: attrs.position as ImageRun['position'] | undefined,
         pmStart: childPos,
         pmEnd: childPos + child.nodeSize,
       };
@@ -243,22 +263,30 @@ function convertParagraphAttrs(pmAttrs: PMParagraphAttrs): ParagraphAttrs {
     }
   }
 
-  // Indentation
-  if (
-    pmAttrs.indentLeft != null ||
-    pmAttrs.indentRight != null ||
-    pmAttrs.indentFirstLine != null
-  ) {
+  // Indentation - handle list item fallback calculation
+  // For list items without explicit indentation, calculate based on level
+  let indentLeft = pmAttrs.indentLeft;
+  if (pmAttrs.numPr?.numId && indentLeft == null) {
+    // Fallback: calculate indentation based on level
+    // Each level indents 0.5 inch (720 twips) more
+    const level = pmAttrs.numPr.ilvl ?? 0;
+    // Base indentation: 0.5 inch (720 twips) per level
+    // Level 0 = 720 twips, Level 1 = 1440 twips, etc.
+    indentLeft = (level + 1) * 720;
+  }
+
+  if (indentLeft != null || pmAttrs.indentRight != null || pmAttrs.indentFirstLine != null) {
     attrs.indent = {};
-    if (pmAttrs.indentLeft != null) {
-      attrs.indent.left = twipsToPixels(pmAttrs.indentLeft);
+    if (indentLeft != null) {
+      attrs.indent.left = twipsToPixels(indentLeft);
     }
     if (pmAttrs.indentRight != null) {
       attrs.indent.right = twipsToPixels(pmAttrs.indentRight);
     }
     if (pmAttrs.indentFirstLine != null) {
       if (pmAttrs.hangingIndent) {
-        attrs.indent.hanging = twipsToPixels(pmAttrs.indentFirstLine);
+        // Hanging indent: indentFirstLine is stored as negative, convert to positive for rendering
+        attrs.indent.hanging = Math.abs(twipsToPixels(pmAttrs.indentFirstLine));
       } else {
         attrs.indent.firstLine = twipsToPixels(pmAttrs.indentFirstLine);
       }
@@ -517,11 +545,15 @@ function convertTable(node: PMNode, startPos: number, options: ToFlowBlocksOptio
   const columnWidthsTwips = node.attrs.columnWidths as number[] | undefined;
   const columnWidths = columnWidthsTwips?.map(twipsToPixels);
 
+  // Extract justification
+  const justification = node.attrs.justification as 'left' | 'center' | 'right' | undefined;
+
   return {
     kind: 'table',
     id: nextBlockId(),
     rows,
     columnWidths,
+    justification,
     pmStart: startPos,
     pmEnd: startPos + node.nodeSize,
   };
@@ -532,6 +564,12 @@ function convertTable(node: PMNode, startPos: number, options: ToFlowBlocksOptio
  */
 function convertImage(node: PMNode, startPos: number): ImageBlock {
   const attrs = node.attrs;
+  const wrapType = attrs.wrapType as string | undefined;
+
+  // Only anchor images with 'behind' or 'inFront' wrap types
+  // Other wrap types (square, tight, through, topAndBottom) need text wrapping
+  // which we don't support yet, so treat them as block-level images
+  const shouldAnchor = wrapType === 'behind' || wrapType === 'inFront';
 
   return {
     kind: 'image',
@@ -540,15 +578,15 @@ function convertImage(node: PMNode, startPos: number): ImageBlock {
     width: (attrs.width as number) || 100,
     height: (attrs.height as number) || 100,
     alt: attrs.alt as string | undefined,
-    anchor:
-      attrs.wrapType !== 'inline'
-        ? {
-            isAnchored: true,
-            offsetH: attrs.distLeft as number | undefined,
-            offsetV: attrs.distTop as number | undefined,
-            behindDoc: attrs.wrapType === 'behind',
-          }
-        : undefined,
+    transform: attrs.transform as string | undefined,
+    anchor: shouldAnchor
+      ? {
+          isAnchored: true,
+          offsetH: attrs.distLeft as number | undefined,
+          offsetV: attrs.distTop as number | undefined,
+          behindDoc: wrapType === 'behind',
+        }
+      : undefined,
     pmStart: startPos,
     pmEnd: startPos + node.nodeSize,
   };
