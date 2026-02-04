@@ -287,11 +287,17 @@ function renderInlineImageRun(run: ImageRun, doc: Document): HTMLElement {
 }
 
 /**
- * Render a floating image (text wraps around it)
+ * Render a floating image (positioned at page margins)
+ *
+ * Since our layout uses absolute positioning, CSS float doesn't work well.
+ * Instead, we position floating images absolutely at the left/right margins
+ * outside the text content area.
  */
-function renderFloatingImage(run: ImageRun, doc: Document): HTMLElement {
-  const container = doc.createElement('span');
+function renderFloatingImage(run: ImageRun, doc: Document, side: 'left' | 'right'): HTMLElement {
+  const container = doc.createElement('div');
   container.className = 'layout-floating-image';
+  container.style.position = 'absolute';
+  container.style.zIndex = '1';
 
   const img = doc.createElement('img');
   img.src = run.src;
@@ -304,24 +310,15 @@ function renderFloatingImage(run: ImageRun, doc: Document): HTMLElement {
     img.style.transform = run.transform;
   }
 
-  // Use cssFloat from the preserved attributes
-  const cssFloat = run.cssFloat;
-
-  if (cssFloat === 'right') {
-    container.style.cssFloat = 'right';
-    container.style.marginLeft = `${run.distLeft ?? 12}px`;
-    container.style.marginBottom = `${run.distBottom ?? 6}px`;
-    container.style.marginTop = `${run.distTop ?? 0}px`;
-  } else if (cssFloat === 'left') {
-    container.style.cssFloat = 'left';
-    container.style.marginRight = `${run.distRight ?? 12}px`;
-    container.style.marginBottom = `${run.distBottom ?? 6}px`;
-    container.style.marginTop = `${run.distTop ?? 0}px`;
+  // Position at left or right margin (outside the content area)
+  if (side === 'right') {
+    // Position to the right of the content area
+    container.style.right = `-${run.width + (run.distRight ?? 12)}px`;
+    container.style.top = `${run.distTop ?? 0}px`;
   } else {
-    // Default to left float if wrapType is square/tight/through
-    container.style.cssFloat = 'left';
-    container.style.marginRight = `${run.distRight ?? 12}px`;
-    container.style.marginBottom = `${run.distBottom ?? 6}px`;
+    // Position to the left of the content area
+    container.style.left = `-${run.width + (run.distLeft ?? 12)}px`;
+    container.style.top = `${run.distTop ?? 0}px`;
   }
 
   applyPmPositions(container, run.pmStart, run.pmEnd);
@@ -360,14 +357,17 @@ function renderBlockImage(run: ImageRun, doc: Document): HTMLElement {
 
 /**
  * Render an image run based on its display mode
+ * Note: Floating images (square/tight/through) are handled separately at paragraph level,
+ * not through this function. If they reach here, render as block.
  */
 function renderImageRun(run: ImageRun, doc: Document): HTMLElement {
   const displayMode = run.displayMode;
   const wrapType = run.wrapType;
 
-  // Determine rendering based on display mode and wrap type
+  // Floating images should be handled at paragraph level, not here
+  // If they reach here (e.g., during line rendering), render as block
   if (displayMode === 'float' || (wrapType && ['square', 'tight', 'through'].includes(wrapType))) {
-    return renderFloatingImage(run, doc);
+    return renderBlockImage(run, doc);
   } else if (displayMode === 'block' || wrapType === 'topAndBottom') {
     return renderBlockImage(run, doc);
   } else {
@@ -790,9 +790,11 @@ export function renderParagraphFragment(
     }
   }
 
-  // Render floating images at the start of the paragraph
+  // Render floating images - positioned absolutely at margins
   for (const floatImg of floatingImages) {
-    const floatEl = renderFloatingImage(floatImg, doc);
+    // Determine which side based on cssFloat
+    const side = floatImg.cssFloat === 'right' ? 'right' : 'left';
+    const floatEl = renderFloatingImage(floatImg, doc, side);
     fragmentEl.appendChild(floatEl);
   }
 

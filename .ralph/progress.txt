@@ -65,6 +65,15 @@
 [2026-02-04 10:48] NOTES: Floating images now positioned left/right based on horizontal align from OOXML
 [2026-02-04 10:48] STATUS: done
 [2026-02-04 10:48] NOTES: Committed and pushed image rendering fixes
+[2026-02-04 11:00] TASK: Fix image wrap attributes not flowing through
+[2026-02-04 11:00] STATUS: investigating
+[2026-02-04 11:00] NOTES: User reports images still not rendering correctly
+[2026-02-04 11:01] NOTES: Found: wrapType, displayMode, cssFloat not being preserved in ImageRun
+[2026-02-04 11:02] NOTES: Updated ImageRun type with wrap attributes
+[2026-02-04 11:03] NOTES: Updated toFlowBlocks.ts to preserve wrap attributes
+[2026-02-04 11:04] NOTES: Updated renderParagraph.ts with separate renderers: inline, float, block
+[2026-02-04 11:05] STATUS: done
+[2026-02-04 11:05] NOTES: Committed and pushed - images now rendered based on displayMode
 [2026-02-03 22:37] STATUS: done
 [2026-02-03 22:45] TASK: Fix list indentation levels
 [2026-02-03 22:45] STATUS: done
