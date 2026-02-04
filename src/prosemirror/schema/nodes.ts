@@ -85,6 +85,22 @@ export interface ParagraphAttrs {
 }
 
 /**
+ * Image position for floating images (horizontal and vertical positioning)
+ */
+export interface ImagePositionAttrs {
+  horizontal?: {
+    relativeTo?: string;
+    posOffset?: number; // In EMU
+    align?: string;
+  };
+  vertical?: {
+    relativeTo?: string;
+    posOffset?: number; // In EMU
+    align?: string;
+  };
+}
+
+/**
  * Image node attributes
  */
 export interface ImageAttrs {
@@ -112,6 +128,8 @@ export interface ImageAttrs {
   distLeft?: number;
   /** Distance from text right (pixels) */
   distRight?: number;
+  /** Position for floating images (horizontal and vertical alignment) */
+  position?: ImagePositionAttrs;
 }
 
 /**
@@ -350,6 +368,7 @@ export const image: NodeSpec = {
     distBottom: { default: null },
     distLeft: { default: null },
     distRight: { default: null },
+    position: { default: null },
   },
   parseDOM: [
     {

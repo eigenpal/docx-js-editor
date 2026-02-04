@@ -40,11 +40,61 @@ export const PARAGRAPH_CLASS_NAMES = {
 };
 
 /**
+ * Info about page-level floating images that affect text layout.
+ * Passed from renderPage to renderParagraph to apply proper margins.
+ */
+export interface FloatingImageInfo {
+  /** Left margin to reserve for floating images (pixels) */
+  leftMargin: number;
+  /** Right margin to reserve for floating images (pixels) */
+  rightMargin: number;
+  /** Top Y position where this zone starts (content-relative) */
+  topY: number;
+  /** Bottom Y position where this zone ends (content-relative) */
+  bottomY: number;
+}
+
+/**
+ * Calculate floating image margins for a specific line based on its Y position.
+ * This is the SuperDoc approach - each line independently checks if it overlaps
+ * with any floating images and gets its own margins.
+ */
+function calculateLineFloatingMargins(
+  lineY: number,
+  lineHeight: number,
+  exclusionZones: FloatingImageInfo[] | undefined
+): { leftMargin: number; rightMargin: number } {
+  if (!exclusionZones || exclusionZones.length === 0) {
+    return { leftMargin: 0, rightMargin: 0 };
+  }
+
+  let leftMargin = 0;
+  let rightMargin = 0;
+
+  const lineTop = lineY;
+  const lineBottom = lineY + lineHeight;
+
+  for (const zone of exclusionZones) {
+    // Check if this line overlaps vertically with the exclusion zone
+    if (lineBottom > zone.topY && lineTop < zone.bottomY) {
+      leftMargin = Math.max(leftMargin, zone.leftMargin);
+      rightMargin = Math.max(rightMargin, zone.rightMargin);
+    }
+  }
+
+  return { leftMargin, rightMargin };
+}
+
+/**
  * Options for rendering a paragraph
  */
 export interface RenderParagraphOptions {
   /** Document to create elements in */
   document?: Document;
+  /** Page-level floating image info for text wrapping (exclusion zones) */
+  floatingImageInfo?: FloatingImageInfo[];
+  /** Fragment's Y position relative to content area (for per-line margin calculation) */
+  fragmentContentY?: number;
 }
 
 /**
@@ -287,43 +337,6 @@ function renderInlineImageRun(run: ImageRun, doc: Document): HTMLElement {
 }
 
 /**
- * Render a floating image (positioned at left/right of paragraph)
- *
- * Floating images are positioned absolutely within the paragraph fragment.
- * Text content is given margin to make room for the image.
- */
-function renderFloatingImage(run: ImageRun, doc: Document, side: 'left' | 'right'): HTMLElement {
-  const container = doc.createElement('div');
-  container.className = 'layout-floating-image';
-  container.style.position = 'absolute';
-  container.style.zIndex = '1';
-  container.style.top = `${run.distTop ?? 0}px`;
-
-  const img = doc.createElement('img');
-  img.src = run.src;
-  img.width = run.width;
-  img.height = run.height;
-  if (run.alt) {
-    img.alt = run.alt;
-  }
-  if (run.transform) {
-    img.style.transform = run.transform;
-  }
-
-  // Position at left or right edge of paragraph
-  if (side === 'right') {
-    container.style.right = `${run.distRight ?? 0}px`;
-  } else {
-    container.style.left = `${run.distLeft ?? 0}px`;
-  }
-
-  applyPmPositions(container, run.pmStart, run.pmEnd);
-  container.appendChild(img);
-
-  return container;
-}
-
-/**
  * Render a block image (on its own line, like topAndBottom)
  */
 function renderBlockImage(run: ImageRun, doc: Document): HTMLElement {
@@ -509,6 +522,8 @@ interface RenderLineOptions {
   leftIndentPx?: number;
   /** First line indent in pixels (positive) or hanging indent (negative) */
   firstLineIndentPx?: number;
+  /** Line-specific floating image margins (calculated per-line based on Y overlap) */
+  floatingMargins?: { leftMargin: number; rightMargin: number };
 }
 
 /**
@@ -629,6 +644,17 @@ export function renderLine(
   // rather than causing paragraph overlap.
   lineEl.style.whiteSpace = 'nowrap';
   lineEl.style.overflow = 'visible'; // Allow text to render fully (don't clip descenders)
+
+  // Apply per-line floating image margins (SuperDoc approach)
+  // Each line independently checks if it overlaps with floating images
+  if (options?.floatingMargins) {
+    if (options.floatingMargins.leftMargin > 0) {
+      lineEl.style.marginLeft = `${options.floatingMargins.leftMargin}px`;
+    }
+    if (options.floatingMargins.rightMargin > 0) {
+      lineEl.style.marginRight = `${options.floatingMargins.rightMargin}px`;
+    }
+  }
 
   // Build tab context if we have tab runs - also create for text measurement
   const hasTabRuns = runsForLine.some(isTabRun);
@@ -772,49 +798,28 @@ export function renderParagraphFragment(
     fragmentEl.dataset.continuesOnNext = 'true';
   }
 
-  // Extract floating images and calculate space needed for text wrapping
-  const floatingImages: ImageRun[] = [];
-  let leftFloatWidth = 0;
-  let rightFloatWidth = 0;
+  // Get floating image exclusion zones from options
+  // Per-line margins will be calculated for each line based on its Y position
+  const exclusionZones = options.floatingImageInfo;
+  const fragmentContentY = options.fragmentContentY ?? 0;
 
+  // Track whether we have floating images to skip during inline rendering
+  // But DON'T render them here - they're now rendered at page level
   for (const run of block.runs) {
     if (isImageRun(run)) {
-      // Check if this is a floating image based on displayMode or wrapType
       const isFloating =
         run.displayMode === 'float' ||
         (run.wrapType && ['square', 'tight', 'through'].includes(run.wrapType));
       if (isFloating) {
-        floatingImages.push(run);
-        // Track space needed on each side for text wrapping
-        const imgSpace = run.width + (run.distLeft ?? 12) + (run.distRight ?? 12);
-        if (run.cssFloat === 'right') {
-          rightFloatWidth = Math.max(rightFloatWidth, imgSpace);
-        } else {
-          leftFloatWidth = Math.max(leftFloatWidth, imgSpace);
-        }
+        // Skip floating images - they're rendered at page level
+        continue;
       }
     }
   }
 
-  // Create a content wrapper for text that wraps around floating images
-  const contentWrapper = doc.createElement('div');
-  contentWrapper.className = 'layout-paragraph-content';
-  contentWrapper.style.position = 'relative';
-
-  // Add padding to make room for floating images
-  if (leftFloatWidth > 0) {
-    contentWrapper.style.marginLeft = `${leftFloatWidth}px`;
-  }
-  if (rightFloatWidth > 0) {
-    contentWrapper.style.marginRight = `${rightFloatWidth}px`;
-  }
-
-  // Render floating images - positioned absolutely outside content area
-  for (const floatImg of floatingImages) {
-    const side = floatImg.cssFloat === 'right' ? 'right' : 'left';
-    const floatEl = renderFloatingImage(floatImg, doc, side);
-    fragmentEl.appendChild(floatEl);
-  }
+  // NOTE: Floating images are no longer rendered here - they're rendered
+  // at page level in renderPage.ts for proper cross-paragraph positioning
+  // Per-line margins are calculated below during line rendering
 
   // Get the lines for this fragment
   const lines = measure.lines.slice(fragment.fromLine, fragment.toLine);
@@ -945,7 +950,9 @@ export function renderParagraphFragment(
     firstLineIndentPx = indent.firstLine; // Positive because first line is indented right
   }
 
-  // Render each line
+  // Render each line with per-line floating margin calculation (SuperDoc approach)
+  let cumulativeLineY = 0; // Track Y position within the fragment
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     // Calculate the actual line index in the full paragraph
@@ -953,6 +960,16 @@ export function renderParagraphFragment(
     const isLastLine = lineIndex === totalLines - 1;
     // First line of the paragraph (not just this fragment)
     const isFirstLine = lineIndex === 0 && !fragment.continuesFromPrev;
+
+    // Calculate this line's absolute Y position on the page (content-relative)
+    const lineAbsoluteY = fragmentContentY + cumulativeLineY;
+
+    // Calculate per-line floating margins based on vertical overlap with exclusion zones
+    const lineFloatingMargins = calculateLineFloatingMargins(
+      lineAbsoluteY,
+      line.lineHeight,
+      exclusionZones
+    );
 
     const lineEl = renderLine(block, line, alignment, doc, {
       availableWidth,
@@ -963,7 +980,14 @@ export function renderParagraphFragment(
       leftIndentPx: indentLeft,
       firstLineIndentPx: isFirstLine ? firstLineIndentPx : 0,
       context,
+      floatingMargins:
+        lineFloatingMargins.leftMargin > 0 || lineFloatingMargins.rightMargin > 0
+          ? lineFloatingMargins
+          : undefined,
     });
+
+    // Update cumulative Y for next line
+    cumulativeLineY += line.lineHeight;
 
     // Apply line-level indentation (SuperDoc approach)
     // Indentation is applied per-line for correct text wrapping
@@ -1018,17 +1042,8 @@ export function renderParagraphFragment(
       lineEl.insertBefore(marker, lineEl.firstChild);
     }
 
-    // Append to content wrapper if we have floating images, otherwise directly to fragment
-    if (floatingImages.length > 0) {
-      contentWrapper.appendChild(lineEl);
-    } else {
-      fragmentEl.appendChild(lineEl);
-    }
-  }
-
-  // If we have floating images, append the content wrapper
-  if (floatingImages.length > 0) {
-    fragmentEl.appendChild(contentWrapper);
+    // Append line directly to fragment (per-line margins are applied in renderLine)
+    fragmentEl.appendChild(lineEl);
   }
 
   return fragmentEl;

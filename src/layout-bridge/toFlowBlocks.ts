@@ -204,6 +204,8 @@ function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksO
         distBottom: attrs.distBottom as number | undefined,
         distLeft: attrs.distLeft as number | undefined,
         distRight: attrs.distRight as number | undefined,
+        // Preserve position for page-level floating image positioning
+        position: attrs.position as ImageRun['position'] | undefined,
         pmStart: childPos,
         pmEnd: childPos + child.nodeSize,
       };
