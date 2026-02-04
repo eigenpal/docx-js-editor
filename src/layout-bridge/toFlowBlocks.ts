@@ -12,6 +12,8 @@ import type {
   TableBlock,
   TableRow,
   TableCell,
+  CellBorders,
+  CellBorderSpec,
   ImageBlock,
   PageBreakBlock,
   Run,
@@ -374,6 +376,53 @@ function convertParagraph(
 }
 
 /**
+ * Convert border width from eighths of a point to pixels.
+ * OOXML stores border widths in eighths of a point.
+ */
+function borderWidthToPixels(eighthsOfPoint: number): number {
+  // 1 point = 1.333 pixels at 96 DPI
+  // eighths of a point: divide by 8 first
+  return Math.max(1, Math.round((eighthsOfPoint / 8) * 1.333));
+}
+
+/**
+ * Extract cell borders from ProseMirror attributes.
+ */
+function extractCellBorders(attrs: Record<string, unknown>): CellBorders | undefined {
+  const borders = attrs.borders as Record<string, boolean> | null;
+  const borderColors = attrs.borderColors as Record<string, string> | null;
+  const borderWidths = attrs.borderWidths as Record<string, number> | null;
+
+  if (!borders && !borderColors && !borderWidths) {
+    return undefined;
+  }
+
+  const result: CellBorders = {};
+  const sides = ['top', 'bottom', 'left', 'right'] as const;
+
+  for (const side of sides) {
+    // Check if border is explicitly set (default to true if colors/widths are specified)
+    const hasBorder = borders?.[side] !== false;
+    const color = borderColors?.[side];
+    const width = borderWidths?.[side];
+
+    if (hasBorder && (color || width)) {
+      const spec: CellBorderSpec = {
+        style: 'solid',
+      };
+      if (color) spec.color = color.startsWith('#') ? color : `#${color}`;
+      if (width) spec.width = borderWidthToPixels(width);
+      result[side] = spec;
+    } else if (borders?.[side] === false) {
+      // Explicitly no border
+      result[side] = { width: 0, style: 'none' };
+    }
+  }
+
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+/**
  * Convert a table cell node.
  */
 function convertTableCell(node: PMNode, startPos: number, options: ToFlowBlocksOptions): TableCell {
@@ -398,6 +447,7 @@ function convertTableCell(node: PMNode, startPos: number, options: ToFlowBlocksO
     width: attrs.width ? twipsToPixels(attrs.width as number) : undefined,
     verticalAlign: attrs.verticalAlign as 'top' | 'center' | 'bottom' | undefined,
     background: attrs.backgroundColor ? `#${attrs.backgroundColor}` : undefined,
+    borders: extractCellBorders(attrs as Record<string, unknown>),
   };
 }
 
@@ -438,10 +488,15 @@ function convertTable(node: PMNode, startPos: number, options: ToFlowBlocksOptio
     offset += child.nodeSize;
   });
 
+  // Extract columnWidths from node attributes and convert from twips to pixels
+  const columnWidthsTwips = node.attrs.columnWidths as number[] | undefined;
+  const columnWidths = columnWidthsTwips?.map(twipsToPixels);
+
   return {
     kind: 'table',
     id: nextBlockId(),
     rows,
+    columnWidths,
     pmStart: startPos,
     pmEnd: startPos + node.nodeSize,
   };

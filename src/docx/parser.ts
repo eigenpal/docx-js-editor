@@ -31,15 +31,14 @@ import type {
   StyleDefinitions,
 } from '../types/document';
 import { unzipDocx, getMediaMimeType, type RawDocxContent } from './unzip';
-import { parseRelationships } from './relsParser';
+import { parseRelationships, RELATIONSHIP_TYPES } from './relsParser';
 import { parseTheme } from './themeParser';
 import { parseStyles, parseStyleDefinitions, type StyleMap } from './styleParser';
 import { parseNumbering, type NumberingMap } from './numberingParser';
 import { parseDocumentBody, extractAllTemplateVariables } from './documentParser';
 import { parseHeader, parseFooter } from './headerFooterParser';
 import { parseFootnotes, parseEndnotes } from './footnoteParser';
-import { loadFonts } from '../utils/fontLoader';
-import { getGoogleFontsToLoad } from '../utils/fontResolver';
+import { loadFontsWithMapping } from '../utils/fontLoader';
 
 // ============================================================================
 // PROGRESS CALLBACK
@@ -321,7 +320,7 @@ function parseHeadersAndFooters(
 
   // Find header/footer references in relationships
   for (const [rId, rel] of rels.entries()) {
-    if (rel.type === 'header' && rel.target) {
+    if (rel.type === RELATIONSHIP_TYPES.header && rel.target) {
       // Get the header XML for this relationship
       const filename = rel.target.split('/').pop() || rel.target;
       const headerXml = raw.headers.get(filename);
@@ -338,7 +337,7 @@ function parseHeadersAndFooters(
         );
         headers.set(rId, header);
       }
-    } else if (rel.type === 'footer' && rel.target) {
+    } else if (rel.type === RELATIONSHIP_TYPES.footer && rel.target) {
       const filename = rel.target.split('/').pop() || rel.target;
       const footerXml = raw.footers.get(filename);
 
@@ -379,29 +378,56 @@ function parseNotesContent(
 async function loadDocumentFonts(
   theme: Theme | null,
   styleDefinitions: StyleDefinitions | undefined,
-  _documentBody: DocumentBody
+  documentBody: DocumentBody
 ): Promise<void> {
-  const docxFonts: string[] = [];
+  const docxFonts = new Set<string>();
 
   // Extract fonts from theme
   if (theme?.fontScheme) {
     const { majorFont, minorFont } = theme.fontScheme;
-    if (majorFont?.latin) docxFonts.push(majorFont.latin);
-    if (minorFont?.latin) docxFonts.push(minorFont.latin);
+    if (majorFont?.latin) docxFonts.add(majorFont.latin);
+    if (minorFont?.latin) docxFonts.add(minorFont.latin);
   }
 
   // Extract fonts from style defaults
   if (styleDefinitions?.docDefaults?.rPr?.fontFamily?.ascii) {
-    docxFonts.push(styleDefinitions.docDefaults.rPr.fontFamily.ascii);
+    docxFonts.add(styleDefinitions.docDefaults.rPr.fontFamily.ascii);
   }
 
-  // Get Google Font equivalents
-  const googleFonts = getGoogleFontsToLoad(docxFonts);
+  // Extract fonts from styles
+  if (styleDefinitions?.styles) {
+    for (const style of styleDefinitions.styles) {
+      if (style.rPr?.fontFamily?.ascii) {
+        docxFonts.add(style.rPr.fontFamily.ascii);
+      }
+      if (style.rPr?.fontFamily?.hAnsi) {
+        docxFonts.add(style.rPr.fontFamily.hAnsi);
+      }
+    }
+  }
 
-  // Load fonts
-  if (googleFonts.length > 0) {
+  // Extract fonts from document content (inline run formatting)
+  if (documentBody.content) {
+    for (const block of documentBody.content) {
+      if (block.type === 'paragraph') {
+        for (const item of block.content) {
+          if (item.type === 'run' && item.formatting?.fontFamily) {
+            if (item.formatting.fontFamily.ascii) {
+              docxFonts.add(item.formatting.fontFamily.ascii);
+            }
+            if (item.formatting.fontFamily.hAnsi) {
+              docxFonts.add(item.formatting.fontFamily.hAnsi);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Load fonts with mapping (creates aliases so original names work in CSS)
+  if (docxFonts.size > 0) {
     try {
-      await loadFonts(googleFonts);
+      await loadFontsWithMapping(Array.from(docxFonts));
     } catch (error) {
       // Font loading is non-critical, continue without fonts
       console.warn('Failed to load some fonts:', error);

@@ -20,7 +20,7 @@ import React, {
   useImperativeHandle,
 } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import type { Document, Theme } from '../types/document';
+import type { Document, Theme, HeaderFooter } from '../types/document';
 
 import { Toolbar, type SelectionFormatting, type FormattingAction } from './Toolbar';
 import { pointsToHalfPoints } from './ui/FontSizePicker';
@@ -63,6 +63,7 @@ import {
   type ProseMirrorEditorRef,
   type SelectionState,
   TextSelection,
+  extractSelectionState,
   toggleBold,
   toggleItalic,
   toggleUnderline,
@@ -1232,6 +1233,42 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     return extractVariableNames(history.state);
   }, [history.state]);
 
+  // Get header and footer content from document
+  const { headerContent, footerContent } = useMemo<{
+    headerContent: HeaderFooter | null;
+    footerContent: HeaderFooter | null;
+  }>(() => {
+    if (!history.state?.package) {
+      return { headerContent: null, footerContent: null };
+    }
+
+    const pkg = history.state.package;
+    const sectionProps = pkg.document?.finalSectionProperties;
+    const headers = pkg.headers;
+    const footers = pkg.footers;
+
+    let header: HeaderFooter | null = null;
+    let footer: HeaderFooter | null = null;
+
+    // Get default header from section references
+    if (headers && sectionProps?.headerReferences) {
+      const defaultRef = sectionProps.headerReferences.find((r) => r.type === 'default');
+      if (defaultRef?.rId) {
+        header = headers.get(defaultRef.rId) ?? null;
+      }
+    }
+
+    // Get default footer from section references
+    if (footers && sectionProps?.footerReferences) {
+      const defaultRef = sectionProps.footerReferences.find((r) => r.type === 'default');
+      if (defaultRef?.rId) {
+        footer = footers.get(defaultRef.rId) ?? null;
+      }
+    }
+
+    return { headerContent: header, footerContent: footer };
+  }, [history.state]);
+
   // Container styles - using overflow: auto so sticky toolbar works
   const containerStyle: CSSProperties = {
     display: 'flex',
@@ -1403,22 +1440,20 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                     styles={history.state?.package.styles}
                     theme={history.state?.package.theme || theme}
                     sectionProperties={history.state?.package.document?.finalSectionProperties}
+                    headerContent={headerContent}
+                    footerContent={footerContent}
                     zoom={state.zoom}
                     readOnly={readOnly}
                     onDocumentChange={handleDocumentChange}
                     onSelectionChange={(_from, _to) => {
-                      // PagedEditor provides PM positions, we need to build SelectionState
+                      // Extract full selection state from PM and use the standard handler
                       const view = pagedEditorRef.current?.getView();
                       if (view) {
-                        // Get table context
-                        const pmTableCtx = getTableContext(view.state);
-                        setState((prev) => ({
-                          ...prev,
-                          pmTableContext: pmTableCtx.isInTable ? pmTableCtx : null,
-                        }));
+                        const selectionState = extractSelectionState(view.state);
+                        handleSelectionChange(selectionState);
+                      } else {
+                        handleSelectionChange(null);
                       }
-                      // Notify parent of raw selection change
-                      onSelectionChange?.(null);
                     }}
                     externalPlugins={externalPlugins}
                     onReady={(ref) => {

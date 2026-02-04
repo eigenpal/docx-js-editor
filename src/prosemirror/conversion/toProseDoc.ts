@@ -201,15 +201,18 @@ function resolveTableStyleConditional(
  * preserve their layout when opened from DOCX files.
  */
 function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode {
+  // Get column widths from table grid
+  const columnWidths = table.columnWidths;
+
   const attrs: TableAttrs = {
     styleId: table.formatting?.styleId,
     width: table.formatting?.width?.value,
     widthType: table.formatting?.width?.type,
     justification: table.formatting?.justification,
+    columnWidths: columnWidths,
   };
 
   // Calculate total width from columnWidths if available (for percentage calculation)
-  const columnWidths = table.columnWidths;
   const totalWidth = columnWidths?.reduce((sum, w) => sum + w, 0) ?? 0;
 
   // Get the table style's conditional formatting

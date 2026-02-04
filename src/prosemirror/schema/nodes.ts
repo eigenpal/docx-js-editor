@@ -506,6 +506,8 @@ export interface TableAttrs {
   widthType?: string;
   /** Table justification/alignment */
   justification?: 'left' | 'center' | 'right';
+  /** Column widths (in twips) from w:tblGrid */
+  columnWidths?: number[];
 }
 
 /**
@@ -561,6 +563,7 @@ export const table: NodeSpec = {
     width: { default: null },
     widthType: { default: null },
     justification: { default: null },
+    columnWidths: { default: null },
   },
   parseDOM: [
     {

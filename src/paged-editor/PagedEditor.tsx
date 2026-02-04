@@ -43,6 +43,9 @@ import type {
   TableBlock,
   ImageBlock,
   PageMargins,
+  Run,
+  RunFormatting,
+  ParagraphAttrs,
 } from '../layout-engine/types';
 
 // Layout bridge
@@ -240,26 +243,47 @@ function measureBlock(block: FlowBlock, contentWidth: number): Measure {
       return measureParagraph(block as ParagraphBlock, contentWidth);
 
     case 'table': {
-      // Simple table measure - just calculate basic dimensions
+      // Simple table measure - calculate dimensions with proper column handling
       const tableBlock = block as TableBlock;
-      const rows = tableBlock.rows.map((row) => ({
-        cells: row.cells.map((cell) => ({
-          blocks: cell.blocks.map((b) =>
-            b.kind === 'paragraph'
-              ? measureParagraph(b as ParagraphBlock, cell.width ?? 100)
-              : {
-                  kind: 'paragraph' as const,
-                  lines: [],
-                  totalHeight: 0,
-                }
-          ),
-          width: cell.width ?? 100,
-          height: 0, // Calculated below
-          colSpan: cell.colSpan,
-          rowSpan: cell.rowSpan,
-        })),
-        height: 0,
-      }));
+      // columnWidths are already in pixels (converted in toFlowBlocks)
+      const columnWidths = tableBlock.columnWidths ?? [];
+
+      // Calculate cell widths based on colSpan and columnWidths
+      const rows = tableBlock.rows.map((row) => {
+        let columnIndex = 0;
+        return {
+          cells: row.cells.map((cell) => {
+            const colSpan = cell.colSpan ?? 1;
+            // Calculate cell width as sum of spanned columns
+            let cellWidth = 0;
+            for (let c = 0; c < colSpan && columnIndex + c < columnWidths.length; c++) {
+              cellWidth += columnWidths[columnIndex + c] ?? 0;
+            }
+            // Fallback to cell.width or default if columnWidths not available
+            if (cellWidth === 0) {
+              cellWidth = cell.width ?? 100;
+            }
+            columnIndex += colSpan;
+
+            return {
+              blocks: cell.blocks.map((b) =>
+                b.kind === 'paragraph'
+                  ? measureParagraph(b as ParagraphBlock, cellWidth)
+                  : {
+                      kind: 'paragraph' as const,
+                      lines: [],
+                      totalHeight: 0,
+                    }
+              ),
+              width: cellWidth,
+              height: 0, // Calculated below
+              colSpan: cell.colSpan,
+              rowSpan: cell.rowSpan,
+            };
+          }),
+          height: 0,
+        };
+      });
 
       // Calculate cell heights
       for (const row of rows) {
@@ -272,7 +296,6 @@ function measureBlock(block: FlowBlock, contentWidth: number): Measure {
       }
 
       const totalHeight = rows.reduce((h, r) => h + r.height, 0);
-      const columnWidths = tableBlock.columnWidths ?? [];
       const totalWidth = columnWidths.reduce((w, cw) => w + cw, 0);
 
       return {
@@ -320,13 +343,155 @@ function measureBlocks(blocks: FlowBlock[], contentWidth: number): Measure[] {
 }
 
 /**
+ * Convert document Run content to FlowBlock runs.
+ * Handles text, tabs, fields (PAGE, NUMPAGES), etc.
+ *
+ * Fields like PAGE and NUMPAGES are converted to FieldRun which gets
+ * substituted with actual values at render time (in renderParagraph).
+ *
+ * @param content - Array of ParagraphContent from document
+ */
+function convertDocumentRunsToFlowRuns(content: unknown[]): Run[] {
+  const runs: Run[] = [];
+
+  for (const item of content) {
+    const itemObj = item as Record<string, unknown>;
+
+    // Handle Run type (from Document)
+    if (itemObj.type === 'run' && Array.isArray(itemObj.content)) {
+      const formatting = itemObj.formatting as Record<string, unknown> | undefined;
+      const runFormatting: RunFormatting = {};
+
+      if (formatting) {
+        if (formatting.bold) runFormatting.bold = true;
+        if (formatting.italic) runFormatting.italic = true;
+        if (formatting.underline) runFormatting.underline = true;
+        if (formatting.strike) runFormatting.strike = true;
+        if (formatting.color) {
+          const color = formatting.color as Record<string, unknown>;
+          if (color.val) runFormatting.color = `#${color.val}`;
+          else if (color.rgb) runFormatting.color = `#${color.rgb}`;
+        }
+        if (formatting.fontSize) {
+          runFormatting.fontSize = (formatting.fontSize as number) / 2; // half-points to points
+        }
+        if (formatting.fontFamily) {
+          const ff = formatting.fontFamily as Record<string, unknown>;
+          runFormatting.fontFamily = (ff.ascii || ff.hAnsi) as string;
+        }
+      }
+
+      // Process run content
+      for (const runContent of itemObj.content as unknown[]) {
+        const rc = runContent as Record<string, unknown>;
+
+        if (rc.type === 'text' && typeof rc.text === 'string') {
+          runs.push({
+            kind: 'text',
+            text: rc.text,
+            ...runFormatting,
+          });
+        } else if (rc.type === 'tab') {
+          runs.push({
+            kind: 'tab',
+            ...runFormatting,
+          });
+        } else if (rc.type === 'break') {
+          runs.push({
+            kind: 'lineBreak',
+          });
+        }
+      }
+    }
+
+    // Handle SimpleField (w:fldSimple) - PAGE, NUMPAGES, etc.
+    if (itemObj.type === 'simpleField') {
+      const fieldType = itemObj.fieldType as string;
+
+      if (fieldType === 'PAGE') {
+        runs.push({
+          kind: 'field',
+          fieldType: 'PAGE',
+          fallback: '1',
+        });
+      } else if (fieldType === 'NUMPAGES') {
+        runs.push({
+          kind: 'field',
+          fieldType: 'NUMPAGES',
+          fallback: '1',
+        });
+      } else if (Array.isArray(itemObj.content)) {
+        // Use the display content for other fields
+        const displayRuns = convertDocumentRunsToFlowRuns(itemObj.content as unknown[]);
+        runs.push(...displayRuns);
+      }
+      continue;
+    }
+
+    // Handle ComplexField (fldChar sequence)
+    if (itemObj.type === 'complexField') {
+      const fieldType = itemObj.fieldType as string;
+
+      // Extract formatting from fieldResult runs if available
+      const fieldFormatting: RunFormatting = {};
+      if (Array.isArray(itemObj.fieldResult) && itemObj.fieldResult.length > 0) {
+        const firstRun = itemObj.fieldResult[0] as Record<string, unknown>;
+        if (firstRun?.type === 'run' && firstRun.formatting) {
+          const formatting = firstRun.formatting as Record<string, unknown>;
+          if (formatting.fontSize) {
+            fieldFormatting.fontSize = (formatting.fontSize as number) / 2;
+          }
+          if (formatting.fontFamily) {
+            const ff = formatting.fontFamily as Record<string, unknown>;
+            fieldFormatting.fontFamily = (ff.ascii || ff.hAnsi) as string;
+          }
+          if (formatting.bold) fieldFormatting.bold = true;
+          if (formatting.italic) fieldFormatting.italic = true;
+        }
+      }
+
+      if (fieldType === 'PAGE') {
+        runs.push({
+          kind: 'field',
+          fieldType: 'PAGE',
+          fallback: '1',
+          ...fieldFormatting,
+        });
+      } else if (fieldType === 'NUMPAGES') {
+        runs.push({
+          kind: 'field',
+          fieldType: 'NUMPAGES',
+          fallback: '1',
+          ...fieldFormatting,
+        });
+      } else if (Array.isArray(itemObj.fieldResult)) {
+        // Use the fieldResult for other fields
+        const displayRuns = convertDocumentRunsToFlowRuns(itemObj.fieldResult as unknown[]);
+        runs.push(...displayRuns);
+      }
+    }
+
+    // Handle Hyperlink
+    if (itemObj.type === 'hyperlink' && Array.isArray(itemObj.children)) {
+      const childRuns = convertDocumentRunsToFlowRuns(itemObj.children as unknown[]);
+      runs.push(...childRuns);
+    }
+  }
+
+  return runs;
+}
+
+/**
  * Convert HeaderFooter (document type) to HeaderFooterContent (render type).
  *
  * This converts parsed header/footer content into FlowBlocks that can be
  * rendered by the layout painter.
  *
- * Note: This is a simplified conversion that handles basic paragraph content.
- * Complex content like tables and images may need additional handling.
+ * Fields like PAGE and NUMPAGES are converted to FieldRun which gets
+ * substituted with actual values at render time.
+ *
+ * @param headerFooter - The header/footer document content
+ * @param contentWidth - Available width for content
  */
 function convertHeaderFooterToContent(
   headerFooter: HeaderFooter | null | undefined,
@@ -339,18 +504,36 @@ function convertHeaderFooterToContent(
   const blocks: FlowBlock[] = [];
 
   for (const item of headerFooter.content) {
-    if ('runs' in item && Array.isArray(item.runs)) {
-      // This is a Paragraph
-      const paragraph = item as unknown as { runs: unknown[]; properties?: unknown };
-      const paragraphBlock: ParagraphBlock = {
-        kind: 'paragraph',
-        id: String(blocks.length),
-        runs: paragraph.runs as ParagraphBlock['runs'],
-        attrs: paragraph.properties as ParagraphBlock['attrs'],
-      };
-      blocks.push(paragraphBlock);
+    const itemObj = item as unknown as Record<string, unknown>;
+
+    // Check for Document Paragraph type
+    if (itemObj.type === 'paragraph' && Array.isArray(itemObj.content)) {
+      const formatting = itemObj.formatting as Record<string, unknown> | undefined;
+      const attrs: ParagraphAttrs = {};
+
+      if (formatting) {
+        if (formatting.alignment) {
+          const align = formatting.alignment as string;
+          if (align === 'both') attrs.alignment = 'justify';
+          else if (['left', 'center', 'right', 'justify'].includes(align)) {
+            attrs.alignment = align as 'left' | 'center' | 'right' | 'justify';
+          }
+        }
+      }
+
+      const runs = convertDocumentRunsToFlowRuns(itemObj.content as unknown[]);
+
+      // Only add paragraph if it has content
+      if (runs.length > 0) {
+        const paragraphBlock: ParagraphBlock = {
+          kind: 'paragraph',
+          id: String(blocks.length),
+          runs,
+          attrs: Object.keys(attrs).length > 0 ? attrs : undefined,
+        };
+        blocks.push(paragraphBlock);
+      }
     }
-    // Tables in headers/footers would need additional handling
   }
 
   if (blocks.length === 0) {
