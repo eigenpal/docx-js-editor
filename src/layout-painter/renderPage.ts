@@ -678,10 +678,13 @@ export function renderPage(
 
   // Render header if provided
   if (options.headerContent && options.headerContent.blocks.length > 0) {
-    const headerDistance = options.headerDistance ?? page.margins.header ?? page.margins.top;
+    // Default header distance is 0.5 inch (48px) from page top if not specified
+    const defaultHeaderDistance = 48;
+    const headerDistance = options.headerDistance ?? page.margins.header ?? defaultHeaderDistance;
     const headerContentWidth = page.size.w - page.margins.left - page.margins.right;
     // Calculate max header height (from header distance to top margin)
-    const maxHeaderHeight = page.margins.top - headerDistance;
+    // Ensure at least some height even if margins are weird
+    const maxHeaderHeight = Math.max(page.margins.top - headerDistance, 48);
 
     const headerEl = doc.createElement('div');
     headerEl.className = PAGE_CLASS_NAMES.header;
@@ -705,8 +708,13 @@ export function renderPage(
 
   // Render footer if provided
   if (options.footerContent && options.footerContent.blocks.length > 0) {
-    const footerDistance = options.footerDistance ?? page.margins.footer ?? page.margins.bottom;
+    // Default footer distance is 0.5 inch (48px) from page bottom if not specified
+    const defaultFooterDistance = 48;
+    const footerDistance = options.footerDistance ?? page.margins.footer ?? defaultFooterDistance;
     const footerContentWidth = page.size.w - page.margins.left - page.margins.right;
+    // Calculate max footer height (from footer distance to bottom margin)
+    const maxFooterHeight = Math.max(page.margins.bottom - footerDistance, 48);
+
     const footerEl = doc.createElement('div');
     footerEl.className = PAGE_CLASS_NAMES.footer;
     footerEl.style.position = 'absolute';
@@ -714,6 +722,9 @@ export function renderPage(
     footerEl.style.left = `${page.margins.left}px`;
     footerEl.style.right = `${page.margins.right}px`;
     footerEl.style.width = `${footerContentWidth}px`;
+    // Clip footer content to prevent overflow into body area
+    footerEl.style.maxHeight = `${maxFooterHeight}px`;
+    footerEl.style.overflow = 'hidden';
 
     const footerContentEl = renderHeaderFooterContent(
       options.footerContent,
