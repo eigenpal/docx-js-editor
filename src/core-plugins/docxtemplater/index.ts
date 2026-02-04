@@ -57,9 +57,9 @@ export const docxtemplaterPlugin: CorePlugin = {
     // This is just a validation step
     try {
       // Check if the utilities are importable
-       
+
       require('docxtemplater');
-       
+
       require('pizzip');
     } catch {
       console.warn(
