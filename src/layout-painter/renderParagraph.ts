@@ -85,17 +85,27 @@ function isFieldRun(run: Run): run is FieldRun {
 /**
  * Apply text run styles to an element
  */
+/**
+ * Font fallback chain - MUST match measureContainer.ts to ensure
+ * measurement and rendering use the same fonts
+ */
+const FONT_FALLBACK = '"Segoe UI", Arial, sans-serif';
+
 function applyRunStyles(element: HTMLElement, run: TextRun | TabRun): void {
   // Font properties
   if (run.fontFamily) {
     // Quote font names with spaces for proper CSS
+    // Use the same fallback chain as measureContainer.ts to ensure
+    // text renders with the same widths as measured
     const fontName = run.fontFamily.includes(' ') ? `"${run.fontFamily}"` : run.fontFamily;
-    element.style.fontFamily = `${fontName}, sans-serif`;
+    element.style.fontFamily = `${fontName}, ${FONT_FALLBACK}`;
   }
   if (run.fontSize) {
-    // fontSize is in points - use pt unit for browser to handle conversion
-    // This matches how ProseMirror renders font sizes
-    element.style.fontSize = `${run.fontSize}pt`;
+    // fontSize is in points - convert to pixels to match Canvas measurement
+    // (1pt = 96/72 px at standard web DPI)
+    // Using px ensures consistent rendering with Canvas-based measurements
+    const fontSizePx = (run.fontSize * 96) / 72;
+    element.style.fontSize = `${fontSizePx}px`;
   }
   if (run.bold) {
     element.style.fontWeight = 'bold';
@@ -175,8 +185,28 @@ function renderTextRun(run: TextRun, doc: Document): HTMLElement {
   applyRunStyles(span, run);
   applyPmPositions(span, run.pmStart, run.pmEnd);
 
-  // Set text content
-  span.textContent = run.text;
+  // Handle hyperlinks
+  if (run.hyperlink) {
+    const anchor = doc.createElement('a');
+    anchor.href = run.hyperlink.href;
+    // Internal bookmark links (starting with #) should scroll within the document
+    // External links should open in a new tab
+    if (!run.hyperlink.href.startsWith('#')) {
+      anchor.target = '_blank';
+      anchor.rel = 'noopener noreferrer';
+    }
+    if (run.hyperlink.tooltip) {
+      anchor.title = run.hyperlink.tooltip;
+    }
+    anchor.textContent = run.text;
+    // Style hyperlink
+    anchor.style.color = run.color || '#0563c1'; // Default Word hyperlink color
+    anchor.style.textDecoration = 'underline';
+    span.appendChild(anchor);
+  } else {
+    // Set text content
+    span.textContent = run.text;
+  }
 
   return span;
 }
@@ -242,6 +272,9 @@ function renderImageRun(run: ImageRun, doc: Document): HTMLElement {
   img.height = run.height;
   if (run.alt) {
     img.alt = run.alt;
+  }
+  if (run.transform) {
+    img.style.transform = run.transform;
   }
 
   applyPmPositions(img, run.pmStart, run.pmEnd);
@@ -403,12 +436,21 @@ function convertTabStopToCalc(stop: TabStop): TabCalcStop {
  * Get the text content immediately following a tab run in the runs array
  * Used for center/end/decimal tab alignment calculations
  */
-function getTextAfterTab(runs: Run[], tabRunIndex: number): string {
+function getTextAfterTab(runs: Run[], tabRunIndex: number, context?: RenderContext): string {
   let text = '';
   for (let i = tabRunIndex + 1; i < runs.length; i++) {
     const run = runs[i];
     if (isTextRun(run)) {
       text += run.text;
+    } else if (isFieldRun(run)) {
+      // Resolve field values for TOC page numbers
+      if (run.fieldType === 'PAGE' && context) {
+        text += String(context.pageNumber);
+      } else if (run.fieldType === 'NUMPAGES' && context) {
+        text += String(context.totalPages);
+      } else {
+        text += run.fallback ?? '';
+      }
     } else if (isTabRun(run) || isLineBreakRun(run)) {
       // Stop at next tab or line break
       break;
@@ -419,6 +461,7 @@ function getTextAfterTab(runs: Run[], tabRunIndex: number): string {
 
 /**
  * Create a text measurement function using a temporary canvas
+ * Uses the same font fallback chain as measureContainer.ts
  */
 function createTextMeasurer(
   doc: Document
@@ -428,7 +471,11 @@ function createTextMeasurer(
 
   return (text: string, fontSize = 11, fontFamily = 'Calibri') => {
     if (!ctx) return text.length * 7; // Fallback estimate
-    ctx.font = `${fontSize}pt ${fontFamily}`;
+    // Use same fallback chain as measureContainer.ts to ensure consistent measurements
+    const fontName = fontFamily.includes(' ') ? `"${fontFamily}"` : fontFamily;
+    // Convert pt to px for canvas (1pt = 96/72 px)
+    const fontSizePx = (fontSize * 96) / 72;
+    ctx.font = `${fontSizePx}px ${fontName}, ${FONT_FALLBACK}`;
     return ctx.measureText(text).width;
   };
 }
@@ -487,9 +534,11 @@ export function renderLine(
     }
   }
 
-  // Use white-space: normal for justified text (needed for text-align to work)
-  // and pre-wrap for others (to preserve multiple spaces)
-  lineEl.style.whiteSpace = shouldJustify ? 'normal' : 'pre-wrap';
+  // Use white-space: nowrap to prevent internal wrapping - all line breaking
+  // is done during measurement. Text that doesn't fit will overflow visibly
+  // rather than causing paragraph overlap.
+  lineEl.style.whiteSpace = 'nowrap';
+  lineEl.style.overflow = 'hidden'; // Clip overflow to prevent visual issues
 
   // Build tab context if we have tab runs - also create for text measurement
   const hasTabRuns = runsForLine.some(isTabRun);
@@ -538,7 +587,7 @@ export function renderLine(
 
     if (isTabRun(run) && tabContext) {
       // Get text following this tab for alignment calculations
-      const followingText = getTextAfterTab(runsForLine, i);
+      const followingText = getTextAfterTab(runsForLine, i, options?.context);
 
       // Calculate tab width based on current position
       const tabResult = calculateTabWidth(currentX, tabContext, followingText, measureText);
@@ -631,7 +680,7 @@ export function renderParagraphFragment(
   }
 
   // Apply text alignment at paragraph level
-  // For justify: use text-align: left and apply word-spacing per line (like SuperDoc)
+  // For justify: use text-align: left and apply word-spacing per line
   if (alignment) {
     if (alignment === 'center') {
       fragmentEl.style.textAlign = 'center';
@@ -644,34 +693,19 @@ export function renderParagraphFragment(
     }
   }
 
-  // Apply indentation and track for justify calculation
+  // Track indentation for line-level application (SuperDoc approach)
+  // Indentation is applied per-line, not at fragment level
   const indent = block.attrs?.indent;
   let indentLeft = 0;
   let indentRight = 0;
 
   if (indent) {
-    // Left indent (margin, not padding, for proper text-indent interaction)
+    // Track indent values for line-level application
     if (indent.left && indent.left > 0) {
-      fragmentEl.style.marginLeft = `${indent.left}px`;
       indentLeft = indent.left;
     }
-    // Right indent
     if (indent.right && indent.right > 0) {
-      fragmentEl.style.marginRight = `${indent.right}px`;
       indentRight = indent.right;
-    }
-    // First line indent or hanging indent
-    // Only apply to first fragment (not continuation fragments)
-    if (!fragment.continuesFromPrev) {
-      if (indent.hanging && indent.hanging > 0) {
-        // Hanging indent: first line is outdented (negative text-indent)
-        fragmentEl.style.textIndent = `-${indent.hanging}px`;
-        // Add padding to compensate so text doesn't go outside container
-        fragmentEl.style.paddingLeft = `${indent.hanging}px`;
-      } else if (indent.firstLine && indent.firstLine > 0) {
-        // Regular first line indent
-        fragmentEl.style.textIndent = `${indent.firstLine}px`;
-      }
     }
   }
 
@@ -785,10 +819,56 @@ export function renderParagraphFragment(
       context,
     });
 
+    // Apply line-level indentation (SuperDoc approach)
+    // Indentation is applied per-line for correct text wrapping
+    const hasHanging = indent?.hanging && indent.hanging > 0;
+    const hasFirstLine = indent?.firstLine && indent.firstLine > 0;
+
+    if (isFirstLine) {
+      // First line handling
+      if (indentLeft > 0 && hasHanging) {
+        // Hanging indent: first line starts at (indentLeft - hanging)
+        lineEl.style.paddingLeft = `${indentLeft}px`;
+        lineEl.style.textIndent = `-${indent!.hanging}px`;
+      } else if (indentLeft > 0 && hasFirstLine) {
+        // First line indent: first line starts at (indentLeft + firstLine)
+        lineEl.style.paddingLeft = `${indentLeft}px`;
+        lineEl.style.textIndent = `${indent!.firstLine}px`;
+      } else if (indentLeft > 0) {
+        // Just left indent, no special first line treatment
+        lineEl.style.paddingLeft = `${indentLeft}px`;
+      } else if (hasFirstLine) {
+        // No left indent, but has first line indent
+        lineEl.style.textIndent = `${indent!.firstLine}px`;
+      }
+      // No hanging without left indent (handled by firstLineOffset in measurement)
+    } else {
+      // Body lines (not first line)
+      if (indentLeft > 0) {
+        lineEl.style.paddingLeft = `${indentLeft}px`;
+      } else if (hasHanging) {
+        // Hanging indent without left indent: body lines need padding = hanging
+        lineEl.style.paddingLeft = `${indent!.hanging}px`;
+      }
+    }
+
+    if (indentRight > 0) {
+      lineEl.style.paddingRight = `${indentRight}px`;
+    }
+
     // Add list marker to first line
+    // List first lines have special handling:
+    // - Marker starts at (indentLeft - hanging)
+    // - Text starts at indentLeft
+    // - The marker box fills the hanging space
     if (isFirstLine && block.attrs?.listMarker) {
+      // Override padding for list first lines
+      // Marker position = indentLeft - hanging (where first line content starts)
+      const markerPos = Math.max(0, indentLeft - (indent?.hanging ?? 0));
+      lineEl.style.paddingLeft = `${markerPos}px`;
+      lineEl.style.textIndent = '0'; // Don't use textIndent for lists
+
       const marker = renderListMarker(block.attrs.listMarker, indent, doc);
-      // Insert marker at the start of the line
       lineEl.insertBefore(marker, lineEl.firstChild);
     }
 
@@ -800,6 +880,11 @@ export function renderParagraphFragment(
 
 /**
  * Render a list marker element
+ *
+ * The marker is rendered as an inline-block that fills the hanging indent area.
+ * - Marker box width = hanging indent
+ * - Text aligns left within the box
+ * - Small padding separates marker from following text
  */
 function renderListMarker(
   marker: string,
@@ -808,18 +893,18 @@ function renderListMarker(
 ): HTMLElement {
   const span = doc.createElement('span');
   span.className = 'layout-list-marker';
-  span.textContent = marker + '\u00A0'; // Add non-breaking space after marker
-
-  // Position the marker in the hanging indent area
   span.style.display = 'inline-block';
+  span.textContent = marker;
 
-  // For hanging indent, the marker appears in the outdented area
-  if (indent?.hanging && indent.hanging > 0) {
-    // Position marker at the negative indent
-    span.style.width = `${indent.hanging}px`;
-    span.style.marginLeft = `-${indent.hanging}px`;
-    span.style.textAlign = 'left';
-  }
+  // The marker box should fill the hanging indent space
+  // with a small gap before the text
+  const hanging = indent?.hanging ?? 24; // Default 24px if not specified
+  const gap = 8; // Small gap between marker and text
+
+  span.style.width = `${hanging - gap}px`;
+  span.style.paddingRight = `${gap}px`;
+  span.style.textAlign = 'left'; // Left-align marker text within box
+  span.style.boxSizing = 'content-box';
 
   return span;
 }

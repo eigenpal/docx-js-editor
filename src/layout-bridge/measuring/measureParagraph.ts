@@ -26,9 +26,9 @@ import {
   type FontMetrics,
 } from './measureContainer';
 
-// Default values
-const DEFAULT_FONT_SIZE = 12; // 12pt
-const DEFAULT_FONT_FAMILY = 'Arial';
+// Default values - match Word 2007+ defaults and renderPage.ts
+const DEFAULT_FONT_SIZE = 11; // 11pt (Word 2007+ default)
+const DEFAULT_FONT_FAMILY = 'Calibri';
 const DEFAULT_LINE_HEIGHT_MULTIPLIER = 1.15; // Word single spacing
 
 // Floating-point tolerance for line breaking (0.5px)
@@ -88,7 +88,11 @@ function calculateTypographyMetrics(
   const fontSizePx = ptToPx(fontSize);
   const ascent = metrics?.ascent ?? fontSizePx * 0.8;
   const descent = metrics?.descent ?? fontSizePx * 0.2;
-  const baseLineHeight = ascent + descent;
+
+  // Base line height should match CSS rendering (em-box based, not ink bounding box)
+  // Use metrics.lineHeight if available (already calculated correctly in getFontMetrics)
+  // This is fontSizePx * 1.15 which matches what browsers render
+  const defaultLineHeight = metrics?.lineHeight ?? fontSizePx * DEFAULT_LINE_HEIGHT_MULTIPLIER;
 
   // Apply line spacing rules
   let lineHeight: number;
@@ -98,16 +102,17 @@ function calculateTypographyMetrics(
     lineHeight = spacing.line;
   } else if (spacing?.lineRule === 'atLeast' && spacing.line !== undefined) {
     // At least: use specified height or natural height, whichever is larger
-    lineHeight = Math.max(spacing.line, baseLineHeight);
+    lineHeight = Math.max(spacing.line, defaultLineHeight);
   } else if (spacing?.line !== undefined && spacing?.lineUnit === 'multiplier') {
-    // Multiplier: multiply base line height
-    lineHeight = baseLineHeight * spacing.line;
+    // Multiplier: In OOXML, lineRule="auto" the line value is a percentage of
+    // single line spacing. line=240 → 1.0x, line=480 → 2.0x
+    lineHeight = defaultLineHeight * spacing.line;
   } else if (spacing?.line !== undefined && spacing?.lineUnit === 'px') {
     // Pixel value
     lineHeight = spacing.line;
   } else {
-    // Default: Word's single line spacing (1.15x)
-    lineHeight = baseLineHeight * DEFAULT_LINE_HEIGHT_MULTIPLIER;
+    // Default: Word's single line spacing (1.15x) - already in defaultLineHeight
+    lineHeight = defaultLineHeight;
   }
 
   return { ascent, descent, lineHeight };
@@ -202,7 +207,9 @@ export function measureParagraph(block: ParagraphBlock, maxWidth: number): Parag
 
   // Calculate available widths
   const bodyContentWidth = Math.max(1, maxWidth - indentLeft - indentRight);
-  const firstLineWidth = Math.max(1, bodyContentWidth - Math.max(0, firstLineOffset));
+  // First line offset: positive = first-line indent (less space), negative = hanging (more space)
+  // Subtracting gives correct width in both cases
+  const firstLineWidth = Math.max(1, bodyContentWidth - firstLineOffset);
 
   const lines: MeasuredLine[] = [];
 
@@ -339,6 +346,14 @@ export function measureParagraph(block: ParagraphBlock, maxWidth: number): Parag
     }
 
     if (isImageRun(run)) {
+      // Skip floating/anchored images - they don't contribute to line height
+      // (they are positioned absolutely and rendered separately)
+      if (run.position) {
+        currentLine.toRun = runIndex;
+        currentLine.toChar = 1;
+        continue;
+      }
+
       // Handle inline image
       const imageWidth = run.width;
       const imageHeight = run.height;

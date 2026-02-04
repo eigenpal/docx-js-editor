@@ -106,7 +106,8 @@ function applyPageStyles(
   // Set default font styles (matches Word default: 11pt Calibri)
   // Individual runs will override these with their own font settings
   element.style.fontFamily = 'Calibri, "Segoe UI", Arial, sans-serif';
-  element.style.fontSize = '11pt';
+  // Use pixels to match Canvas-based measurements (11pt = 11 * 96/72 ≈ 14.67px)
+  element.style.fontSize = `${(11 * 96) / 72}px`;
   element.style.color = '#000000';
 
   if (options.showBorders) {
@@ -155,6 +156,14 @@ function applyFragmentStyles(
 }
 
 /**
+ * EMU to pixels conversion for floating image positioning
+ */
+function emuToPixels(emu: number | undefined): number {
+  if (emu === undefined) return 0;
+  return Math.round((emu * 96) / 914400);
+}
+
+/**
  * Render header or footer content
  */
 function renderHeaderFooterContent(
@@ -166,6 +175,22 @@ function renderHeaderFooterContent(
   const containerEl = doc.createElement('div');
   containerEl.style.position = 'relative';
 
+  // Use content width from context if available, otherwise default to reasonable width
+  const contentWidth = context.contentWidth ?? 600;
+
+  // Collect floating images to render separately, with their paragraph's Y position
+  const floatingImages: Array<{
+    src: string;
+    width: number;
+    height: number;
+    alt?: string;
+    paragraphY: number; // Y position of the containing paragraph
+    position: {
+      horizontal?: { relativeTo?: string; posOffset?: number; align?: string };
+      vertical?: { relativeTo?: string; posOffset?: number; align?: string };
+    };
+  }> = [];
+
   let cursorY = 0;
 
   for (let i = 0; i < content.blocks.length; i++) {
@@ -176,22 +201,60 @@ function renderHeaderFooterContent(
       const paragraphBlock = block as ParagraphBlock;
       const paragraphMeasure = measure as ParagraphMeasure;
 
+      // Track the Y position where this paragraph starts
+      const paragraphStartY = cursorY;
+
+      // Extract floating images and filter them from runs
+      const inlineRuns: typeof paragraphBlock.runs = [];
+      for (const run of paragraphBlock.runs) {
+        if (run.kind === 'image' && 'position' in run && run.position) {
+          const imgRun = run as {
+            kind: 'image';
+            src: string;
+            width: number;
+            height: number;
+            alt?: string;
+            position: {
+              horizontal?: { relativeTo?: string; posOffset?: number; align?: string };
+              vertical?: { relativeTo?: string; posOffset?: number; align?: string };
+            };
+          };
+          floatingImages.push({
+            src: imgRun.src,
+            width: imgRun.width,
+            height: imgRun.height,
+            alt: imgRun.alt,
+            paragraphY: paragraphStartY, // Store where this paragraph starts
+            position: imgRun.position,
+          });
+        } else {
+          // Keep non-floating runs for inline rendering
+          inlineRuns.push(run);
+        }
+      }
+
+      // Create a modified paragraph block without floating images
+      const inlineBlock: ParagraphBlock = {
+        ...paragraphBlock,
+        runs: inlineRuns,
+      };
+
       // Create a synthetic fragment for the paragraph
       const syntheticFragment: ParagraphFragment = {
         kind: 'paragraph',
         blockId: paragraphBlock.id,
         x: 0,
         y: cursorY,
-        width: 500, // Will be overridden by container width
+        width: contentWidth,
         height: paragraphMeasure.totalHeight,
         fromLine: 0,
         toLine: paragraphMeasure.lines.length,
       };
 
-      // Render paragraph fragment
+      // Render paragraph fragment (with floating images filtered out)
       const fragEl = renderParagraphFragment(
         syntheticFragment,
-        paragraphBlock,
+        inlineBlock,
         paragraphMeasure,
         context,
         { document: doc }
@@ -204,6 +267,57 @@ function renderHeaderFooterContent(
       containerEl.appendChild(fragEl);
       cursorY += paragraphMeasure.totalHeight;
     }
+  }
+
+  // Render floating images with absolute positioning
+  for (const floatImg of floatingImages) {
+    const img = doc.createElement('img');
+    img.src = floatImg.src;
+    img.width = floatImg.width;
+    img.height = floatImg.height;
+    if (floatImg.alt) img.alt = floatImg.alt;
+
+    img.style.position = 'absolute';
+
+    // Horizontal positioning
+    const h = floatImg.position.horizontal;
+    if (h) {
+      if (h.align === 'right') {
+        img.style.right = '0';
+      } else if (h.align === 'center') {
+        img.style.left = '50%';
+        img.style.transform = 'translateX(-50%)';
+      } else if (h.posOffset !== undefined) {
+        // posOffset is in EMUs, convert to pixels
+        img.style.left = `${emuToPixels(h.posOffset)}px`;
+      } else {
+        img.style.left = '0';
+      }
+    }
+
+    // Vertical positioning - relative to containing paragraph
+    const v = floatImg.position.vertical;
+    if (v) {
+      // Calculate base Y from paragraph position (for relativeFrom="paragraph")
+      const baseY = floatImg.paragraphY;
+
+      if (v.align === 'bottom') {
+        img.style.bottom = '0';
+      } else if (v.align === 'center') {
+        img.style.top = '50%';
+        img.style.transform = (img.style.transform || '') + ' translateY(-50%)';
+      } else if (v.posOffset !== undefined) {
+        // Add offset to paragraph's Y position
+        img.style.top = `${baseY + emuToPixels(v.posOffset)}px`;
+      } else {
+        img.style.top = `${baseY}px`;
+      }
+    } else {
+      // No vertical positioning - place at paragraph start
+      img.style.top = `${floatImg.paragraphY}px`;
+    }
+
+    containerEl.appendChild(img);
   }
 
   return containerEl;
@@ -302,17 +416,18 @@ export function renderPage(
   // Render header if provided
   if (options.headerContent && options.headerContent.blocks.length > 0) {
     const headerDistance = options.headerDistance ?? page.margins.header ?? page.margins.top;
+    const headerContentWidth = page.size.w - page.margins.left - page.margins.right;
     const headerEl = doc.createElement('div');
     headerEl.className = PAGE_CLASS_NAMES.header;
     headerEl.style.position = 'absolute';
     headerEl.style.top = `${headerDistance}px`;
     headerEl.style.left = `${page.margins.left}px`;
     headerEl.style.right = `${page.margins.right}px`;
-    headerEl.style.width = `${page.size.w - page.margins.left - page.margins.right}px`;
+    headerEl.style.width = `${headerContentWidth}px`;
 
     const headerContentEl = renderHeaderFooterContent(
       options.headerContent,
-      { ...context, section: 'header' },
+      { ...context, section: 'header', contentWidth: headerContentWidth },
       options
     );
     headerEl.appendChild(headerContentEl);
@@ -322,17 +437,18 @@ export function renderPage(
   // Render footer if provided
   if (options.footerContent && options.footerContent.blocks.length > 0) {
     const footerDistance = options.footerDistance ?? page.margins.footer ?? page.margins.bottom;
+    const footerContentWidth = page.size.w - page.margins.left - page.margins.right;
     const footerEl = doc.createElement('div');
     footerEl.className = PAGE_CLASS_NAMES.footer;
     footerEl.style.position = 'absolute';
     footerEl.style.bottom = `${footerDistance}px`;
     footerEl.style.left = `${page.margins.left}px`;
     footerEl.style.right = `${page.margins.right}px`;
-    footerEl.style.width = `${page.size.w - page.margins.left - page.margins.right}px`;
+    footerEl.style.width = `${footerContentWidth}px`;
 
     const footerContentEl = renderHeaderFooterContent(
       options.footerContent,
-      { ...context, section: 'footer' },
+      { ...context, section: 'footer', contentWidth: footerContentWidth },
       options
     );
     footerEl.appendChild(footerContentEl);
@@ -366,7 +482,7 @@ export function renderPages(
   container.style.alignItems = 'center';
   container.style.gap = `${pageGap}px`;
   container.style.padding = `${pageGap}px`;
-  container.style.backgroundColor = '#e0e0e0';
+  container.style.backgroundColor = 'var(--doc-bg, #f8f9fa)';
 
   for (let i = 0; i < pages.length; i++) {
     const page = pages[i];
