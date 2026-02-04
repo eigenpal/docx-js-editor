@@ -14,10 +14,14 @@ import type {
   ParagraphBlock,
   ParagraphMeasure,
   ParagraphFragment,
+  TableBlock,
+  TableMeasure,
+  TableFragment,
 } from '../layout-engine/types';
 import { renderPage, renderPages, updatePage, type RenderContext } from './renderPage';
 import { renderParagraphFragment, sliceRunsForLine, renderLine } from './renderParagraph';
 import { renderFragment, FRAGMENT_CLASS_NAMES } from './renderFragment';
+import { renderTableFragment, TABLE_CLASS_NAMES } from './renderTable';
 
 // Re-export render functions
 export {
@@ -25,10 +29,12 @@ export {
   renderPages,
   updatePage,
   renderParagraphFragment,
+  renderTableFragment,
   renderFragment,
   sliceRunsForLine,
   renderLine,
   FRAGMENT_CLASS_NAMES,
+  TABLE_CLASS_NAMES,
   type RenderContext,
 };
 
@@ -217,6 +223,14 @@ export class LayoutPainter {
       const block = lookup.block as ParagraphBlock;
       const measure = lookup.measure as ParagraphMeasure;
       return renderParagraphFragment(fragment as ParagraphFragment, block, measure, context, {
+        document: this.doc,
+      });
+    }
+
+    if (fragment.kind === 'table' && lookup) {
+      const block = lookup.block as TableBlock;
+      const measure = lookup.measure as TableMeasure;
+      return renderTableFragment(fragment as TableFragment, block, measure, context, {
         document: this.doc,
       });
     }

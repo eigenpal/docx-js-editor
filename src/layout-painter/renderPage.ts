@@ -13,9 +13,13 @@ import type {
   ParagraphBlock,
   ParagraphMeasure,
   ParagraphFragment,
+  TableBlock,
+  TableMeasure,
+  TableFragment,
 } from '../layout-engine/types';
 import { renderFragment } from './renderFragment';
 import { renderParagraphFragment } from './renderParagraph';
+import { renderTableFragment } from './renderTable';
 import type { BlockLookup } from './index';
 
 /**
@@ -234,29 +238,43 @@ export function renderPage(
   // Render each fragment
   for (const fragment of page.fragments) {
     let fragmentEl: HTMLElement;
+    const fragmentContext = { ...context, section: 'body' as const, contentWidth };
 
-    // If we have block lookup and this is a paragraph fragment, render actual content
-    if (options.blockLookup && fragment.kind === 'paragraph' && fragment.blockId) {
+    // If we have block lookup, try to render full content based on fragment type
+    if (options.blockLookup && fragment.blockId) {
       const blockData = options.blockLookup.get(String(fragment.blockId));
+
       if (
-        blockData &&
-        blockData.block.kind === 'paragraph' &&
-        blockData.measure.kind === 'paragraph'
+        fragment.kind === 'paragraph' &&
+        blockData?.block.kind === 'paragraph' &&
+        blockData?.measure.kind === 'paragraph'
       ) {
         fragmentEl = renderParagraphFragment(
           fragment as ParagraphFragment,
           blockData.block as ParagraphBlock,
           blockData.measure as ParagraphMeasure,
-          { ...context, section: 'body', contentWidth },
+          fragmentContext,
+          { document: doc }
+        );
+      } else if (
+        fragment.kind === 'table' &&
+        blockData?.block.kind === 'table' &&
+        blockData?.measure.kind === 'table'
+      ) {
+        fragmentEl = renderTableFragment(
+          fragment as TableFragment,
+          blockData.block as TableBlock,
+          blockData.measure as TableMeasure,
+          fragmentContext,
           { document: doc }
         );
       } else {
         // Fallback to placeholder
-        fragmentEl = renderFragment(fragment, { ...context, section: 'body' }, { document: doc });
+        fragmentEl = renderFragment(fragment, fragmentContext, { document: doc });
       }
     } else {
-      // Use placeholder for other fragment types or when no blockLookup
-      fragmentEl = renderFragment(fragment, { ...context, section: 'body' }, { document: doc });
+      // Use placeholder when no blockLookup
+      fragmentEl = renderFragment(fragment, fragmentContext, { document: doc });
     }
 
     applyFragmentStyles(fragmentEl, fragment, { left: page.margins.left, top: page.margins.top });
