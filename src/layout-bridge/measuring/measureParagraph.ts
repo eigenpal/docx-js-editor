@@ -466,11 +466,39 @@ export function measureParagraph(
     }
 
     if (isImageRun(run)) {
-      // Skip floating/anchored images - they don't contribute to line height
-      // (they are positioned absolutely and rendered separately)
-      if (run.position) {
+      const wrapType = run.wrapType;
+      const isFloating =
+        run.displayMode === 'float' ||
+        (wrapType && ['square', 'tight', 'through'].includes(wrapType));
+
+      // Skip truly floating images - they don't contribute to line height
+      // (they are positioned absolutely and text wraps around them)
+      if (run.position && isFloating) {
         currentLine.toRun = runIndex;
         currentLine.toChar = 1;
+        continue;
+      }
+
+      // Handle topAndBottom (block) images - they get their own line
+      if (wrapType === 'topAndBottom' || run.displayMode === 'block') {
+        // If current line has content, finish it first
+        if (currentLine.width > 0) {
+          startNewLine(runIndex, 0);
+        }
+
+        // The image gets its own line with full image height
+        const imageHeight = run.height;
+        const distTop = run.distTop ?? 6;
+        const distBottom = run.distBottom ?? 6;
+
+        // Update line to contain just this image
+        currentLine.toRun = runIndex;
+        currentLine.toChar = 1;
+        // Use image height plus margins as line height
+        currentLine.maxFontSize = imageHeight + distTop + distBottom;
+
+        // Start a new line after the image for subsequent content
+        startNewLine(runIndex + 1, 0);
         continue;
       }
 
