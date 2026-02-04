@@ -17,11 +17,15 @@ import type {
   TableBlock,
   TableMeasure,
   TableFragment,
+  ImageBlock,
+  ImageMeasure,
+  ImageFragment,
 } from '../layout-engine/types';
 import { renderPage, renderPages, updatePage, type RenderContext } from './renderPage';
 import { renderParagraphFragment, sliceRunsForLine, renderLine } from './renderParagraph';
 import { renderFragment, FRAGMENT_CLASS_NAMES } from './renderFragment';
 import { renderTableFragment, TABLE_CLASS_NAMES } from './renderTable';
+import { renderImageFragment, IMAGE_CLASS_NAMES } from './renderImage';
 
 // Re-export render functions
 export {
@@ -30,11 +34,13 @@ export {
   updatePage,
   renderParagraphFragment,
   renderTableFragment,
+  renderImageFragment,
   renderFragment,
   sliceRunsForLine,
   renderLine,
   FRAGMENT_CLASS_NAMES,
   TABLE_CLASS_NAMES,
+  IMAGE_CLASS_NAMES,
   type RenderContext,
 };
 
@@ -231,6 +237,14 @@ export class LayoutPainter {
       const block = lookup.block as TableBlock;
       const measure = lookup.measure as TableMeasure;
       return renderTableFragment(fragment as TableFragment, block, measure, context, {
+        document: this.doc,
+      });
+    }
+
+    if (fragment.kind === 'image' && lookup) {
+      const block = lookup.block as ImageBlock;
+      const measure = lookup.measure as ImageMeasure;
+      return renderImageFragment(fragment as ImageFragment, block, measure, context, {
         document: this.doc,
       });
     }
