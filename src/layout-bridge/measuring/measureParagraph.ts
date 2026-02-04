@@ -36,6 +36,31 @@ const DEFAULT_LINE_HEIGHT_MULTIPLIER = 1.15; // Word single spacing
 const WIDTH_TOLERANCE = 0.5;
 
 /**
+ * Floating image exclusion zone - describes an area where text cannot flow.
+ * Used to calculate reduced line widths for text wrapping around floating images.
+ */
+export interface FloatingImageZone {
+  /** Left margin reduction (pixels from left edge) */
+  leftMargin: number;
+  /** Right margin reduction (pixels from right edge) */
+  rightMargin: number;
+  /** Top Y coordinate of the exclusion zone (pixels from paragraph start) */
+  topY: number;
+  /** Bottom Y coordinate of the exclusion zone (pixels from paragraph start) */
+  bottomY: number;
+}
+
+/**
+ * Options for paragraph measurement
+ */
+export interface MeasureParagraphOptions {
+  /** Floating image exclusion zones that affect line widths */
+  floatingZones?: FloatingImageZone[];
+  /** Y offset of this paragraph relative to the exclusion zones (default: 0) */
+  paragraphYOffset?: number;
+}
+
+/**
  * Typography metrics for a line
  */
 interface LineTypography {
@@ -56,6 +81,10 @@ interface LineState {
   maxFontSize: number;
   maxFontMetrics: FontMetrics | null;
   availableWidth: number;
+  /** Left offset from floating images (pixels from content left edge) */
+  leftOffset: number;
+  /** Right offset from floating images (pixels from content right edge) */
+  rightOffset: number;
 }
 
 /**
@@ -188,16 +217,57 @@ function findWordBreaks(text: string): number[] {
 const DEFAULT_TAB_WIDTH = 48;
 
 /**
+ * Calculate width reduction for a line based on floating image zones.
+ * Returns the left and right margins that need to be applied.
+ */
+function getFloatingMargins(
+  lineY: number,
+  lineHeight: number,
+  zones: FloatingImageZone[] | undefined,
+  paragraphYOffset: number
+): { leftMargin: number; rightMargin: number } {
+  if (!zones || zones.length === 0) {
+    return { leftMargin: 0, rightMargin: 0 };
+  }
+
+  let leftMargin = 0;
+  let rightMargin = 0;
+
+  // Line position relative to exclusion zones
+  const absoluteLineTop = paragraphYOffset + lineY;
+  const absoluteLineBottom = absoluteLineTop + lineHeight;
+
+  for (const zone of zones) {
+    // Check if this line overlaps vertically with the exclusion zone
+    if (absoluteLineBottom > zone.topY && absoluteLineTop < zone.bottomY) {
+      leftMargin = Math.max(leftMargin, zone.leftMargin);
+      rightMargin = Math.max(rightMargin, zone.rightMargin);
+    }
+  }
+
+  return { leftMargin, rightMargin };
+}
+
+/**
  * Measure a paragraph block and compute line breaks
  *
  * @param block - The paragraph block to measure
  * @param maxWidth - Maximum available width for the paragraph
+ * @param options - Optional measurement options (floating zones, Y offset)
  * @returns ParagraphMeasure with lines and total height
  */
-export function measureParagraph(block: ParagraphBlock, maxWidth: number): ParagraphMeasure {
+export function measureParagraph(
+  block: ParagraphBlock,
+  maxWidth: number,
+  options?: MeasureParagraphOptions
+): ParagraphMeasure {
   const runs = block.runs;
   const attrs = block.attrs;
   const spacing = attrs?.spacing;
+
+  // Floating image support
+  const floatingZones = options?.floatingZones;
+  const paragraphYOffset = options?.paragraphYOffset ?? 0;
 
   // Handle indentation
   const indent = attrs?.indent;
@@ -205,11 +275,28 @@ export function measureParagraph(block: ParagraphBlock, maxWidth: number): Parag
   const indentRight = indent?.right ?? 0;
   const firstLineOffset = (indent?.firstLine ?? 0) - (indent?.hanging ?? 0);
 
-  // Calculate available widths
+  // Calculate base available widths (before floating image adjustment)
   const bodyContentWidth = Math.max(1, maxWidth - indentLeft - indentRight);
   // First line offset: positive = first-line indent (less space), negative = hanging (more space)
   // Subtracting gives correct width in both cases
-  const firstLineWidth = Math.max(1, bodyContentWidth - firstLineOffset);
+  const baseFirstLineWidth = Math.max(1, bodyContentWidth - firstLineOffset);
+
+  // Track cumulative height for floating zone calculations
+  let cumulativeHeight = 0;
+
+  // Calculate first line width with floating zone adjustment
+  // Estimate first line height for floating margin calculation
+  const estimatedFirstLineHeight = ptToPx(DEFAULT_FONT_SIZE) * DEFAULT_LINE_HEIGHT_MULTIPLIER;
+  const firstLineFloatingMargins = getFloatingMargins(
+    0,
+    estimatedFirstLineHeight,
+    floatingZones,
+    paragraphYOffset
+  );
+  const firstLineWidth = Math.max(
+    1,
+    baseFirstLineWidth - firstLineFloatingMargins.leftMargin - firstLineFloatingMargins.rightMargin
+  );
 
   const lines: MeasuredLine[] = [];
 
@@ -264,6 +351,8 @@ export function measureParagraph(block: ParagraphBlock, maxWidth: number): Parag
     maxFontSize: DEFAULT_FONT_SIZE,
     maxFontMetrics: null,
     availableWidth: firstLineWidth,
+    leftOffset: firstLineFloatingMargins.leftMargin,
+    rightOffset: firstLineFloatingMargins.rightMargin,
   };
 
   /**
@@ -276,14 +365,27 @@ export function measureParagraph(block: ParagraphBlock, maxWidth: number): Parag
       currentLine.maxFontMetrics
     );
 
-    lines.push({
+    const line: MeasuredLine = {
       fromRun: currentLine.fromRun,
       fromChar: currentLine.fromChar,
       toRun: currentLine.toRun,
       toChar: currentLine.toChar,
       width: currentLine.width,
       ...typography,
-    });
+    };
+
+    // Only add offsets if they're non-zero (for floating images)
+    if (currentLine.leftOffset > 0) {
+      line.leftOffset = currentLine.leftOffset;
+    }
+    if (currentLine.rightOffset > 0) {
+      line.rightOffset = currentLine.rightOffset;
+    }
+
+    lines.push(line);
+
+    // Update cumulative height for next line's floating zone calculation
+    cumulativeHeight += typography.lineHeight;
   };
 
   /**
@@ -291,6 +393,22 @@ export function measureParagraph(block: ParagraphBlock, maxWidth: number): Parag
    */
   const startNewLine = (runIndex: number, charIndex: number): void => {
     finalizeLine();
+
+    // Calculate available width for new line based on floating zones
+    // Estimate the new line's height for overlap calculation
+    const estimatedLineHeight = ptToPx(DEFAULT_FONT_SIZE) * DEFAULT_LINE_HEIGHT_MULTIPLIER;
+    const floatingMargins = getFloatingMargins(
+      cumulativeHeight,
+      estimatedLineHeight,
+      floatingZones,
+      paragraphYOffset
+    );
+
+    // Body content width minus floating image margins
+    const adjustedWidth = Math.max(
+      1,
+      bodyContentWidth - floatingMargins.leftMargin - floatingMargins.rightMargin
+    );
 
     currentLine = {
       fromRun: runIndex,
@@ -300,7 +418,9 @@ export function measureParagraph(block: ParagraphBlock, maxWidth: number): Parag
       width: 0,
       maxFontSize: DEFAULT_FONT_SIZE,
       maxFontMetrics: null,
-      availableWidth: bodyContentWidth,
+      availableWidth: adjustedWidth,
+      leftOffset: floatingMargins.leftMargin,
+      rightOffset: floatingMargins.rightMargin,
     };
   };
 

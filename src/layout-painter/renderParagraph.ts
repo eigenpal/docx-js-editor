@@ -54,36 +54,11 @@ export interface FloatingImageInfo {
   bottomY: number;
 }
 
-/**
- * Calculate floating image margins for a specific line based on its Y position.
- * This is the SuperDoc approach - each line independently checks if it overlaps
- * with any floating images and gets its own margins.
- */
-function calculateLineFloatingMargins(
-  lineY: number,
-  lineHeight: number,
-  exclusionZones: FloatingImageInfo[] | undefined
-): { leftMargin: number; rightMargin: number } {
-  if (!exclusionZones || exclusionZones.length === 0) {
-    return { leftMargin: 0, rightMargin: 0 };
-  }
-
-  let leftMargin = 0;
-  let rightMargin = 0;
-
-  const lineTop = lineY;
-  const lineBottom = lineY + lineHeight;
-
-  for (const zone of exclusionZones) {
-    // Check if this line overlaps vertically with the exclusion zone
-    if (lineBottom > zone.topY && lineTop < zone.bottomY) {
-      leftMargin = Math.max(leftMargin, zone.leftMargin);
-      rightMargin = Math.max(rightMargin, zone.rightMargin);
-    }
-  }
-
-  return { leftMargin, rightMargin };
-}
+// NOTE: Per-line floating margin calculation has been disabled.
+// Text wrapping around floating images requires passing exclusion zones
+// to the MEASUREMENT phase so lines can be broken at reduced widths.
+// Currently, floating images render at page level and text flows under them.
+// TODO: Implement measurement-time floating image support for proper text wrapping.
 
 /**
  * Options for rendering a paragraph
@@ -645,16 +620,17 @@ export function renderLine(
   lineEl.style.whiteSpace = 'nowrap';
   lineEl.style.overflow = 'visible'; // Allow text to render fully (don't clip descenders)
 
-  // Apply per-line floating image margins (SuperDoc approach)
-  // Each line independently checks if it overlaps with floating images
-  if (options?.floatingMargins) {
-    if (options.floatingMargins.leftMargin > 0) {
-      lineEl.style.marginLeft = `${options.floatingMargins.leftMargin}px`;
-    }
-    if (options.floatingMargins.rightMargin > 0) {
-      lineEl.style.marginRight = `${options.floatingMargins.rightMargin}px`;
-    }
-  }
+  // NOTE: Per-line floating image margins are NOT applied here because:
+  // 1. Text was already measured and line-broken at full paragraph width
+  // 2. Applying margins at render time would push content without re-wrapping
+  // 3. This causes text overflow and paragraph overlapping
+  //
+  // Proper text wrapping around floating images requires:
+  // - Passing floating image info to measureParagraph
+  // - Re-calculating line widths based on vertical overlap
+  // - This is a significant architectural change (TODO)
+  //
+  // For now, floating images render at page level and text flows under them.
 
   // Build tab context if we have tab runs - also create for text measurement
   const hasTabRuns = runsForLine.some(isTabRun);
@@ -798,13 +774,10 @@ export function renderParagraphFragment(
     fragmentEl.dataset.continuesOnNext = 'true';
   }
 
-  // Get floating image exclusion zones from options
-  // Per-line margins will be calculated for each line based on its Y position
-  const exclusionZones = options.floatingImageInfo;
-  const fragmentContentY = options.fragmentContentY ?? 0;
-
-  // Track whether we have floating images to skip during inline rendering
-  // But DON'T render them here - they're now rendered at page level
+  // NOTE: Floating image exclusion zones (options.floatingImageInfo) and
+  // fragment Y position (options.fragmentContentY) are accepted but not used.
+  // Text wrapping around floating images is not yet implemented at measurement time.
+  // Floating images skip during inline rendering - they're rendered at page level.
   for (const run of block.runs) {
     if (isImageRun(run)) {
       const isFloating =
@@ -916,12 +889,14 @@ export function renderParagraphFragment(
 
     // Add small padding inside borders for text not to touch the border
     // This is standard Word behavior
+    // Bottom padding needs to be larger to clear text descenders
     const hasBorder = borders.top || borders.bottom || borders.left || borders.right;
     if (hasBorder) {
       fragmentEl.style.paddingLeft = borders.left ? '4px' : '0';
       fragmentEl.style.paddingRight = borders.right ? '4px' : '0';
       fragmentEl.style.paddingTop = borders.top ? '2px' : '0';
-      fragmentEl.style.paddingBottom = borders.bottom ? '2px' : '0';
+      // Use larger bottom padding to ensure border is below text descenders
+      fragmentEl.style.paddingBottom = borders.bottom ? '6px' : '0';
     }
   }
 
@@ -961,18 +936,12 @@ export function renderParagraphFragment(
     // First line of the paragraph (not just this fragment)
     const isFirstLine = lineIndex === 0 && !fragment.continuesFromPrev;
 
-    // Calculate this line's absolute Y position on the page (content-relative)
-    const lineAbsoluteY = fragmentContentY + cumulativeLineY;
-
-    // Calculate per-line floating margins based on vertical overlap with exclusion zones
-    const lineFloatingMargins = calculateLineFloatingMargins(
-      lineAbsoluteY,
-      line.lineHeight,
-      exclusionZones
-    );
+    // Get per-line floating margins from measurement phase
+    const lineLeftOffset = line.leftOffset ?? 0;
+    const lineRightOffset = line.rightOffset ?? 0;
 
     const lineEl = renderLine(block, line, alignment, doc, {
-      availableWidth,
+      availableWidth: availableWidth - lineLeftOffset - lineRightOffset,
       isLastLine,
       isFirstLine,
       paragraphEndsWithLineBreak,
@@ -980,11 +949,16 @@ export function renderParagraphFragment(
       leftIndentPx: indentLeft,
       firstLineIndentPx: isFirstLine ? firstLineIndentPx : 0,
       context,
-      floatingMargins:
-        lineFloatingMargins.leftMargin > 0 || lineFloatingMargins.rightMargin > 0
-          ? lineFloatingMargins
-          : undefined,
+      floatingMargins: { leftMargin: lineLeftOffset, rightMargin: lineRightOffset },
     });
+
+    // Apply left offset from floating images (lines start after the floating image)
+    if (lineLeftOffset > 0) {
+      lineEl.style.marginLeft = `${lineLeftOffset}px`;
+    }
+    if (lineRightOffset > 0) {
+      lineEl.style.marginRight = `${lineRightOffset}px`;
+    }
 
     // Update cumulative Y for next line
     cumulativeLineY += line.lineHeight;

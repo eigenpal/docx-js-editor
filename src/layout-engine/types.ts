@@ -371,6 +371,10 @@ export type MeasuredLine = {
   descent: number;
   /** Total line height in pixels. */
   lineHeight: number;
+  /** Left offset from floating images (pixels from content left edge). */
+  leftOffset?: number;
+  /** Right offset from floating images (pixels from content right edge). */
+  rightOffset?: number;
 };
 
 /**
