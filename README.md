@@ -1,10 +1,24 @@
-# DOCX Editor
+# @eigenpal/docx-js-editor
 
-A browser-based WYSIWYG DOCX editor with template variable support.
+An open-source, extendable WYSIWYG DOCX editor for JavaScript.
 
 ## Demo
 
 <!-- Add video here -->
+
+## Features
+
+- Full WYSIWYG editing with Microsoft Word fidelity
+- Open, edit, and save DOCX files directly in the browser
+- Template variable support (`{{variable}}`)
+- Extendable plugin architecture
+- Zero server dependencies — runs entirely client-side
+
+## Installation
+
+```bash
+npm install @eigenpal/docx-js-editor
+```
 
 ## Quick Start
 
@@ -13,12 +27,12 @@ bun install
 bun run dev
 ```
 
-## Features
+## Contributing
 
-- Open and edit DOCX files in the browser
-- WYSIWYG editing with Microsoft Word fidelity
-- Template variable insertion (`{{variable}}`)
-- Export back to DOCX
+This is an open-source project. Contributions are welcome!
+
+- [Open an issue](https://github.com/eigenpal/docx-js-editor/issues) to report bugs or request features
+- Submit pull requests to help improve the editor
 
 ## License
 
