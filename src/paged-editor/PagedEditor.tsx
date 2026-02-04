@@ -60,13 +60,23 @@ import {
 
 // Layout painter
 import { LayoutPainter, type BlockLookup } from '../layout-painter';
-import { renderPages, type RenderPageOptions } from '../layout-painter/renderPage';
+import {
+  renderPages,
+  type RenderPageOptions,
+  type HeaderFooterContent,
+} from '../layout-painter/renderPage';
 
 // Selection sync
 import { SelectionSyncCoordinator } from './SelectionSyncCoordinator';
 
 // Types
-import type { Document, Theme, StyleDefinitions, SectionProperties } from '../types/document';
+import type {
+  Document,
+  Theme,
+  StyleDefinitions,
+  SectionProperties,
+  HeaderFooter,
+} from '../types/document';
 
 // =============================================================================
 // TYPES
@@ -81,6 +91,10 @@ export interface PagedEditorProps {
   theme?: Theme | null;
   /** Section properties (page size, margins). */
   sectionProperties?: SectionProperties | null;
+  /** Header content for all pages. */
+  headerContent?: HeaderFooter | null;
+  /** Footer content for all pages. */
+  footerContent?: HeaderFooter | null;
   /** Whether the editor is read-only. */
   readOnly?: boolean;
   /** Gap between pages in pixels. */
@@ -305,6 +319,59 @@ function measureBlocks(blocks: FlowBlock[], contentWidth: number): Measure[] {
   return blocks.map((block) => measureBlock(block, contentWidth));
 }
 
+/**
+ * Convert HeaderFooter (document type) to HeaderFooterContent (render type).
+ *
+ * This converts parsed header/footer content into FlowBlocks that can be
+ * rendered by the layout painter.
+ *
+ * Note: This is a simplified conversion that handles basic paragraph content.
+ * Complex content like tables and images may need additional handling.
+ */
+function convertHeaderFooterToContent(
+  headerFooter: HeaderFooter | null | undefined,
+  contentWidth: number
+): HeaderFooterContent | undefined {
+  if (!headerFooter || !headerFooter.content || headerFooter.content.length === 0) {
+    return undefined;
+  }
+
+  const blocks: FlowBlock[] = [];
+
+  for (const item of headerFooter.content) {
+    if ('runs' in item && Array.isArray(item.runs)) {
+      // This is a Paragraph
+      const paragraph = item as unknown as { runs: unknown[]; properties?: unknown };
+      const paragraphBlock: ParagraphBlock = {
+        kind: 'paragraph',
+        id: String(blocks.length),
+        runs: paragraph.runs as ParagraphBlock['runs'],
+        attrs: paragraph.properties as ParagraphBlock['attrs'],
+      };
+      blocks.push(paragraphBlock);
+    }
+    // Tables in headers/footers would need additional handling
+  }
+
+  if (blocks.length === 0) {
+    return undefined;
+  }
+
+  const measures = measureBlocks(blocks, contentWidth);
+  const totalHeight = measures.reduce((h, m) => {
+    if (m.kind === 'paragraph') {
+      return h + m.totalHeight;
+    }
+    return h;
+  }, 0);
+
+  return {
+    blocks,
+    measures,
+    height: totalHeight,
+  };
+}
+
 // =============================================================================
 // COMPONENT
 // =============================================================================
@@ -319,6 +386,8 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
       styles,
       theme: _theme,
       sectionProperties,
+      headerContent,
+      footerContent,
       readOnly = false,
       pageGap = DEFAULT_PAGE_GAP,
       zoom = 1,
@@ -415,19 +484,40 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
           }
           painterRef.current.setBlockLookup(blockLookup);
 
+          // Convert header/footer content for rendering
+          const headerContentForRender = convertHeaderFooterToContent(headerContent, contentWidth);
+          const footerContentForRender = convertHeaderFooterToContent(footerContent, contentWidth);
+
           // Render pages to container
           renderPages(newLayout.pages, pagesContainerRef.current, {
             pageGap,
             showShadow: true,
             pageBackground: '#fff',
             blockLookup,
+            headerContent: headerContentForRender,
+            footerContent: footerContentForRender,
+            headerDistance: sectionProperties?.headerDistance
+              ? twipsToPixels(sectionProperties.headerDistance)
+              : undefined,
+            footerDistance: sectionProperties?.footerDistance
+              ? twipsToPixels(sectionProperties.footerDistance)
+              : undefined,
           } as RenderPageOptions & { pageGap?: number; blockLookup?: BlockLookup });
         }
 
         // Signal layout is complete for this epoch
         syncCoordinator.onLayoutComplete(currentEpoch);
       },
-      [contentWidth, pageSize, margins, pageGap, syncCoordinator]
+      [
+        contentWidth,
+        pageSize,
+        margins,
+        pageGap,
+        syncCoordinator,
+        headerContent,
+        footerContent,
+        sectionProperties,
+      ]
     );
 
     /**
