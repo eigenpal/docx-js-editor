@@ -680,6 +680,9 @@ export function renderPage(
   if (options.headerContent && options.headerContent.blocks.length > 0) {
     const headerDistance = options.headerDistance ?? page.margins.header ?? page.margins.top;
     const headerContentWidth = page.size.w - page.margins.left - page.margins.right;
+    // Calculate max header height (from header distance to top margin)
+    const maxHeaderHeight = page.margins.top - headerDistance;
+
     const headerEl = doc.createElement('div');
     headerEl.className = PAGE_CLASS_NAMES.header;
     headerEl.style.position = 'absolute';
@@ -687,6 +690,9 @@ export function renderPage(
     headerEl.style.left = `${page.margins.left}px`;
     headerEl.style.right = `${page.margins.right}px`;
     headerEl.style.width = `${headerContentWidth}px`;
+    // Clip header content to prevent overflow into body area
+    headerEl.style.maxHeight = `${maxHeaderHeight}px`;
+    headerEl.style.overflow = 'hidden';
 
     const headerContentEl = renderHeaderFooterContent(
       options.headerContent,
