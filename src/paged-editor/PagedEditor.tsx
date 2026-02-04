@@ -62,6 +62,9 @@ import {
 import { LayoutPainter, type BlockLookup } from '../layout-painter';
 import { renderPages, type RenderPageOptions } from '../layout-painter/renderPage';
 
+// Selection sync
+import { SelectionSyncCoordinator } from './SelectionSyncCoordinator';
+
 // Types
 import type { Document, Theme, StyleDefinitions, SectionProperties } from '../types/document';
 
@@ -345,6 +348,9 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     const isDraggingRef = useRef(false);
     const dragAnchorRef = useRef<number | null>(null);
 
+    // Selection sync coordinator - ensures selection renders only when layout is current
+    const syncCoordinator = useMemo(() => new SelectionSyncCoordinator(), []);
+
     // Compute page size and margins
     const pageSize = useMemo(() => getPageSize(sectionProperties), [sectionProperties]);
     const margins = useMemo(() => getMargins(sectionProperties), [sectionProperties]);
@@ -375,6 +381,12 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
      */
     const runLayoutPipeline = useCallback(
       (state: EditorState) => {
+        // Capture current epoch for this layout run
+        const currentEpoch = syncCoordinator.getDocEpoch();
+
+        // Signal layout is starting
+        syncCoordinator.onLayoutStart();
+
         // Step 1: Convert PM doc to flow blocks
         const newBlocks = toFlowBlocks(state.doc);
         setBlocks(newBlocks);
@@ -411,8 +423,11 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
             blockLookup,
           } as RenderPageOptions & { pageGap?: number; blockLookup?: BlockLookup });
         }
+
+        // Signal layout is complete for this epoch
+        syncCoordinator.onLayoutComplete(currentEpoch);
       },
-      [contentWidth, pageSize, margins, pageGap]
+      [contentWidth, pageSize, margins, pageGap, syncCoordinator]
     );
 
     /**
@@ -677,6 +692,9 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     const handleTransaction = useCallback(
       (transaction: Transaction, newState: EditorState) => {
         if (transaction.docChanged) {
+          // Increment doc epoch to signal document changed
+          syncCoordinator.incrementDocEpoch();
+
           // Content changed - full layout
           runLayoutPipeline(newState);
 
@@ -689,10 +707,11 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
           }
         }
 
-        // Always update selection
+        // Request selection update (will only execute when layout is current)
+        syncCoordinator.requestRender();
         updateSelectionOverlay(newState);
       },
-      [runLayoutPipeline, updateSelectionOverlay, onDocumentChange]
+      [runLayoutPipeline, updateSelectionOverlay, onDocumentChange, syncCoordinator]
     );
 
     /**
