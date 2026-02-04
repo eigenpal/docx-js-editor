@@ -804,9 +804,14 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
      */
     const updateSelectionOverlay = useCallback(
       (state: EditorState) => {
-        if (!layout || blocks.length === 0) return;
-
         const { from, to } = state.selection;
+
+        // Always notify selection change (for toolbar sync) even if layout not ready
+        if (onSelectionChange) {
+          onSelectionChange(from, to);
+        }
+
+        if (!layout || blocks.length === 0) return;
 
         // Collapsed selection - show caret
         if (from === to) {
@@ -940,11 +945,6 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
             setSelectionRects([]);
           }
           setCaretPosition(null);
-        }
-
-        // Notify selection change
-        if (onSelectionChange) {
-          onSelectionChange(from, to);
         }
       },
       [layout, blocks, measures, getCaretFromDom, onSelectionChange]
