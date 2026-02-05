@@ -67,8 +67,6 @@
     }
   },
   "dependencies": {
-    "@radix-ui/react-popover": "^1.1.15",
-    "@radix-ui/react-select": "^2.2.6",
     "clsx": "^2.1.0",
     "docxtemplater": "^3.50.0",
     "jszip": "^3.10.1",
