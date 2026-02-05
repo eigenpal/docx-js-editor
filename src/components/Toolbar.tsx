@@ -607,23 +607,42 @@ export function Toolbar({
 
   // Prevent toolbar clicks from stealing focus and refocus editor
   const handleToolbarMouseDown = useCallback((e: React.MouseEvent) => {
-    // Allow clicks on input elements to work normally
+    // Allow clicks on input/select elements to work normally
     const target = e.target as HTMLElement;
-    const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+    const isInteractive =
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'SELECT' ||
+      target.tagName === 'OPTION';
 
-    if (!isInput) {
+    if (!isInteractive) {
       // Prevent the mousedown from stealing focus
       e.preventDefault();
     }
   }, []);
 
   // Refocus editor after toolbar click (called on mouseup)
-  const handleToolbarMouseUp = useCallback(() => {
-    // Use requestAnimationFrame to ensure the click action completes first
-    requestAnimationFrame(() => {
-      onRefocusEditor?.();
-    });
-  }, [onRefocusEditor]);
+  const handleToolbarMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't refocus if user is interacting with a select/input
+      const target = e.target as HTMLElement;
+      const activeEl = document.activeElement as HTMLElement;
+      const isSelectActive =
+        target.tagName === 'SELECT' ||
+        target.tagName === 'OPTION' ||
+        activeEl?.tagName === 'SELECT';
+
+      if (isSelectActive) {
+        return; // Let the select keep focus
+      }
+
+      // Use requestAnimationFrame to ensure the click action completes first
+      requestAnimationFrame(() => {
+        onRefocusEditor?.();
+      });
+    },
+    [onRefocusEditor]
+  );
 
   return (
     <div

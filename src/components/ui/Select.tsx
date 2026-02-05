@@ -49,7 +49,6 @@ export function SimpleSelect({
         backgroundSize: '1rem',
         backgroundPosition: 'right 0.25rem center',
       }}
-      onMouseDown={(e) => e.stopPropagation()}
       {...props}
     >
       {placeholder && (
@@ -128,7 +127,6 @@ function Select({ value, defaultValue = '', onValueChange, disabled, children }:
           backgroundSize: '1rem',
           backgroundPosition: 'right 0.25rem center',
         }}
-        onMouseDown={(e) => e.stopPropagation()}
       >
         {items}
       </select>
