@@ -12,7 +12,11 @@ import { singletonManager } from '../schema';
 
 // Re-export types and query helpers from extensions
 export type { ResolvedStyleAttrs } from '../extensions/core/ParagraphExtension';
-export { getParagraphAlignment, getStyleId } from '../extensions/core/ParagraphExtension';
+export {
+  getParagraphAlignment,
+  getStyleId,
+  getParagraphTabs,
+} from '../extensions/core/ParagraphExtension';
 export { isInList, getListInfo } from '../extensions/features/ListExtension';
 
 // ============================================================================

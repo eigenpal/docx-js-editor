@@ -284,6 +284,15 @@
 [2026-02-06 15:30] NOTES: typecheck passed, 26/27 tests pass (1 pre-existing skip)
 [2026-02-06 15:30] STATUS: done
 
+[2026-02-06 15:32] TASK: 7.2 Custom tab stop editor
+[2026-02-06 15:32] STATUS: starting
+[2026-02-06 15:35] STATUS: editing
+[2026-02-06 15:35] NOTES: Added getParagraphTabs query, setTabs/addTabStop/removeTabStop commands to ParagraphExtension
+[2026-02-06 15:37] NOTES: Added TabStopMarker to HorizontalRuler — L/C/R/D symbols, click-to-add, double-click-to-remove
+[2026-02-06 15:38] STATUS: testing
+[2026-02-06 15:38] NOTES: typecheck passed, 55/56 tests pass (1 pre-existing skip)
+[2026-02-06 15:38] STATUS: done
+
 [2026-02-06 15:15] TASK: 6.2 Footnote/endnote properties
 [2026-02-06 15:15] STATUS: starting
 [2026-02-06 15:15] NOTES: Position, numbering format, restart rules per section. Infrastructure already parsed/serialized.

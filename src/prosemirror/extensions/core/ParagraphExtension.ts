@@ -14,6 +14,9 @@ import type {
   ParagraphFormatting,
   TextFormatting,
   NumberFormat,
+  TabStop,
+  TabStopAlignment,
+  TabLeader,
 } from '../../../types/document';
 import { paragraphToStyle } from '../../../utils/formatToStyle';
 import { createNodeExtension } from '../create';
@@ -421,6 +424,14 @@ export function getParagraphAlignment(state: EditorState): ParagraphAlignment | 
   return paragraph.attrs.alignment || null;
 }
 
+export function getParagraphTabs(state: EditorState): TabStop[] | null {
+  const { $from } = state.selection;
+  const paragraph = $from.parent;
+
+  if (paragraph.type.name !== 'paragraph') return null;
+  return paragraph.attrs.tabs || null;
+}
+
 export function getStyleId(state: EditorState): string | null {
   const { $from } = state.selection;
   const paragraph = $from.parent;
@@ -461,6 +472,40 @@ export const ParagraphExtension = createNodeExtension({
         insertSectionBreak: (breakType: 'nextPage' | 'continuous' | 'oddPage' | 'evenPage') =>
           setParagraphAttr('sectionBreakType', breakType),
         removeSectionBreak: () => setParagraphAttr('sectionBreakType', null),
+        setTabs: (tabs: TabStop[]) => setParagraphAttr('tabs', tabs.length > 0 ? tabs : null),
+        addTabStop: (
+          position: number,
+          alignment: TabStopAlignment = 'left',
+          leader: TabLeader = 'none'
+        ) => {
+          return (
+            state: EditorState,
+            dispatch?: (tr: import('prosemirror-state').Transaction) => void
+          ) => {
+            const { $from } = state.selection;
+            const paragraph = $from.parent;
+            if (paragraph.type.name !== 'paragraph') return false;
+            const currentTabs: TabStop[] = paragraph.attrs.tabs || [];
+            const filtered = currentTabs.filter((t: TabStop) => t.position !== position);
+            const newTabs = [...filtered, { position, alignment, leader }].sort(
+              (a: TabStop, b: TabStop) => a.position - b.position
+            );
+            return setParagraphAttr('tabs', newTabs)(state, dispatch);
+          };
+        },
+        removeTabStop: (position: number) => {
+          return (
+            state: EditorState,
+            dispatch?: (tr: import('prosemirror-state').Transaction) => void
+          ) => {
+            const { $from } = state.selection;
+            const paragraph = $from.parent;
+            if (paragraph.type.name !== 'paragraph') return false;
+            const currentTabs: TabStop[] = paragraph.attrs.tabs || [];
+            const newTabs = currentTabs.filter((t: TabStop) => t.position !== position);
+            return setParagraphAttr('tabs', newTabs.length > 0 ? newTabs : null)(state, dispatch);
+          };
+        },
       },
     };
   },

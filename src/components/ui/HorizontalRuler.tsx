@@ -13,7 +13,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import type { SectionProperties } from '../../types/document';
+import type { SectionProperties, TabStop, TabStopAlignment } from '../../types/document';
 import { twipsToPixels, pixelsToTwips, formatPx } from '../../utils/units';
 
 // ============================================================================
@@ -46,6 +46,12 @@ export interface HorizontalRulerProps {
   className?: string;
   /** Additional inline styles */
   style?: CSSProperties;
+  /** Current paragraph tab stops */
+  tabStops?: TabStop[] | null;
+  /** Callback when a tab stop is added (click on ruler) */
+  onTabStopAdd?: (positionTwips: number, alignment: TabStopAlignment) => void;
+  /** Callback when a tab stop is removed (double-click on marker) */
+  onTabStopRemove?: (positionTwips: number) => void;
 }
 
 /**
@@ -89,6 +95,9 @@ export function HorizontalRuler({
   unit = 'inch',
   className = '',
   style,
+  tabStops,
+  onTabStopAdd,
+  onTabStopRemove,
 }: HorizontalRulerProps): React.ReactElement {
   // State for dragging
   const [dragging, setDragging] = useState<MarkerType | null>(null);
@@ -202,6 +211,16 @@ export function HorizontalRuler({
       style={rulerStyle}
       role="slider"
       aria-label="Horizontal ruler"
+      onClick={(e) => {
+        if (!onTabStopAdd || !rulerRef.current || dragging) return;
+        const rect = rulerRef.current.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const positionTwips = pixelsToTwips(clickX / zoom);
+        // Only add in the content area (between margins)
+        if (positionTwips > leftMarginTwips && positionTwips < pageWidthTwips - rightMarginTwips) {
+          onTabStopAdd(Math.round(positionTwips), 'left');
+        }
+      }}
       aria-valuemin={0}
       aria-valuemax={pageWidthTwips}
     >
@@ -258,6 +277,19 @@ export function HorizontalRuler({
           onMouseDown={(e) => handleDragStart(e, 'firstLineIndent')}
         />
       )}
+
+      {/* Tab stop markers */}
+      {tabStops?.map((tab) => {
+        const posPx = twipsToPixels(tab.position) * zoom;
+        return (
+          <TabStopMarker
+            key={tab.position}
+            tabStop={tab}
+            positionPx={posPx}
+            onDoubleClick={() => onTabStopRemove?.(tab.position)}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -445,6 +477,61 @@ function FirstLineIndentMarker({
       tabIndex={editable ? 0 : -1}
     >
       <div style={triangleStyle} />
+    </div>
+  );
+}
+
+/**
+ * Tab stop marker — L/C/R/D symbol on the ruler
+ */
+interface TabStopMarkerProps {
+  tabStop: TabStop;
+  positionPx: number;
+  onDoubleClick: () => void;
+}
+
+const TAB_ALIGNMENT_SYMBOLS: Record<string, string> = {
+  left: 'L',
+  center: 'C',
+  right: 'R',
+  decimal: 'D',
+  bar: '|',
+};
+
+function TabStopMarker({
+  tabStop,
+  positionPx,
+  onDoubleClick,
+}: TabStopMarkerProps): React.ReactElement {
+  const symbol = TAB_ALIGNMENT_SYMBOLS[tabStop.alignment] || 'L';
+
+  const markerStyle: CSSProperties = {
+    position: 'absolute',
+    left: formatPx(positionPx - 5),
+    bottom: 0,
+    width: 10,
+    height: 12,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 8,
+    fontWeight: 700,
+    color: '#555',
+    cursor: 'pointer',
+    userSelect: 'none',
+  };
+
+  return (
+    <div
+      className="docx-ruler-tab-stop"
+      style={markerStyle}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        onDoubleClick();
+      }}
+      title={`${tabStop.alignment} tab at ${(tabStop.position / 1440).toFixed(2)}"`}
+    >
+      {symbol}
     </div>
   );
 }
