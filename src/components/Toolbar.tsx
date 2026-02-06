@@ -11,9 +11,9 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import type { TextFormatting, ParagraphAlignment, Style, Theme } from '../types/document';
+import type { ParagraphAlignment, Style, Theme } from '../types/document';
 import { FontPicker } from './ui/FontPicker';
-import { FontSizePicker, halfPointsToPoints, pointsToHalfPoints } from './ui/FontSizePicker';
+import { FontSizePicker, halfPointsToPoints } from './ui/FontSizePicker';
 import { TextColorPicker, HighlightColorPicker } from './ui/ColorPicker';
 import { AlignmentButtons } from './ui/AlignmentButtons';
 import { ListButtons, type ListState, createDefaultListState } from './ui/ListButtons';
@@ -913,188 +913,14 @@ export function Toolbar({
 }
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// RE-EXPORTED UTILITIES (from toolbarUtils.ts)
 // ============================================================================
 
-/**
- * Map hex color to OOXML highlight color name
- * OOXML uses named colors for highlights (yellow, green, cyan, etc.)
- */
-const HIGHLIGHT_HEX_TO_NAME: Record<string, string> = {
-  FFFF00: 'yellow',
-  '00FF00': 'green',
-  '00FFFF': 'cyan',
-  FF00FF: 'magenta',
-  '0000FF': 'blue',
-  FF0000: 'red',
-  '00008B': 'darkBlue',
-  '008080': 'darkCyan',
-  '008000': 'darkGreen',
-  '800080': 'darkMagenta',
-  '8B0000': 'darkRed',
-  '808000': 'darkYellow',
-  '808080': 'darkGray',
-  C0C0C0: 'lightGray',
-  '000000': 'black',
-  FFFFFF: 'white',
-};
-
-function mapHexToHighlightName(hex: string): string | null {
-  const normalized = hex.replace(/^#/, '').toUpperCase();
-  return HIGHLIGHT_HEX_TO_NAME[normalized] || null;
-}
-
-/**
- * Extract formatting state from TextFormatting and ParagraphFormatting objects
- */
-export function getSelectionFormatting(
-  formatting?: Partial<TextFormatting>,
-  paragraphFormatting?: Partial<import('../types/document').ParagraphFormatting>
-): SelectionFormatting {
-  const result: SelectionFormatting = {};
-
-  if (formatting) {
-    result.bold = formatting.bold;
-    result.italic = formatting.italic;
-    result.underline =
-      formatting.underline?.style !== 'none' && formatting.underline?.style !== undefined;
-    result.strike = formatting.strike;
-    result.superscript = formatting.vertAlign === 'superscript';
-    result.subscript = formatting.vertAlign === 'subscript';
-    result.fontFamily = formatting.fontFamily?.ascii || formatting.fontFamily?.hAnsi;
-    result.fontSize = formatting.fontSize;
-    // Color would need theme resolution, simplified here
-    result.color = formatting.color?.rgb ? `#${formatting.color.rgb}` : undefined;
-    result.highlight = formatting.highlight !== 'none' ? formatting.highlight : undefined;
-  }
-
-  if (paragraphFormatting) {
-    result.alignment = paragraphFormatting.alignment;
-
-    // Extract line spacing
-    if (paragraphFormatting.lineSpacing !== undefined) {
-      result.lineSpacing = paragraphFormatting.lineSpacing;
-    }
-
-    // Extract paragraph style ID
-    if (paragraphFormatting.styleId) {
-      result.styleId = paragraphFormatting.styleId;
-    }
-
-    // Extract list state from numPr
-    if (paragraphFormatting.numPr) {
-      const { numId, ilvl } = paragraphFormatting.numPr;
-      // We need to determine if it's bullet or numbered - for now we'll use a heuristic
-      // numId 1 is typically bullet, numId 2 is typically numbered in Word defaults
-      // This is a simplification - proper implementation would check the numbering definitions
-      const isBullet = numId === 1;
-      result.listState = {
-        type: isBullet ? 'bullet' : 'numbered',
-        level: ilvl ?? 0,
-        isInList: true,
-        numId,
-      };
-    } else {
-      result.listState = createDefaultListState();
-    }
-  }
-
-  return result;
-}
-
-/**
- * Apply a formatting action to existing formatting, returning new formatting
- */
-export function applyFormattingAction(
-  currentFormatting: TextFormatting,
-  action: FormattingAction
-): TextFormatting {
-  const newFormatting = { ...currentFormatting };
-
-  // Handle object-type actions (fontFamily, fontSize, textColor, etc.)
-  if (typeof action === 'object') {
-    switch (action.type) {
-      case 'fontFamily':
-        newFormatting.fontFamily = {
-          ...currentFormatting.fontFamily,
-          ascii: action.value,
-          hAnsi: action.value,
-        };
-        return newFormatting;
-      case 'fontSize':
-        // Convert points to half-points for OOXML
-        newFormatting.fontSize = pointsToHalfPoints(action.value);
-        return newFormatting;
-      case 'textColor':
-        // Set text color as RGB value (without #)
-        newFormatting.color = {
-          rgb: action.value.replace(/^#/, '').toUpperCase(),
-        };
-        return newFormatting;
-      case 'highlightColor':
-        // Set highlight color - empty string means "no highlight"
-        if (action.value === '' || action.value === 'none') {
-          newFormatting.highlight = 'none';
-        } else {
-          // Highlight color is stored as a name in OOXML (yellow, green, etc.)
-          // But we receive hex values from the picker, so map them
-          newFormatting.highlight = (mapHexToHighlightName(action.value) ||
-            'yellow') as TextFormatting['highlight'];
-        }
-        return newFormatting;
-    }
-  }
-
-  // Handle string-type actions
-  switch (action) {
-    case 'bold':
-      newFormatting.bold = !currentFormatting.bold;
-      break;
-    case 'italic':
-      newFormatting.italic = !currentFormatting.italic;
-      break;
-    case 'underline':
-      if (currentFormatting.underline?.style && currentFormatting.underline.style !== 'none') {
-        newFormatting.underline = undefined;
-      } else {
-        newFormatting.underline = { style: 'single' };
-      }
-      break;
-    case 'strikethrough':
-      newFormatting.strike = !currentFormatting.strike;
-      break;
-    case 'superscript':
-      newFormatting.vertAlign =
-        currentFormatting.vertAlign === 'superscript' ? 'baseline' : 'superscript';
-      break;
-    case 'subscript':
-      newFormatting.vertAlign =
-        currentFormatting.vertAlign === 'subscript' ? 'baseline' : 'subscript';
-      break;
-    case 'clearFormatting':
-      return {}; // Return empty formatting
-  }
-
-  return newFormatting;
-}
-
-/**
- * Check if formatting has any active styles
- */
-export function hasActiveFormatting(formatting?: SelectionFormatting): boolean {
-  if (!formatting) return false;
-  return !!(
-    formatting.bold ||
-    formatting.italic ||
-    formatting.underline ||
-    formatting.strike ||
-    formatting.superscript ||
-    formatting.subscript
-  );
-}
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
+export {
+  getSelectionFormatting,
+  applyFormattingAction,
+  hasActiveFormatting,
+  mapHexToHighlightName,
+} from './toolbarUtils';
 
 export default Toolbar;

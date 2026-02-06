@@ -865,88 +865,43 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   }, [hyperlinkDialog, getActiveEditorView, focusActiveEditor]);
 
   // Handle margin changes from rulers
-  const handleLeftMarginChange = useCallback(
-    (marginTwips: number) => {
-      if (!history.state || readOnly) return;
-      const newDoc = {
-        ...history.state,
-        package: {
-          ...history.state.package,
-          document: {
-            ...history.state.package.document,
-            finalSectionProperties: {
-              ...history.state.package.document.finalSectionProperties,
-              marginLeft: marginTwips,
+  const createMarginHandler = useCallback(
+    (property: 'marginLeft' | 'marginRight' | 'marginTop' | 'marginBottom') =>
+      (marginTwips: number) => {
+        if (!history.state || readOnly) return;
+        const newDoc = {
+          ...history.state,
+          package: {
+            ...history.state.package,
+            document: {
+              ...history.state.package.document,
+              finalSectionProperties: {
+                ...history.state.package.document.finalSectionProperties,
+                [property]: marginTwips,
+              },
             },
           },
-        },
-      };
-      handleDocumentChange(newDoc);
-    },
+        };
+        handleDocumentChange(newDoc);
+      },
     [history.state, readOnly, handleDocumentChange]
   );
 
-  const handleRightMarginChange = useCallback(
-    (marginTwips: number) => {
-      if (!history.state || readOnly) return;
-      const newDoc = {
-        ...history.state,
-        package: {
-          ...history.state.package,
-          document: {
-            ...history.state.package.document,
-            finalSectionProperties: {
-              ...history.state.package.document.finalSectionProperties,
-              marginRight: marginTwips,
-            },
-          },
-        },
-      };
-      handleDocumentChange(newDoc);
-    },
-    [history.state, readOnly, handleDocumentChange]
+  const handleLeftMarginChange = useMemo(
+    () => createMarginHandler('marginLeft'),
+    [createMarginHandler]
   );
-
-  const handleTopMarginChange = useCallback(
-    (marginTwips: number) => {
-      if (!history.state || readOnly) return;
-      const newDoc = {
-        ...history.state,
-        package: {
-          ...history.state.package,
-          document: {
-            ...history.state.package.document,
-            finalSectionProperties: {
-              ...history.state.package.document.finalSectionProperties,
-              marginTop: marginTwips,
-            },
-          },
-        },
-      };
-      handleDocumentChange(newDoc);
-    },
-    [history.state, readOnly, handleDocumentChange]
+  const handleRightMarginChange = useMemo(
+    () => createMarginHandler('marginRight'),
+    [createMarginHandler]
   );
-
-  const handleBottomMarginChange = useCallback(
-    (marginTwips: number) => {
-      if (!history.state || readOnly) return;
-      const newDoc = {
-        ...history.state,
-        package: {
-          ...history.state.package,
-          document: {
-            ...history.state.package.document,
-            finalSectionProperties: {
-              ...history.state.package.document.finalSectionProperties,
-              marginBottom: marginTwips,
-            },
-          },
-        },
-      };
-      handleDocumentChange(newDoc);
-    },
-    [history.state, readOnly, handleDocumentChange]
+  const handleTopMarginChange = useMemo(
+    () => createMarginHandler('marginTop'),
+    [createMarginHandler]
+  );
+  const handleBottomMarginChange = useMemo(
+    () => createMarginHandler('marginBottom'),
+    [createMarginHandler]
   );
 
   // Handle page navigation (from PageNavigator)

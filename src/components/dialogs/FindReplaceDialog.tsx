@@ -4,61 +4,39 @@
  * Modal dialog for searching and replacing text in the document.
  * Supports find, find next/previous, replace, and replace all operations.
  *
- * Features:
- * - Find input with next/previous navigation
- * - Replace input with replace/replace all
- * - Match case option
- * - Match whole word option
- * - Keyboard shortcuts (Ctrl+F, Ctrl+H, Enter, Escape)
- * - Match count display
+ * Logic and utilities are in separate files:
+ * - findReplaceUtils.ts — Pure search/replace functions and types
+ * - useFindReplace.ts   — React hook for dialog state management
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CSSProperties, KeyboardEvent, ChangeEvent } from 'react';
 
+// Re-export types and utilities so existing imports still work
+export type { FindMatch, FindOptions, FindResult, HighlightOptions } from './findReplaceUtils';
+export {
+  createDefaultFindOptions,
+  findAllMatches,
+  escapeRegexString,
+  createSearchPattern,
+  replaceAllInContent,
+  replaceFirstInContent,
+  getMatchCountText,
+  isEmptySearch,
+  getDefaultHighlightOptions,
+  findInDocument,
+  findInParagraph,
+  scrollToMatch,
+} from './findReplaceUtils';
+
+export type { FindReplaceOptions, FindReplaceState, UseFindReplaceReturn } from './useFindReplace';
+export { useFindReplace } from './useFindReplace';
+
+import type { FindOptions, FindResult, FindMatch } from './findReplaceUtils';
+
 // ============================================================================
-// TYPES
+// PROPS
 // ============================================================================
-
-/**
- * A single match result in the document
- */
-export interface FindMatch {
-  /** Index of the paragraph containing the match */
-  paragraphIndex: number;
-  /** Index of the run/content within the paragraph */
-  contentIndex: number;
-  /** Character offset within the content */
-  startOffset: number;
-  /** Character offset for end of match */
-  endOffset: number;
-  /** The matched text */
-  text: string;
-}
-
-/**
- * Find options for controlling search behavior
- */
-export interface FindOptions {
-  /** Whether to match case */
-  matchCase: boolean;
-  /** Whether to match whole words only */
-  matchWholeWord: boolean;
-  /** Whether to use regular expressions (future) */
-  useRegex?: boolean;
-}
-
-/**
- * Find result with all matches
- */
-export interface FindResult {
-  /** All matches found */
-  matches: FindMatch[];
-  /** Total match count */
-  totalCount: number;
-  /** Current match index (0-based) */
-  currentIndex: number;
-}
 
 /**
  * Props for the FindReplaceDialog component
@@ -350,13 +328,11 @@ export function FindReplaceDialog({
       setShowReplace(replaceMode);
       setResult(null);
 
-      // Focus search input
       setTimeout(() => {
         searchInputRef.current?.focus();
         searchInputRef.current?.select();
       }, 100);
 
-      // If we have initial text, search for it
       if (initialSearchText) {
         const searchResult = onFind(initialSearchText, { matchCase, matchWholeWord });
         setResult(searchResult);
@@ -365,16 +341,12 @@ export function FindReplaceDialog({
         }
       }
     } else {
-      // Clear highlights when closing
       if (onClearHighlights) {
         onClearHighlights();
       }
     }
   }, [isOpen, initialSearchText, replaceMode]);
 
-  /**
-   * Perform search
-   */
   const performSearch = useCallback(() => {
     if (!searchText.trim()) {
       setResult(null);
@@ -394,23 +366,16 @@ export function FindReplaceDialog({
     }
   }, [searchText, matchCase, matchWholeWord, onFind, onHighlightMatches, onClearHighlights]);
 
-  // Search when options change
   useEffect(() => {
     if (isOpen && searchText.trim()) {
       performSearch();
     }
   }, [matchCase, matchWholeWord]);
 
-  /**
-   * Handle search input change
-   */
   const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value);
   }, []);
 
-  /**
-   * Handle search on Enter or input change with debounce
-   */
   const handleSearchKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
@@ -431,9 +396,6 @@ export function FindReplaceDialog({
     [result, performSearch, onClose]
   );
 
-  /**
-   * Handle replace input key down
-   */
   const handleReplaceKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
@@ -446,16 +408,12 @@ export function FindReplaceDialog({
     [onClose]
   );
 
-  /**
-   * Handle Find Next
-   */
   const handleFindNext = useCallback(() => {
     if (!searchText.trim()) {
       performSearch();
       return;
     }
 
-    // If no current result, search first
     if (!result) {
       performSearch();
       return;
@@ -471,16 +429,12 @@ export function FindReplaceDialog({
     }
   }, [searchText, result, performSearch, onFindNext]);
 
-  /**
-   * Handle Find Previous
-   */
   const handleFindPrevious = useCallback(() => {
     if (!searchText.trim()) {
       performSearch();
       return;
     }
 
-    // If no current result, search first
     if (!result) {
       performSearch();
       return;
@@ -496,15 +450,11 @@ export function FindReplaceDialog({
     }
   }, [searchText, result, performSearch, onFindPrevious]);
 
-  /**
-   * Handle Replace
-   */
   const handleReplace = useCallback(() => {
     if (!result || result.totalCount === 0) return;
 
     const success = onReplace(replaceText);
     if (success) {
-      // Re-search after replacement
       const newResult = onFind(searchText, { matchCase, matchWholeWord });
       setResult(newResult);
       if (newResult?.matches && onHighlightMatches) {
@@ -522,15 +472,11 @@ export function FindReplaceDialog({
     onHighlightMatches,
   ]);
 
-  /**
-   * Handle Replace All
-   */
   const handleReplaceAll = useCallback(() => {
     if (!searchText.trim()) return;
 
     const count = onReplaceAll(searchText, replaceText, { matchCase, matchWholeWord });
     if (count > 0) {
-      // Clear result after replace all
       setResult({
         matches: [],
         totalCount: 0,
@@ -542,9 +488,6 @@ export function FindReplaceDialog({
     }
   }, [searchText, replaceText, matchCase, matchWholeWord, onReplaceAll, onClearHighlights]);
 
-  /**
-   * Toggle replace mode
-   */
   const toggleReplaceMode = useCallback(() => {
     setShowReplace((prev) => {
       const newValue = !prev;
@@ -555,18 +498,12 @@ export function FindReplaceDialog({
     });
   }, []);
 
-  /**
-   * Handle overlay click
-   */
   const handleOverlayClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       // Don't close on overlay click - this is a non-modal dialog
     }
   }, []);
 
-  /**
-   * Handle global key events
-   */
   const handleDialogKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
       if (e.key === 'Escape') {
@@ -576,7 +513,6 @@ export function FindReplaceDialog({
     [onClose]
   );
 
-  // Don't render if not open
   if (!isOpen) {
     return null;
   }
@@ -766,596 +702,6 @@ export function FindReplaceDialog({
       </div>
     </div>
   );
-}
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-/**
- * Create default find options
- */
-export function createDefaultFindOptions(): FindOptions {
-  return {
-    matchCase: false,
-    matchWholeWord: false,
-    useRegex: false,
-  };
-}
-
-/**
- * Find all matches of search text in content
- * @param content - The text to search in
- * @param searchText - The text to find
- * @param options - Find options
- * @returns Array of match indices [startIndex, endIndex]
- */
-export function findAllMatches(
-  content: string,
-  searchText: string,
-  options: FindOptions
-): Array<{ start: number; end: number }> {
-  if (!content || !searchText) {
-    return [];
-  }
-
-  const matches: Array<{ start: number; end: number }> = [];
-
-  // Prepare search string
-  let searchFor = searchText;
-
-  if (!options.matchCase) {
-    searchFor = searchText.toLowerCase();
-  }
-
-  // Escape regex special characters if not using regex
-  const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  // Build pattern
-  let pattern: string;
-  if (options.matchWholeWord) {
-    pattern = `\\b${escapeRegex(searchFor)}\\b`;
-  } else {
-    pattern = escapeRegex(searchFor);
-  }
-
-  const flags = options.matchCase ? 'g' : 'gi';
-  const regex = new RegExp(pattern, flags);
-
-  let match: RegExpExecArray | null;
-  while ((match = regex.exec(content)) !== null) {
-    matches.push({
-      start: match.index,
-      end: match.index + match[0].length,
-    });
-    // Prevent infinite loop for zero-width matches
-    if (match[0].length === 0) {
-      regex.lastIndex++;
-    }
-  }
-
-  return matches;
-}
-
-/**
- * Escape string for use in regex pattern
- */
-export function escapeRegexString(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/**
- * Create a regex pattern from search text and options
- */
-export function createSearchPattern(searchText: string, options: FindOptions): RegExp | null {
-  if (!searchText) return null;
-
-  try {
-    let pattern: string;
-
-    if (options.useRegex) {
-      pattern = searchText;
-    } else {
-      pattern = escapeRegexString(searchText);
-    }
-
-    if (options.matchWholeWord) {
-      pattern = `\\b${pattern}\\b`;
-    }
-
-    const flags = options.matchCase ? 'g' : 'gi';
-    return new RegExp(pattern, flags);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Replace text in content
- * @param content - Original content
- * @param searchText - Text to find
- * @param replaceText - Text to replace with
- * @param options - Find options
- * @returns New content with replacements
- */
-export function replaceAllInContent(
-  content: string,
-  searchText: string,
-  replaceText: string,
-  options: FindOptions
-): string {
-  const pattern = createSearchPattern(searchText, options);
-  if (!pattern) return content;
-
-  return content.replace(pattern, replaceText);
-}
-
-/**
- * Replace first match in content
- * @param content - Original content
- * @param searchText - Text to find
- * @param replaceText - Text to replace with
- * @param options - Find options
- * @param startIndex - Index to start searching from
- * @returns New content with replacement, or original if no match
- */
-export function replaceFirstInContent(
-  content: string,
-  searchText: string,
-  replaceText: string,
-  options: FindOptions,
-  startIndex: number = 0
-): { content: string; replaced: boolean; matchStart: number; matchEnd: number } {
-  const matches = findAllMatches(content, searchText, options);
-
-  // Find match at or after startIndex
-  const match = matches.find((m) => m.start >= startIndex) || matches[0];
-
-  if (!match) {
-    return { content, replaced: false, matchStart: -1, matchEnd: -1 };
-  }
-
-  const newContent = content.substring(0, match.start) + replaceText + content.substring(match.end);
-
-  return {
-    content: newContent,
-    replaced: true,
-    matchStart: match.start,
-    matchEnd: match.start + replaceText.length,
-  };
-}
-
-/**
- * Get match count for status display
- */
-export function getMatchCountText(result: FindResult | null): string {
-  if (!result) return '';
-  if (result.totalCount === 0) return 'No results';
-  if (result.totalCount === 1) return '1 match';
-  return `${result.currentIndex + 1} of ${result.totalCount} matches`;
-}
-
-/**
- * Check if search text is empty or whitespace-only
- */
-export function isEmptySearch(searchText: string): boolean {
-  return !searchText || searchText.trim() === '';
-}
-
-/**
- * Highlight options for document rendering
- */
-export interface HighlightOptions {
-  /** Background color for current match */
-  currentMatchColor: string;
-  /** Background color for other matches */
-  otherMatchColor: string;
-}
-
-/**
- * Get default highlight options
- */
-export function getDefaultHighlightOptions(): HighlightOptions {
-  return {
-    currentMatchColor: '#FFFF00', // Bright yellow for current (hardcoded for visibility)
-    otherMatchColor: '#FFFFAA', // Light yellow for others (hardcoded for visibility)
-  };
-}
-
-// ============================================================================
-// HOOK: useFindReplace
-// ============================================================================
-
-/**
- * Options for the useFindReplace hook
- */
-export interface FindReplaceOptions {
-  /** Whether to show replace functionality initially */
-  initialReplaceMode?: boolean;
-  /** Callback when matches change */
-  onMatchesChange?: (matches: FindMatch[]) => void;
-  /** Callback when current match changes */
-  onCurrentMatchChange?: (match: FindMatch | null, index: number) => void;
-}
-
-/**
- * State for the find/replace hook
- */
-export interface FindReplaceState {
-  /** Whether the dialog is open */
-  isOpen: boolean;
-  /** Current search text */
-  searchText: string;
-  /** Current replace text */
-  replaceText: string;
-  /** Find options */
-  options: FindOptions;
-  /** All matches found */
-  matches: FindMatch[];
-  /** Current match index */
-  currentIndex: number;
-  /** Whether in replace mode */
-  replaceMode: boolean;
-}
-
-/**
- * Return type for the useFindReplace hook
- */
-export interface UseFindReplaceReturn {
-  /** Current state */
-  state: FindReplaceState;
-  /** Open the find dialog */
-  openFind: (selectedText?: string) => void;
-  /** Open the replace dialog */
-  openReplace: (selectedText?: string) => void;
-  /** Close the dialog */
-  close: () => void;
-  /** Toggle dialog visibility */
-  toggle: () => void;
-  /** Update search text */
-  setSearchText: (text: string) => void;
-  /** Update replace text */
-  setReplaceText: (text: string) => void;
-  /** Update find options */
-  setOptions: (options: Partial<FindOptions>) => void;
-  /** Set search results */
-  setMatches: (matches: FindMatch[], currentIndex?: number) => void;
-  /** Go to next match */
-  goToNextMatch: () => number;
-  /** Go to previous match */
-  goToPreviousMatch: () => number;
-  /** Go to a specific match by index */
-  goToMatch: (index: number) => void;
-  /** Get current match */
-  getCurrentMatch: () => FindMatch | null;
-  /** Check if has matches */
-  hasMatches: () => boolean;
-}
-
-/**
- * Hook for managing find/replace dialog state
- */
-export function useFindReplace(hookOptions?: FindReplaceOptions): UseFindReplaceReturn {
-  const [state, setState] = useState<FindReplaceState>({
-    isOpen: false,
-    searchText: '',
-    replaceText: '',
-    options: createDefaultFindOptions(),
-    matches: [],
-    currentIndex: 0,
-    replaceMode: hookOptions?.initialReplaceMode ?? false,
-  });
-
-  const openFind = useCallback((selectedText?: string) => {
-    setState((prev) => ({
-      ...prev,
-      isOpen: true,
-      replaceMode: false,
-      searchText: selectedText || prev.searchText,
-      matches: [],
-      currentIndex: 0,
-    }));
-  }, []);
-
-  const openReplace = useCallback((selectedText?: string) => {
-    setState((prev) => ({
-      ...prev,
-      isOpen: true,
-      replaceMode: true,
-      searchText: selectedText || prev.searchText,
-      matches: [],
-      currentIndex: 0,
-    }));
-  }, []);
-
-  const close = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
-  }, []);
-
-  const toggle = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      isOpen: !prev.isOpen,
-    }));
-  }, []);
-
-  const setSearchText = useCallback((text: string) => {
-    setState((prev) => ({
-      ...prev,
-      searchText: text,
-    }));
-  }, []);
-
-  const setReplaceText = useCallback((text: string) => {
-    setState((prev) => ({
-      ...prev,
-      replaceText: text,
-    }));
-  }, []);
-
-  const setOptions = useCallback((options: Partial<FindOptions>) => {
-    setState((prev) => ({
-      ...prev,
-      options: { ...prev.options, ...options },
-    }));
-  }, []);
-
-  const setMatches = useCallback(
-    (matches: FindMatch[], currentIndex: number = 0) => {
-      const newIndex = Math.max(0, Math.min(currentIndex, matches.length - 1));
-      setState((prev) => ({
-        ...prev,
-        matches,
-        currentIndex: matches.length > 0 ? newIndex : 0,
-      }));
-      hookOptions?.onMatchesChange?.(matches);
-      if (matches.length > 0) {
-        hookOptions?.onCurrentMatchChange?.(matches[newIndex], newIndex);
-      } else {
-        hookOptions?.onCurrentMatchChange?.(null, -1);
-      }
-    },
-    [hookOptions]
-  );
-
-  const goToNextMatch = useCallback(() => {
-    let newIndex = 0;
-    setState((prev) => {
-      if (prev.matches.length === 0) return prev;
-      newIndex = (prev.currentIndex + 1) % prev.matches.length;
-      return { ...prev, currentIndex: newIndex };
-    });
-    return newIndex;
-  }, []);
-
-  const goToPreviousMatch = useCallback(() => {
-    let newIndex = 0;
-    setState((prev) => {
-      if (prev.matches.length === 0) return prev;
-      newIndex = prev.currentIndex === 0 ? prev.matches.length - 1 : prev.currentIndex - 1;
-      return { ...prev, currentIndex: newIndex };
-    });
-    return newIndex;
-  }, []);
-
-  const goToMatch = useCallback((index: number) => {
-    setState((prev) => {
-      if (prev.matches.length === 0 || index < 0 || index >= prev.matches.length) {
-        return prev;
-      }
-      return { ...prev, currentIndex: index };
-    });
-  }, []);
-
-  const getCurrentMatch = useCallback((): FindMatch | null => {
-    if (state.matches.length === 0) return null;
-    return state.matches[state.currentIndex] || null;
-  }, [state.matches, state.currentIndex]);
-
-  const hasMatches = useCallback(() => state.matches.length > 0, [state.matches.length]);
-
-  return {
-    state,
-    openFind,
-    openReplace,
-    close,
-    toggle,
-    setSearchText,
-    setReplaceText,
-    setOptions,
-    setMatches,
-    goToNextMatch,
-    goToPreviousMatch,
-    goToMatch,
-    getCurrentMatch,
-    hasMatches,
-  };
-}
-
-// ============================================================================
-// DOCUMENT SEARCH UTILITIES
-// ============================================================================
-
-/**
- * Get plain text from a run
- */
-function getRunText(run: any): string {
-  if (!run || !run.content) return '';
-  let text = '';
-  for (const item of run.content) {
-    if (item.type === 'text') {
-      text += item.text || '';
-    } else if (item.type === 'tab') {
-      text += '\t';
-    } else if (item.type === 'break' && item.breakType === 'textWrapping') {
-      text += '\n';
-    }
-  }
-  return text;
-}
-
-/**
- * Get plain text from a paragraph
- */
-function getParagraphPlainText(paragraph: any): string {
-  if (!paragraph || !paragraph.content) return '';
-  let text = '';
-  for (const item of paragraph.content) {
-    if (item.type === 'run') {
-      text += getRunText(item);
-    } else if (item.type === 'hyperlink') {
-      for (const child of item.children || []) {
-        if (child.type === 'run') {
-          text += getRunText(child);
-        }
-      }
-    }
-  }
-  return text;
-}
-
-/**
- * Find all matches in a document
- */
-export function findInDocument(
-  document: any,
-  searchText: string,
-  options: FindOptions
-): FindMatch[] {
-  if (!document || !searchText) return [];
-
-  const matches: FindMatch[] = [];
-  const body = document.package?.document || document.package?.document;
-  if (!body || !body.content) return matches;
-
-  // Iterate through paragraphs
-  let paragraphIndex = 0;
-  for (const block of body.content) {
-    if (block.type === 'paragraph') {
-      const paragraphMatches = findInParagraph(block, searchText, options, paragraphIndex);
-      matches.push(...paragraphMatches);
-      paragraphIndex++;
-    } else if (block.type === 'table') {
-      // Search in table cells
-      for (const row of block.rows || []) {
-        for (const cell of row.cells || []) {
-          for (const cellContent of cell.content || []) {
-            if (cellContent.type === 'paragraph') {
-              // Note: table paragraphs are tracked separately in the document model
-              // For now, we skip table content in the simple search
-              // A more complete implementation would track table cell positions
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return matches;
-}
-
-/**
- * Find matches in a single paragraph
- */
-export function findInParagraph(
-  paragraph: any,
-  searchText: string,
-  options: FindOptions,
-  paragraphIndex: number
-): FindMatch[] {
-  const matches: FindMatch[] = [];
-  const paragraphText = getParagraphPlainText(paragraph);
-
-  if (!paragraphText) return matches;
-
-  // Find all text matches
-  const textMatches = findAllMatches(paragraphText, searchText, options);
-
-  // Map each match back to the run/content structure
-  for (const match of textMatches) {
-    // For now, we'll use a simplified approach: store the paragraph index and offsets
-    // A more complex implementation would track exact run and content indices
-    const contentInfo = findContentAtOffset(paragraph, match.start);
-
-    matches.push({
-      paragraphIndex,
-      contentIndex: contentInfo.contentIndex,
-      startOffset: contentInfo.offsetInContent,
-      endOffset: contentInfo.offsetInContent + (match.end - match.start),
-      text: paragraphText.substring(match.start, match.end),
-    });
-  }
-
-  return matches;
-}
-
-/**
- * Find the content (run) at a specific character offset in a paragraph
- */
-function findContentAtOffset(
-  paragraph: any,
-  offset: number
-): { contentIndex: number; runIndex: number; offsetInContent: number } {
-  if (!paragraph || !paragraph.content) {
-    return { contentIndex: 0, runIndex: 0, offsetInContent: offset };
-  }
-
-  let currentOffset = 0;
-  let contentIndex = 0;
-
-  for (const item of paragraph.content) {
-    let itemText = '';
-
-    if (item.type === 'run') {
-      itemText = getRunText(item);
-    } else if (item.type === 'hyperlink') {
-      for (const child of item.children || []) {
-        if (child.type === 'run') {
-          itemText += getRunText(child);
-        }
-      }
-    }
-
-    const itemLength = itemText.length;
-
-    if (currentOffset + itemLength > offset) {
-      // The offset is within this content
-      return {
-        contentIndex,
-        runIndex: contentIndex, // Simplified: same as contentIndex
-        offsetInContent: offset - currentOffset,
-      };
-    }
-
-    currentOffset += itemLength;
-    contentIndex++;
-  }
-
-  // Offset is past the end, return last position
-  return {
-    contentIndex: Math.max(0, paragraph.content.length - 1),
-    runIndex: Math.max(0, paragraph.content.length - 1),
-    offsetInContent: 0,
-  };
-}
-
-/**
- * Scroll to a match in the document (to be used with the editor)
- */
-export function scrollToMatch(containerElement: HTMLElement | null, match: FindMatch): void {
-  if (!containerElement || !match) return;
-
-  // Find the paragraph element
-  const paragraphElement = containerElement.querySelector(
-    `[data-paragraph-index="${match.paragraphIndex}"]`
-  );
-
-  if (paragraphElement) {
-    paragraphElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
 }
 
 export default FindReplaceDialog;
