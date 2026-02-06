@@ -51,6 +51,7 @@ import {
 } from './dialogs/FindReplaceDialog';
 import { HyperlinkDialog, useHyperlinkDialog, type HyperlinkData } from './dialogs/HyperlinkDialog';
 import { TablePropertiesDialog } from './dialogs/TablePropertiesDialog';
+import { ImagePositionDialog, type ImagePositionData } from './dialogs/ImagePositionDialog';
 import { getBuiltinTableStyle, type TableStylePreset } from './ui/TableStyleGallery';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import {
@@ -355,6 +356,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
 
   // Table properties dialog state
   const [tablePropsOpen, setTablePropsOpen] = useState(false);
+  // Image position dialog state
+  const [imagePositionOpen, setImagePositionOpen] = useState(false);
 
   // History hook for undo/redo - start with null document
   const history = useDocumentHistory<Document | null>(initialDocument || null, {
@@ -816,6 +819,38 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       const tr = view.state.tr.setNodeMarkup(pos, undefined, {
         ...node.attrs,
         transform: newTransform,
+      });
+      view.dispatch(tr.scrollIntoView());
+      focusActiveEditor();
+    },
+    [getActiveEditorView, focusActiveEditor, state.pmImageContext]
+  );
+
+  // Open image position dialog
+  const handleOpenImagePosition = useCallback(() => {
+    setImagePositionOpen(true);
+  }, []);
+
+  // Apply image position changes
+  const handleApplyImagePosition = useCallback(
+    (data: ImagePositionData) => {
+      const view = getActiveEditorView();
+      if (!view || !state.pmImageContext) return;
+
+      const pos = state.pmImageContext.pos;
+      const node = view.state.doc.nodeAt(pos);
+      if (!node || node.type.name !== 'image') return;
+
+      const tr = view.state.tr.setNodeMarkup(pos, undefined, {
+        ...node.attrs,
+        position: {
+          horizontal: data.horizontal,
+          vertical: data.vertical,
+        },
+        distTop: data.distTop ?? node.attrs.distTop,
+        distBottom: data.distBottom ?? node.attrs.distBottom,
+        distLeft: data.distLeft ?? node.attrs.distLeft,
+        distRight: data.distRight ?? node.attrs.distRight,
       });
       view.dispatch(tr.scrollIntoView());
       focusActiveEditor();
@@ -1683,6 +1718,7 @@ body { background: white; }
                     imageContext={state.pmImageContext}
                     onImageWrapType={handleImageWrapType}
                     onImageTransform={handleImageTransform}
+                    onOpenImagePosition={handleOpenImagePosition}
                     tableContext={state.pmTableContext}
                     onTableAction={handleTableAction}
                   >
@@ -1843,6 +1879,11 @@ body { background: white; }
               }
             }}
             currentProps={state.pmTableContext?.table?.attrs as Record<string, unknown> | undefined}
+          />
+          <ImagePositionDialog
+            isOpen={imagePositionOpen}
+            onClose={() => setImagePositionOpen(false)}
+            onApply={handleApplyImagePosition}
           />
           {/* Hidden file input for image insertion */}
           <input

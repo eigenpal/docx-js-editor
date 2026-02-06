@@ -131,3 +131,11 @@
 [2026-02-06 12:50] STATUS: testing
 [2026-02-06 12:50] NOTES: typecheck passed, 4/4 table tests pass
 [2026-02-06 12:50] STATUS: done
+
+[2026-02-06 12:55] TASK: 3.4 Image positioning dialog
+[2026-02-06 12:55] STATUS: editing
+[2026-02-06 12:55] NOTES: Creating ImagePositionDialog.tsx with horizontal/vertical alignment, offset, relative-to, and distance-from-text controls
+[2026-02-06 13:00] NOTES: Wired dialog in DocxEditor.tsx with imagePositionOpen state, handleOpenImagePosition, handleApplyImagePosition
+[2026-02-06 13:01] STATUS: testing
+[2026-02-06 13:01] NOTES: typecheck passed, 4/4 table tests pass
+[2026-02-06 13:01] STATUS: done

@@ -169,6 +169,8 @@ export interface ToolbarProps {
   onImageWrapType?: (wrapType: string) => void;
   /** Callback for image transform (rotate/flip) */
   onImageTransform?: (action: 'rotateCW' | 'rotateCCW' | 'flipH' | 'flipV') => void;
+  /** Callback to open image position dialog */
+  onOpenImagePosition?: () => void;
   /** Table context when cursor is in a table */
   tableContext?: {
     isInTable: boolean;
@@ -350,6 +352,7 @@ export function Toolbar({
   imageContext,
   onImageWrapType,
   onImageTransform,
+  onOpenImagePosition,
   tableContext,
   onTableAction,
 }: ToolbarProps) {
@@ -970,6 +973,16 @@ export function Toolbar({
           >
             <MaterialSymbol name="flip_to_front" size={ICON_SIZE} />
           </ToolbarButton>
+          {onOpenImagePosition && (
+            <ToolbarButton
+              onClick={onOpenImagePosition}
+              disabled={disabled}
+              title="Image position..."
+              ariaLabel="Image position"
+            >
+              <MaterialSymbol name="open_with" size={ICON_SIZE} />
+            </ToolbarButton>
+          )}
           {onImageTransform && (
             <>
               <ToolbarButton
