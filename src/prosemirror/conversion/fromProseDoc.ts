@@ -599,7 +599,8 @@ function tableCellAttrsToFormatting(attrs: TableCellAttrs): TableCellFormatting 
     attrs.verticalAlign ||
     attrs.backgroundColor ||
     attrs.borders ||
-    attrs.margins;
+    attrs.margins ||
+    attrs.textDirection;
 
   if (!hasFormatting) {
     return undefined;
@@ -625,6 +626,7 @@ function tableCellAttrsToFormatting(attrs: TableCellAttrs): TableCellFormatting 
         }
       : undefined,
     verticalAlign: attrs.verticalAlign || undefined,
+    textDirection: (attrs.textDirection as TableCellFormatting['textDirection']) || undefined,
     shading: attrs.backgroundColor
       ? {
           fill: { rgb: attrs.backgroundColor },

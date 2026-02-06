@@ -86,6 +86,8 @@ export {
   setCellBorder,
   setCellVerticalAlign,
   setCellMargins,
+  setCellTextDirection,
+  toggleNoWrap,
   setCellFillColor,
   setTableBorderColor,
 } from './table';

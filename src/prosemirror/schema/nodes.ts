@@ -174,6 +174,8 @@ export interface TableCellAttrs {
   verticalAlign?: 'top' | 'center' | 'bottom';
   /** Background color (RGB hex) */
   backgroundColor?: string;
+  /** OOXML text direction (e.g. 'tbRl', 'btLr') */
+  textDirection?: string;
   /** No text wrapping in cell */
   noWrap?: boolean;
   /** Cell borders — full BorderSpec per side (style, color, size) */

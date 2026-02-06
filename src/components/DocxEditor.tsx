@@ -115,6 +115,8 @@ import {
   setCellBorder,
   setCellVerticalAlign,
   setCellMargins,
+  setCellTextDirection,
+  toggleNoWrap,
   removeTableBorders,
   setAllTableBorders,
   setOutsideTableBorders,
@@ -702,6 +704,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               setCellVerticalAlign(action.align)(view.state, view.dispatch);
             } else if (action.type === 'cellMargins') {
               setCellMargins(action.margins)(view.state, view.dispatch);
+            } else if (action.type === 'cellTextDirection') {
+              setCellTextDirection(action.direction)(view.state, view.dispatch);
+            } else if (action.type === 'toggleNoWrap') {
+              toggleNoWrap()(view.state, view.dispatch);
             }
           } else {
             // Fallback to legacy table selection handler for other actions

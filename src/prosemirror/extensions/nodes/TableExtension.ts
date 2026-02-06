@@ -169,6 +169,33 @@ function buildCellPaddingStyles(attrs: TableCellAttrs): string[] {
   return [`padding: ${top}px ${right}px ${bottom}px ${left}px`];
 }
 
+// OOXML text direction → CSS writing-mode + direction
+function buildTextDirectionStyles(textDirection?: string): string[] {
+  if (!textDirection) return [];
+  const styles: string[] = [];
+
+  switch (textDirection) {
+    case 'tbRl':
+    case 'tbRlV':
+      styles.push('writing-mode: vertical-rl');
+      break;
+    case 'btLr':
+      styles.push('writing-mode: vertical-lr', 'transform: rotate(180deg)');
+      break;
+    case 'rl':
+    case 'rlV':
+      styles.push('direction: rtl');
+      break;
+    case 'tb':
+    case 'tbV':
+      styles.push('writing-mode: vertical-lr');
+      break;
+    // 'lr', 'lrV' are the default left-to-right, no extra styles needed
+  }
+
+  return styles;
+}
+
 function buildCellWidthStyles(attrs: TableCellAttrs): string[] {
   const styles: string[] = [];
 
@@ -199,6 +226,7 @@ const tableCellSpec: NodeSpec = {
     backgroundColor: { default: null },
     borders: { default: null },
     margins: { default: null },
+    textDirection: { default: null },
     noWrap: { default: false },
   },
   parseDOM: [
@@ -233,6 +261,7 @@ const tableCellSpec: NodeSpec = {
 
     styles.push(...buildCellWidthStyles(attrs));
     styles.push(...buildCellBorderStyles(attrs));
+    styles.push(...buildTextDirectionStyles(attrs.textDirection));
 
     if (attrs.verticalAlign) {
       domAttrs['data-valign'] = attrs.verticalAlign;
@@ -262,6 +291,7 @@ const tableHeaderSpec: NodeSpec = {
     backgroundColor: { default: null },
     borders: { default: null },
     margins: { default: null },
+    textDirection: { default: null },
     noWrap: { default: false },
   },
   parseDOM: [
@@ -296,6 +326,7 @@ const tableHeaderSpec: NodeSpec = {
 
     styles.push(...buildCellWidthStyles(attrs));
     styles.push(...buildCellBorderStyles(attrs));
+    styles.push(...buildTextDirectionStyles(attrs.textDirection));
 
     if (attrs.verticalAlign) {
       domAttrs['data-valign'] = attrs.verticalAlign;
@@ -1150,6 +1181,56 @@ export const TablePluginExtension = createExtension({
       };
     }
 
+    function setCellTextDirection(direction: string | null): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
+
+        if (dispatch) {
+          const tr = state.tr;
+          const { $from } = state.selection;
+
+          for (let d = $from.depth; d > 0; d--) {
+            const node = $from.node(d);
+            if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+              const pos = $from.before(d);
+              const newAttrs = { ...node.attrs, textDirection: direction };
+              tr.setNodeMarkup(pos, undefined, newAttrs);
+              dispatch(tr.scrollIntoView());
+              return true;
+            }
+          }
+        }
+
+        return true;
+      };
+    }
+
+    function toggleNoWrap(): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
+
+        if (dispatch) {
+          const tr = state.tr;
+          const { $from } = state.selection;
+
+          for (let d = $from.depth; d > 0; d--) {
+            const node = $from.node(d);
+            if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+              const pos = $from.before(d);
+              const newAttrs = { ...node.attrs, noWrap: !node.attrs.noWrap };
+              tr.setNodeMarkup(pos, undefined, newAttrs);
+              dispatch(tr.scrollIntoView());
+              return true;
+            }
+          }
+        }
+
+        return true;
+      };
+    }
+
     function setTableBorderColor(color: string): Command {
       return (state, dispatch) => {
         const context = getTableContext(state);
@@ -1216,6 +1297,8 @@ export const TablePluginExtension = createExtension({
           left?: number;
           right?: number;
         }) => setCellMargins(margins),
+        setCellTextDirection: (direction: string | null) => setCellTextDirection(direction),
+        toggleNoWrap: () => toggleNoWrap(),
         setCellFillColor: (color: string | null) => setCellFillColor(color),
         setTableBorderColor: (color: string) => setTableBorderColor(color),
         removeTableBorders: () => setTableBorders('none'),

@@ -433,6 +433,97 @@ function CellMarginsRow({ onAction }: { onAction: (action: TableAction) => void 
 }
 
 // ============================================================================
+// TEXT DIRECTION SUBCOMPONENT
+// ============================================================================
+
+const TEXT_DIR_OPTIONS: { value: string | null; label: string }[] = [
+  { value: null, label: 'Horizontal (LR)' },
+  { value: 'tbRl', label: 'Vertical (top-bottom, RL)' },
+  { value: 'btLr', label: 'Vertical (bottom-top, LR)' },
+];
+
+function TextDirectionRow({ onAction }: { onAction: (action: TableAction) => void }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  return (
+    <div>
+      <button
+        type="button"
+        style={{
+          ...menuItemStyles,
+          backgroundColor: hoveredItem === 'main' ? 'var(--doc-bg-hover)' : 'transparent',
+        }}
+        onMouseEnter={() => setHoveredItem('main')}
+        onMouseLeave={() => setHoveredItem(null)}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <MaterialSymbol name="text_rotation_none" size={18} />
+        <span style={{ flex: 1 }}>Text direction</span>
+        <MaterialSymbol name={isExpanded ? 'expand_less' : 'expand_more'} size={18} />
+      </button>
+
+      {isExpanded && (
+        <div
+          style={{
+            backgroundColor: 'var(--doc-bg-muted)',
+            borderTop: '1px solid var(--doc-border)',
+            borderBottom: '1px solid var(--doc-border)',
+            padding: '4px 0',
+          }}
+        >
+          {TEXT_DIR_OPTIONS.map((opt) => (
+            <button
+              key={opt.value ?? 'default'}
+              type="button"
+              style={{
+                ...menuItemStyles,
+                padding: '6px 16px',
+                fontSize: 13,
+                backgroundColor:
+                  hoveredItem === (opt.value ?? 'default') ? 'var(--doc-bg-hover)' : 'transparent',
+              }}
+              onMouseEnter={() => setHoveredItem(opt.value ?? 'default')}
+              onMouseLeave={() => setHoveredItem(null)}
+              onClick={() => {
+                onAction({ type: 'cellTextDirection', direction: opt.value });
+                setIsExpanded(false);
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// NO-WRAP SUBCOMPONENT
+// ============================================================================
+
+function NoWrapRow({ onAction }: { onAction: (action: TableAction) => void }) {
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  return (
+    <button
+      type="button"
+      style={{
+        ...menuItemStyles,
+        backgroundColor: hoveredItem === 'main' ? 'var(--doc-bg-hover)' : 'transparent',
+      }}
+      onMouseEnter={() => setHoveredItem('main')}
+      onMouseLeave={() => setHoveredItem(null)}
+      onClick={() => onAction({ type: 'toggleNoWrap' })}
+    >
+      <MaterialSymbol name="wrap_text" size={18} />
+      <span style={{ flex: 1 }}>Toggle no-wrap</span>
+    </button>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -606,6 +697,11 @@ export function TableOptionsDropdown({
 
           {/* Cell margins section */}
           <CellMarginsRow onAction={handleAction} />
+
+          {/* Text direction + no-wrap section */}
+          <div style={separatorStyles} role="separator" />
+          <TextDirectionRow onAction={handleAction} />
+          <NoWrapRow onAction={handleAction} />
         </div>
       )}
     </div>

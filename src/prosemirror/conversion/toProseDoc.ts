@@ -497,6 +497,7 @@ function convertTableCell(
     widthType: widthType,
     verticalAlign: formatting?.verticalAlign,
     backgroundColor: backgroundColor,
+    textDirection: formatting?.textDirection,
     noWrap: formatting?.noWrap,
     borders: borders,
     margins: formatting?.margins

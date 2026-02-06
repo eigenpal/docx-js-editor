@@ -118,6 +118,21 @@ export function setCellMargins(margins: {
   return cmds.setCellMargins(margins);
 }
 
+// Text direction
+export function setCellTextDirection(
+  direction: string | null
+): (state: EditorState, dispatch?: (tr: Transaction) => void) => boolean {
+  return cmds.setCellTextDirection(direction);
+}
+
+// No-wrap toggle
+export function toggleNoWrap(): (
+  state: EditorState,
+  dispatch?: (tr: Transaction) => void
+) => boolean {
+  return cmds.toggleNoWrap();
+}
+
 // Cell styling
 export function setCellFillColor(
   color: string | null

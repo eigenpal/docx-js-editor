@@ -41,3 +41,13 @@
 [2026-02-06 11:10] STATUS: testing
 [2026-02-06 11:10] NOTES: typecheck passed, 4/4 merge-split tests pass, 2 pre-existing failures confirmed
 [2026-02-06 11:10] STATUS: done
+
+[2026-02-06 11:15] TASK: 1.5 Text direction + no-wrap controls
+[2026-02-06 11:15] STATUS: editing
+[2026-02-06 11:15] NOTES: Adding textDirection attr, OOXML→CSS mapping, setCellTextDirection + toggleNoWrap commands, UI controls
+[2026-02-06 11:20] NOTES: Added textDirection attr to TableCellAttrs, buildTextDirectionStyles OOXML→CSS mapping (tbRl, btLr, rl, tb)
+[2026-02-06 11:21] NOTES: Added setCellTextDirection + toggleNoWrap commands, re-exports, UI (TextDirectionRow dropdown, NoWrapRow toggle)
+[2026-02-06 11:22] NOTES: Updated toProseDoc/fromProseDoc for textDirection round-trip
+[2026-02-06 11:23] STATUS: testing
+[2026-02-06 11:23] NOTES: typecheck passed, 4/4 table tests pass
+[2026-02-06 11:23] STATUS: done
