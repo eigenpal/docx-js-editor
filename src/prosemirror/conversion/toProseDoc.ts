@@ -90,12 +90,18 @@ export function toProseDoc(document: Document, options?: ToProseDocOptions): PMN
  * Resolves style-based text formatting and passes it to runs so that
  * paragraph styles (like Heading1) apply their font size, color, etc.
  */
-function convertParagraph(paragraph: Paragraph, styleResolver: StyleResolver | null): PMNode {
+function convertParagraph(
+  paragraph: Paragraph,
+  styleResolver: StyleResolver | null,
+  activeCommentIds?: Set<number>
+): PMNode {
   const attrs = paragraphFormattingToAttrs(paragraph, styleResolver);
   const inlineNodes: PMNode[] = [];
 
+  // Track active comment ranges for this paragraph
+  const commentIds = activeCommentIds ?? new Set<number>();
+
   // Get style-based text formatting (font size, bold, color, etc.)
-  // This comes from the paragraph's style (e.g., Heading1 defines fontSize: 28pt, bold: true)
   let styleRunFormatting: TextFormatting | undefined;
   if (styleResolver) {
     const resolved = styleResolver.resolveParagraphStyle(paragraph.formatting?.styleId);
@@ -103,8 +109,15 @@ function convertParagraph(paragraph: Paragraph, styleResolver: StyleResolver | n
   }
 
   for (const content of paragraph.content) {
-    if (content.type === 'run') {
-      const runNodes = convertRun(content, styleRunFormatting);
+    if (content.type === 'commentRangeStart') {
+      commentIds.add(content.id);
+    } else if (content.type === 'commentRangeEnd') {
+      commentIds.delete(content.id);
+    } else if (content.type === 'run') {
+      let runNodes = convertRun(content, styleRunFormatting);
+      if (commentIds.size > 0) {
+        runNodes = applyCommentMarks(runNodes, commentIds);
+      }
       inlineNodes.push(...runNodes);
     } else if (content.type === 'hyperlink') {
       const linkNodes = convertHyperlink(content, styleRunFormatting);
@@ -120,6 +133,23 @@ function convertParagraph(paragraph: Paragraph, styleResolver: StyleResolver | n
   }
 
   return schema.node('paragraph', attrs, inlineNodes);
+}
+
+/**
+ * Apply comment marks to PM nodes within a comment range.
+ * Only the first active comment ID is used (comments don't overlap visually).
+ */
+function applyCommentMarks(nodes: PMNode[], commentIds: Set<number>): PMNode[] {
+  if (commentIds.size === 0) return nodes;
+  const commentId = [...commentIds][0]; // Use first active comment
+  const commentMark = schema.marks.comment.create({ commentId });
+
+  return nodes.map((node) => {
+    if (node.isText) {
+      return node.mark(commentMark.addToSet(node.marks));
+    }
+    return node;
+  });
 }
 
 /**

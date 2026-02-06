@@ -38,6 +38,7 @@ import { parseNumbering, type NumberingMap } from './numberingParser';
 import { parseDocumentBody, extractAllTemplateVariables } from './documentParser';
 import { parseHeader, parseFooter } from './headerFooterParser';
 import { parseFootnotes, parseEndnotes } from './footnoteParser';
+import { parseComments } from './commentParser';
 import { loadFontsWithMapping } from '../utils/fontLoader';
 
 // ============================================================================
@@ -221,7 +222,18 @@ export async function parseDocx(
     }
 
     // ========================================================================
-    // STAGE 10: Detect template variables (75-80%)
+    // STAGE 9b: Parse comments (75-77%)
+    // ========================================================================
+    onProgress('Parsing comments...', 75);
+    const comments = timeStage('comments', () =>
+      parseComments(raw.commentsXml, styles, theme, rels, media)
+    );
+    if (comments.length > 0) {
+      documentBody.comments = comments;
+    }
+
+    // ========================================================================
+    // STAGE 10: Detect template variables (77-80%)
     // ========================================================================
     let templateVariables: string[] | undefined;
 

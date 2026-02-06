@@ -899,10 +899,16 @@ function parseParagraphContents(
         // Track changes - skip for now (would need revision mode)
         break;
 
-      case 'commentRangeStart':
-      case 'commentRangeEnd':
-        // Comments - skip for now
+      case 'commentRangeStart': {
+        const commentId = parseInt(getAttribute(child, 'w', 'id') ?? '0', 10);
+        contents.push({ type: 'commentRangeStart', id: commentId });
         break;
+      }
+      case 'commentRangeEnd': {
+        const commentId = parseInt(getAttribute(child, 'w', 'id') ?? '0', 10);
+        contents.push({ type: 'commentRangeEnd', id: commentId });
+        break;
+      }
 
       case 'oMath':
       case 'oMathPara':

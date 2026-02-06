@@ -713,6 +713,10 @@ function serializeParagraphContent(content: ParagraphContent): string {
       return serializeComplexField(content);
     case 'inlineSdt':
       return serializeInlineSdt(content);
+    case 'commentRangeStart':
+      return `<w:commentRangeStart w:id="${content.id}"/>`;
+    case 'commentRangeEnd':
+      return `<w:commentRangeEnd w:id="${content.id}"/>`;
     default:
       return '';
   }

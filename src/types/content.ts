@@ -792,6 +792,46 @@ export interface Table {
 }
 
 // ============================================================================
+// COMMENTS
+// ============================================================================
+
+/**
+ * A comment (w:comment) from comments.xml
+ */
+export interface Comment {
+  /** Comment ID (matches commentRangeStart/End) */
+  id: number;
+  /** Author name */
+  author: string;
+  /** Author initials */
+  initials?: string;
+  /** Date */
+  date?: string;
+  /** Comment content (paragraphs) */
+  content: Paragraph[];
+  /** Parent comment ID (for replies) */
+  parentId?: number;
+  /** Whether the comment is resolved/done */
+  done?: boolean;
+}
+
+/**
+ * Comment range start marker in paragraph content
+ */
+export interface CommentRangeStart {
+  type: 'commentRangeStart';
+  id: number;
+}
+
+/**
+ * Comment range end marker in paragraph content
+ */
+export interface CommentRangeEnd {
+  type: 'commentRangeEnd';
+  id: number;
+}
+
+// ============================================================================
 // STRUCTURED DOCUMENT TAGS (SDT / Content Controls)
 // ============================================================================
 
@@ -870,7 +910,9 @@ export type ParagraphContent =
   | BookmarkEnd
   | SimpleField
   | ComplexField
-  | InlineSdt;
+  | InlineSdt
+  | CommentRangeStart
+  | CommentRangeEnd;
 
 /**
  * Paragraph (w:p)
@@ -1168,4 +1210,6 @@ export interface DocumentBody {
   sections?: Section[];
   /** Final section properties (from body's sectPr) */
   finalSectionProperties?: SectionProperties;
+  /** Comments from comments.xml */
+  comments?: Comment[];
 }

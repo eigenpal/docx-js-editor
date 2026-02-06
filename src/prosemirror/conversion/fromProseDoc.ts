@@ -106,7 +106,7 @@ function extractBlocks(pmDoc: PMNode): (Paragraph | Table)[] {
  */
 function convertPMParagraph(node: PMNode): Paragraph {
   const attrs = node.attrs as ParagraphAttrs;
-  const content = extractParagraphContent(node);
+  const content = insertCommentRanges(extractParagraphContent(node), node);
 
   const paragraph: Paragraph = {
     type: 'paragraph',
@@ -129,6 +129,69 @@ function convertPMParagraph(node: PMNode): Paragraph {
 /**
  * Convert ProseMirror paragraph attrs to ParagraphFormatting
  */
+/**
+ * Scan paragraph PM node for comment marks and insert commentRangeStart/End
+ * markers in the content array for round-trip serialization.
+ */
+function insertCommentRanges(content: ParagraphContent[], paragraph: PMNode): ParagraphContent[] {
+  // Collect which comment IDs appear as marks on child nodes
+  const commentIds = new Set<number>();
+  paragraph.forEach((node) => {
+    for (const mark of node.marks) {
+      if (mark.type.name === 'comment') {
+        commentIds.add(mark.attrs.commentId as number);
+      }
+    }
+  });
+
+  if (commentIds.size === 0) return content;
+
+  // For each comment ID, find the first and last content item that belongs to it
+  // and wrap with commentRangeStart/End
+  const result: ParagraphContent[] = [];
+  const openedComments = new Set<number>();
+  let nodeIndex = 0;
+
+  paragraph.forEach((node) => {
+    const nodeCommentIds = new Set<number>();
+    for (const mark of node.marks) {
+      if (mark.type.name === 'comment') {
+        nodeCommentIds.add(mark.attrs.commentId as number);
+      }
+    }
+
+    // Open new comments
+    for (const cid of nodeCommentIds) {
+      if (!openedComments.has(cid)) {
+        result.push({ type: 'commentRangeStart', id: cid });
+        openedComments.add(cid);
+      }
+    }
+
+    // Push the actual content item
+    if (nodeIndex < content.length) {
+      result.push(content[nodeIndex]);
+    }
+
+    // Close comments that are no longer active
+    for (const cid of openedComments) {
+      if (!nodeCommentIds.has(cid)) {
+        result.push({ type: 'commentRangeEnd', id: cid });
+        openedComments.delete(cid);
+      }
+    }
+
+    nodeIndex++;
+  });
+
+  // Close any remaining open comments
+  for (const cid of openedComments) {
+    result.push({ type: 'commentRangeEnd', id: cid });
+  }
+
+  return result;
+}
+
 function paragraphAttrsToFormatting(attrs: ParagraphAttrs): ParagraphFormatting | undefined {
   // Check if any formatting is present
   const hasFormatting =
