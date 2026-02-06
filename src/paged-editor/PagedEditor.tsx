@@ -1672,6 +1672,24 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Re-compute selection overlay when the container resizes.
+    // Page elements shift during window resize (centering, scrollbar changes),
+    // causing caret/selection coordinates to become stale.
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const observer = new ResizeObserver(() => {
+        const state = hiddenPMRef.current?.getState();
+        if (state) {
+          updateSelectionOverlay(state);
+        }
+      });
+
+      observer.observe(container);
+      return () => observer.disconnect();
+    }, [updateSelectionOverlay]);
+
     // =========================================================================
     // Imperative Handle
     // =========================================================================

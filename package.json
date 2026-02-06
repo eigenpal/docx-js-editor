@@ -72,6 +72,7 @@
     "jszip": "^3.10.1",
     "pizzip": "^3.1.7",
     "prosemirror-commands": "^1.5.2",
+    "prosemirror-dropcursor": "^1.8.2",
     "prosemirror-history": "^1.4.0",
     "prosemirror-keymap": "^1.2.2",
     "prosemirror-model": "^1.19.4",

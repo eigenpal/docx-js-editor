@@ -60,6 +60,7 @@ import { ListExtension } from './features/ListExtension';
 import { BaseKeymapExtension } from './features/BaseKeymapExtension';
 import { SelectionTrackerExtension } from './features/SelectionTrackerExtension';
 import { ImageDragExtension } from './features/ImageDragExtension';
+import { DropCursorExtension } from './features/DropCursorExtension';
 
 export interface StarterKitOptions {
   /** Extensions to disable by name */
@@ -130,6 +131,7 @@ export function createStarterKit(options: StarterKitOptions = {}): AnyExtension[
   add('textBox', TextBoxExtension());
   add('shape', ShapeExtension());
   add('imageDrag', ImageDragExtension());
+  add('dropCursor', DropCursorExtension());
   add('horizontalRule', HorizontalRuleExtension());
   add('field', FieldExtension());
   add('sdt', SdtExtension());

@@ -244,6 +244,61 @@ function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksO
         pmEnd: childPos + child.nodeSize,
       };
       runs.push(run);
+    } else if (child.type.name === 'sdt') {
+      // SDT (Structured Document Tag / content control) — inline wrapper node.
+      // Descend into its children to extract the actual text runs.
+      const sdtInnerOffset = childPos + 1; // +1 for opening tag
+      child.forEach((sdtChild, sdtChildOffset) => {
+        const sdtChildPos = sdtInnerOffset + sdtChildOffset;
+        if (sdtChild.isText && sdtChild.text) {
+          const formatting = extractRunFormatting(sdtChild.marks);
+          const run: TextRun = {
+            kind: 'text',
+            text: sdtChild.text,
+            ...formatting,
+            pmStart: sdtChildPos,
+            pmEnd: sdtChildPos + sdtChild.nodeSize,
+          };
+          runs.push(run);
+        } else if (sdtChild.type.name === 'hardBreak') {
+          const run: LineBreakRun = {
+            kind: 'lineBreak',
+            pmStart: sdtChildPos,
+            pmEnd: sdtChildPos + sdtChild.nodeSize,
+          };
+          runs.push(run);
+        } else if (sdtChild.type.name === 'tab') {
+          const formatting = extractRunFormatting(sdtChild.marks);
+          const run: TabRun = {
+            kind: 'tab',
+            ...formatting,
+            pmStart: sdtChildPos,
+            pmEnd: sdtChildPos + sdtChild.nodeSize,
+          };
+          runs.push(run);
+        } else if (sdtChild.type.name === 'image') {
+          const attrs = sdtChild.attrs;
+          const run: ImageRun = {
+            kind: 'image',
+            src: attrs.src as string,
+            width: (attrs.width as number) || 100,
+            height: (attrs.height as number) || 100,
+            alt: attrs.alt as string | undefined,
+            transform: attrs.transform as string | undefined,
+            wrapType: attrs.wrapType as string | undefined,
+            displayMode: attrs.displayMode as 'inline' | 'block' | 'float' | undefined,
+            cssFloat: attrs.cssFloat as 'left' | 'right' | 'none' | undefined,
+            distTop: attrs.distTop as number | undefined,
+            distBottom: attrs.distBottom as number | undefined,
+            distLeft: attrs.distLeft as number | undefined,
+            distRight: attrs.distRight as number | undefined,
+            position: attrs.position as ImageRun['position'] | undefined,
+            pmStart: sdtChildPos,
+            pmEnd: sdtChildPos + sdtChild.nodeSize,
+          };
+          runs.push(run);
+        }
+      });
     }
   });
 

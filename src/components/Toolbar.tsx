@@ -25,7 +25,6 @@ import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
 import { TableGridPicker } from './ui/TableGridPicker';
 import { TableOptionsDropdown } from './ui/TableOptionsDropdown';
-import { TableStyleGallery } from './ui/TableStyleGallery';
 import { ShapeGallery } from './ui/ShapeGallery';
 import type { TableAction } from './ui/TableToolbar';
 import { cn } from '../lib/utils';
@@ -1051,16 +1050,12 @@ export function Toolbar({
       {/* Table Options - shown when cursor is in a table */}
       {tableContext?.isInTable && onTableAction && (
         <ToolbarGroup label="Table">
-          <TableStyleGallery
-            currentStyleId={null}
-            documentStyles={documentStyles}
-            onAction={handleTableAction}
-          />
           <TableOptionsDropdown
             onAction={handleTableAction}
             disabled={disabled}
             tableContext={tableContext}
             tooltip="Table options"
+            documentStyles={documentStyles}
           />
         </ToolbarGroup>
       )}

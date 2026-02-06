@@ -367,6 +367,262 @@ export function IconDragIndicator(props: IconProps) {
 }
 
 // ============================================================================
+// IMAGE TOOLBAR ICONS
+// ============================================================================
+
+export function IconImage(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm40-80h480L570-480 450-320l-90-120-120 160Zm-40 80v-560 560Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconFormatImageLeft(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M120-280v-400h400v400H120Zm80-80h240v-240H200v240Zm-80-400v-80h720v80H120Zm480 160v-80h240v80H600Zm0 160v-80h240v80H600Zm0 160v-80h240v80H600ZM120-120v-80h720v80H120Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconFormatImageRight(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M440-280v-400h400v400H440Zm80-80h240v-240H520v240ZM120-120v-80h720v80H120Zm0-160v-80h240v80H120Zm0-160v-80h240v80H120Zm0-160v-80h240v80H120Zm0-160v-80h720v80H120Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconHorizontalRule(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M160-440v-80h640v80H160Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconFlipToBack(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M200-120q-33 0-56.5-23.5T120-200v-480h80v480h480v80H200Zm160-240v80q-33 0-56.5-23.5T280-360h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm80-160h-80q0-33 23.5-56.5T360-840v80Zm80 480v-80h80v80h-80Zm0-480v-80h80v80h-80Zm160 0v-80h80v80h-80Zm0 480v-80h80v80h-80Zm160-480v-80q33 0 56.5 23.5T840-760h-80Zm0 400h80q0 33-23.5 56.5T760-280v-80Zm0-80v-80h80v80h-80Zm0-160v-80h80v80h-80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconFlipToFront(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M360-280q-33 0-56.5-23.5T280-360v-400q0-33 23.5-56.5T360-840h400q33 0 56.5 23.5T840-760v400q0 33-23.5 56.5T760-280H360Zm0-80h400v-400H360v400ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 480v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconOpenWith(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M480-80 310-250l57-57 73 73v-166h80v165l72-73 58 58L480-80ZM250-310 80-480l169-169 57 57-72 72h166v80H235l73 72-58 58Zm460 0-57-57 73-73H560v-80h165l-73-72 58-58 170 170-170 170ZM440-560v-166l-73 73-57-57 170-170 170 170-57 57-73-73v166h-80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconTune(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M440-120v-240h80v80h320v80H520v80h-80Zm-320-80v-80h240v80H120Zm160-160v-80H120v-80h160v-80h80v240h-80Zm160-80v-80h400v80H440Zm160-160v-240h80v80h160v80H680v80h-80Zm-480-80v-80h400v80H120Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconRotateRight(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M522-80v-82q34-5 66.5-18t61.5-34l56 58q-42 32-88 51.5T522-80Zm-80 0Q304-98 213-199.5T122-438q0-75 28.5-140.5t77-114q48.5-48.5 114-77T482-798h6l-62-62 56-58 160 160-160 160-56-56 64-64h-8q-117 0-198.5 81.5T202-438q0 104 68 182.5T442-162v82Zm322-134-58-56q21-29 34-61.5t18-66.5h82q-5 50-24.5 96T764-214Zm76-264h-82q-5-34-18-66.5T706-606l58-56q32 39 51 86t25 98Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconRotateLeft(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M440-80q-50-5-96-24.5T256-156l56-58q29 21 61.5 34t66.5 18v82Zm80 0v-82q104-15 172-93.5T760-438q0-117-81.5-198.5T480-718h-8l64 64-56 56-160-160 160-160 56 58-62 62h6q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-438q0 137-91 238.5T520-80ZM198-214q-32-42-51.5-88T122-398h82q5 34 18 66.5t34 61.5l-58 56Zm-76-264q6-51 25-98t51-86l58 56q-21 29-34 61.5T204-478h-82Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconSwapHoriz(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M280-160 80-360l200-200 56 57-103 103h287v80H233l103 103-56 57Zm400-240-56-57 103-103H440v-80h287L624-743l56-57 200 200-200 200Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconSwapVert(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M320-440v-287L217-624l-57-56 200-200 200 200-57 56-103-103v287h-80ZM600-80 400-280l57-56 103 103v-287h80v287l103-103 57 56L600-80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconShapes(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M600-360ZM320-242q10 1 19.5 1.5t20.5.5q11 0 20.5-.5T400-242v82h400v-400h-82q1-10 1.5-19.5t.5-20.5q0-11-.5-20.5T718-640h82q33 0 56.5 23.5T880-560v400q0 33-23.5 56.5T800-80H400q-33 0-56.5-23.5T320-160v-82Zm40-78q-117 0-198.5-81.5T80-600q0-117 81.5-198.5T360-880q117 0 198.5 81.5T640-600q0 117-81.5 198.5T360-320Zm0-80q83 0 141.5-58.5T560-600q0-83-58.5-141.5T360-800q-83 0-141.5 58.5T160-600q0 83 58.5 141.5T360-400Zm0-200Z" />
+    </SvgIcon>
+  );
+}
+
+// ============================================================================
+// TABLE DROPDOWN ICONS
+// ============================================================================
+
+export function IconFormatPaint(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M440-80q-33 0-56.5-23.5T360-160v-160H240q-33 0-56.5-23.5T160-400v-280q0-66 47-113t113-47h480v440q0 33-23.5 56.5T720-320H600v160q0 33-23.5 56.5T520-80h-80ZM240-560h480v-200h-40v160h-80v-160h-40v80h-80v-80H320q-33 0-56.5 23.5T240-680v120Zm0 160h480v-80H240v80Zm0 0v-80 80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconExpandMore(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconExpandLess(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="m296-345-56-56 240-240 240 240-56 56-184-184-184 184Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconBorderTop(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M120-120v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h720v80H120Zm160 640v-80h80v80h-80Zm0-320v-80h80v80h-80Zm160 320v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 480v-80h80v80h-80Zm0-320v-80h80v80h-80Zm160 320v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconBorderBottom(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M120-120v-80h720v80H120Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 320v-80h80v80h-80Zm0-320v-80h80v80h-80Zm160 480v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 320v-80h80v80h-80Zm0-320v-80h80v80h-80Zm160 480v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconBorderLeft(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M120-120v-720h80v720h-80Zm160 0v-80h80v80h-80Zm0-320v-80h80v80h-80Zm0-320v-80h80v80h-80Zm160 640v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 640v-80h80v80h-80Zm0-320v-80h80v80h-80Zm0-320v-80h80v80h-80Zm160 640v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconBorderRight(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M120-120v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 640v-80h80v80h-80Zm0-320v-80h80v80h-80Zm0-320v-80h80v80h-80Zm160 640v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 640v-80h80v80h-80Zm0-320v-80h80v80h-80Zm0-320v-80h80v80h-80Zm160 640v-720h80v720h-80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconPadding(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M320-600q17 0 28.5-11.5T360-640q0-17-11.5-28.5T320-680q-17 0-28.5 11.5T280-640q0 17 11.5 28.5T320-600Zm160 0q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm160 0q17 0 28.5-11.5T680-640q0-17-11.5-28.5T640-680q-17 0-28.5 11.5T600-640q0 17 11.5 28.5T640-600ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconTextRotationNone(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M160-200v-80h528l-42-42 56-56 138 138-138 138-56-56 42-42H160Zm116-200 164-440h80l164 440h-76l-38-112H392l-40 112h-76Zm138-176h132l-64-182h-4l-64 182Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconWrapText(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M588-132 440-280l148-148 56 58-50 50h96q29 0 49.5-20.5T760-390q0-29-20.5-49.5T690-460H160v-80h530q63 0 106.5 43.5T840-390q0 63-43.5 106.5T690-240h-96l50 50-56 58ZM160-240v-80h200v80H160Zm0-440v-80h640v80H160Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconHeight(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M480-120 320-280l56-56 64 63v-414l-64 63-56-56 160-160 160 160-56 57-64-64v414l64-63 56 56-160 160Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconFitWidth(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M120-120v-720h80v720h-80Zm640 0v-720h80v720h-80ZM280-440v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconSettings(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconBorderColor(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M80 0v-160h800V0H80Zm160-320h56l312-311-29-29-28-28-311 312v56Zm-80 80v-170l448-447q11-11 25.5-17t30.5-6q16 0 31 6t27 18l55 56q12 11 17.5 26t5.5 31q0 15-5.5 29.5T777-687L330-240H160Zm560-504-56-56 56 56ZM608-631l-29-29-28-28 57 57Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconFormatColorFill(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="m247-904 57-56 343 343q23 23 23 57t-23 57L457-313q-23 23-57 23t-57-23L153-503q-23-23-23-57t23-57l190-191-96-96Zm153 153L209-560h382L400-751Zm360 471q-33 0-56.5-23.5T680-360q0-21 12.5-45t27.5-45q9-12 19-25t21-25q11 12 21 25t19 25q15 21 27.5 45t12.5 45q0 33-23.5 56.5T760-280ZM80 0v-160h800V0H80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconVerticalAlignTop(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M160-760v-80h640v80H160Zm280 640v-408L336-424l-56-56 200-200 200 200-56 56-104-104v408h-80Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconVerticalAlignCenter(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M440-80v-168l-64 64-56-56 160-160 160 160-56 56-64-64v168h-80ZM160-440v-80h640v80H160Zm320-120L320-720l56-56 64 64v-168h80v168l64-64 56 56-160 160Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconVerticalAlignBottom(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M160-120v-80h640v80H160Zm320-160L280-480l56-56 104 104v-408h80v408l104-104 56 56-200 200Z" />
+    </SvgIcon>
+  );
+}
+
+// ============================================================================
 // ICON MAP - for MaterialSymbol compatibility
 // ============================================================================
 
@@ -411,6 +667,40 @@ const iconMap: Record<string, React.ComponentType<IconProps>> = {
   call_merge: IconMerge,
   call_split: IconSplit,
   drag_indicator: IconDragIndicator,
+  // Image toolbar
+  image: IconImage,
+  format_image_left: IconFormatImageLeft,
+  format_image_right: IconFormatImageRight,
+  horizontal_rule: IconHorizontalRule,
+  flip_to_back: IconFlipToBack,
+  flip_to_front: IconFlipToFront,
+  open_with: IconOpenWith,
+  tune: IconTune,
+  rotate_right: IconRotateRight,
+  rotate_left: IconRotateLeft,
+  swap_horiz: IconSwapHoriz,
+  swap_vert: IconSwapVert,
+  // Shape gallery
+  shapes: IconShapes,
+  // Table dropdown
+  format_paint: IconFormatPaint,
+  expand_more: IconExpandMore,
+  expand_less: IconExpandLess,
+  border_top: IconBorderTop,
+  border_bottom: IconBorderBottom,
+  border_left: IconBorderLeft,
+  border_right: IconBorderRight,
+  padding: IconPadding,
+  text_rotation_none: IconTextRotationNone,
+  wrap_text: IconWrapText,
+  height: IconHeight,
+  fit_width: IconFitWidth,
+  settings: IconSettings,
+  border_color: IconBorderColor,
+  format_color_fill: IconFormatColorFill,
+  vertical_align_top: IconVerticalAlignTop,
+  vertical_align_center: IconVerticalAlignCenter,
+  vertical_align_bottom: IconVerticalAlignBottom,
 };
 
 /**

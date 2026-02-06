@@ -17,6 +17,8 @@ import { Tooltip } from './Tooltip';
 import { MaterialSymbol } from './MaterialSymbol';
 import { cn } from '../../lib/utils';
 import type { TableAction } from './TableToolbar';
+import type { Style } from '../../types/document';
+import { getBuiltinTableStyles } from './TableStyleGallery';
 
 // ============================================================================
 // TYPES
@@ -38,6 +40,8 @@ export interface TableOptionsDropdownProps {
   className?: string;
   /** Tooltip text */
   tooltip?: string;
+  /** Document styles for table style gallery */
+  documentStyles?: Style[];
 }
 
 // ============================================================================
@@ -734,6 +738,96 @@ function TablePropertiesRow({ onAction }: { onAction: (action: TableAction) => v
 }
 
 // ============================================================================
+// TABLE STYLES SECTION
+// ============================================================================
+
+function TableStylesSection({
+  onAction,
+  documentStyles,
+}: {
+  onAction: (action: TableAction) => void;
+  documentStyles?: Style[];
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  const presets = React.useMemo(() => {
+    const all = [...getBuiltinTableStyles()];
+    if (documentStyles) {
+      for (const ds of documentStyles) {
+        if (ds.type !== 'table') continue;
+        if (!all.some((p) => p.id === ds.styleId)) {
+          all.push({
+            id: ds.styleId,
+            name: ds.name ?? ds.styleId,
+          });
+        }
+      }
+    }
+    return all;
+  }, [documentStyles]);
+
+  return (
+    <div>
+      <button
+        type="button"
+        style={{
+          ...menuItemStyles,
+          backgroundColor: hoveredItem === 'main' ? 'var(--doc-bg-hover)' : 'transparent',
+        }}
+        onMouseEnter={() => setHoveredItem('main')}
+        onMouseLeave={() => setHoveredItem(null)}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <MaterialSymbol name="format_paint" size={18} />
+        <span style={{ flex: 1 }}>Table styles</span>
+        <MaterialSymbol name={isExpanded ? 'expand_less' : 'expand_more'} size={18} />
+      </button>
+
+      {isExpanded && (
+        <div
+          style={{
+            backgroundColor: 'var(--doc-bg-muted)',
+            borderTop: '1px solid var(--doc-border)',
+            borderBottom: '1px solid var(--doc-border)',
+            padding: 8,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 4,
+            maxHeight: 200,
+            overflowY: 'auto',
+          }}
+        >
+          {presets.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              title={preset.name}
+              onClick={() => {
+                onAction({ type: 'applyTableStyle', styleId: preset.id });
+                setIsExpanded(false);
+              }}
+              style={{
+                padding: '4px 8px',
+                fontSize: 11,
+                border: '1px solid var(--doc-border)',
+                borderRadius: 3,
+                cursor: 'pointer',
+                backgroundColor: 'var(--doc-bg)',
+                color: 'var(--doc-text)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {preset.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -743,6 +837,7 @@ export function TableOptionsDropdown({
   tableContext,
   className,
   tooltip = 'Table options',
+  documentStyles,
 }: TableOptionsDropdownProps): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -840,6 +935,10 @@ export function TableOptionsDropdown({
           role="menu"
           aria-label="Table options menu"
         >
+          {/* Table styles section */}
+          <TableStylesSection onAction={handleAction} documentStyles={documentStyles} />
+          <div style={separatorStyles} role="separator" />
+
           {/* Regular menu items */}
           {MENU_ITEMS.map((item, index) => {
             const isDisabled = disabled || item.disabled?.(tableContext);
