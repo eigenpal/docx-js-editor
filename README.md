@@ -17,7 +17,7 @@ Open-source WYSIWYG DOCX editor for React. Open, edit, and save `.docx` files en
 
 <p align="center">
   <a href="https://docx-js-editor.vercel.app/">
-    <img src="./assets/editor.png" alt="DOCX JS Editor screenshot" width="800" />
+    <img src="./assets/editor.png" alt="DOCX JS Editor screenshot" width="500" />
   </a>
 </p>
 
