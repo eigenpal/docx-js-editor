@@ -90,6 +90,8 @@ export {
   toggleNoWrap,
   setRowHeight,
   toggleHeaderRow,
+  distributeColumns,
+  autoFitContents,
   setCellFillColor,
   setTableBorderColor,
 } from './table';

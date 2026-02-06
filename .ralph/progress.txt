@@ -67,3 +67,11 @@
 [2026-02-06 11:35] STATUS: testing
 [2026-02-06 11:35] NOTES: typecheck passed, 4/4 table tests pass
 [2026-02-06 11:35] STATUS: done
+
+[2026-02-06 11:38] TASK: 2.2 Auto-fit + distribute columns evenly
+[2026-02-06 11:38] STATUS: editing
+[2026-02-06 11:38] NOTES: Adding distributeColumns + autoFitContents commands
+[2026-02-06 11:40] NOTES: Added distributeColumns (equal widths) + autoFitContents (remove explicit widths) commands + UI
+[2026-02-06 11:41] STATUS: testing
+[2026-02-06 11:41] NOTES: typecheck passed, 4/4 table tests pass
+[2026-02-06 11:41] STATUS: done

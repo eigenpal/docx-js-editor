@@ -58,7 +58,9 @@ export type TableAction =
   | { type: 'cellTextDirection'; direction: string | null }
   | { type: 'toggleNoWrap' }
   | { type: 'rowHeight'; height: number | null; rule?: 'auto' | 'atLeast' | 'exact' }
-  | { type: 'toggleHeaderRow' };
+  | { type: 'toggleHeaderRow' }
+  | { type: 'distributeColumns' }
+  | { type: 'autoFitContents' };
 
 /**
  * Border style preset

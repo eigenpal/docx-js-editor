@@ -1260,6 +1260,107 @@ export const TablePluginExtension = createExtension({
       };
     }
 
+    function distributeColumns(): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (
+          !context.isInTable ||
+          context.tablePos === undefined ||
+          !context.table ||
+          !context.columnCount
+        )
+          return false;
+
+        if (dispatch) {
+          let tr = state.tr;
+          const table = context.table;
+          const colCount = context.columnCount;
+
+          // Calculate total table width from existing column widths or use default
+          const existingWidths = table.attrs.columnWidths as number[] | null;
+          const totalWidthTwips = existingWidths
+            ? existingWidths.reduce((sum: number, w: number) => sum + w, 0)
+            : 9360; // Default content width in twips
+          const equalWidth = Math.floor(totalWidthTwips / colCount);
+
+          // Update each cell in every row
+          let rowPos = context.tablePos + 1;
+          table.forEach((row) => {
+            if (row.type.name === 'tableRow') {
+              let cellPos = rowPos + 1;
+              row.forEach((cell) => {
+                if (cell.type.name === 'tableCell' || cell.type.name === 'tableHeader') {
+                  tr = tr.setNodeMarkup(cellPos, undefined, {
+                    ...cell.attrs,
+                    width: equalWidth,
+                    widthType: 'dxa',
+                    colwidth: null,
+                  });
+                }
+                cellPos += cell.nodeSize;
+              });
+            }
+            rowPos += row.nodeSize;
+          });
+
+          // Update table-level column widths
+          const newColumnWidths = Array(colCount).fill(equalWidth);
+          tr = tr.setNodeMarkup(context.tablePos, undefined, {
+            ...table.attrs,
+            columnWidths: newColumnWidths,
+          });
+
+          dispatch(tr.scrollIntoView());
+        }
+
+        return true;
+      };
+    }
+
+    function autoFitContents(): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
+
+        if (dispatch) {
+          let tr = state.tr;
+          const table = context.table;
+
+          // Remove explicit widths from all cells
+          let rowPos = context.tablePos + 1;
+          table.forEach((row) => {
+            if (row.type.name === 'tableRow') {
+              let cellPos = rowPos + 1;
+              row.forEach((cell) => {
+                if (cell.type.name === 'tableCell' || cell.type.name === 'tableHeader') {
+                  tr = tr.setNodeMarkup(cellPos, undefined, {
+                    ...cell.attrs,
+                    width: null,
+                    widthType: null,
+                    colwidth: null,
+                  });
+                }
+                cellPos += cell.nodeSize;
+              });
+            }
+            rowPos += row.nodeSize;
+          });
+
+          // Remove table-level column widths and set auto width
+          tr = tr.setNodeMarkup(context.tablePos, undefined, {
+            ...table.attrs,
+            columnWidths: null,
+            width: null,
+            widthType: 'auto',
+          });
+
+          dispatch(tr.scrollIntoView());
+        }
+
+        return true;
+      };
+    }
+
     function toggleHeaderRow(): Command {
       return (state, dispatch) => {
         const context = getTableContext(state);
@@ -1356,6 +1457,8 @@ export const TablePluginExtension = createExtension({
         setRowHeight: (height: number | null, rule?: 'auto' | 'atLeast' | 'exact') =>
           setRowHeight(height, rule),
         toggleHeaderRow: () => toggleHeaderRow(),
+        distributeColumns: () => distributeColumns(),
+        autoFitContents: () => autoFitContents(),
         setCellFillColor: (color: string | null) => setCellFillColor(color),
         setTableBorderColor: (color: string) => setTableBorderColor(color),
         removeTableBorders: () => setTableBorders('none'),

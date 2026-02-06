@@ -119,6 +119,8 @@ import {
   toggleNoWrap,
   setRowHeight,
   toggleHeaderRow,
+  distributeColumns,
+  autoFitContents,
   removeTableBorders,
   setAllTableBorders,
   setOutsideTableBorders,
@@ -714,6 +716,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               setRowHeight(action.height, action.rule)(view.state, view.dispatch);
             } else if (action.type === 'toggleHeaderRow') {
               toggleHeaderRow()(view.state, view.dispatch);
+            } else if (action.type === 'distributeColumns') {
+              distributeColumns()(view.state, view.dispatch);
+            } else if (action.type === 'autoFitContents') {
+              autoFitContents()(view.state, view.dispatch);
             }
           } else {
             // Fallback to legacy table selection handler for other actions

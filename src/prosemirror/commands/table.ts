@@ -149,6 +149,20 @@ export function toggleHeaderRow(): (
   return cmds.toggleHeaderRow();
 }
 
+// Column distribution
+export function distributeColumns(): (
+  state: EditorState,
+  dispatch?: (tr: Transaction) => void
+) => boolean {
+  return cmds.distributeColumns();
+}
+export function autoFitContents(): (
+  state: EditorState,
+  dispatch?: (tr: Transaction) => void
+) => boolean {
+  return cmds.autoFitContents();
+}
+
 // Cell styling
 export function setCellFillColor(
   color: string | null

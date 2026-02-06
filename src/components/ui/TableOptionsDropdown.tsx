@@ -663,6 +663,50 @@ function HeaderRowRow({ onAction }: { onAction: (action: TableAction) => void })
 }
 
 // ============================================================================
+// DISTRIBUTE / AUTO-FIT SUBCOMPONENTS
+// ============================================================================
+
+function DistributeColumnsRow({ onAction }: { onAction: (action: TableAction) => void }) {
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  return (
+    <button
+      type="button"
+      style={{
+        ...menuItemStyles,
+        backgroundColor: hoveredItem === 'main' ? 'var(--doc-bg-hover)' : 'transparent',
+      }}
+      onMouseEnter={() => setHoveredItem('main')}
+      onMouseLeave={() => setHoveredItem(null)}
+      onClick={() => onAction({ type: 'distributeColumns' })}
+    >
+      <MaterialSymbol name="view_column" size={18} />
+      <span style={{ flex: 1 }}>Distribute columns evenly</span>
+    </button>
+  );
+}
+
+function AutoFitRow({ onAction }: { onAction: (action: TableAction) => void }) {
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  return (
+    <button
+      type="button"
+      style={{
+        ...menuItemStyles,
+        backgroundColor: hoveredItem === 'main' ? 'var(--doc-bg-hover)' : 'transparent',
+      }}
+      onMouseEnter={() => setHoveredItem('main')}
+      onMouseLeave={() => setHoveredItem(null)}
+      onClick={() => onAction({ type: 'autoFitContents' })}
+    >
+      <MaterialSymbol name="fit_width" size={18} />
+      <span style={{ flex: 1 }}>Auto-fit to contents</span>
+    </button>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -843,6 +887,8 @@ export function TableOptionsDropdown({
           <NoWrapRow onAction={handleAction} />
           <RowHeightRow onAction={handleAction} />
           <HeaderRowRow onAction={handleAction} />
+          <DistributeColumnsRow onAction={handleAction} />
+          <AutoFitRow onAction={handleAction} />
         </div>
       )}
     </div>
