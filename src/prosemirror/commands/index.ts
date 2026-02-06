@@ -83,6 +83,7 @@ export {
   setAllTableBorders,
   setOutsideTableBorders,
   setInsideTableBorders,
+  setCellBorder,
   setCellFillColor,
   setTableBorderColor,
 } from './table';

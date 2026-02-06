@@ -42,7 +42,14 @@ export type TableAction =
   | 'borderLeft'
   | 'borderRight'
   | { type: 'cellFillColor'; color: string | null }
-  | { type: 'borderColor'; color: string };
+  | { type: 'borderColor'; color: string }
+  | {
+      type: 'cellBorder';
+      side: 'top' | 'bottom' | 'left' | 'right' | 'all';
+      style: string;
+      size: number;
+      color: string;
+    };
 
 /**
  * Border style preset

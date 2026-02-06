@@ -112,6 +112,7 @@ import {
   deleteTable as pmDeleteTable,
   mergeCells as pmMergeCells,
   splitCell as pmSplitCell,
+  setCellBorder,
   removeTableBorders,
   setAllTableBorders,
   setOutsideTableBorders,
@@ -657,6 +658,31 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         case 'borderNone':
           removeTableBorders(view.state, view.dispatch);
           break;
+        // Per-side border actions (toggle with default style)
+        case 'borderTop':
+          setCellBorder('top', { style: 'single', size: 4, color: { rgb: '000000' } })(
+            view.state,
+            view.dispatch
+          );
+          break;
+        case 'borderBottom':
+          setCellBorder('bottom', { style: 'single', size: 4, color: { rgb: '000000' } })(
+            view.state,
+            view.dispatch
+          );
+          break;
+        case 'borderLeft':
+          setCellBorder('left', { style: 'single', size: 4, color: { rgb: '000000' } })(
+            view.state,
+            view.dispatch
+          );
+          break;
+        case 'borderRight':
+          setCellBorder('right', { style: 'single', size: 4, color: { rgb: '000000' } })(
+            view.state,
+            view.dispatch
+          );
+          break;
         default:
           // Handle complex actions (with parameters)
           if (typeof action === 'object') {
@@ -664,6 +690,12 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               setCellFillColor(action.color)(view.state, view.dispatch);
             } else if (action.type === 'borderColor') {
               setTableBorderColor(action.color)(view.state, view.dispatch);
+            } else if (action.type === 'cellBorder') {
+              setCellBorder(action.side, {
+                style: action.style,
+                size: action.size,
+                color: { rgb: action.color.replace(/^#/, '') },
+              })(view.state, view.dispatch);
             }
           } else {
             // Fallback to legacy table selection handler for other actions

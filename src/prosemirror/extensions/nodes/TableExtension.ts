@@ -1032,6 +1032,49 @@ export const TablePluginExtension = createExtension({
       };
     }
 
+    function setCellBorder(
+      side: 'top' | 'bottom' | 'left' | 'right' | 'all',
+      spec: { style: string; size?: number; color?: { rgb: string } } | null
+    ): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
+
+        if (dispatch) {
+          const tr = state.tr;
+          const { $from } = state.selection;
+
+          for (let d = $from.depth; d > 0; d--) {
+            const node = $from.node(d);
+            if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+              const pos = $from.before(d);
+              const currentBorders = node.attrs.borders || {};
+              const borderValue = spec || { style: 'none' };
+
+              let newBorders;
+              if (side === 'all') {
+                newBorders = {
+                  top: borderValue,
+                  bottom: borderValue,
+                  left: borderValue,
+                  right: borderValue,
+                };
+              } else {
+                newBorders = { ...currentBorders, [side]: borderValue };
+              }
+
+              const newAttrs = { ...node.attrs, borders: newBorders };
+              tr.setNodeMarkup(pos, undefined, newAttrs);
+              dispatch(tr.scrollIntoView());
+              return true;
+            }
+          }
+        }
+
+        return true;
+      };
+    }
+
     function setTableBorderColor(color: string): Command {
       return (state, dispatch) => {
         const context = getTableContext(state);
@@ -1086,6 +1129,10 @@ export const TablePluginExtension = createExtension({
         deleteTable: () => deleteTable,
         mergeCells: () => pmMergeCells,
         splitCell: () => pmSplitCell,
+        setCellBorder: (
+          side: 'top' | 'bottom' | 'left' | 'right' | 'all',
+          spec: { style: string; size?: number; color?: { rgb: string } } | null
+        ) => setCellBorder(side, spec),
         setTableBorders: (preset: BorderPreset) => setTableBorders(preset),
         setCellFillColor: (color: string | null) => setCellFillColor(color),
         setTableBorderColor: (color: string) => setTableBorderColor(color),

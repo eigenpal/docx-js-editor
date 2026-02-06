@@ -22,3 +22,10 @@
 [2026-02-06 10:46] STATUS: testing
 [2026-02-06 10:46] NOTES: typecheck passed, 32/32 table tests pass, 4/4 merge/split tests pass
 [2026-02-06 10:46] STATUS: done
+
+[2026-02-06 10:47] TASK: 1.3 Per-cell border editing commands
+[2026-02-06 10:47] STATUS: starting
+[2026-02-06 10:48] NOTES: Added setCellBorder(side, spec) command to TableExtension.ts
+[2026-02-06 10:49] NOTES: Added cellBorder action type to TableAction, per-side border buttons to dropdown
+[2026-02-06 10:50] NOTES: Wired borderTop/Bottom/Left/Right + cellBorder action in DocxEditor.tsx
+[2026-02-06 10:50] STATUS: done

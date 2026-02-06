@@ -80,6 +80,10 @@ type SimpleAction =
   | 'borderOutside'
   | 'borderInside'
   | 'borderNone'
+  | 'borderTop'
+  | 'borderBottom'
+  | 'borderLeft'
+  | 'borderRight'
   | 'mergeCells'
   | 'splitCell';
 
@@ -116,7 +120,11 @@ const MENU_ITEMS: MenuItem[] = [
   { action: 'borderAll', label: 'All borders', icon: 'border_all' },
   { action: 'borderOutside', label: 'Outside borders', icon: 'border_outer' },
   { action: 'borderInside', label: 'Inside borders', icon: 'border_inner' },
-  { action: 'borderNone', label: 'Remove borders', icon: 'border_clear', separator: true },
+  { action: 'borderNone', label: 'Remove borders', icon: 'border_clear' },
+  { action: 'borderTop', label: 'Top border', icon: 'border_top' },
+  { action: 'borderBottom', label: 'Bottom border', icon: 'border_bottom' },
+  { action: 'borderLeft', label: 'Left border', icon: 'border_left' },
+  { action: 'borderRight', label: 'Right border', icon: 'border_right', separator: true },
   {
     action: 'mergeCells',
     label: 'Merge cells',

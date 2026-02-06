@@ -62,6 +62,14 @@ export function splitCell(state: EditorState, dispatch?: (tr: Transaction) => vo
   return cmds.splitCell()(state, dispatch);
 }
 
+// Per-cell border editing
+export function setCellBorder(
+  side: 'top' | 'bottom' | 'left' | 'right' | 'all',
+  spec: { style: string; size?: number; color?: { rgb: string } } | null
+): (state: EditorState, dispatch?: (tr: Transaction) => void) => boolean {
+  return cmds.setCellBorder(side, spec);
+}
+
 // Borders
 export function setTableBorders(
   preset: import('../extensions/nodes/TableExtension').BorderPreset
