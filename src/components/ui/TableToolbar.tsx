@@ -56,7 +56,8 @@ export type TableAction =
       margins: { top?: number; bottom?: number; left?: number; right?: number };
     }
   | { type: 'cellTextDirection'; direction: string | null }
-  | { type: 'toggleNoWrap' };
+  | { type: 'toggleNoWrap' }
+  | { type: 'rowHeight'; height: number | null; rule?: 'auto' | 'atLeast' | 'exact' };
 
 /**
  * Border style preset

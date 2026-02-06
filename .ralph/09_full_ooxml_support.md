@@ -14,7 +14,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 - [x] **1.3 Per-cell border editing commands** — `setCellBorder(side, spec)` operating on CellSelection or current cell. Wire into TableBorderPicker with style/color/width selectors.
 - [x] **1.4 Vertical alignment + cell margins UI** — `setCellVerticalAlign()`, `setCellMargins()` commands. Add controls to TableOptionsDropdown.
 - [x] **1.5 Text direction + no-wrap controls** — Map OOXML text directions (`lrTb`, `tbRl`, `btLr`) to CSS `writing-mode`+`direction`. Add `setCellTextDirection()` command and dropdown UI.
-- [ ] **1.6 Row height editing** — `setRowHeight(height, rule)` command. UI input in TableOptionsDropdown for height + rule (auto/atLeast/exact).
+- [x] **1.6 Row height editing** — `setRowHeight(height, rule)` command. UI input in TableOptionsDropdown for height + rule (auto/atLeast/exact).
 
 ---
 

@@ -133,6 +133,14 @@ export function toggleNoWrap(): (
   return cmds.toggleNoWrap();
 }
 
+// Row height
+export function setRowHeight(
+  height: number | null,
+  rule?: 'auto' | 'atLeast' | 'exact'
+): (state: EditorState, dispatch?: (tr: Transaction) => void) => boolean {
+  return cmds.setRowHeight(height, rule);
+}
+
 // Cell styling
 export function setCellFillColor(
   color: string | null

@@ -524,6 +524,121 @@ function NoWrapRow({ onAction }: { onAction: (action: TableAction) => void }) {
 }
 
 // ============================================================================
+// ROW HEIGHT SUBCOMPONENT
+// ============================================================================
+
+const HEIGHT_RULE_OPTIONS: { value: 'auto' | 'atLeast' | 'exact'; label: string }[] = [
+  { value: 'auto', label: 'Auto' },
+  { value: 'atLeast', label: 'At least' },
+  { value: 'exact', label: 'Exact' },
+];
+
+function RowHeightRow({ onAction }: { onAction: (action: TableAction) => void }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [heightValue, setHeightValue] = useState(0);
+  const [heightRule, setHeightRule] = useState<'auto' | 'atLeast' | 'exact'>('atLeast');
+
+  const handleApply = () => {
+    if (heightRule === 'auto' || heightValue <= 0) {
+      onAction({ type: 'rowHeight', height: null });
+    } else {
+      onAction({ type: 'rowHeight', height: heightValue, rule: heightRule });
+    }
+    setIsExpanded(false);
+  };
+
+  return (
+    <div>
+      <button
+        type="button"
+        style={{
+          ...menuItemStyles,
+          backgroundColor: hoveredItem === 'main' ? 'var(--doc-bg-hover)' : 'transparent',
+        }}
+        onMouseEnter={() => setHoveredItem('main')}
+        onMouseLeave={() => setHoveredItem(null)}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <MaterialSymbol name="height" size={18} />
+        <span style={{ flex: 1 }}>Row height</span>
+        <MaterialSymbol name={isExpanded ? 'expand_less' : 'expand_more'} size={18} />
+      </button>
+
+      {isExpanded && (
+        <div
+          style={{
+            backgroundColor: 'var(--doc-bg-muted)',
+            borderTop: '1px solid var(--doc-border)',
+            borderBottom: '1px solid var(--doc-border)',
+            padding: '8px 12px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <label style={{ fontSize: 12, color: 'var(--doc-text-muted)', width: 40 }}>Rule</label>
+            <select
+              value={heightRule}
+              onChange={(e) => setHeightRule(e.target.value as typeof heightRule)}
+              style={{
+                flex: 1,
+                padding: '2px 4px',
+                border: '1px solid var(--doc-border)',
+                borderRadius: 3,
+                fontSize: 12,
+              }}
+            >
+              {HEIGHT_RULE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {heightRule !== 'auto' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <label style={{ fontSize: 12, color: 'var(--doc-text-muted)', width: 40 }}>
+                Height
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={20}
+                value={heightValue}
+                onChange={(e) => setHeightValue(Number(e.target.value) || 0)}
+                style={{
+                  flex: 1,
+                  padding: '2px 4px',
+                  border: '1px solid var(--doc-border)',
+                  borderRadius: 3,
+                  fontSize: 12,
+                }}
+              />
+              <span style={{ fontSize: 10, color: 'var(--doc-text-muted)' }}>tw</span>
+            </div>
+          )}
+          <button
+            type="button"
+            style={{
+              padding: '4px 12px',
+              fontSize: 12,
+              border: '1px solid var(--doc-border)',
+              borderRadius: 4,
+              backgroundColor: 'var(--doc-primary)',
+              color: 'white',
+              cursor: 'pointer',
+              width: '100%',
+            }}
+            onClick={handleApply}
+          >
+            Apply
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -702,6 +817,7 @@ export function TableOptionsDropdown({
           <div style={separatorStyles} role="separator" />
           <TextDirectionRow onAction={handleAction} />
           <NoWrapRow onAction={handleAction} />
+          <RowHeightRow onAction={handleAction} />
         </div>
       )}
     </div>

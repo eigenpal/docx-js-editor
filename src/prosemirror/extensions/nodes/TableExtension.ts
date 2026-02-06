@@ -1231,6 +1231,35 @@ export const TablePluginExtension = createExtension({
       };
     }
 
+    function setRowHeight(height: number | null, rule?: 'auto' | 'atLeast' | 'exact'): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
+
+        if (dispatch) {
+          const tr = state.tr;
+          const { $from } = state.selection;
+
+          for (let d = $from.depth; d > 0; d--) {
+            const node = $from.node(d);
+            if (node.type.name === 'tableRow') {
+              const pos = $from.before(d);
+              const newAttrs = {
+                ...node.attrs,
+                height: height,
+                heightRule: height ? rule || 'atLeast' : null,
+              };
+              tr.setNodeMarkup(pos, undefined, newAttrs);
+              dispatch(tr.scrollIntoView());
+              return true;
+            }
+          }
+        }
+
+        return true;
+      };
+    }
+
     function setTableBorderColor(color: string): Command {
       return (state, dispatch) => {
         const context = getTableContext(state);
@@ -1299,6 +1328,8 @@ export const TablePluginExtension = createExtension({
         }) => setCellMargins(margins),
         setCellTextDirection: (direction: string | null) => setCellTextDirection(direction),
         toggleNoWrap: () => toggleNoWrap(),
+        setRowHeight: (height: number | null, rule?: 'auto' | 'atLeast' | 'exact') =>
+          setRowHeight(height, rule),
         setCellFillColor: (color: string | null) => setCellFillColor(color),
         setTableBorderColor: (color: string) => setTableBorderColor(color),
         removeTableBorders: () => setTableBorders('none'),

@@ -116,6 +116,7 @@ export {
   setCellMargins,
   setCellTextDirection,
   toggleNoWrap,
+  setRowHeight,
   setCellFillColor,
   setTableBorderColor,
 } from './commands';

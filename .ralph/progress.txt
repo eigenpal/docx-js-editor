@@ -51,3 +51,11 @@
 [2026-02-06 11:23] STATUS: testing
 [2026-02-06 11:23] NOTES: typecheck passed, 4/4 table tests pass
 [2026-02-06 11:23] STATUS: done
+
+[2026-02-06 11:25] TASK: 1.6 Row height editing
+[2026-02-06 11:25] STATUS: editing
+[2026-02-06 11:25] NOTES: Row height attrs + conversion already exist. Adding setRowHeight command and UI
+[2026-02-06 11:28] NOTES: Added setRowHeight(height, rule) command, RowHeightRow UI with rule selector + height input
+[2026-02-06 11:29] STATUS: testing
+[2026-02-06 11:29] NOTES: typecheck passed, 4/4 table tests pass
+[2026-02-06 11:29] STATUS: done
