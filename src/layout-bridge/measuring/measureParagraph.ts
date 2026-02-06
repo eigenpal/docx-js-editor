@@ -457,6 +457,7 @@ export function measureParagraph(
       if (currentLine.width + tabWidth > currentLine.availableWidth + WIDTH_TOLERANCE) {
         // Tab doesn't fit, start new line
         startNewLine(runIndex, 0);
+        updateMaxFont(style);
       }
 
       currentLine.width += tabWidth;
@@ -563,6 +564,8 @@ export function measureParagraph(
         ) {
           // Word doesn't fit, start new line
           startNewLine(runIndex, charIndex);
+          // Re-apply font metrics to the new line (startNewLine resets maxFontSize)
+          updateMaxFont(style);
         }
 
         // Add word to current line
