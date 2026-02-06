@@ -2,11 +2,22 @@
  * DOCX Editor Styles
  *
  * Core styles for the WYSIWYG DOCX editor including:
+ * - Tailwind utility classes used by toolbar/UI components
  * - CSS custom properties for theming (shadcn compatible)
  * - Cursor/caret visibility
  * - Selection highlighting
  * - ContentEditable element styling
+ *
+ * NOTE: @tailwind utilities is required so that the built dist/styles.css
+ * includes all Tailwind utility classes used in the component JSX.
+ * Without this, consuming apps that import the library won't have
+ * the necessary button/toolbar styles unless they happen to generate
+ * the same classes in their own Tailwind build.
+ * We intentionally do NOT include @tailwind base (preflight) to avoid
+ * resetting styles in the consuming application.
  */
+
+@tailwind utilities;
 
 /* ============================================================================
  * CSS CUSTOM PROPERTIES (shadcn theme)
