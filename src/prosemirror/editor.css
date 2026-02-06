@@ -562,3 +562,27 @@
 .prosemirror-editor .ProseMirror .docx-run-small-caps {
   font-variant: small-caps;
 }
+
+/* Header/footer areas — double-click hint */
+.layout-page-header,
+.layout-page-footer {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.layout-page-header:hover,
+.layout-page-footer:hover {
+  background-color: rgba(37, 99, 235, 0.04);
+}
+
+/* Header/footer editor ProseMirror styles */
+.hf-editor-pm .ProseMirror {
+  outline: none;
+  min-height: 40px;
+  padding: 4px;
+  border: 1px solid var(--doc-border, #e5e7eb);
+  border-radius: 4px;
+}
+.hf-editor-pm .ProseMirror:focus {
+  border-color: var(--doc-primary, #2563eb);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}

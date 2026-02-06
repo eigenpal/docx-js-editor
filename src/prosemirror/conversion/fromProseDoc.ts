@@ -831,3 +831,11 @@ function convertPMTextBox(node: PMNode): Paragraph {
 export function updateDocumentContent(originalDocument: Document, pmDoc: PMNode): Document {
   return fromProseDoc(pmDoc, originalDocument);
 }
+
+/**
+ * Convert a ProseMirror document back to an array of Paragraph/Table blocks.
+ * Used for converting edited header/footer PM content back to the document model.
+ */
+export function proseDocToBlocks(pmDoc: PMNode): (Paragraph | Table)[] {
+  return extractBlocks(pmDoc);
+}

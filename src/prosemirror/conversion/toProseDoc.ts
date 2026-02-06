@@ -1144,6 +1144,36 @@ function convertTextBox(textBox: TextBox, styleResolver: StyleResolver | null): 
 }
 
 /**
+ * Convert HeaderFooter content (array of Paragraph/Table blocks) to a ProseMirror document.
+ * Used for editing headers/footers in their own ProseMirror editor.
+ */
+export function headerFooterToProseDoc(
+  content: Array<Paragraph | Table>,
+  options?: ToProseDocOptions
+): PMNode {
+  const nodes: PMNode[] = [];
+  const styleResolver = options?.styles ? createStyleResolver(options.styles) : null;
+
+  for (const block of content) {
+    if (block.type === 'paragraph') {
+      const textBoxes = extractTextBoxesFromParagraph(block);
+      nodes.push(convertParagraph(block, styleResolver));
+      for (const tb of textBoxes) {
+        nodes.push(convertTextBox(tb, styleResolver));
+      }
+    } else if (block.type === 'table') {
+      nodes.push(convertTable(block, styleResolver));
+    }
+  }
+
+  if (nodes.length === 0) {
+    nodes.push(schema.node('paragraph', {}, []));
+  }
+
+  return schema.node('doc', null, nodes);
+}
+
+/**
  * Create an empty ProseMirror document
  */
 export function createEmptyDoc(): PMNode {

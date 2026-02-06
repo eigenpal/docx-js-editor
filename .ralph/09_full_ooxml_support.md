@@ -49,7 +49,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 
 ## Phase 5: Headers, Footers & Sections (3 tasks)
 
-- [ ] **5.1 Editable headers/footers** — Double-click to enter header editing mode. Nested ProseMirror EditorView for header content. Dim main body. Separate undo history. Save changes back to document model on exit.
+- [x] **5.1 Editable headers/footers** — Double-click to enter header editing mode. Nested ProseMirror EditorView for header content. Dim main body. Separate undo history. Save changes back to document model on exit.
 - [ ] **5.2 Section break editing** — Visualize section boundaries. Insert/delete section breaks (nextPage, continuous, oddPage, evenPage). Each section has own margins/orientation/columns/headers.
 - [ ] **5.3 Page borders** — Render section-level page borders on page container. CSS border with full OOXML border spec styles.
 

@@ -219,3 +219,17 @@
 [2026-02-06 14:15] STATUS: testing
 [2026-02-06 14:15] NOTES: typecheck passed, 30/31 tests pass (1 pre-existing skip)
 [2026-02-06 14:15] STATUS: done
+
+[2026-02-06 14:20] TASK: 5.1 Editable headers/footers
+[2026-02-06 14:20] STATUS: starting
+[2026-02-06 14:20] NOTES: Research complete. Headers rendered via layout-painter as absolute divs on pages. Need: double-click handler, overlay editor with PM, dim body, save back.
+[2026-02-06 14:22] STATUS: editing
+[2026-02-06 14:22] NOTES: Creating HeaderFooterEditor.tsx — overlay PM editor for header/footer content
+[2026-02-06 14:30] NOTES: Added headerFooterToProseDoc + proseDocToBlocks conversion functions
+[2026-02-06 14:32] NOTES: Created HeaderFooterEditor.tsx — modal overlay with dedicated ProseMirror EditorView, separate undo history
+[2026-02-06 14:34] NOTES: Added onHeaderFooterDoubleClick prop to PagedEditor, detects double-click on .layout-page-header/.layout-page-footer
+[2026-02-06 14:36] NOTES: Wired in DocxEditor: hfEditPosition state, handleHeaderFooterDoubleClick, handleHeaderFooterSave (updates HeaderFooter in document package)
+[2026-02-06 14:37] NOTES: Added CSS: hover hint on header/footer areas, ProseMirror styles for hf-editor-pm
+[2026-02-06 14:38] STATUS: testing
+[2026-02-06 14:38] NOTES: typecheck passed, 30/31 tests pass (1 pre-existing skip)
+[2026-02-06 14:38] STATUS: done

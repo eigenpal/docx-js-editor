@@ -53,6 +53,7 @@ import { HyperlinkDialog, useHyperlinkDialog, type HyperlinkData } from './dialo
 import { TablePropertiesDialog } from './dialogs/TablePropertiesDialog';
 import { ImagePositionDialog, type ImagePositionData } from './dialogs/ImagePositionDialog';
 import { ImagePropertiesDialog, type ImagePropertiesData } from './dialogs/ImagePropertiesDialog';
+import { HeaderFooterEditor } from './HeaderFooterEditor';
 import { getBuiltinTableStyle, type TableStylePreset } from './ui/TableStyleGallery';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import {
@@ -365,6 +366,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   const [imagePositionOpen, setImagePositionOpen] = useState(false);
   // Image properties dialog state
   const [imagePropsOpen, setImagePropsOpen] = useState(false);
+  // Header/footer editing state
+  const [hfEditPosition, setHfEditPosition] = useState<'header' | 'footer' | null>(null);
 
   // History hook for undo/redo - start with null document
   const history = useDocumentHistory<Document | null>(initialDocument || null, {
@@ -1698,6 +1701,60 @@ body { background: white; }
     return { headerContent: header, footerContent: footer };
   }, [history.state]);
 
+  // Handle header/footer double-click — open editing overlay
+  const handleHeaderFooterDoubleClick = useCallback(
+    (position: 'header' | 'footer') => {
+      const hf = position === 'header' ? headerContent : footerContent;
+      if (hf) {
+        setHfEditPosition(position);
+      }
+    },
+    [headerContent, footerContent]
+  );
+
+  // Handle header/footer save — update document package with edited content
+  const handleHeaderFooterSave = useCallback(
+    (content: (import('../types/document').Paragraph | import('../types/document').Table)[]) => {
+      if (!hfEditPosition || !history.state?.package) {
+        setHfEditPosition(null);
+        return;
+      }
+
+      const pkg = history.state.package;
+      const sectionProps = pkg.document?.finalSectionProperties;
+      const refs =
+        hfEditPosition === 'header'
+          ? sectionProps?.headerReferences
+          : sectionProps?.footerReferences;
+      const defaultRef = refs?.find((r) => r.type === 'default');
+      const map = hfEditPosition === 'header' ? pkg.headers : pkg.footers;
+
+      if (defaultRef?.rId && map) {
+        const existing = map.get(defaultRef.rId);
+        if (existing) {
+          const updated: HeaderFooter = {
+            ...existing,
+            content,
+          };
+          map.set(defaultRef.rId, updated);
+
+          // Force re-render by creating a new Document reference
+          const newDoc: Document = {
+            ...history.state,
+            package: {
+              ...pkg,
+              [hfEditPosition === 'header' ? 'headers' : 'footers']: new Map(map),
+            },
+          };
+          history.push(newDoc);
+        }
+      }
+
+      setHfEditPosition(null);
+    },
+    [hfEditPosition, history]
+  );
+
   // Container styles - using overflow: auto so sticky toolbar works
   const containerStyle: CSSProperties = {
     display: 'flex',
@@ -1874,6 +1931,7 @@ body { background: white; }
                   sectionProperties={history.state?.package.document?.finalSectionProperties}
                   headerContent={headerContent}
                   footerContent={footerContent}
+                  onHeaderFooterDoubleClick={handleHeaderFooterDoubleClick}
                   zoom={state.zoom}
                   readOnly={readOnly}
                   extensionManager={extensionManager}
@@ -1991,6 +2049,29 @@ body { background: white; }
                 : undefined
             }
           />
+          {/* Header/Footer editor overlay */}
+          {hfEditPosition && (headerContent || footerContent) && (
+            <HeaderFooterEditor
+              headerFooter={
+                (hfEditPosition === 'header' ? headerContent : footerContent) as HeaderFooter
+              }
+              position={hfEditPosition}
+              styles={history.state?.package.styles}
+              widthPx={
+                history.state?.package.document?.finalSectionProperties
+                  ? Math.round(
+                      ((history.state.package.document.finalSectionProperties.pageWidth ?? 12240) -
+                        (history.state.package.document.finalSectionProperties.marginLeft ?? 1440) -
+                        (history.state.package.document.finalSectionProperties.marginRight ??
+                          1440)) /
+                        15
+                    )
+                  : 612
+              }
+              onSave={handleHeaderFooterSave}
+              onClose={() => setHfEditPosition(null)}
+            />
+          )}
           {/* Hidden file input for image insertion */}
           <input
             ref={imageInputRef}
