@@ -1259,7 +1259,7 @@ body { background: white; }
   if (state.isLoading) {
     return (
       <div
-        className={`docx-editor docx-editor-loading ${className}`}
+        className={`ep-root docx-editor docx-editor-loading ${className}`}
         style={containerStyle}
         data-testid="docx-editor"
       >
@@ -1272,7 +1272,7 @@ body { background: white; }
   if (state.parseError) {
     return (
       <div
-        className={`docx-editor docx-editor-error ${className}`}
+        className={`ep-root docx-editor docx-editor-error ${className}`}
         style={containerStyle}
         data-testid="docx-editor"
       >
@@ -1285,7 +1285,7 @@ body { background: white; }
   if (!history.state) {
     return (
       <div
-        className={`docx-editor docx-editor-empty ${className}`}
+        className={`ep-root docx-editor docx-editor-empty ${className}`}
         style={containerStyle}
         data-testid="docx-editor"
       >
@@ -1299,7 +1299,7 @@ body { background: white; }
       <ErrorBoundary onError={handleEditorError}>
         <div
           ref={containerRef}
-          className={`docx-editor ${className}`}
+          className={`ep-root docx-editor ${className}`}
           style={containerStyle}
           data-testid="docx-editor"
         >

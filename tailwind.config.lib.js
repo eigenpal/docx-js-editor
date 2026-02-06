@@ -1,6 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ['class'],
+  // Scope all utilities under .ep-root to avoid clashing with host app CSS
+  important: '.ep-root',
   // Only scan library source files, not demo
   content: ['./src/**/*.{ts,tsx}'],
   theme: {

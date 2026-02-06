@@ -106,14 +106,6 @@ export {
 } from './components/Toolbar';
 export { VariablePanel, type VariablePanelProps } from './components/VariablePanel';
 export {
-  DocumentViewer,
-  type DocumentViewerProps,
-  scrollToPage,
-  getVisiblePages,
-  calculateFitWidthZoom,
-  calculateFitPageZoom,
-} from './components/DocumentViewer';
-export {
   ContextMenu,
   type ContextMenuProps,
   useContextMenu,

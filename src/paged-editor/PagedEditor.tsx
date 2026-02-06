@@ -1727,7 +1727,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     return (
       <div
         ref={containerRef}
-        className={`paged-editor ${className ?? ''}`}
+        className={`ep-root paged-editor ${className ?? ''}`}
         style={{ ...containerStyles, ...style }}
         tabIndex={0}
         onFocus={handleContainerFocus}
