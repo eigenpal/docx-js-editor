@@ -729,6 +729,56 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     [getActiveEditorView, focusActiveEditor]
   );
 
+  // Handle shape insertion
+  const handleInsertShape = useCallback(
+    (data: {
+      shapeType: string;
+      width: number;
+      height: number;
+      fillColor?: string;
+      fillType?: string;
+      outlineWidth?: number;
+      outlineColor?: string;
+    }) => {
+      const view = getActiveEditorView();
+      if (!view) return;
+
+      const { state: editorState } = view;
+
+      if (data.shapeType === 'textBox') {
+        // Insert a text box node (block-level)
+        const textBoxNode = editorState.schema.nodes.textBox.create(
+          {
+            width: data.width,
+            height: data.height,
+            outlineWidth: 1,
+            outlineColor: '#d1d5db',
+            outlineStyle: 'solid',
+          },
+          editorState.schema.nodes.paragraph.create()
+        );
+        const tr = editorState.tr.replaceSelectionWith(textBoxNode);
+        view.dispatch(tr.scrollIntoView());
+      } else {
+        // Insert a shape node (inline)
+        const shapeNode = editorState.schema.nodes.shape.create({
+          shapeType: data.shapeType,
+          width: data.width,
+          height: data.height,
+          fillColor: data.fillColor,
+          fillType: data.fillType,
+          outlineWidth: data.outlineWidth,
+          outlineColor: data.outlineColor,
+          outlineStyle: 'solid',
+        });
+        const tr = editorState.tr.replaceSelectionWith(shapeNode);
+        view.dispatch(tr.scrollIntoView());
+      }
+      focusActiveEditor();
+    },
+    [getActiveEditorView, focusActiveEditor]
+  );
+
   // Handle image wrap type change
   const handleImageWrapType = useCallback(
     (wrapType: string) => {
@@ -1754,6 +1804,7 @@ body { background: white; }
                     onInsertTable={handleInsertTable}
                     showTableInsert={true}
                     onInsertImage={handleInsertImageClick}
+                    onInsertShape={handleInsertShape}
                     imageContext={state.pmImageContext}
                     onImageWrapType={handleImageWrapType}
                     onImageTransform={handleImageTransform}

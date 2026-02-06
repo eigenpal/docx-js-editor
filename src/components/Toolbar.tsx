@@ -26,6 +26,7 @@ import { Tooltip } from './ui/Tooltip';
 import { TableGridPicker } from './ui/TableGridPicker';
 import { TableOptionsDropdown } from './ui/TableOptionsDropdown';
 import { TableStyleGallery } from './ui/TableStyleGallery';
+import { ShapeGallery } from './ui/ShapeGallery';
 import type { TableAction } from './ui/TableToolbar';
 import { cn } from '../lib/utils';
 
@@ -159,6 +160,16 @@ export interface ToolbarProps {
   showTableInsert?: boolean;
   /** Callback when user wants to insert an image */
   onInsertImage?: () => void;
+  /** Callback when user wants to insert a shape */
+  onInsertShape?: (data: {
+    shapeType: string;
+    width: number;
+    height: number;
+    fillColor?: string;
+    fillType?: string;
+    outlineWidth?: number;
+    outlineColor?: string;
+  }) => void;
   /** Image context when an image is selected */
   imageContext?: {
     wrapType: string;
@@ -351,6 +362,7 @@ export function Toolbar({
   onInsertTable,
   showTableInsert = true,
   onInsertImage,
+  onInsertShape,
   imageContext,
   onImageWrapType,
   onImageTransform,
@@ -897,7 +909,7 @@ export function Toolbar({
       )}
 
       {/* Insert group */}
-      {(showTableInsert || onInsertImage) && (
+      {(showTableInsert || onInsertImage || onInsertShape) && (
         <ToolbarGroup label="Insert">
           {showTableInsert && onInsertTable && (
             <TableGridPicker
@@ -916,6 +928,7 @@ export function Toolbar({
               <MaterialSymbol name="image" size={ICON_SIZE} />
             </ToolbarButton>
           )}
+          {onInsertShape && <ShapeGallery onInsertShape={onInsertShape} disabled={disabled} />}
         </ToolbarGroup>
       )}
 

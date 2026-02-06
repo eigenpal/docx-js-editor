@@ -196,3 +196,13 @@
 [2026-02-06 13:52] STATUS: testing
 [2026-02-06 13:52] NOTES: typecheck passed, 30/31 tests pass
 [2026-02-06 13:52] STATUS: done
+
+[2026-02-06 13:55] TASK: 4.3 Shape insertion
+[2026-02-06 13:55] STATUS: editing
+[2026-02-06 13:55] NOTES: Creating ShapeGallery dropdown with preset shapes, insert handler in DocxEditor
+[2026-02-06 13:57] NOTES: Created ShapeGallery.tsx with 7 presets: rect, roundRect, ellipse, triangle, diamond, line, textBox
+[2026-02-06 13:58] NOTES: Added onInsertShape prop to Toolbar, ShapeGallery in Insert group
+[2026-02-06 13:59] NOTES: Added handleInsertShape in DocxEditor — creates shape or textBox nodes via schema
+[2026-02-06 14:00] STATUS: testing
+[2026-02-06 14:00] NOTES: typecheck passed, 30/31 tests pass
+[2026-02-06 14:00] STATUS: done
