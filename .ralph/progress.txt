@@ -153,3 +153,15 @@
 [2026-02-06 13:15] STATUS: testing
 [2026-02-06 13:15] NOTES: typecheck passed, 30/31 tests pass (1 pre-existing skip)
 [2026-02-06 13:15] STATUS: done
+
+[2026-02-06 13:16] TASK: 3.6 Image drag to reposition
+[2026-02-06 13:16] STATUS: starting
+[2026-02-06 13:16] NOTES: Researching drag infrastructure and EditableImage component
+[2026-02-06 13:20] STATUS: editing
+[2026-02-06 13:20] NOTES: ProseMirror has built-in drag for draggable:true nodes. Creating ImageDragExtension plugin for ghost overlay + drop handling
+[2026-02-06 13:22] NOTES: Created ImageDragExtension.ts with dragstart/dragend/dragover/drop handlers, ghost outline during drag
+[2026-02-06 13:23] NOTES: Added CSS for grab cursor on selected images, opacity+dashed outline during drag
+[2026-02-06 13:24] NOTES: Registered ImageDragExtension in StarterKit
+[2026-02-06 13:25] STATUS: testing
+[2026-02-06 13:25] NOTES: typecheck passed, 30/31 tests pass (1 pre-existing skip)
+[2026-02-06 13:25] STATUS: done

@@ -44,6 +44,7 @@ import { createTableExtensions } from './nodes/TableExtension';
 import { ListExtension } from './features/ListExtension';
 import { BaseKeymapExtension } from './features/BaseKeymapExtension';
 import { SelectionTrackerExtension } from './features/SelectionTrackerExtension';
+import { ImageDragExtension } from './features/ImageDragExtension';
 
 export interface StarterKitOptions {
   /** Extensions to disable by name */
@@ -102,6 +103,7 @@ export function createStarterKit(options: StarterKitOptions = {}): AnyExtension[
   add('hardBreak', HardBreakExtension());
   add('tab', TabExtension());
   add('image', ImageExtension());
+  add('imageDrag', ImageDragExtension());
   add('horizontalRule', HorizontalRuleExtension());
 
   // Table (5 extensions grouped)

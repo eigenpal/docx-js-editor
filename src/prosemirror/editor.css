@@ -325,6 +325,14 @@
 .prosemirror-editor .ProseMirror img.docx-image.ProseMirror-selectednode {
   outline: 2px solid var(--doc-primary, #4285f4);
   outline-offset: 2px;
+  cursor: grab;
+}
+
+/* Image dragging state */
+.prosemirror-editor .ProseMirror.pm-image-dragging img.docx-image.ProseMirror-selectednode {
+  opacity: 0.4;
+  outline: 2px dashed var(--doc-primary, #4285f4);
+  cursor: grabbing;
 }
 
 /* Fallback for images without docx-image class */
