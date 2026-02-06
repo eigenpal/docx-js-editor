@@ -38,5 +38,11 @@ screenshots/
 # Lock files (optional - uncomment if you want to track)
 # bun.lock
 
+# Built packages
+*.tgz
+
+# npm lock file (using bun.lock)
+package-lock.json
+
 # Reference documentation (large files - can be re-downloaded)
 reference/ecma-376/*.zip

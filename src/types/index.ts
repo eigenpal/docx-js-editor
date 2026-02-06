@@ -1,10 +1,9 @@
 /**
  * Type exports for @eigenpal/docx-editor
  *
- * This file exports all public TypeScript types for the DOCX editor.
+ * Re-exports all public TypeScript types from the split type modules.
  */
 
-// Export all document types
 export type {
   // Color & Styling Primitives
   ThemeColorSlot,
@@ -25,6 +24,18 @@ export type {
   LineSpacingRule,
   ParagraphAlignment,
   ParagraphFormatting,
+
+  // Table Formatting
+  TableWidthType,
+  TableMeasurement,
+  TableBorders,
+  CellMargins,
+  TableLook,
+  FloatingTableProperties,
+  TableFormatting,
+  TableRowFormatting,
+  ConditionalFormatStyle,
+  TableCellFormatting,
 
   // Run Content
   TextContent,
@@ -69,16 +80,6 @@ export type {
   TextBox,
 
   // Tables
-  TableWidthType,
-  TableMeasurement,
-  TableBorders,
-  CellMargins,
-  TableLook,
-  FloatingTableProperties,
-  TableFormatting,
-  TableRowFormatting,
-  ConditionalFormatStyle,
-  TableCellFormatting,
   TableCell,
   TableRow,
   Table,

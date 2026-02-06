@@ -658,18 +658,6 @@ export function blendColors(
 }
 
 /**
- * Get opacity from a color (for future alpha channel support)
- *
- * @param color - ColorValue with potential alpha
- * @returns Opacity value 0-1
- */
-export function getColorOpacity(_color: ColorValue | undefined | null): number {
-  // OOXML colors don't typically have alpha in ColorValue
-  // This is a placeholder for future extension
-  return 1;
-}
-
-/**
  * Check if two colors are equal
  *
  * @param color1 - First color

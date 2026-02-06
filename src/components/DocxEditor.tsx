@@ -10,7 +10,7 @@
  * - Loading states
  */
 
-import React, {
+import {
   useRef,
   useCallback,
   useState,
@@ -51,6 +51,13 @@ import {
 } from './dialogs/FindReplaceDialog';
 import { HyperlinkDialog, useHyperlinkDialog, type HyperlinkData } from './dialogs/HyperlinkDialog';
 import { DocumentAgent } from '../agent/DocumentAgent';
+import {
+  DefaultLoadingIndicator,
+  DefaultPlaceholder,
+  ParseError,
+  extractVariableNames,
+  extractVariables,
+} from './DocxEditorHelpers';
 import { parseDocx } from '../docx/parser';
 import { onFontsLoaded, loadDocumentFonts } from '../utils/fontLoader';
 import { executeCommand } from '../agent/executor';
@@ -1521,164 +1528,6 @@ body { background: white; }
     </ErrorProvider>
   );
 });
-
-// ============================================================================
-// HELPER COMPONENTS
-// ============================================================================
-
-/**
- * Default loading indicator
- */
-function DefaultLoadingIndicator(): React.ReactElement {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        color: 'var(--doc-text-muted)',
-      }}
-    >
-      <div
-        style={{
-          width: '40px',
-          height: '40px',
-          border: '3px solid var(--doc-border)',
-          borderTop: '3px solid var(--doc-primary)',
-          borderRadius: '50%',
-          animation: 'docx-spin 1s linear infinite',
-        }}
-      />
-      <style>
-        {`
-          @keyframes docx-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
-      <div style={{ marginTop: '16px' }}>Loading document...</div>
-    </div>
-  );
-}
-
-/**
- * Default placeholder
- */
-function DefaultPlaceholder(): React.ReactElement {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        color: 'var(--doc-text-placeholder)',
-      }}
-    >
-      <svg
-        width="64"
-        height="64"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      >
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-      </svg>
-      <div style={{ marginTop: '16px' }}>No document loaded</div>
-    </div>
-  );
-}
-
-/**
- * Parse error display
- */
-function ParseError({ message }: { message: string }): React.ReactElement {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        padding: '20px',
-        textAlign: 'center',
-      }}
-    >
-      <div style={{ color: 'var(--doc-error)', marginBottom: '16px' }}>
-        <svg
-          width="48"
-          height="48"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 8v4M12 16v.01" />
-        </svg>
-      </div>
-      <h3 style={{ color: 'var(--doc-error)', marginBottom: '8px' }}>Failed to Load Document</h3>
-      <p style={{ color: 'var(--doc-text-muted)', maxWidth: '400px' }}>{message}</p>
-    </div>
-  );
-}
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-/**
- * Extract variable names from document
- */
-function extractVariableNames(doc: Document): string[] {
-  const variables = new Set<string>();
-  const regex = /\{\{([^}]+)\}\}/g;
-
-  const extractFromParagraph = (paragraph: any) => {
-    for (const item of paragraph.content || []) {
-      if (item.type === 'run') {
-        for (const content of item.content || []) {
-          if (content.type === 'text') {
-            let match;
-            while ((match = regex.exec(content.text)) !== null) {
-              variables.add(match[1].trim());
-            }
-          }
-        }
-      }
-    }
-  };
-
-  const body = doc.package.document;
-  for (const block of body.content || []) {
-    if (block.type === 'paragraph') {
-      extractFromParagraph(block);
-    }
-  }
-
-  return Array.from(variables);
-}
-
-/**
- * Extract current variable values (placeholders with current text)
- */
-function extractVariables(doc: Document): Record<string, string> {
-  const values: Record<string, string> = {};
-  const names = extractVariableNames(doc);
-
-  for (const name of names) {
-    values[name] = ''; // Default empty
-  }
-
-  return values;
-}
 
 // ============================================================================
 // EXPORTS

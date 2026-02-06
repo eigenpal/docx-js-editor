@@ -235,8 +235,6 @@ export {
   positionToMargin,
 } from './components/ui/HorizontalRuler';
 export {
-  PrintPreview,
-  type PrintPreviewProps,
   PrintButton,
   type PrintButtonProps,
   PrintStyles,

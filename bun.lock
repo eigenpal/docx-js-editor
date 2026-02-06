@@ -15,7 +15,6 @@
         "prosemirror-model": "^1.19.4",
         "prosemirror-state": "^1.4.3",
         "prosemirror-tables": "^1.8.5",
-        "prosemirror-transform": "^1.8.0",
         "prosemirror-view": "^1.32.7",
         "xml-js": "^1.6.11",
       },
