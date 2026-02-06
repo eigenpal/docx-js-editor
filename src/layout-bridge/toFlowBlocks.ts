@@ -21,6 +21,7 @@ import type {
   TabRun,
   ImageRun,
   LineBreakRun,
+  FieldRun,
   RunFormatting,
   ParagraphAttrs,
 } from '../layout-engine/types';
@@ -206,6 +207,27 @@ function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksO
         distRight: attrs.distRight as number | undefined,
         // Preserve position for page-level floating image positioning
         position: attrs.position as ImageRun['position'] | undefined,
+        pmStart: childPos,
+        pmEnd: childPos + child.nodeSize,
+      };
+      runs.push(run);
+    } else if (child.type.name === 'field') {
+      // Field node — convert to FieldRun for render-time substitution
+      const ft = child.attrs.fieldType as string;
+      const mappedType: FieldRun['fieldType'] =
+        ft === 'PAGE'
+          ? 'PAGE'
+          : ft === 'NUMPAGES'
+            ? 'NUMPAGES'
+            : ft === 'DATE'
+              ? 'DATE'
+              : ft === 'TIME'
+                ? 'TIME'
+                : 'OTHER';
+      const run: FieldRun = {
+        kind: 'field',
+        fieldType: mappedType,
+        fallback: (child.attrs.displayText as string) || '',
         pmStart: childPos,
         pmEnd: childPos + child.nodeSize,
       };

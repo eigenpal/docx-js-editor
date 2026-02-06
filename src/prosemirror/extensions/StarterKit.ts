@@ -48,6 +48,7 @@ import { ImageExtension } from './nodes/ImageExtension';
 import { TextBoxExtension } from './nodes/TextBoxExtension';
 import { ShapeExtension } from './nodes/ShapeExtension';
 import { HorizontalRuleExtension } from './nodes/HorizontalRuleExtension';
+import { FieldExtension } from './nodes/FieldExtension';
 import { createTableExtensions } from './nodes/TableExtension';
 
 // Features
@@ -123,6 +124,7 @@ export function createStarterKit(options: StarterKitOptions = {}): AnyExtension[
   add('shape', ShapeExtension());
   add('imageDrag', ImageDragExtension());
   add('horizontalRule', HorizontalRuleExtension());
+  add('field', FieldExtension());
 
   // Table (5 extensions grouped)
   if (!disabled.has('table')) {

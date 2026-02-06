@@ -68,7 +68,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 - [x] **7.2 Custom tab stop editor** — Ruler component with visual tab stop placement. Add/remove/change alignment(L/C/R/decimal)/leader(dot/dash/underline).
 - [x] **7.3 Character spacing/position UI** — Font dialog or Format menu: spacing (twips), position (raise/lower), scale %, kerning.
 - [x] **7.4 Table of Contents** — Parse TOC field codes. Generate from heading styles + outline levels. Update command.
-- [ ] **7.5 Field updates** — PAGE, NUMPAGES, DATE auto-update. MERGEFIELD preview with template data.
+- [x] **7.5 Field updates** — PAGE, NUMPAGES, DATE auto-update. MERGEFIELD preview with template data.
 - [ ] **7.6 Content control (SDT) editing** — Make structured document tags editable with proper UI. Rich text, plain text, date, dropdown, checkbox controls.
 - [ ] **7.7 Comments sidebar** — Parse comment ranges. Highlight commented text. Sidebar with comment list. Add/reply/resolve commands.
 - [ ] **7.8 Tracked changes (foundation)** — Parse `w:ins`/`w:del`/`w:rPrChange`. Render insertions (underline) and deletions (strikethrough). Accept/reject commands.

@@ -34,6 +34,9 @@ import type {
   ShapeContent,
   Shape,
   NoteReferenceContent,
+  SimpleField,
+  ComplexField,
+  FieldType,
 } from '../../types/document';
 import type {
   ParagraphAttrs,
@@ -285,6 +288,14 @@ function extractParagraphContent(paragraph: PMNode): ParagraphContent[] {
         currentMarksKey = null;
       }
       content.push(createTabRun());
+    } else if (node.type.name === 'field') {
+      // Field ends current run and emits a field content item
+      if (currentRun) {
+        content.push(currentRun);
+        currentRun = null;
+        currentMarksKey = null;
+      }
+      content.push(createFieldFromNode(node));
     }
   });
 
@@ -398,6 +409,46 @@ function createTabRun(): Run {
   return {
     type: 'run',
     content: [tabContent],
+  };
+}
+
+/**
+ * Create a SimpleField or ComplexField from a PM field node
+ */
+function createFieldFromNode(node: PMNode): SimpleField | ComplexField {
+  const attrs = node.attrs as {
+    fieldType: string;
+    instruction: string;
+    displayText: string;
+    fieldKind: string;
+    fldLock: boolean;
+    dirty: boolean;
+  };
+
+  const displayRun: Run = {
+    type: 'run',
+    content: [{ type: 'text' as const, text: attrs.displayText || '' }],
+  };
+
+  if (attrs.fieldKind === 'complex') {
+    return {
+      type: 'complexField',
+      instruction: attrs.instruction,
+      fieldType: attrs.fieldType as FieldType,
+      fieldCode: [],
+      fieldResult: [displayRun],
+      fldLock: attrs.fldLock || undefined,
+      dirty: attrs.dirty || undefined,
+    };
+  }
+
+  return {
+    type: 'simpleField',
+    instruction: attrs.instruction,
+    fieldType: attrs.fieldType as FieldType,
+    content: [displayRun],
+    fldLock: attrs.fldLock || undefined,
+    dirty: attrs.dirty || undefined,
   };
 }
 

@@ -386,7 +386,13 @@ function renderFieldRun(run: FieldRun, doc: Document, context: RenderContext): H
     case 'NUMPAGES':
       text = String(context.totalPages);
       break;
-    // DATE, TIME, and OTHER fields use fallback
+    case 'DATE':
+      text = new Date().toLocaleDateString();
+      break;
+    case 'TIME':
+      text = new Date().toLocaleTimeString();
+      break;
+    // OTHER fields use fallback
   }
 
   // Create a text run with the resolved value

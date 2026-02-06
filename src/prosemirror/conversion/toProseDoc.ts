@@ -31,6 +31,8 @@ import type {
   TableCell,
   TableCellFormatting,
   TableBorders,
+  SimpleField,
+  ComplexField,
 } from '../../types/document';
 import { emuToPixels } from '../../docx/imageParser';
 import { createStyleResolver, type StyleResolver } from '../styles';
@@ -106,8 +108,11 @@ function convertParagraph(paragraph: Paragraph, styleResolver: StyleResolver | n
     } else if (content.type === 'hyperlink') {
       const linkNodes = convertHyperlink(content, styleRunFormatting);
       inlineNodes.push(...linkNodes);
+    } else if (content.type === 'simpleField' || content.type === 'complexField') {
+      const fieldNode = convertField(content);
+      if (fieldNode) inlineNodes.push(fieldNode);
     }
-    // Skip other content types for now (bookmarks, fields, etc.)
+    // Skip other content types for now (bookmarks, etc.)
   }
 
   return schema.node('paragraph', attrs, inlineNodes);
@@ -559,6 +564,33 @@ function convertTableCell(
   // Use tableHeader for header cells, tableCell otherwise
   const nodeType = isHeader ? 'tableHeader' : 'tableCell';
   return schema.node(nodeType, attrs, contentNodes);
+}
+
+/**
+ * Convert a SimpleField or ComplexField to a ProseMirror field node.
+ */
+function convertField(field: SimpleField | ComplexField): PMNode | null {
+  // Extract display text from field content/result
+  let displayText = '';
+  const runs = field.type === 'simpleField' ? field.content : field.fieldResult;
+  if (runs) {
+    for (const r of runs) {
+      if (r.type === 'run') {
+        for (const c of r.content) {
+          if (c.type === 'text') displayText += c.text;
+        }
+      }
+    }
+  }
+
+  return schema.node('field', {
+    fieldType: field.fieldType,
+    instruction: field.instruction,
+    displayText,
+    fieldKind: field.type === 'simpleField' ? 'simple' : 'complex',
+    fldLock: field.fldLock ?? false,
+    dirty: field.dirty ?? false,
+  });
 }
 
 /**
