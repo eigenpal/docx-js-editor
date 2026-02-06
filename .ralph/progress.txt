@@ -293,6 +293,12 @@
 [2026-02-06 15:38] NOTES: typecheck passed, 55/56 tests pass (1 pre-existing skip)
 [2026-02-06 15:38] STATUS: done
 
+[2026-02-06 15:40] TASK: 7.3 Character spacing/position UI
+[2026-02-06 15:40] STATUS: editing
+[2026-02-06 15:40] NOTES: Created CharacterSpacingExtension mark — spacing, position, scale, kerning in single mark
+[2026-02-06 15:42] NOTES: Added toProseDoc/fromProseDoc conversion, registered in StarterKit
+[2026-02-06 15:43] STATUS: done
+
 [2026-02-06 15:15] TASK: 6.2 Footnote/endnote properties
 [2026-02-06 15:15] STATUS: starting
 [2026-02-06 15:15] NOTES: Position, numbering format, restart rules per section. Infrastructure already parsed/serialized.

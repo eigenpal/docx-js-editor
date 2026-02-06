@@ -613,6 +613,14 @@ function marksToTextFormatting(marks: readonly Mark[]): TextFormatting {
         formatting.smallCaps = true;
         break;
 
+      case 'characterSpacing': {
+        if (mark.attrs.spacing != null) formatting.spacing = mark.attrs.spacing;
+        if (mark.attrs.position != null) formatting.position = mark.attrs.position;
+        if (mark.attrs.scale != null) formatting.scale = mark.attrs.scale;
+        if (mark.attrs.kerning != null) formatting.kerning = mark.attrs.kerning;
+        break;
+      }
+
       case 'emboss':
         formatting.emboss = true;
         break;

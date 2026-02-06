@@ -975,6 +975,23 @@ function textFormattingToMarks(
     marks.push(schema.mark('smallCaps'));
   }
 
+  // Character spacing (spacing, position, scale, kerning)
+  if (
+    formatting.spacing != null ||
+    formatting.position != null ||
+    formatting.scale != null ||
+    formatting.kerning != null
+  ) {
+    marks.push(
+      schema.mark('characterSpacing', {
+        spacing: formatting.spacing ?? null,
+        position: formatting.position ?? null,
+        scale: formatting.scale ?? null,
+        kerning: formatting.kerning ?? null,
+      })
+    );
+  }
+
   // Emboss (w:emboss)
   if (formatting.emboss) {
     marks.push(schema.mark('emboss'));
