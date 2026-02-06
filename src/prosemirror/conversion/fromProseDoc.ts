@@ -31,6 +31,8 @@ import type {
   TableFormatting,
   TableRowFormatting,
   TableCellFormatting,
+  ShapeContent,
+  Shape,
 } from '../../types/document';
 import type {
   ParagraphAttrs,
@@ -84,6 +86,9 @@ function extractBlocks(pmDoc: PMNode): (Paragraph | Table)[] {
       blocks.push(convertPMParagraph(node));
     } else if (node.type.name === 'table') {
       blocks.push(convertPMTable(node));
+    } else if (node.type.name === 'textBox') {
+      // Convert text box back to a paragraph containing a shape with text body
+      blocks.push(convertPMTextBox(node));
     }
   });
 
@@ -658,6 +663,84 @@ function tableCellAttrsToFormatting(attrs: TableCellAttrs): TableCellFormatting 
       : undefined,
     borders: attrs.borders as TableCellFormatting['borders'],
     margins,
+  };
+}
+
+// ============================================================================
+// TEXT BOX CONVERSION
+// ============================================================================
+
+/**
+ * Convert a ProseMirror textBox node back to a Paragraph wrapping a ShapeContent run.
+ * The text box content becomes a Shape with textBody.
+ */
+function convertPMTextBox(node: PMNode): Paragraph {
+  const attrs = node.attrs as import('../extensions/nodes/TextBoxExtension').TextBoxAttrs;
+
+  // Extract child paragraphs from the text box content
+  const childParagraphs: Paragraph[] = [];
+  node.forEach((child) => {
+    if (child.type.name === 'paragraph') {
+      childParagraphs.push(convertPMParagraph(child));
+    }
+    // Tables inside text boxes are currently not round-tripped
+  });
+
+  // Build shape with text body
+  const shape: Shape = {
+    type: 'shape',
+    shapeType: 'rect',
+    id: attrs.textBoxId || undefined,
+    size: {
+      width: attrs.width ? Math.round(attrs.width * (914400 / 96)) : 0,
+      height: attrs.height ? Math.round(attrs.height * (914400 / 96)) : 0,
+    },
+    textBody: {
+      content: childParagraphs.length > 0 ? childParagraphs : [{ type: 'paragraph', content: [] }],
+      margins: {
+        top: attrs.marginTop != null ? Math.round(attrs.marginTop * (914400 / 96)) : undefined,
+        bottom:
+          attrs.marginBottom != null ? Math.round(attrs.marginBottom * (914400 / 96)) : undefined,
+        left: attrs.marginLeft != null ? Math.round(attrs.marginLeft * (914400 / 96)) : undefined,
+        right:
+          attrs.marginRight != null ? Math.round(attrs.marginRight * (914400 / 96)) : undefined,
+      },
+    },
+  };
+
+  // Convert fill color back
+  if (attrs.fillColor) {
+    shape.fill = {
+      type: 'solid',
+      color: { rgb: attrs.fillColor.replace('#', '') },
+    };
+  }
+
+  // Convert outline back
+  if (attrs.outlineWidth && attrs.outlineWidth > 0) {
+    const cssToOoxmlOutline: Record<string, string> = {
+      solid: 'solid',
+      dotted: 'dot',
+      dashed: 'dash',
+    };
+    shape.outline = {
+      width: Math.round(attrs.outlineWidth * (914400 / 96)),
+      color: attrs.outlineColor ? { rgb: attrs.outlineColor.replace('#', '') } : undefined,
+      style: attrs.outlineStyle
+        ? (cssToOoxmlOutline[
+            attrs.outlineStyle
+          ] as import('../../types/content').ShapeOutline['style']) || 'solid'
+        : 'solid',
+    };
+  }
+
+  // Wrap the shape in a paragraph with a run containing ShapeContent
+  const shapeContent: ShapeContent = { type: 'shape', shape };
+  const run: Run = { type: 'run', content: [shapeContent] };
+
+  return {
+    type: 'paragraph',
+    content: [run],
   };
 }
 

@@ -341,6 +341,18 @@
   height: auto;
 }
 
+/* Text boxes */
+.prosemirror-editor .ProseMirror .docx-textbox {
+  border-radius: 2px;
+  margin: 4px 0;
+  cursor: text;
+}
+
+.prosemirror-editor .ProseMirror .docx-textbox.ProseMirror-selectednode {
+  outline: 2px solid var(--doc-primary, #4285f4);
+  outline-offset: 2px;
+}
+
 /* Links */
 .prosemirror-editor .ProseMirror a {
   color: var(--doc-link);

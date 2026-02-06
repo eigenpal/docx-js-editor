@@ -165,3 +165,22 @@
 [2026-02-06 13:25] STATUS: testing
 [2026-02-06 13:25] NOTES: typecheck passed, 30/31 tests pass (1 pre-existing skip)
 [2026-02-06 13:25] STATUS: done
+
+[2026-02-06 13:28] TASK: 4.1 Editable text boxes
+[2026-02-06 13:28] STATUS: starting
+[2026-02-06 13:28] NOTES: Need TextBoxExtension, isolating block node, focus management, wps:wsp/txbx round-trip
+[2026-02-06 13:32] STATUS: reading
+[2026-02-06 13:32] NOTES: TextBox type has size, position, wrap, fill, outline, content:Paragraph[], margins
+[2026-02-06 13:33] NOTES: Currently parseDrawingContent only handles images - text boxes silently dropped
+[2026-02-06 13:34] STATUS: editing
+[2026-02-06 13:34] NOTES: Creating TextBoxExtension.ts as isolating block node with paragraph content
+[2026-02-06 13:36] NOTES: Created TextBoxExtension with attrs: width, height, fillColor, outlineWidth/Color/Style, margins, verticalAlign, displayMode
+[2026-02-06 13:37] NOTES: Node spec: group='block', content='(paragraph|table)+', isolating=true, draggable=true
+[2026-02-06 13:38] NOTES: toDOM renders as div.docx-textbox with inline styles for fill, border, padding, float
+[2026-02-06 13:39] NOTES: Registered in StarterKit, added CSS for .docx-textbox
+[2026-02-06 13:40] NOTES: Updated toProseDoc: extractTextBoxesFromParagraph scans for shape content with textBody, convertTextBox creates PM node
+[2026-02-06 13:41] NOTES: Updated fromProseDoc: convertPMTextBox converts back to Paragraph wrapping ShapeContent with textBody
+[2026-02-06 13:42] NOTES: Fixed ShapeFill type (uses color not solidColor), fixed outline style type casting
+[2026-02-06 13:43] STATUS: testing
+[2026-02-06 13:43] NOTES: typecheck passed, 30/31 tests pass (1 pre-existing skip)
+[2026-02-06 13:43] STATUS: done
