@@ -233,3 +233,7 @@
 [2026-02-06 14:38] STATUS: testing
 [2026-02-06 14:38] NOTES: typecheck passed, 30/31 tests pass (1 pre-existing skip)
 [2026-02-06 14:38] STATUS: done
+
+[2026-02-06 14:40] TASK: 5.2 Section break editing
+[2026-02-06 14:40] STATUS: starting
+[2026-02-06 14:40] NOTES: Need to visualize section boundaries, insert/delete section breaks

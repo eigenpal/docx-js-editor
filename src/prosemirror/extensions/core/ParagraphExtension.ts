@@ -119,6 +119,7 @@ const paragraphNodeSpec: NodeSpec = {
     keepNext: { default: null },
     keepLines: { default: null },
     defaultTextFormatting: { default: null },
+    sectionBreakType: { default: null },
   },
   parseDOM: [
     {
@@ -129,6 +130,8 @@ const paragraphNodeSpec: NodeSpec = {
           paraId: element.dataset.paraId || undefined,
           alignment: element.dataset.alignment as ParagraphAlignment | undefined,
           styleId: element.dataset.styleId || undefined,
+          sectionBreakType:
+            (element.dataset.sectionBreak as ParagraphAttrs['sectionBreakType']) || undefined,
         };
       },
     },
@@ -162,6 +165,11 @@ const paragraphNodeSpec: NodeSpec = {
 
     if (attrs.listMarker) {
       domAttrs['data-list-marker'] = attrs.listMarker;
+    }
+
+    if (attrs.sectionBreakType) {
+      domAttrs['data-section-break'] = attrs.sectionBreakType;
+      domAttrs.class = (domAttrs.class ? domAttrs.class + ' ' : '') + 'docx-section-break';
     }
 
     return ['p', domAttrs, 0];
@@ -450,6 +458,9 @@ export const ParagraphExtension = createNodeExtension({
         applyStyle: (styleId: string, resolvedAttrs?: ResolvedStyleAttrs) =>
           applyStyleFn(styleId, resolvedAttrs),
         clearStyle: () => setParagraphAttr('styleId', null),
+        insertSectionBreak: (breakType: 'nextPage' | 'continuous' | 'oddPage' | 'evenPage') =>
+          setParagraphAttr('sectionBreakType', breakType),
+        removeSectionBreak: () => setParagraphAttr('sectionBreakType', null),
       },
     };
   },

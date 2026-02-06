@@ -78,6 +78,9 @@ export interface ParagraphAttrs {
   // Default text formatting for empty paragraphs (persists when navigating away)
   // Maps to OOXML pPr/rPr (paragraph's default run properties)
   defaultTextFormatting?: TextFormatting;
+
+  // Section break type — marks end of a section
+  sectionBreakType?: 'nextPage' | 'continuous' | 'oddPage' | 'evenPage';
 }
 
 /**

@@ -67,3 +67,11 @@ export function applyStyle(styleId: string, resolvedAttrs?: ResolvedStyleAttrs):
   return cmds.applyStyle(styleId, resolvedAttrs);
 }
 export const clearStyle: Command = cmds.clearStyle();
+
+// Section breaks
+export function insertSectionBreak(
+  breakType: 'nextPage' | 'continuous' | 'oddPage' | 'evenPage'
+): Command {
+  return cmds.insertSectionBreak(breakType);
+}
+export const removeSectionBreak: Command = cmds.removeSectionBreak();

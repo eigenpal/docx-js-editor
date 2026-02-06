@@ -102,13 +102,22 @@ function convertPMParagraph(node: PMNode): Paragraph {
   const attrs = node.attrs as ParagraphAttrs;
   const content = extractParagraphContent(node);
 
-  return {
+  const paragraph: Paragraph = {
     type: 'paragraph',
     paraId: attrs.paraId || undefined,
     textId: attrs.textId || undefined,
     formatting: paragraphAttrsToFormatting(attrs),
     content,
   };
+
+  // Restore section break type
+  if (attrs.sectionBreakType) {
+    paragraph.sectionProperties = {
+      sectionStart: attrs.sectionBreakType as import('../../types/content').SectionStart,
+    };
+  }
+
+  return paragraph;
 }
 
 /**

@@ -162,6 +162,14 @@ function paragraphFormattingToAttrs(
     attrs.keepNext = formatting?.keepNext ?? stylePpr?.keepNext;
     attrs.keepLines = formatting?.keepLines ?? stylePpr?.keepLines;
 
+    // Section break type from paragraph-level section properties
+    if (paragraph.sectionProperties?.sectionStart) {
+      const st = paragraph.sectionProperties.sectionStart;
+      if (st === 'nextPage' || st === 'continuous' || st === 'oddPage' || st === 'evenPage') {
+        attrs.sectionBreakType = st;
+      }
+    }
+
     // If style defines numPr but inline doesn't, use style's numPr
     if (!formatting?.numPr && stylePpr?.numPr) {
       attrs.numPr = stylePpr.numPr;
@@ -185,6 +193,14 @@ function paragraphFormattingToAttrs(
     attrs.pageBreakBefore = formatting?.pageBreakBefore;
     attrs.keepNext = formatting?.keepNext;
     attrs.keepLines = formatting?.keepLines;
+  }
+
+  // Section break type from paragraph-level section properties
+  if (paragraph.sectionProperties?.sectionStart) {
+    const st = paragraph.sectionProperties.sectionStart;
+    if (st === 'nextPage' || st === 'continuous' || st === 'oddPage' || st === 'evenPage') {
+      attrs.sectionBreakType = st;
+    }
   }
 
   return attrs;

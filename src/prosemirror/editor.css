@@ -563,6 +563,22 @@
   font-variant: small-caps;
 }
 
+/* Section break indicator */
+.docx-section-break {
+  position: relative;
+}
+.docx-section-break::after {
+  content: 'Section Break (' attr(data-section-break) ')';
+  display: block;
+  text-align: center;
+  font-size: 9px;
+  color: var(--doc-text-muted, #9ca3af);
+  border-top: 1px dashed var(--doc-border, #d1d5db);
+  margin-top: 4px;
+  padding-top: 2px;
+  pointer-events: none;
+}
+
 /* Header/footer areas — double-click hint */
 .layout-page-header,
 .layout-page-footer {
