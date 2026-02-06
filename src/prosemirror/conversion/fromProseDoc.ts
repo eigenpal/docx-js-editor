@@ -33,6 +33,7 @@ import type {
   TableCellFormatting,
   ShapeContent,
   Shape,
+  NoteReferenceContent,
 } from '../../types/document';
 import type {
   ParagraphAttrs,
@@ -176,6 +177,31 @@ function extractParagraphContent(paragraph: PMNode): ParagraphContent[] {
   let currentHyperlink: Hyperlink | null = null;
 
   paragraph.forEach((node) => {
+    // Check for footnote/endnote reference mark
+    const noteRefMark = node.marks.find((m) => m.type.name === 'footnoteRef');
+    if (noteRefMark) {
+      // Finish any current content
+      if (currentRun) {
+        content.push(currentRun);
+        currentRun = null;
+        currentMarksKey = null;
+      }
+      if (currentHyperlink) {
+        content.push(currentHyperlink);
+        currentHyperlink = null;
+      }
+      const noteType = noteRefMark.attrs.noteType === 'endnote' ? 'endnoteRef' : 'footnoteRef';
+      const noteRef: NoteReferenceContent = {
+        type: noteType,
+        id: parseInt(noteRefMark.attrs.id, 10) || 0,
+      };
+      content.push({
+        type: 'run',
+        content: [noteRef],
+      });
+      return;
+    }
+
     // Check for hyperlink mark
     const linkMark = node.marks.find((m) => m.type.name === 'hyperlink');
 

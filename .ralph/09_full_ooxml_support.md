@@ -57,7 +57,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 
 ## Phase 6: Footnotes & Endnotes (2 tasks)
 
-- [ ] **6.1 Footnote/endnote editing** — Clickable reference markers. Footnote editing area at page bottom. Insert/delete commands. Auto-renumbering.
+- [x] **6.1 Footnote/endnote editing** — Clickable reference markers. Footnote editing area at page bottom. Insert/delete commands. Auto-renumbering.
 - [ ] **6.2 Footnote/endnote properties** — Position (page bottom vs beneath text), numbering format, restart rules per section.
 
 ---

@@ -252,3 +252,15 @@
 [2026-02-06 14:54] STATUS: testing
 [2026-02-06 14:54] NOTES: typecheck passed, 55/56 tests pass (1 pre-existing skip)
 [2026-02-06 14:54] STATUS: done
+
+[2026-02-06 15:00] TASK: 6.1 Footnote/endnote editing
+[2026-02-06 15:00] STATUS: starting
+[2026-02-06 15:00] NOTES: Clickable reference markers. Footnote editing area at page bottom. Insert/delete commands. Auto-renumbering.
+[2026-02-06 15:05] STATUS: researching
+[2026-02-06 15:05] NOTES: Footnote infrastructure already comprehensive: parsing, rendering (FootnoteRef.tsx, FootnoteArea.tsx), PM mark, CSS styling all exist
+[2026-02-06 15:08] STATUS: editing
+[2026-02-06 15:08] NOTES: Added NoteReferenceContent round-trip in fromProseDoc.ts — detects footnoteRef mark, creates NoteReferenceContent
+[2026-02-06 15:10] NOTES: Upgraded FootnoteRefExtension with insertFootnote/insertEndnote/deleteNoteRef commands
+[2026-02-06 15:12] STATUS: testing
+[2026-02-06 15:12] NOTES: typecheck passed, 58/61 tests pass (3 pre-existing skips)
+[2026-02-06 15:12] STATUS: done
