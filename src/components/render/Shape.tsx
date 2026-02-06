@@ -186,10 +186,15 @@ function renderLine(shape: ShapeType, width: number, height: number): ReactNode 
  * Render a basic shape (rect, ellipse, etc.)
  */
 function renderBasicShape(shape: ShapeType, width: number, height: number): ReactNode {
-  const fillColor = resolveFillColor(shape);
   const strokeColor = hasOutline(shape) ? resolveOutlineColor(shape) : undefined;
   const strokeWidth = hasOutline(shape) ? getOutlineWidthPx(shape) || 1 : 0;
   const strokeDasharray = getStrokeDasharray(shape.outline);
+
+  // Determine fill — gradient or solid
+  const isGradient = shape.fill?.type === 'gradient' && shape.fill.gradient;
+  const gradId = isGradient ? `grad-${shape.id || 'shape'}` : undefined;
+  const fillColor = isGradient ? undefined : resolveFillColor(shape);
+  const fillValue = gradId ? `url(#${gradId})` : fillColor || 'none';
 
   // Calculate SVG viewBox to account for stroke
   const padding = strokeWidth;
@@ -208,7 +213,7 @@ function renderBasicShape(shape: ShapeType, width: number, height: number): Reac
           cy={svgHeight / 2}
           rx={innerWidth / 2}
           ry={innerHeight / 2}
-          fill={fillColor || 'none'}
+          fill={fillValue}
           stroke={strokeColor}
           strokeWidth={strokeWidth}
           strokeDasharray={strokeDasharray}
@@ -226,7 +231,7 @@ function renderBasicShape(shape: ShapeType, width: number, height: number): Reac
           height={innerHeight}
           rx={cornerRadius}
           ry={cornerRadius}
-          fill={fillColor || 'none'}
+          fill={fillValue}
           stroke={strokeColor}
           strokeWidth={strokeWidth}
           strokeDasharray={strokeDasharray}
@@ -243,7 +248,7 @@ function renderBasicShape(shape: ShapeType, width: number, height: number): Reac
       shapeElement = (
         <polygon
           points={triPoints}
-          fill={fillColor || 'none'}
+          fill={fillValue}
           stroke={strokeColor}
           strokeWidth={strokeWidth}
           strokeDasharray={strokeDasharray}
@@ -258,7 +263,7 @@ function renderBasicShape(shape: ShapeType, width: number, height: number): Reac
         svgWidth,
         svgHeight,
         padding,
-        fillColor,
+        fillValue,
         strokeColor,
         strokeWidth,
         strokeDasharray
@@ -271,7 +276,7 @@ function renderBasicShape(shape: ShapeType, width: number, height: number): Reac
         svgWidth,
         svgHeight,
         padding,
-        fillColor,
+        fillValue,
         strokeColor,
         strokeWidth,
         strokeDasharray
@@ -287,7 +292,7 @@ function renderBasicShape(shape: ShapeType, width: number, height: number): Reac
           y={padding}
           width={innerWidth}
           height={innerHeight}
-          fill={fillColor || 'none'}
+          fill={fillValue}
           stroke={strokeColor}
           strokeWidth={strokeWidth}
           strokeDasharray={strokeDasharray}
@@ -310,6 +315,39 @@ function renderBasicShape(shape: ShapeType, width: number, height: number): Reac
     }
   }
 
+  // Build gradient defs if needed
+  let gradientDef: ReactNode = null;
+  if (isGradient && gradId && shape.fill?.gradient) {
+    const g = shape.fill.gradient;
+    const stops = g.stops.map((s, i) => (
+      <stop
+        key={i}
+        offset={`${Math.round(s.position / 1000)}%`}
+        stopColor={s.color.rgb ? `#${s.color.rgb}` : '#000000'}
+      />
+    ));
+
+    if (g.type === 'radial' || g.type === 'rectangular' || g.type === 'path') {
+      gradientDef = (
+        <radialGradient id={gradId} cx="50%" cy="50%" r="50%">
+          {stops}
+        </radialGradient>
+      );
+    } else {
+      const angle = g.angle || 0;
+      const rad = ((angle - 90) * Math.PI) / 180;
+      const x1 = Math.round(50 + 50 * Math.cos(rad + Math.PI));
+      const y1 = Math.round(50 + 50 * Math.sin(rad + Math.PI));
+      const x2 = Math.round(50 + 50 * Math.cos(rad));
+      const y2 = Math.round(50 + 50 * Math.sin(rad));
+      gradientDef = (
+        <linearGradient id={gradId} x1={`${x1}%`} y1={`${y1}%`} x2={`${x2}%`} y2={`${y2}%`}>
+          {stops}
+        </linearGradient>
+      );
+    }
+  }
+
   return (
     <svg
       width={svgWidth}
@@ -317,6 +355,7 @@ function renderBasicShape(shape: ShapeType, width: number, height: number): Reac
       className="docx-shape-svg"
       style={{ position: 'absolute', top: 0, left: 0 }}
     >
+      {gradientDef && <defs>{gradientDef}</defs>}
       <g transform={transforms.length > 0 ? transforms.join(' ') : undefined}>{shapeElement}</g>
     </svg>
   );

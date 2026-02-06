@@ -975,10 +975,26 @@ function convertShape(shape: Shape): PMNode {
 
   let fillColor: string | undefined;
   let fillType: string = 'solid';
+  let gradientType: string | undefined;
+  let gradientAngle: number | undefined;
+  let gradientStops: string | undefined;
   if (shape.fill) {
     fillType = shape.fill.type;
     if (shape.fill.color?.rgb) {
       fillColor = `#${shape.fill.color.rgb}`;
+    }
+    // Extract gradient data
+    if (shape.fill.type === 'gradient' && shape.fill.gradient) {
+      const g = shape.fill.gradient;
+      gradientType = g.type;
+      gradientAngle = g.angle;
+      // Convert stops to serializable format with CSS colors
+      gradientStops = JSON.stringify(
+        g.stops.map((s) => ({
+          position: s.position,
+          color: s.color.rgb ? `#${s.color.rgb}` : '#000000',
+        }))
+      );
     }
   }
 
@@ -1019,6 +1035,9 @@ function convertShape(shape: Shape): PMNode {
     height: heightPx,
     fillColor,
     fillType,
+    gradientType,
+    gradientAngle,
+    gradientStops,
     outlineWidth,
     outlineColor,
     outlineStyle,

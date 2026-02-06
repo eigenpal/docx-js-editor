@@ -435,7 +435,28 @@ function createShapeRun(node: PMNode): Run {
   };
 
   // Fill
-  if (attrs.fillColor) {
+  if (attrs.fillType === 'gradient' && attrs.gradientStops) {
+    // Round-trip gradient fill
+    try {
+      const parsed = JSON.parse(attrs.gradientStops) as Array<{ position: number; color: string }>;
+      shape.fill = {
+        type: 'gradient',
+        gradient: {
+          type: (attrs.gradientType || 'linear') as 'linear' | 'radial' | 'rectangular' | 'path',
+          angle: attrs.gradientAngle || undefined,
+          stops: parsed.map((s) => ({
+            position: s.position,
+            color: { rgb: s.color.replace('#', '') },
+          })),
+        },
+      };
+    } catch {
+      shape.fill = {
+        type: 'solid',
+        color: { rgb: (attrs.fillColor || '000000').replace('#', '') },
+      };
+    }
+  } else if (attrs.fillColor) {
     shape.fill = {
       type: (attrs.fillType || 'solid') as 'solid' | 'none',
       color: { rgb: attrs.fillColor.replace('#', '') },

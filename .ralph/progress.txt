@@ -206,3 +206,16 @@
 [2026-02-06 14:00] STATUS: testing
 [2026-02-06 14:00] NOTES: typecheck passed, 30/31 tests pass
 [2026-02-06 14:00] STATUS: done
+
+[2026-02-06 14:02] TASK: 4.4 Shape effects rendering
+[2026-02-06 14:02] STATUS: editing
+[2026-02-06 14:02] NOTES: Adding gradient fill support to shape SVG, shadow/glow CSS properties
+[2026-02-06 14:10] STATUS: editing
+[2026-02-06 14:10] NOTES: Added gradient attrs (gradientType/Angle/Stops) + shadow/glow attrs to ShapeExtension
+[2026-02-06 14:11] NOTES: Updated toDOM to render SVG linearGradient/radialGradient defs, CSS drop-shadow + glow filter
+[2026-02-06 14:12] NOTES: Updated toProseDoc convertShape to extract gradient data from ShapeFill
+[2026-02-06 14:13] NOTES: Updated fromProseDoc createShapeRun to round-trip gradient fills
+[2026-02-06 14:14] NOTES: Updated render/Shape.tsx to render SVG gradients in non-PM rendering path
+[2026-02-06 14:15] STATUS: testing
+[2026-02-06 14:15] NOTES: typecheck passed, 30/31 tests pass (1 pre-existing skip)
+[2026-02-06 14:15] STATUS: done
