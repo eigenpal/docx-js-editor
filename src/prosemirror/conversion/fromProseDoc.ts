@@ -39,6 +39,7 @@ import type {
   FieldType,
   InlineSdt,
   SdtProperties,
+  TrackedChangeInfo,
 } from '../../types/document';
 import type {
   ParagraphAttrs,
@@ -269,6 +270,47 @@ function extractParagraphContent(paragraph: PMNode): ParagraphContent[] {
         type: 'run',
         content: [noteRef],
       });
+      return;
+    }
+
+    // Check for tracked change marks (insertion/deletion)
+    const insertionMark = node.marks.find((m) => m.type.name === 'insertion');
+    const deletionMark = node.marks.find((m) => m.type.name === 'deletion');
+    if (insertionMark || deletionMark) {
+      // Finish any current content
+      if (currentRun) {
+        content.push(currentRun);
+        currentRun = null;
+        currentMarksKey = null;
+      }
+      if (currentHyperlink) {
+        content.push(currentHyperlink);
+        currentHyperlink = null;
+      }
+
+      const changeMark = (insertionMark || deletionMark)!;
+      // Filter out the tracked change mark for text formatting extraction
+      const otherMarks = node.marks.filter(
+        (m) => m.type.name !== 'insertion' && m.type.name !== 'deletion'
+      );
+      const formatting = marksToTextFormatting(otherMarks);
+      const run: Run = {
+        type: 'run',
+        content: node.isText && node.text ? [{ type: 'text', text: node.text }] : [],
+        ...(Object.keys(formatting).length > 0 ? { formatting } : {}),
+      };
+
+      const info: TrackedChangeInfo = {
+        id: changeMark.attrs.revisionId as number,
+        author: (changeMark.attrs.author as string) || 'Unknown',
+        date: (changeMark.attrs.date as string) || undefined,
+      };
+
+      if (insertionMark) {
+        content.push({ type: 'insertion', info, content: [run] });
+      } else {
+        content.push({ type: 'deletion', info, content: [run] });
+      }
       return;
     }
 

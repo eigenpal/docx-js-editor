@@ -34,6 +34,9 @@ import type {
   MediaFile,
   InlineSdt,
   SdtProperties,
+  Insertion,
+  Deletion,
+  TrackedChangeInfo,
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import type { NumberingMap } from './numberingParser';
@@ -891,12 +894,46 @@ function parseParagraphContents(
         break;
       }
 
+      case 'ins': {
+        // Track change: insertion — parse content and wrap
+        const insInfo: TrackedChangeInfo = {
+          id: parseInt(getAttribute(child, 'w', 'id') ?? '0', 10),
+          author: getAttribute(child, 'w', 'author') ?? 'Unknown',
+          date: getAttribute(child, 'w', 'date') ?? undefined,
+        };
+        const insContent = parseParagraphContents(child, styles, theme, null, rels, media);
+        const insertion: Insertion = {
+          type: 'insertion',
+          info: insInfo,
+          content: insContent.filter(
+            (c): c is Run | Hyperlink => c.type === 'run' || c.type === 'hyperlink'
+          ),
+        };
+        contents.push(insertion);
+        break;
+      }
+      case 'del': {
+        // Track change: deletion — parse content and wrap
+        const delInfo: TrackedChangeInfo = {
+          id: parseInt(getAttribute(child, 'w', 'id') ?? '0', 10),
+          author: getAttribute(child, 'w', 'author') ?? 'Unknown',
+          date: getAttribute(child, 'w', 'date') ?? undefined,
+        };
+        const delContent = parseParagraphContents(child, styles, theme, null, rels, media);
+        const deletion: Deletion = {
+          type: 'deletion',
+          info: delInfo,
+          content: delContent.filter(
+            (c): c is Run | Hyperlink => c.type === 'run' || c.type === 'hyperlink'
+          ),
+        };
+        contents.push(deletion);
+        break;
+      }
       case 'smartTag':
-      case 'del':
-      case 'ins':
       case 'moveTo':
       case 'moveFrom':
-        // Track changes - skip for now (would need revision mode)
+        // Other track changes - skip for now
         break;
 
       case 'commentRangeStart': {

@@ -20,6 +20,8 @@ import type {
   SimpleField,
   ComplexField,
   InlineSdt,
+  Insertion,
+  Deletion,
   TabStop,
   BorderSpec,
   ShadingProperties,
@@ -695,6 +697,25 @@ function serializeInlineSdt(sdt: InlineSdt): string {
 }
 
 /**
+ * Serialize a tracked change (insertion or deletion) wrapper
+ */
+function serializeTrackedChange(tag: 'ins' | 'del', change: Insertion | Deletion): string {
+  const info = change.info;
+  const attrs = [`w:id="${info.id}"`, `w:author="${escapeXml(info.author)}"`];
+  if (info.date) attrs.push(`w:date="${escapeXml(info.date)}"`);
+
+  const contentXml = change.content
+    .map((item) => {
+      if (item.type === 'run') return serializeRun(item);
+      if (item.type === 'hyperlink') return serializeHyperlink(item);
+      return '';
+    })
+    .join('');
+
+  return `<w:${tag} ${attrs.join(' ')}>${contentXml}</w:${tag}>`;
+}
+
+/**
  * Serialize a single paragraph content item
  */
 function serializeParagraphContent(content: ParagraphContent): string {
@@ -717,6 +738,10 @@ function serializeParagraphContent(content: ParagraphContent): string {
       return `<w:commentRangeStart w:id="${content.id}"/>`;
     case 'commentRangeEnd':
       return `<w:commentRangeEnd w:id="${content.id}"/>`;
+    case 'insertion':
+      return serializeTrackedChange('ins', content);
+    case 'deletion':
+      return serializeTrackedChange('del', content);
     default:
       return '';
   }
@@ -836,6 +861,16 @@ export function getParagraphPlainText(paragraph: Paragraph): string {
         }
       }
     } else if (content.type === 'inlineSdt') {
+      for (const item of content.content) {
+        if (item.type === 'run') {
+          for (const subItem of item.content) {
+            if (subItem.type === 'text') {
+              texts.push(subItem.text);
+            }
+          }
+        }
+      }
+    } else if (content.type === 'insertion' || content.type === 'deletion') {
       for (const item of content.content) {
         if (item.type === 'run') {
           for (const subItem of item.content) {

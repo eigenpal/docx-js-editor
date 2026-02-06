@@ -832,6 +832,44 @@ export interface CommentRangeEnd {
 }
 
 // ============================================================================
+// TRACKED CHANGES
+// ============================================================================
+
+/**
+ * Tracked change metadata (w:ins, w:del attributes)
+ */
+export interface TrackedChangeInfo {
+  /** Revision ID */
+  id: number;
+  /** Author who made the change */
+  author: string;
+  /** Date of the change */
+  date?: string;
+}
+
+/**
+ * Insertion wrapper (w:ins) — runs inserted by tracked changes
+ */
+export interface Insertion {
+  type: 'insertion';
+  /** Tracked change metadata */
+  info: TrackedChangeInfo;
+  /** Inserted content */
+  content: (Run | Hyperlink)[];
+}
+
+/**
+ * Deletion wrapper (w:del) — runs deleted by tracked changes
+ */
+export interface Deletion {
+  type: 'deletion';
+  /** Tracked change metadata */
+  info: TrackedChangeInfo;
+  /** Deleted content */
+  content: (Run | Hyperlink)[];
+}
+
+// ============================================================================
 // STRUCTURED DOCUMENT TAGS (SDT / Content Controls)
 // ============================================================================
 
@@ -912,7 +950,9 @@ export type ParagraphContent =
   | ComplexField
   | InlineSdt
   | CommentRangeStart
-  | CommentRangeEnd;
+  | CommentRangeEnd
+  | Insertion
+  | Deletion;
 
 /**
  * Paragraph (w:p)

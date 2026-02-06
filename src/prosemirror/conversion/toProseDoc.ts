@@ -34,6 +34,8 @@ import type {
   SimpleField,
   ComplexField,
   InlineSdt,
+  Insertion,
+  Deletion,
 } from '../../types/document';
 import { emuToPixels } from '../../docx/imageParser';
 import { createStyleResolver, type StyleResolver } from '../styles';
@@ -128,6 +130,12 @@ function convertParagraph(
     } else if (content.type === 'inlineSdt') {
       const sdtNode = convertInlineSdt(content, styleRunFormatting);
       if (sdtNode) inlineNodes.push(sdtNode);
+    } else if (content.type === 'insertion') {
+      const insNodes = convertTrackedChange(content, 'insertion', styleRunFormatting);
+      inlineNodes.push(...insNodes);
+    } else if (content.type === 'deletion') {
+      const delNodes = convertTrackedChange(content, 'deletion', styleRunFormatting);
+      inlineNodes.push(...delNodes);
     }
     // Skip other content types for now (bookmarks, etc.)
   }
@@ -147,6 +155,38 @@ function applyCommentMarks(nodes: PMNode[], commentIds: Set<number>): PMNode[] {
   return nodes.map((node) => {
     if (node.isText) {
       return node.mark(commentMark.addToSet(node.marks));
+    }
+    return node;
+  });
+}
+
+/**
+ * Convert tracked change (insertion or deletion) content to PM nodes with
+ * an insertion/deletion mark applied.
+ */
+function convertTrackedChange(
+  change: Insertion | Deletion,
+  markType: 'insertion' | 'deletion',
+  styleRunFormatting?: TextFormatting
+): PMNode[] {
+  const nodes: PMNode[] = [];
+  for (const item of change.content) {
+    if (item.type === 'run') {
+      nodes.push(...convertRun(item, styleRunFormatting));
+    } else if (item.type === 'hyperlink') {
+      nodes.push(...convertHyperlink(item, styleRunFormatting));
+    }
+  }
+
+  const mark = schema.marks[markType].create({
+    revisionId: change.info.id,
+    author: change.info.author,
+    date: change.info.date ?? null,
+  });
+
+  return nodes.map((node) => {
+    if (node.isText) {
+      return node.mark(mark.addToSet(node.marks));
     }
     return node;
   });

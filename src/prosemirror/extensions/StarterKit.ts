@@ -34,6 +34,7 @@ import { SmallCapsExtension } from './marks/SmallCapsExtension';
 import { FootnoteRefExtension } from './marks/FootnoteRefExtension';
 import { CharacterSpacingExtension } from './marks/CharacterSpacingExtension';
 import { CommentExtension } from './marks/CommentExtension';
+import { InsertionExtension, DeletionExtension } from './marks/TrackedChangeExtensions';
 import {
   EmbossExtension,
   ImprintExtension,
@@ -118,6 +119,8 @@ export function createStarterKit(options: StarterKitOptions = {}): AnyExtension[
   add('emphasisMark', EmphasisMarkExtension());
   add('textOutline', TextOutlineExtension());
   add('comment', CommentExtension());
+  add('insertion', InsertionExtension());
+  add('deletion', DeletionExtension());
 
   // Nodes
   add('hardBreak', HardBreakExtension());
