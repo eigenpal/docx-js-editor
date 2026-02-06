@@ -176,10 +176,6 @@ export interface TableCellAttrs {
   backgroundColor?: string;
   /** No text wrapping in cell */
   noWrap?: boolean;
-  /** Which borders are visible */
-  borders?: { top?: boolean; bottom?: boolean; left?: boolean; right?: boolean };
-  /** Per-side border colors (RGB hex) */
-  borderColors?: { top?: string; bottom?: string; left?: string; right?: string };
-  /** Per-side border widths (in eighths of a point) */
-  borderWidths?: { top?: number; bottom?: number; left?: number; right?: number };
+  /** Cell borders — full BorderSpec per side (style, color, size) */
+  borders?: { top?: BorderSpec; bottom?: BorderSpec; left?: BorderSpec; right?: BorderSpec };
 }

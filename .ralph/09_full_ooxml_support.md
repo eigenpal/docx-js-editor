@@ -10,7 +10,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 ## Phase 1: Table Editing Core (6 tasks)
 
 - [x] **1.1 Cell merge/split via prosemirror-tables** — Import `mergeCells`, `splitCell`, `CellSelection` from prosemirror-tables. Wire real implementations into TableExtension.ts commands (replacing stubs). Detect CellSelection in `getTableContext()` for `hasMultiCellSelection`. Update commands/table.ts re-exports.
-- [ ] **1.2 Upgrade cell border model to full BorderSpec** — Change `TableCellAttrs.borders` from `{top?: boolean}` to `{top?: BorderSpec}` with style/color/width per side. Remove separate `borderColors`/`borderWidths` attrs. Update `buildCellBorderStyles()` to render OOXML border styles as CSS. Update toProseDoc/fromProseDoc conversion.
+- [x] **1.2 Upgrade cell border model to full BorderSpec** — Change `TableCellAttrs.borders` from `{top?: boolean}` to `{top?: BorderSpec}` with style/color/width per side. Remove separate `borderColors`/`borderWidths` attrs. Update `buildCellBorderStyles()` to render OOXML border styles as CSS. Update toProseDoc/fromProseDoc conversion.
 - [ ] **1.3 Per-cell border editing commands** — `setCellBorder(side, spec)` operating on CellSelection or current cell. Wire into TableBorderPicker with style/color/width selectors.
 - [ ] **1.4 Vertical alignment + cell margins UI** — `setCellVerticalAlign()`, `setCellMargins()` commands. Add controls to TableOptionsDropdown.
 - [ ] **1.5 Text direction + no-wrap controls** — Map OOXML text directions (`lrTb`, `tbRl`, `btLr`) to CSS `writing-mode`+`direction`. Add `setCellTextDirection()` command and dropdown UI.

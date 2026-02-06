@@ -438,15 +438,36 @@ function borderWidthToPixels(eighthsOfPoint: number): number {
   return Math.max(1, Math.round((eighthsOfPoint / 8) * 1.333));
 }
 
+// OOXML border style → CSS border-style mapping
+const OOXML_TO_CSS_BORDER: Record<string, string> = {
+  single: 'solid',
+  double: 'double',
+  dotted: 'dotted',
+  dashed: 'dashed',
+  thick: 'solid',
+  dashSmallGap: 'dashed',
+  dotDash: 'dashed',
+  dotDotDash: 'dotted',
+  triple: 'double',
+  wave: 'solid',
+  doubleWave: 'double',
+  threeDEmboss: 'ridge',
+  threeDEngrave: 'groove',
+  outset: 'outset',
+  inset: 'inset',
+};
+
 /**
  * Extract cell borders from ProseMirror attributes.
+ * Borders are full BorderSpec objects with style/size/color.
  */
 function extractCellBorders(attrs: Record<string, unknown>): CellBorders | undefined {
-  const borders = attrs.borders as Record<string, boolean> | null;
-  const borderColors = attrs.borderColors as Record<string, string> | null;
-  const borderWidths = attrs.borderWidths as Record<string, number> | null;
+  const borders = attrs.borders as Record<
+    string,
+    { style?: string; size?: number; color?: { rgb?: string } }
+  > | null;
 
-  if (!borders && !borderColors && !borderWidths) {
+  if (!borders) {
     return undefined;
   }
 
@@ -454,22 +475,22 @@ function extractCellBorders(attrs: Record<string, unknown>): CellBorders | undef
   const sides = ['top', 'bottom', 'left', 'right'] as const;
 
   for (const side of sides) {
-    // Check if border is explicitly set (default to true if colors/widths are specified)
-    const hasBorder = borders?.[side] !== false;
-    const color = borderColors?.[side];
-    const width = borderWidths?.[side];
-
-    if (hasBorder && (color || width)) {
-      const spec: CellBorderSpec = {
-        style: 'solid',
-      };
-      if (color) spec.color = color.startsWith('#') ? color : `#${color}`;
-      if (width) spec.width = borderWidthToPixels(width);
-      result[side] = spec;
-    } else if (borders?.[side] === false) {
-      // Explicitly no border
+    const border = borders[side];
+    if (!border || !border.style || border.style === 'none' || border.style === 'nil') {
       result[side] = { width: 0, style: 'none' };
+      continue;
     }
+
+    const spec: CellBorderSpec = {
+      style: OOXML_TO_CSS_BORDER[border.style] || 'solid',
+    };
+    if (border.color?.rgb) {
+      spec.color = `#${border.color.rgb}`;
+    }
+    if (border.size) {
+      spec.width = borderWidthToPixels(border.size);
+    }
+    result[side] = spec;
   }
 
   return Object.keys(result).length > 0 ? result : undefined;

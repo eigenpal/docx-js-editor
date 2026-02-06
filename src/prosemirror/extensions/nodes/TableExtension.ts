@@ -97,35 +97,60 @@ const tableRowSpec: NodeSpec = {
   },
 };
 
-// Helper for cell border rendering
+// OOXML border style → CSS border-style mapping
+const BORDER_STYLE_CSS: Record<string, string> = {
+  single: 'solid',
+  double: 'double',
+  dotted: 'dotted',
+  dashed: 'dashed',
+  thick: 'solid',
+  dashSmallGap: 'dashed',
+  dotDash: 'dashed',
+  dotDotDash: 'dotted',
+  triple: 'double',
+  thinThickSmallGap: 'double',
+  thickThinSmallGap: 'double',
+  thinThickThinSmallGap: 'double',
+  thinThickMediumGap: 'double',
+  thickThinMediumGap: 'double',
+  thinThickThinMediumGap: 'double',
+  thinThickLargeGap: 'double',
+  thickThinLargeGap: 'double',
+  thinThickThinLargeGap: 'double',
+  wave: 'solid',
+  doubleWave: 'double',
+  dashDotStroked: 'dashed',
+  threeDEmboss: 'ridge',
+  threeDEngrave: 'groove',
+  outset: 'outset',
+  inset: 'inset',
+};
+
+// Helper for cell border rendering — works with full BorderSpec objects
 function buildCellBorderStyles(attrs: TableCellAttrs): string[] {
   const styles: string[] = [];
   const borders = attrs.borders;
-  const borderColors = attrs.borderColors;
-  const borderWidths = attrs.borderWidths;
 
-  const toBorderWidth = (size?: number): string => {
-    if (!size) return '1px';
-    const px = Math.max(1, Math.ceil((size / 8) * 1.333));
-    return `${px}px`;
+  if (!borders) return styles;
+
+  const borderToCss = (border?: {
+    style?: string;
+    size?: number;
+    color?: { rgb?: string };
+  }): string => {
+    if (!border || !border.style || border.style === 'none' || border.style === 'nil') {
+      return 'none';
+    }
+    const widthPx = border.size ? Math.max(1, Math.ceil((border.size / 8) * 1.333)) : 1;
+    const cssStyle = BORDER_STYLE_CSS[border.style] || 'solid';
+    const color = border.color?.rgb ? `#${border.color.rgb}` : '#000000';
+    return `${widthPx}px ${cssStyle} ${color}`;
   };
 
-  if (borders) {
-    const topColor = borderColors?.top ? `#${borderColors.top}` : '#000000';
-    const bottomColor = borderColors?.bottom ? `#${borderColors.bottom}` : '#000000';
-    const leftColor = borderColors?.left ? `#${borderColors.left}` : '#000000';
-    const rightColor = borderColors?.right ? `#${borderColors.right}` : '#000000';
-    const topWidth = toBorderWidth(borderWidths?.top);
-    const bottomWidth = toBorderWidth(borderWidths?.bottom);
-    const leftWidth = toBorderWidth(borderWidths?.left);
-    const rightWidth = toBorderWidth(borderWidths?.right);
-    styles.push(`border-top: ${borders.top ? topWidth + ' solid ' + topColor : 'none'}`);
-    styles.push(
-      `border-bottom: ${borders.bottom ? bottomWidth + ' solid ' + bottomColor : 'none'}`
-    );
-    styles.push(`border-left: ${borders.left ? leftWidth + ' solid ' + leftColor : 'none'}`);
-    styles.push(`border-right: ${borders.right ? rightWidth + ' solid ' + rightColor : 'none'}`);
-  }
+  styles.push(`border-top: ${borderToCss(borders.top)}`);
+  styles.push(`border-bottom: ${borderToCss(borders.bottom)}`);
+  styles.push(`border-left: ${borderToCss(borders.left)}`);
+  styles.push(`border-right: ${borderToCss(borders.right)}`);
 
   return styles;
 }
@@ -159,8 +184,6 @@ const tableCellSpec: NodeSpec = {
     verticalAlign: { default: null },
     backgroundColor: { default: null },
     borders: { default: null },
-    borderColors: { default: null },
-    borderWidths: { default: null },
     noWrap: { default: false },
   },
   parseDOM: [
@@ -222,8 +245,6 @@ const tableHeaderSpec: NodeSpec = {
     verticalAlign: { default: null },
     backgroundColor: { default: null },
     borders: { default: null },
-    borderColors: { default: null },
-    borderWidths: { default: null },
     noWrap: { default: false },
   },
   parseDOM: [
@@ -536,14 +557,13 @@ export const TablePluginExtension = createExtension({
       const defaultContentWidthTwips = 9360;
       const colWidthTwips = Math.floor(defaultContentWidthTwips / cols);
 
-      const defaultBorders = { top: true, bottom: true, left: true, right: true };
-      const defaultBorderColors = {
-        top: borderColor,
-        bottom: borderColor,
-        left: borderColor,
-        right: borderColor,
+      const defaultBorder = { style: 'single', size: 4, color: { rgb: borderColor } };
+      const defaultBorders = {
+        top: defaultBorder,
+        bottom: defaultBorder,
+        left: defaultBorder,
+        right: defaultBorder,
       };
-      const defaultBorderWidths = { top: 4, bottom: 4, left: 4, right: 4 };
 
       for (let r = 0; r < rows; r++) {
         const cells: PMNode[] = [];
@@ -553,8 +573,6 @@ export const TablePluginExtension = createExtension({
             colspan: 1,
             rowspan: 1,
             borders: defaultBorders,
-            borderColors: defaultBorderColors,
-            borderWidths: defaultBorderWidths,
             width: colWidthTwips,
             widthType: 'dxa',
           };
@@ -956,16 +974,23 @@ export const TablePluginExtension = createExtension({
             if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
               const pos = $from.before(d);
 
-              let borders: { top?: boolean; bottom?: boolean; left?: boolean; right?: boolean };
+              const solidBorder = { style: 'single', size: 4, color: { rgb: '000000' } };
+              const noBorder = { style: 'none' as const };
+              let borders;
 
               switch (preset) {
                 case 'all':
                 case 'outside':
-                  borders = { top: true, bottom: true, left: true, right: true };
+                  borders = {
+                    top: solidBorder,
+                    bottom: solidBorder,
+                    left: solidBorder,
+                    right: solidBorder,
+                  };
                   break;
                 case 'inside':
                 case 'none':
-                  borders = { top: false, bottom: false, left: false, right: false };
+                  borders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
                   break;
               }
 
@@ -1020,11 +1045,16 @@ export const TablePluginExtension = createExtension({
             const node = $from.node(d);
             if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
               const pos = $from.before(d);
-              const newAttrs = {
-                ...node.attrs,
-                borderColor: color,
-                borders: node.attrs.borders || { top: true, bottom: true, left: true, right: true },
+              const rgb = color.replace(/^#/, '');
+              const currentBorders = node.attrs.borders || {};
+              const defaultBorder = { style: 'single', size: 4 };
+              const newBorders = {
+                top: { ...defaultBorder, ...currentBorders.top, color: { rgb } },
+                bottom: { ...defaultBorder, ...currentBorders.bottom, color: { rgb } },
+                left: { ...defaultBorder, ...currentBorders.left, color: { rgb } },
+                right: { ...defaultBorder, ...currentBorders.right, color: { rgb } },
               };
+              const newAttrs = { ...node.attrs, borders: newBorders };
               tr.setNodeMarkup(pos, undefined, newAttrs);
               dispatch(tr.scrollIntoView());
               return true;

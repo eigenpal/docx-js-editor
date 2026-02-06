@@ -10,3 +10,15 @@
 [2026-02-06 10:38] STATUS: testing
 [2026-02-06 10:38] NOTES: typecheck passed, 32/32 existing table tests pass, 4/4 new merge/split tests pass
 [2026-02-06 10:39] STATUS: done
+
+[2026-02-06 10:40] TASK: 1.2 Upgrade cell border model to full BorderSpec
+[2026-02-06 10:40] STATUS: starting
+[2026-02-06 10:41] STATUS: editing
+[2026-02-06 10:41] NOTES: Updated TableCellAttrs in schema/nodes.ts — removed borderColors/borderWidths, borders now {top?: BorderSpec}
+[2026-02-06 10:42] NOTES: Updated TableExtension.ts — new buildCellBorderStyles with 31 OOXML→CSS style mappings, updated cell specs, createTable, setTableBorders, setTableBorderColor
+[2026-02-06 10:43] NOTES: Simplified toProseDoc.ts — passes through full BorderSpec objects, no more splitting into 3 props
+[2026-02-06 10:44] NOTES: Simplified fromProseDoc.ts — direct assignment, removed 50 lines of reconstruction logic
+[2026-02-06 10:45] NOTES: Updated layout-bridge/toFlowBlocks.ts — extractCellBorders now reads BorderSpec objects
+[2026-02-06 10:46] STATUS: testing
+[2026-02-06 10:46] NOTES: typecheck passed, 32/32 table tests pass, 4/4 merge/split tests pass
+[2026-02-06 10:46] STATUS: done

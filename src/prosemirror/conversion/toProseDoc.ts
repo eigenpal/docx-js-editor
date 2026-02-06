@@ -460,62 +460,33 @@ function convertTableCell(
   const backgroundColor =
     formatting?.shading?.fill?.rgb ?? conditionalStyle?.tcPr?.shading?.fill?.rgb;
 
-  // Convert borders to the format expected by ProseMirror schema
+  // Convert borders — preserve full BorderSpec per side
   // Priority: cell borders > conditional style borders > table borders
   const cellBorders = formatting?.borders ?? conditionalStyle?.tcPr?.borders;
-  let borders: { top?: boolean; bottom?: boolean; left?: boolean; right?: boolean } | undefined;
-  let borderColors: { top?: string; bottom?: string; left?: string; right?: string } | undefined;
-  let borderWidths: { top?: number; bottom?: number; left?: number; right?: number } | undefined;
-
-  // Helper to check if a border side is visible (has a style that's not none/nil)
-  const isBorderVisible = (border?: { style?: string }): boolean => {
-    return !!border && !!border.style && border.style !== 'none' && border.style !== 'nil';
-  };
+  let borders:
+    | {
+        top?: import('../../types/document').BorderSpec;
+        bottom?: import('../../types/document').BorderSpec;
+        left?: import('../../types/document').BorderSpec;
+        right?: import('../../types/document').BorderSpec;
+      }
+    | undefined;
 
   if (cellBorders) {
-    // Use cell-level or conditional style borders
     borders = {
-      top: isBorderVisible(cellBorders.top),
-      bottom: isBorderVisible(cellBorders.bottom),
-      left: isBorderVisible(cellBorders.left),
-      right: isBorderVisible(cellBorders.right),
-    };
-    borderColors = {
-      top: cellBorders.top?.color?.rgb,
-      bottom: cellBorders.bottom?.color?.rgb,
-      left: cellBorders.left?.color?.rgb,
-      right: cellBorders.right?.color?.rgb,
-    };
-    borderWidths = {
-      top: cellBorders.top?.size,
-      bottom: cellBorders.bottom?.size,
-      left: cellBorders.left?.size,
-      right: cellBorders.right?.size,
+      top: cellBorders.top,
+      bottom: cellBorders.bottom,
+      left: cellBorders.left,
+      right: cellBorders.right,
     };
   } else if (tableBorders) {
     // Fall back to table-level borders based on cell position
     // Table borders: top/bottom/left/right for outer edges, insideH/insideV for internal
     borders = {
-      top: isFirstRow ? isBorderVisible(tableBorders.top) : isBorderVisible(tableBorders.insideH),
-      bottom: isLastRow
-        ? isBorderVisible(tableBorders.bottom)
-        : isBorderVisible(tableBorders.insideH),
-      left: isFirstCol ? isBorderVisible(tableBorders.left) : isBorderVisible(tableBorders.insideV),
-      right: isLastCol
-        ? isBorderVisible(tableBorders.right)
-        : isBorderVisible(tableBorders.insideV),
-    };
-    borderColors = {
-      top: isFirstRow ? tableBorders.top?.color?.rgb : tableBorders.insideH?.color?.rgb,
-      bottom: isLastRow ? tableBorders.bottom?.color?.rgb : tableBorders.insideH?.color?.rgb,
-      left: isFirstCol ? tableBorders.left?.color?.rgb : tableBorders.insideV?.color?.rgb,
-      right: isLastCol ? tableBorders.right?.color?.rgb : tableBorders.insideV?.color?.rgb,
-    };
-    borderWidths = {
-      top: isFirstRow ? tableBorders.top?.size : tableBorders.insideH?.size,
-      bottom: isLastRow ? tableBorders.bottom?.size : tableBorders.insideH?.size,
-      left: isFirstCol ? tableBorders.left?.size : tableBorders.insideV?.size,
-      right: isLastCol ? tableBorders.right?.size : tableBorders.insideV?.size,
+      top: isFirstRow ? tableBorders.top : tableBorders.insideH,
+      bottom: isLastRow ? tableBorders.bottom : tableBorders.insideH,
+      left: isFirstCol ? tableBorders.left : tableBorders.insideV,
+      right: isLastCol ? tableBorders.right : tableBorders.insideV,
     };
   }
 
@@ -528,8 +499,6 @@ function convertTableCell(
     backgroundColor: backgroundColor,
     noWrap: formatting?.noWrap,
     borders: borders,
-    borderColors: borderColors,
-    borderWidths: borderWidths,
   };
 
   // Convert cell content (paragraphs and nested tables)
