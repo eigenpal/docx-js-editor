@@ -279,6 +279,13 @@ interface EditorState {
   totalPages: number;
   /** ProseMirror table context (for showing table toolbar) */
   pmTableContext: TableContextInfo | null;
+  /** Image context when cursor is on an image node */
+  pmImageContext: {
+    pos: number;
+    wrapType: string;
+    displayMode: string;
+    cssFloat: string | null;
+  } | null;
 }
 
 // ============================================================================
@@ -342,6 +349,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     currentPage: 1,
     totalPages: 1,
     pmTableContext: null,
+    pmImageContext: null,
   });
 
   // Table properties dialog state
@@ -549,11 +557,30 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         }
       }
 
+      // Check if cursor is on an image (NodeSelection)
+      let pmImageCtx: typeof state.pmImageContext = null;
+      if (view) {
+        const sel = view.state.selection;
+        // NodeSelection has a `node` property
+        const selectedNode = (
+          sel as { node?: { type: { name: string }; attrs: Record<string, unknown> } }
+        ).node;
+        if (selectedNode?.type.name === 'image') {
+          pmImageCtx = {
+            pos: sel.from,
+            wrapType: (selectedNode.attrs.wrapType as string) ?? 'inline',
+            displayMode: (selectedNode.attrs.displayMode as string) ?? 'inline',
+            cssFloat: (selectedNode.attrs.cssFloat as string) ?? null,
+          };
+        }
+      }
+
       if (!selectionState) {
         setState((prev) => ({
           ...prev,
           selectionFormatting: {},
           pmTableContext: pmTableCtx,
+          pmImageContext: pmImageCtx,
         }));
         return;
       }
@@ -599,6 +626,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         ...prev,
         selectionFormatting: formatting,
         pmTableContext: pmTableCtx,
+        pmImageContext: pmImageCtx,
       }));
 
       // Notify parent
@@ -683,6 +711,64 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       e.target.value = '';
     },
     [getActiveEditorView, focusActiveEditor]
+  );
+
+  // Handle image wrap type change
+  const handleImageWrapType = useCallback(
+    (wrapType: string) => {
+      const view = getActiveEditorView();
+      if (!view || !state.pmImageContext) return;
+
+      const pos = state.pmImageContext.pos;
+      const node = view.state.doc.nodeAt(pos);
+      if (!node || node.type.name !== 'image') return;
+
+      // Map wrap type to display mode + cssFloat
+      let displayMode = 'inline';
+      let cssFloat: string | null = null;
+
+      switch (wrapType) {
+        case 'inline':
+          displayMode = 'inline';
+          cssFloat = null;
+          break;
+        case 'square':
+        case 'tight':
+        case 'through':
+          displayMode = 'float';
+          cssFloat = 'left';
+          break;
+        case 'topAndBottom':
+          displayMode = 'block';
+          cssFloat = null;
+          break;
+        case 'behind':
+        case 'inFront':
+          displayMode = 'float';
+          cssFloat = 'none';
+          break;
+        case 'wrapLeft':
+          displayMode = 'float';
+          cssFloat = 'right';
+          wrapType = 'square';
+          break;
+        case 'wrapRight':
+          displayMode = 'float';
+          cssFloat = 'left';
+          wrapType = 'square';
+          break;
+      }
+
+      const tr = view.state.tr.setNodeMarkup(pos, undefined, {
+        ...node.attrs,
+        wrapType,
+        displayMode,
+        cssFloat,
+      });
+      view.dispatch(tr.scrollIntoView());
+      focusActiveEditor();
+    },
+    [getActiveEditorView, focusActiveEditor, state.pmImageContext]
   );
 
   // Handle table action from Toolbar - use ProseMirror commands
@@ -1542,6 +1628,8 @@ body { background: white; }
                     onInsertTable={handleInsertTable}
                     showTableInsert={true}
                     onInsertImage={handleInsertImageClick}
+                    imageContext={state.pmImageContext}
+                    onImageWrapType={handleImageWrapType}
                     tableContext={state.pmTableContext}
                     onTableAction={handleTableAction}
                   >

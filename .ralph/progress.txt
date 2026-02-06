@@ -110,3 +110,15 @@
 [2026-02-06 12:28] STATUS: testing
 [2026-02-06 12:28] NOTES: typecheck passed, 4/4 table tests pass, 26/26 formatting tests pass
 [2026-02-06 12:28] STATUS: done
+
+[2026-02-06 12:30] TASK: 3.2 Text wrapping mode selector
+[2026-02-06 12:30] STATUS: starting
+[2026-02-06 12:30] NOTES: Need setImageWrapType command + floating toolbar on image selection
+[2026-02-06 12:35] STATUS: editing
+[2026-02-06 12:35] NOTES: Added pmImageContext to state, detecting NodeSelection on image nodes
+[2026-02-06 12:36] NOTES: Creating setImageWrapType handler + ImageWrapToolbar UI in Toolbar
+[2026-02-06 12:38] NOTES: Added imageContext/onImageWrapType props to Toolbar, 6 wrapping mode buttons
+[2026-02-06 12:39] NOTES: handleImageWrapType maps wrap types to displayMode+cssFloat combos
+[2026-02-06 12:40] STATUS: testing
+[2026-02-06 12:40] NOTES: typecheck passed, 30/30 tests pass (26 formatting + 4 table)
+[2026-02-06 12:40] STATUS: done

@@ -159,6 +159,14 @@ export interface ToolbarProps {
   showTableInsert?: boolean;
   /** Callback when user wants to insert an image */
   onInsertImage?: () => void;
+  /** Image context when an image is selected */
+  imageContext?: {
+    wrapType: string;
+    displayMode: string;
+    cssFloat: string | null;
+  } | null;
+  /** Callback when image wrap type changes */
+  onImageWrapType?: (wrapType: string) => void;
   /** Table context when cursor is in a table */
   tableContext?: {
     isInTable: boolean;
@@ -337,6 +345,8 @@ export function Toolbar({
   onInsertTable,
   showTableInsert = true,
   onInsertImage,
+  imageContext,
+  onImageWrapType,
   tableContext,
   onTableAction,
 }: ToolbarProps) {
@@ -897,6 +907,66 @@ export function Toolbar({
               <MaterialSymbol name="image" size={ICON_SIZE} />
             </ToolbarButton>
           )}
+        </ToolbarGroup>
+      )}
+
+      {/* Image Wrapping - shown when image is selected */}
+      {imageContext && onImageWrapType && (
+        <ToolbarGroup label="Image">
+          <ToolbarButton
+            active={imageContext.wrapType === 'inline'}
+            onClick={() => onImageWrapType('inline')}
+            disabled={disabled}
+            title="Inline with text"
+            ariaLabel="Inline with text"
+          >
+            <MaterialSymbol name="format_image_left" size={ICON_SIZE} />
+          </ToolbarButton>
+          <ToolbarButton
+            active={imageContext.displayMode === 'float' && imageContext.cssFloat === 'left'}
+            onClick={() => onImageWrapType('wrapRight')}
+            disabled={disabled}
+            title="Wrap text (float left)"
+            ariaLabel="Float left"
+          >
+            <MaterialSymbol name="format_image_right" size={ICON_SIZE} />
+          </ToolbarButton>
+          <ToolbarButton
+            active={imageContext.displayMode === 'float' && imageContext.cssFloat === 'right'}
+            onClick={() => onImageWrapType('wrapLeft')}
+            disabled={disabled}
+            title="Wrap text (float right)"
+            ariaLabel="Float right"
+          >
+            <MaterialSymbol name="format_image_left" size={ICON_SIZE} />
+          </ToolbarButton>
+          <ToolbarButton
+            active={imageContext.wrapType === 'topAndBottom'}
+            onClick={() => onImageWrapType('topAndBottom')}
+            disabled={disabled}
+            title="Top and bottom"
+            ariaLabel="Top and bottom"
+          >
+            <MaterialSymbol name="horizontal_rule" size={ICON_SIZE} />
+          </ToolbarButton>
+          <ToolbarButton
+            active={imageContext.wrapType === 'behind'}
+            onClick={() => onImageWrapType('behind')}
+            disabled={disabled}
+            title="Behind text"
+            ariaLabel="Behind text"
+          >
+            <MaterialSymbol name="flip_to_back" size={ICON_SIZE} />
+          </ToolbarButton>
+          <ToolbarButton
+            active={imageContext.wrapType === 'inFront'}
+            onClick={() => onImageWrapType('inFront')}
+            disabled={disabled}
+            title="In front of text"
+            ariaLabel="In front of text"
+          >
+            <MaterialSymbol name="flip_to_front" size={ICON_SIZE} />
+          </ToolbarButton>
         </ToolbarGroup>
       )}
 
