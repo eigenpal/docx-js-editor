@@ -55,43 +55,42 @@ export function AnnotationPanel({
   const hoveredId = pluginState?.hoveredId;
   const selectedId = pluginState?.selectedId;
 
-  const [positions, setPositions] = useState<TagPosition[]>([]);
+  const [layoutVersion, setLayoutVersion] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const chipRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const lastMeasuredTagsKey = useRef<string>('');
+  // Cache last known good positions so chips never disappear during layout transitions
+  const lastPositionsRef = useRef<TagPosition[]>([]);
 
   // Filter to show only variables and section starts (not ends or vars inside sections)
   const visibleTags = useMemo(() => {
     return tags.filter((t) => t.type !== 'sectionEnd' && !t.insideSection);
   }, [tags]);
 
-  // Calculate positions relative to pagesContainer
-  // Since the panel now scrolls with content, positions are static relative to pages
-  const updatePositions = useCallback(() => {
-    if (visibleTags.length === 0) {
-      setPositions([]);
-      return;
-    }
-
-    if (!renderedDomContext) {
-      setPositions([]);
-      return;
+  // Compute positions synchronously to avoid blank-frame blink
+  const computePositions = useCallback((): TagPosition[] => {
+    if (visibleTags.length === 0 || !renderedDomContext) {
+      return lastPositionsRef.current;
     }
 
     const newPositions: TagPosition[] = [];
-
-    // Get container offset once (pagesContainer position within viewport)
     const containerOffset = renderedDomContext.getContainerOffset();
+    // Build lookup of last known positions by tag ID
+    const lastPosMap = new Map<string, number>();
+    for (const pos of lastPositionsRef.current) {
+      lastPosMap.set(pos.tag.id, pos.top);
+    }
 
     for (const tag of visibleTags) {
-      // Get position relative to pagesContainer using the range API
       const rects = renderedDomContext.getRectsForRange(tag.from, tag.from + 1);
       if (rects.length > 0) {
-        // Position = rect Y + container offset (both are at 1x scale, before zoom transform)
-        // The overlay is inside the zoomed viewport, so we don't multiply by zoom
-        // Subtract 8px to account for chip padding and align text baselines
         const top = rects[0].y + containerOffset.y - 40;
         newPositions.push({ tag, top });
+      } else {
+        // Fallback: keep last known position so chip doesn't disappear
+        const lastTop = lastPosMap.get(tag.id);
+        if (lastTop !== undefined) {
+          newPositions.push({ tag, top: lastTop });
+        }
       }
     }
 
@@ -103,7 +102,6 @@ export function AnnotationPanel({
       const prev = newPositions[i - 1];
       const curr = newPositions[i];
 
-      // Use measured height if available, otherwise estimate
       const prevChipEl = chipRefs.current.get(prev.tag.id);
       let prevHeight = 32;
       if (prevChipEl) {
@@ -117,45 +115,45 @@ export function AnnotationPanel({
       }
     }
 
-    setPositions(newPositions);
+    lastPositionsRef.current = newPositions;
+    return newPositions;
   }, [visibleTags, renderedDomContext]);
 
-  // Update positions when tags or context change
-  useEffect(() => {
-    updatePositions();
-  }, [updatePositions]);
+   
+  const positions = useMemo(() => computePositions(), [computePositions, layoutVersion]);
 
   // ResizeObserver for zoom/layout changes
   useEffect(() => {
     if (!renderedDomContext) return;
 
     const observer = new ResizeObserver(() => {
-      requestAnimationFrame(updatePositions);
+      requestAnimationFrame(() => setLayoutVersion((v) => v + 1));
     });
     observer.observe(renderedDomContext.pagesContainer);
     return () => observer.disconnect();
-  }, [renderedDomContext, updatePositions]);
+  }, [renderedDomContext]);
 
   // Window resize handler
   useEffect(() => {
     const handleResize = () => {
-      requestAnimationFrame(updatePositions);
+      requestAnimationFrame(() => setLayoutVersion((v) => v + 1));
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [updatePositions]);
+  }, []);
 
-  // Second pass: recalculate once after initial render to use measured heights
+  // Second pass: recalculate once after initial render to use measured chip heights
+  const lastMeasuredTagsKey = useRef<string>('');
   useEffect(() => {
     const tagsKey = visibleTags.map((t) => t.id).join(',');
     if (tagsKey && lastMeasuredTagsKey.current !== tagsKey) {
       const timer = setTimeout(() => {
         lastMeasuredTagsKey.current = tagsKey;
-        updatePositions();
+        setLayoutVersion((v) => v + 1);
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [visibleTags, updatePositions]);
+  }, [visibleTags]);
 
   const handleHover = (id: string | undefined) => {
     if (editorView) setHoveredElement(editorView, id);
@@ -264,6 +262,7 @@ export const ANNOTATION_PANEL_STYLES = `
   right: 0;
   display: flex;
   align-items: flex-start;
+  transition: top 0.15s ease-out;
 }
 
 .template-annotation-connector {

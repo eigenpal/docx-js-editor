@@ -70,6 +70,11 @@ export function createPlugin(
   // Create the ProseMirror plugin
   const pmPlugin = createTemplatePlugin();
 
+  // Track previous state to skip unnecessary React re-renders
+  let prevTags: TemplateTag[] = [];
+  let prevHoveredId: string | undefined;
+  let prevSelectedId: string | undefined;
+
   return {
     id: 'template',
     name: 'Template',
@@ -91,6 +96,19 @@ export function createPlugin(
     onStateChange: (view: EditorView): TemplatePluginState | undefined => {
       const pluginState = templatePluginKey.getState(view.state);
       if (!pluginState) return undefined;
+
+      // Skip update if nothing changed — prevents unnecessary React re-renders
+      if (
+        pluginState.tags === prevTags &&
+        pluginState.hoveredId === prevHoveredId &&
+        pluginState.selectedId === prevSelectedId
+      ) {
+        return undefined;
+      }
+
+      prevTags = pluginState.tags;
+      prevHoveredId = pluginState.hoveredId;
+      prevSelectedId = pluginState.selectedId;
 
       return {
         tags: pluginState.tags,

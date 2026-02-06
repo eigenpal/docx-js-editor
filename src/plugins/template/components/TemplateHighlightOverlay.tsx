@@ -5,7 +5,7 @@
  * Uses RenderedDomContext to get accurate positioning.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { RenderedDomContext } from '../../../plugin-api/types';
 import type { TemplateTag, TagType } from '../prosemirror-plugin';
 
@@ -52,11 +52,11 @@ export function TemplateHighlightOverlay({
   onHover,
   onSelect,
 }: TemplateHighlightOverlayProps) {
-  // Use state to store highlights so we can update on resize
-  const [highlights, setHighlights] = useState<HighlightRect[]>([]);
+  // Version counter bumped by resize/layout changes to trigger recompute
+  const [layoutVersion, setLayoutVersion] = useState(0);
 
-  // Function to compute highlight rectangles
-  const computeHighlights = useCallback(() => {
+  // Compute highlight rectangles synchronously during render (no blank frames)
+  const computeHighlights = useCallback((): HighlightRect[] => {
     const containerOffset = context.getContainerOffset();
     const rects: HighlightRect[] = [];
 
@@ -66,7 +66,6 @@ export function TemplateHighlightOverlay({
         rects.push({
           tagId: tag.id,
           tagType: tag.type,
-          // Add container offset to position in viewport space
           x: rect.x + containerOffset.x,
           y: rect.y + containerOffset.y,
           width: rect.width,
@@ -75,32 +74,31 @@ export function TemplateHighlightOverlay({
       }
     }
 
-    setHighlights(rects);
+    return rects;
   }, [context, tags]);
 
-  // Compute highlights when tags or context change
-  useEffect(() => {
-    computeHighlights();
-  }, [computeHighlights]);
+  // Compute synchronously — no useEffect gap that causes blinking
+   
+  const highlights = useMemo(() => computeHighlights(), [computeHighlights, layoutVersion]);
 
   // Recompute on window resize
   useEffect(() => {
     const handleResize = () => {
-      requestAnimationFrame(computeHighlights);
+      requestAnimationFrame(() => setLayoutVersion((v) => v + 1));
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [computeHighlights]);
+  }, []);
 
   // Also observe the pagesContainer for size changes (zoom, layout changes)
   useEffect(() => {
     const observer = new ResizeObserver(() => {
-      requestAnimationFrame(computeHighlights);
+      requestAnimationFrame(() => setLayoutVersion((v) => v + 1));
     });
     observer.observe(context.pagesContainer);
     return () => observer.disconnect();
-  }, [context.pagesContainer, computeHighlights]);
+  }, [context.pagesContainer]);
 
   // Show all highlights, with enhanced styling for hovered/selected
   if (highlights.length === 0) {

@@ -51,9 +51,13 @@ const TAG_REGEX = /\{([#/^@]?)([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*
  */
 export const templatePluginKey = new PluginKey<TemplatePluginState>('template');
 
-let idCounter = 0;
-function genId(): string {
-  return `t${++idCounter}`;
+/**
+ * Generate a stable tag ID based on content, not a counter.
+ * This ensures React keys remain stable across re-parses,
+ * preventing DOM destruction/recreation (which causes blinking).
+ */
+function stableId(type: TagType, name: string, occurrence: number): string {
+  return `${type}:${name}:${occurrence}`;
 }
 
 /**
@@ -82,6 +86,7 @@ function findTags(doc: ProseMirrorNode): TemplateTag[] {
   // Find tags
   const tags: TemplateTag[] = [];
   const sectionStack: TemplateTag[] = [];
+  const occurrences = new Map<string, number>();
   let match: RegExpExecArray | null;
 
   TAG_REGEX.lastIndex = 0;
@@ -97,7 +102,11 @@ function findTags(doc: ProseMirrorNode): TemplateTag[] {
     else if (prefix === '@') type = 'raw';
     else type = 'variable';
 
-    const tag: TemplateTag = { id: genId(), type, name, rawTag, from, to };
+    const key = `${type}:${name}`;
+    const occ = occurrences.get(key) ?? 0;
+    occurrences.set(key, occ + 1);
+
+    const tag: TemplateTag = { id: stableId(type, name, occ), type, name, rawTag, from, to };
 
     // Track nested variables in sections
     if (type === 'sectionStart' || type === 'invertedStart') {
@@ -174,6 +183,18 @@ function createDecorations(
 }
 
 /**
+ * Compare two tag arrays for structural equality (same tag IDs in same order).
+ * Position shifts (from/to) are expected during typing and don't count as structural changes.
+ */
+function tagsStructureEqual(a: TemplateTag[], b: TemplateTag[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].id !== b[i].id) return false;
+  }
+  return true;
+}
+
+/**
  * Create the template plugin
  */
 export function createTemplatePlugin(): Plugin<TemplatePluginState> {
@@ -192,10 +213,28 @@ export function createTemplatePlugin(): Plugin<TemplatePluginState> {
       apply(tr, value, _oldState, newState) {
         // Re-parse on doc change
         if (tr.docChanged) {
-          const tags = findTags(newState.doc);
+          const newTags = findTags(newState.doc);
+
+          // If the tag structure is identical (same IDs in same order),
+          // reuse the old tags array reference. This prevents PluginHost
+          // from triggering React re-renders on every keystroke.
+          if (tagsStructureEqual(value.tags, newTags)) {
+            return {
+              ...value,
+              // Keep old tags reference (positions are stale but overlays
+              // use getRectsForRange which queries the live DOM)
+              decorations: value.decorations.map(tr.mapping, tr.doc),
+            };
+          }
+
           return {
-            tags,
-            decorations: createDecorations(newState.doc, tags, value.hoveredId, value.selectedId),
+            tags: newTags,
+            decorations: createDecorations(
+              newState.doc,
+              newTags,
+              value.hoveredId,
+              value.selectedId
+            ),
             hoveredId: value.hoveredId,
             selectedId: value.selectedId,
           };

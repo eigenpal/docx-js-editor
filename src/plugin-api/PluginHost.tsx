@@ -314,15 +314,20 @@ export const PluginHost = forwardRef<PluginHostRef, PluginHostProps>(function Pl
     // We need to hook into state changes - use DOM events
     // as a lightweight way to detect changes
     const updatePluginStates = () => {
+      let anyChanged = false;
       for (const plugin of plugins) {
         if (plugin.onStateChange) {
           const newState = plugin.onStateChange(editorView);
           if (newState !== undefined) {
             pluginStatesRef.current.set(plugin.id, newState);
+            anyChanged = true;
           }
         }
       }
-      forceUpdate();
+      // Only trigger re-render if at least one plugin state actually changed
+      if (anyChanged) {
+        forceUpdate();
+      }
     };
 
     // Initial state update
