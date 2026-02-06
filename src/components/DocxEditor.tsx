@@ -368,6 +368,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   const containerRef = useRef<HTMLDivElement>(null);
   // Save the last known selection for restoring after toolbar interactions
   const lastSelectionRef = useRef<{ from: number; to: number } | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Helper to get the active editor's view
   const getActiveEditorView = useCallback(() => {
@@ -622,6 +623,64 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       if (!view) return;
       insertTable(rows, columns)(view.state, view.dispatch);
       focusActiveEditor();
+    },
+    [getActiveEditorView, focusActiveEditor]
+  );
+
+  // Trigger file picker for image insert
+  const handleInsertImageClick = useCallback(() => {
+    imageInputRef.current?.click();
+  }, []);
+
+  // Handle file selection for image insert
+  const handleImageFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const view = getActiveEditorView();
+      if (!view) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+
+        // Create an Image element to get natural dimensions
+        const img = new Image();
+        img.onload = () => {
+          let width = img.naturalWidth;
+          let height = img.naturalHeight;
+
+          // Constrain to reasonable max width (612px ~ 6.375 inches at 96dpi)
+          const maxWidth = 612;
+          if (width > maxWidth) {
+            const scale = maxWidth / width;
+            width = maxWidth;
+            height = Math.round(height * scale);
+          }
+
+          const rId = `rId_img_${Date.now()}`;
+          const imageNode = view.state.schema.nodes.image.create({
+            src: dataUrl,
+            alt: file.name,
+            width,
+            height,
+            rId,
+            wrapType: 'inline',
+            displayMode: 'inline',
+          });
+
+          const { from } = view.state.selection;
+          const tr = view.state.tr.insert(from, imageNode);
+          view.dispatch(tr.scrollIntoView());
+          focusActiveEditor();
+        };
+        img.src = dataUrl;
+      };
+      reader.readAsDataURL(file);
+
+      // Reset the input so the same file can be selected again
+      e.target.value = '';
     },
     [getActiveEditorView, focusActiveEditor]
   );
@@ -1482,6 +1541,7 @@ body { background: white; }
                     onRefocusEditor={focusActiveEditor}
                     onInsertTable={handleInsertTable}
                     showTableInsert={true}
+                    onInsertImage={handleInsertImageClick}
                     tableContext={state.pmTableContext}
                     onTableAction={handleTableAction}
                   >
@@ -1642,6 +1702,14 @@ body { background: white; }
               }
             }}
             currentProps={state.pmTableContext?.table?.attrs as Record<string, unknown> | undefined}
+          />
+          {/* Hidden file input for image insertion */}
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleImageFileChange}
           />
         </div>
       </ErrorBoundary>

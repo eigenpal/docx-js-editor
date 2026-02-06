@@ -29,7 +29,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 
 ## Phase 3: Image Editing Complete (6 tasks)
 
-- [ ] **3.1 Image insert from file** — File picker → read as data URL → get natural dimensions → create PM image node → insert at cursor. Track in media registry for DOCX export.
+- [x] **3.1 Image insert from file** — File picker → read as data URL → get natural dimensions → create PM image node → insert at cursor. Track in media registry for DOCX export.
 - [ ] **3.2 Text wrapping mode selector** — `setImageWrapType(type, side?)` command updates wrapType+displayMode+cssFloat atomically. Floating toolbar with 7 mode icons on selected image.
 - [ ] **3.3 Image rotation + flip UI** — Circular rotation handle above selected image. Drag to rotate. Flip H/V buttons in image toolbar. Updates `transform` attr.
 - [ ] **3.4 Image positioning dialog** — Modal: horizontal/vertical alignment or offset, relative to page/column/margin/paragraph. Distance from text controls.

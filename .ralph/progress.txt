@@ -98,3 +98,15 @@
 [2026-02-06 12:13] NOTES: typecheck passed, running table tests
 [2026-02-06 12:14] NOTES: 4/4 merge-split tests pass, 13/15 scenario table tests pass (2 pre-existing failures)
 [2026-02-06 12:14] STATUS: done
+
+[2026-02-06 12:20] TASK: 3.1 Image insert from file
+[2026-02-06 12:20] STATUS: starting
+[2026-02-06 12:20] NOTES: Research complete. Image nodes already exist with full attrs. Need: insertImage command, file picker UI, media tracking
+[2026-02-06 12:22] STATUS: editing
+[2026-02-06 12:22] NOTES: Adding onInsertImage prop to Toolbar, image insert button, file picker handler in DocxEditor
+[2026-02-06 12:25] NOTES: Added onInsertImage prop to Toolbar, image button in Insert group
+[2026-02-06 12:26] NOTES: Added hidden file input + handleInsertImageClick + handleImageFileChange in DocxEditor
+[2026-02-06 12:27] NOTES: Image handler reads file as dataURL, gets natural dimensions, constrains to 612px max, inserts PM node
+[2026-02-06 12:28] STATUS: testing
+[2026-02-06 12:28] NOTES: typecheck passed, 4/4 table tests pass, 26/26 formatting tests pass
+[2026-02-06 12:28] STATUS: done

@@ -157,6 +157,8 @@ export interface ToolbarProps {
   onInsertTable?: (rows: number, columns: number) => void;
   /** Whether to show table insert button (default: true) */
   showTableInsert?: boolean;
+  /** Callback when user wants to insert an image */
+  onInsertImage?: () => void;
   /** Table context when cursor is in a table */
   tableContext?: {
     isInTable: boolean;
@@ -334,6 +336,7 @@ export function Toolbar({
   onRefocusEditor,
   onInsertTable,
   showTableInsert = true,
+  onInsertImage,
   tableContext,
   onTableAction,
 }: ToolbarProps) {
@@ -874,14 +877,26 @@ export function Toolbar({
         </ToolbarGroup>
       )}
 
-      {/* Table Insert */}
-      {showTableInsert && onInsertTable && (
+      {/* Insert group */}
+      {(showTableInsert || onInsertImage) && (
         <ToolbarGroup label="Insert">
-          <TableGridPicker
-            onInsert={handleTableInsert}
-            disabled={disabled}
-            tooltip="Insert table"
-          />
+          {showTableInsert && onInsertTable && (
+            <TableGridPicker
+              onInsert={handleTableInsert}
+              disabled={disabled}
+              tooltip="Insert table"
+            />
+          )}
+          {onInsertImage && (
+            <ToolbarButton
+              onClick={onInsertImage}
+              disabled={disabled}
+              title="Insert image"
+              ariaLabel="Insert image"
+            >
+              <MaterialSymbol name="image" size={ICON_SIZE} />
+            </ToolbarButton>
+          )}
         </ToolbarGroup>
       )}
 
