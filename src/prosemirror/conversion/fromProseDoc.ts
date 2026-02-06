@@ -232,6 +232,14 @@ function extractParagraphContent(paragraph: PMNode): ParagraphContent[] {
         currentMarksKey = null;
       }
       content.push(createImageRun(node));
+    } else if (node.type.name === 'shape') {
+      // Shape ends current run
+      if (currentRun) {
+        content.push(currentRun);
+        currentRun = null;
+        currentMarksKey = null;
+      }
+      content.push(createShapeRun(node));
     } else if (node.type.name === 'tab') {
       // Tab ends current run
       if (currentRun) {
@@ -407,6 +415,57 @@ function createImageRun(node: PMNode): Run {
   return {
     type: 'run',
     content: [drawingContent],
+  };
+}
+
+/**
+ * Create a Run from a ProseMirror shape node
+ */
+function createShapeRun(node: PMNode): Run {
+  const attrs = node.attrs as import('../extensions/nodes/ShapeExtension').ShapeAttrs;
+
+  const shape: Shape = {
+    type: 'shape',
+    shapeType: (attrs.shapeType || 'rect') as Shape['shapeType'],
+    id: attrs.shapeId || undefined,
+    size: {
+      width: attrs.width ? Math.round(attrs.width * (914400 / 96)) : 0,
+      height: attrs.height ? Math.round(attrs.height * (914400 / 96)) : 0,
+    },
+  };
+
+  // Fill
+  if (attrs.fillColor) {
+    shape.fill = {
+      type: (attrs.fillType || 'solid') as 'solid' | 'none',
+      color: { rgb: attrs.fillColor.replace('#', '') },
+    };
+  } else if (attrs.fillType === 'none') {
+    shape.fill = { type: 'none' };
+  }
+
+  // Outline
+  if (attrs.outlineWidth && attrs.outlineWidth > 0) {
+    const cssToOoxml: Record<string, string> = {
+      solid: 'solid',
+      dotted: 'dot',
+      dashed: 'dash',
+    };
+    shape.outline = {
+      width: Math.round(attrs.outlineWidth * (914400 / 96)),
+      color: attrs.outlineColor ? { rgb: attrs.outlineColor.replace('#', '') } : undefined,
+      style: attrs.outlineStyle
+        ? (cssToOoxml[attrs.outlineStyle] as import('../../types/content').ShapeOutline['style']) ||
+          'solid'
+        : 'solid',
+    };
+  }
+
+  const shapeContent: ShapeContent = { type: 'shape', shape };
+
+  return {
+    type: 'run',
+    content: [shapeContent],
   };
 }
 

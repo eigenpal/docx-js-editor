@@ -341,6 +341,19 @@
   height: auto;
 }
 
+/* Shapes */
+.prosemirror-editor .ProseMirror .docx-shape {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.prosemirror-editor .ProseMirror .docx-shape.ProseMirror-selectednode {
+  outline: 2px solid var(--doc-primary, #4285f4);
+  outline-offset: 2px;
+}
+
 /* Text boxes */
 .prosemirror-editor .ProseMirror .docx-textbox {
   border-radius: 2px;

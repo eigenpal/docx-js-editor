@@ -38,6 +38,7 @@ import { HardBreakExtension } from './nodes/HardBreakExtension';
 import { TabExtension } from './nodes/TabExtension';
 import { ImageExtension } from './nodes/ImageExtension';
 import { TextBoxExtension } from './nodes/TextBoxExtension';
+import { ShapeExtension } from './nodes/ShapeExtension';
 import { HorizontalRuleExtension } from './nodes/HorizontalRuleExtension';
 import { createTableExtensions } from './nodes/TableExtension';
 
@@ -105,6 +106,7 @@ export function createStarterKit(options: StarterKitOptions = {}): AnyExtension[
   add('tab', TabExtension());
   add('image', ImageExtension());
   add('textBox', TextBoxExtension());
+  add('shape', ShapeExtension());
   add('imageDrag', ImageDragExtension());
   add('horizontalRule', HorizontalRuleExtension());
 

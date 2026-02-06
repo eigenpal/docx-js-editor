@@ -620,6 +620,17 @@ function convertRunContent(content: RunContent, marks: ReturnType<typeof schema.
       }
       return [];
 
+    case 'shape': {
+      // Shapes with text body are handled as text boxes at block level
+      // Other shapes render as inline SVG
+      const shp = content.shape;
+      if (shp.textBody && shp.textBody.content.length > 0) {
+        // Skip - handled by extractTextBoxesFromParagraph
+        return [];
+      }
+      return [convertShape(shp)];
+    }
+
     case 'footnoteRef':
       // Footnote reference - render as superscript number with footnoteRef mark
       const footnoteMark = schema.mark('footnoteRef', {
@@ -949,6 +960,70 @@ function textFormattingToMarks(
   }
 
   return marks;
+}
+
+// ============================================================================
+// SHAPE CONVERSION
+// ============================================================================
+
+/**
+ * Convert a Shape to a ProseMirror shape node (inline SVG)
+ */
+function convertShape(shape: Shape): PMNode {
+  const widthPx = shape.size?.width ? emuToPixels(shape.size.width) : 100;
+  const heightPx = shape.size?.height ? emuToPixels(shape.size.height) : 80;
+
+  let fillColor: string | undefined;
+  let fillType: string = 'solid';
+  if (shape.fill) {
+    fillType = shape.fill.type;
+    if (shape.fill.color?.rgb) {
+      fillColor = `#${shape.fill.color.rgb}`;
+    }
+  }
+
+  let outlineWidth: number | undefined;
+  let outlineColor: string | undefined;
+  let outlineStyle: string | undefined;
+  if (shape.outline) {
+    if (shape.outline.width) {
+      outlineWidth = Math.round((shape.outline.width / 914400) * 96 * 100) / 100;
+    }
+    if (shape.outline.color?.rgb) {
+      outlineColor = `#${shape.outline.color.rgb}`;
+    }
+    outlineStyle = shape.outline.style || 'solid';
+  }
+
+  let transform: string | undefined;
+  if (shape.transform) {
+    const transforms: string[] = [];
+    if (shape.transform.rotation) {
+      transforms.push(`rotate(${shape.transform.rotation}deg)`);
+    }
+    if (shape.transform.flipH) {
+      transforms.push('scaleX(-1)');
+    }
+    if (shape.transform.flipV) {
+      transforms.push('scaleY(-1)');
+    }
+    if (transforms.length > 0) {
+      transform = transforms.join(' ');
+    }
+  }
+
+  return schema.node('shape', {
+    shapeType: shape.shapeType || 'rect',
+    shapeId: shape.id,
+    width: widthPx,
+    height: heightPx,
+    fillColor,
+    fillType,
+    outlineWidth,
+    outlineColor,
+    outlineStyle,
+    transform,
+  });
 }
 
 // ============================================================================

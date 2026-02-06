@@ -41,7 +41,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 ## Phase 4: Shapes & Text Boxes (4 tasks)
 
 - [x] **4.1 Editable text boxes** — New `TextBoxExtension` as isolating block node with `content: '(paragraph|table)+'`. Positioned absolutely. Focus management between main doc and text box. Round-trip `wps:wsp`/`wps:txbx` XML.
-- [ ] **4.2 Shape selection + basic properties** — `EditableShape.tsx`: selection outline, 8 resize handles, delete. Fill color picker, outline color/width.
+- [x] **4.2 Shape selection + basic properties** — `EditableShape.tsx`: selection outline, 8 resize handles, delete. Fill color picker, outline color/width.
 - [ ] **4.3 Shape insertion** — Shape gallery picker (rect, oval, line, arrow, text box). Creates anchored drawing with `wps:wsp` XML.
 - [ ] **4.4 Shape effects rendering** — Gradient fills as CSS gradients. Shadow via CSS box-shadow. Glow/reflection as CSS filters where possible.
 

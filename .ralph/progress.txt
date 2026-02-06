@@ -184,3 +184,15 @@
 [2026-02-06 13:43] STATUS: testing
 [2026-02-06 13:43] NOTES: typecheck passed, 30/31 tests pass (1 pre-existing skip)
 [2026-02-06 13:43] STATUS: done
+
+[2026-02-06 13:46] TASK: 4.2 Shape selection + basic properties
+[2026-02-06 13:46] STATUS: starting
+[2026-02-06 13:46] NOTES: Need ShapeExtension as atom node, selection outline, fill/outline controls
+[2026-02-06 13:48] STATUS: editing
+[2026-02-06 13:48] NOTES: Created ShapeExtension.ts as inline atom node with SVG rendering
+[2026-02-06 13:49] NOTES: Shape types: rect, ellipse, roundRect, triangle, diamond, line; SVG path builder
+[2026-02-06 13:50] NOTES: Added shape conversion in toProseDoc (convertShape) and fromProseDoc (createShapeRun)
+[2026-02-06 13:51] NOTES: Registered in StarterKit, added CSS for selection outline
+[2026-02-06 13:52] STATUS: testing
+[2026-02-06 13:52] NOTES: typecheck passed, 30/31 tests pass
+[2026-02-06 13:52] STATUS: done
