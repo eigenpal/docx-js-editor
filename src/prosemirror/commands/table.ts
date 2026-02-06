@@ -141,6 +141,14 @@ export function setRowHeight(
   return cmds.setRowHeight(height, rule);
 }
 
+// Header row
+export function toggleHeaderRow(): (
+  state: EditorState,
+  dispatch?: (tr: Transaction) => void
+) => boolean {
+  return cmds.toggleHeaderRow();
+}
+
 // Cell styling
 export function setCellFillColor(
   color: string | null

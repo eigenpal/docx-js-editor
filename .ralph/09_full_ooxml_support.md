@@ -20,7 +20,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 
 ## Phase 2: Table Advanced Features (4 tasks)
 
-- [ ] **2.1 Header row repeat toggle** — `toggleHeaderRow` command on first row. Serializes to `<w:tblHeader/>`. Checkbox in TableOptionsDropdown.
+- [x] **2.1 Header row repeat toggle** — `toggleHeaderRow` command on first row. Serializes to `<w:tblHeader/>`. Checkbox in TableOptionsDropdown.
 - [ ] **2.2 Auto-fit + distribute columns evenly** — `distributeColumns` divides total width equally. `autoFitContents` removes explicit widths. Menu items in dropdown.
 - [ ] **2.3 Table properties dialog** — Modal for table-level settings: preferred width, alignment, cell spacing, default margins, indent, layout mode. New `TablePropertiesDialog.tsx`.
 - [ ] **2.4 Table style gallery** — Visual gallery of predefined styles. `applyTableStyle(styleId)` resolves conditional formatting (firstRow/lastRow/banded). Apply rPr+pPr+tcPr per cell position.

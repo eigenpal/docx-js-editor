@@ -118,6 +118,7 @@ import {
   setCellTextDirection,
   toggleNoWrap,
   setRowHeight,
+  toggleHeaderRow,
   removeTableBorders,
   setAllTableBorders,
   setOutsideTableBorders,
@@ -711,6 +712,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               toggleNoWrap()(view.state, view.dispatch);
             } else if (action.type === 'rowHeight') {
               setRowHeight(action.height, action.rule)(view.state, view.dispatch);
+            } else if (action.type === 'toggleHeaderRow') {
+              toggleHeaderRow()(view.state, view.dispatch);
             }
           } else {
             // Fallback to legacy table selection handler for other actions

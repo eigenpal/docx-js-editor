@@ -89,6 +89,7 @@ export {
   setCellTextDirection,
   toggleNoWrap,
   setRowHeight,
+  toggleHeaderRow,
   setCellFillColor,
   setTableBorderColor,
 } from './table';

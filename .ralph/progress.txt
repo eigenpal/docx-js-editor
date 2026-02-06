@@ -59,3 +59,11 @@
 [2026-02-06 11:29] STATUS: testing
 [2026-02-06 11:29] NOTES: typecheck passed, 4/4 table tests pass
 [2026-02-06 11:29] STATUS: done
+
+[2026-02-06 11:32] TASK: 2.1 Header row repeat toggle
+[2026-02-06 11:32] STATUS: editing
+[2026-02-06 11:32] NOTES: isHeader already round-trips. Adding toggleHeaderRow command + checkbox UI
+[2026-02-06 11:34] NOTES: Added toggleHeaderRow command, HeaderRowRow button in dropdown, wired in DocxEditor
+[2026-02-06 11:35] STATUS: testing
+[2026-02-06 11:35] NOTES: typecheck passed, 4/4 table tests pass
+[2026-02-06 11:35] STATUS: done

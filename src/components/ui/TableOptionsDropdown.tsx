@@ -639,6 +639,30 @@ function RowHeightRow({ onAction }: { onAction: (action: TableAction) => void })
 }
 
 // ============================================================================
+// HEADER ROW SUBCOMPONENT
+// ============================================================================
+
+function HeaderRowRow({ onAction }: { onAction: (action: TableAction) => void }) {
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  return (
+    <button
+      type="button"
+      style={{
+        ...menuItemStyles,
+        backgroundColor: hoveredItem === 'main' ? 'var(--doc-bg-hover)' : 'transparent',
+      }}
+      onMouseEnter={() => setHoveredItem('main')}
+      onMouseLeave={() => setHoveredItem(null)}
+      onClick={() => onAction({ type: 'toggleHeaderRow' })}
+    >
+      <MaterialSymbol name="table_rows" size={18} />
+      <span style={{ flex: 1 }}>Toggle header row</span>
+    </button>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -818,6 +842,7 @@ export function TableOptionsDropdown({
           <TextDirectionRow onAction={handleAction} />
           <NoWrapRow onAction={handleAction} />
           <RowHeightRow onAction={handleAction} />
+          <HeaderRowRow onAction={handleAction} />
         </div>
       )}
     </div>
