@@ -60,7 +60,16 @@ export type TableAction =
   | { type: 'rowHeight'; height: number | null; rule?: 'auto' | 'atLeast' | 'exact' }
   | { type: 'toggleHeaderRow' }
   | { type: 'distributeColumns' }
-  | { type: 'autoFitContents' };
+  | { type: 'autoFitContents' }
+  | {
+      type: 'tableProperties';
+      props: {
+        width?: number | null;
+        widthType?: string | null;
+        justification?: 'left' | 'center' | 'right' | null;
+      };
+    }
+  | { type: 'openTableProperties' };
 
 /**
  * Border style preset

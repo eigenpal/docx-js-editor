@@ -120,6 +120,7 @@ export {
   toggleHeaderRow,
   distributeColumns,
   autoFitContents,
+  setTableProperties,
   setCellFillColor,
   setTableBorderColor,
 } from './commands';

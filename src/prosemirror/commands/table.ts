@@ -163,6 +163,15 @@ export function autoFitContents(): (
   return cmds.autoFitContents();
 }
 
+// Table properties
+export function setTableProperties(props: {
+  width?: number | null;
+  widthType?: string | null;
+  justification?: 'left' | 'center' | 'right' | null;
+}): (state: EditorState, dispatch?: (tr: Transaction) => void) => boolean {
+  return cmds.setTableProperties(props);
+}
+
 // Cell styling
 export function setCellFillColor(
   color: string | null

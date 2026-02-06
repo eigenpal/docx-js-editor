@@ -75,3 +75,11 @@
 [2026-02-06 11:41] STATUS: testing
 [2026-02-06 11:41] NOTES: typecheck passed, 4/4 table tests pass
 [2026-02-06 11:41] STATUS: done
+
+[2026-02-06 11:44] TASK: 2.3 Table properties dialog
+[2026-02-06 11:44] STATUS: editing
+[2026-02-06 11:44] NOTES: Creating TablePropertiesDialog.tsx with width/alignment/indent/layout controls
+[2026-02-06 11:48] NOTES: Created TablePropertiesDialog.tsx, setTableProperties command, wired dialog open/apply
+[2026-02-06 11:49] STATUS: testing
+[2026-02-06 11:49] NOTES: typecheck passed, 4/4 table tests pass
+[2026-02-06 11:49] STATUS: done

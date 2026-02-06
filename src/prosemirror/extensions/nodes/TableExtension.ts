@@ -1361,6 +1361,29 @@ export const TablePluginExtension = createExtension({
       };
     }
 
+    function setTableProperties(props: {
+      width?: number | null;
+      widthType?: string | null;
+      justification?: 'left' | 'center' | 'right' | null;
+    }): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
+
+        if (dispatch) {
+          const tr = state.tr;
+          const newAttrs = { ...context.table.attrs };
+          if ('width' in props) newAttrs.width = props.width;
+          if ('widthType' in props) newAttrs.widthType = props.widthType;
+          if ('justification' in props) newAttrs.justification = props.justification;
+          tr.setNodeMarkup(context.tablePos, undefined, newAttrs);
+          dispatch(tr.scrollIntoView());
+        }
+
+        return true;
+      };
+    }
+
     function toggleHeaderRow(): Command {
       return (state, dispatch) => {
         const context = getTableContext(state);
@@ -1459,6 +1482,11 @@ export const TablePluginExtension = createExtension({
         toggleHeaderRow: () => toggleHeaderRow(),
         distributeColumns: () => distributeColumns(),
         autoFitContents: () => autoFitContents(),
+        setTableProperties: (props: {
+          width?: number | null;
+          widthType?: string | null;
+          justification?: 'left' | 'center' | 'right' | null;
+        }) => setTableProperties(props),
         setCellFillColor: (color: string | null) => setCellFillColor(color),
         setTableBorderColor: (color: string) => setTableBorderColor(color),
         removeTableBorders: () => setTableBorders('none'),

@@ -50,6 +50,7 @@ import {
   type FindResult,
 } from './dialogs/FindReplaceDialog';
 import { HyperlinkDialog, useHyperlinkDialog, type HyperlinkData } from './dialogs/HyperlinkDialog';
+import { TablePropertiesDialog } from './dialogs/TablePropertiesDialog';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import {
   DefaultLoadingIndicator,
@@ -121,6 +122,7 @@ import {
   toggleHeaderRow,
   distributeColumns,
   autoFitContents,
+  setTableProperties,
   removeTableBorders,
   setAllTableBorders,
   setOutsideTableBorders,
@@ -339,6 +341,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     totalPages: 1,
     pmTableContext: null,
   });
+
+  // Table properties dialog state
+  const [tablePropsOpen, setTablePropsOpen] = useState(false);
 
   // History hook for undo/redo - start with null document
   const history = useDocumentHistory<Document | null>(initialDocument || null, {
@@ -720,6 +725,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               distributeColumns()(view.state, view.dispatch);
             } else if (action.type === 'autoFitContents') {
               autoFitContents()(view.state, view.dispatch);
+            } else if (action.type === 'openTableProperties') {
+              setTablePropsOpen(true);
+            } else if (action.type === 'tableProperties') {
+              setTableProperties(action.props)(view.state, view.dispatch);
             }
           } else {
             // Fallback to legacy table selection handler for other actions
@@ -1554,6 +1563,17 @@ body { background: white; }
             initialData={hyperlinkDialog.state.initialData}
             selectedText={hyperlinkDialog.state.selectedText}
             isEditing={hyperlinkDialog.state.isEditing}
+          />
+          <TablePropertiesDialog
+            isOpen={tablePropsOpen}
+            onClose={() => setTablePropsOpen(false)}
+            onApply={(props) => {
+              const view = getActiveEditorView();
+              if (view) {
+                setTableProperties(props)(view.state, view.dispatch);
+              }
+            }}
+            currentProps={state.pmTableContext?.table?.attrs as Record<string, unknown> | undefined}
           />
         </div>
       </ErrorBoundary>

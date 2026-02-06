@@ -707,6 +707,33 @@ function AutoFitRow({ onAction }: { onAction: (action: TableAction) => void }) {
 }
 
 // ============================================================================
+// TABLE PROPERTIES BUTTON
+// ============================================================================
+
+function TablePropertiesRow({ onAction }: { onAction: (action: TableAction) => void }) {
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  return (
+    <>
+      <div style={separatorStyles} role="separator" />
+      <button
+        type="button"
+        style={{
+          ...menuItemStyles,
+          backgroundColor: hoveredItem === 'main' ? 'var(--doc-bg-hover)' : 'transparent',
+        }}
+        onMouseEnter={() => setHoveredItem('main')}
+        onMouseLeave={() => setHoveredItem(null)}
+        onClick={() => onAction({ type: 'openTableProperties' })}
+      >
+        <MaterialSymbol name="settings" size={18} />
+        <span style={{ flex: 1 }}>Table properties...</span>
+      </button>
+    </>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -889,6 +916,7 @@ export function TableOptionsDropdown({
           <HeaderRowRow onAction={handleAction} />
           <DistributeColumnsRow onAction={handleAction} />
           <AutoFitRow onAction={handleAction} />
+          <TablePropertiesRow onAction={handleAction} />
         </div>
       )}
     </div>
