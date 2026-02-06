@@ -167,6 +167,8 @@ export interface ToolbarProps {
   } | null;
   /** Callback when image wrap type changes */
   onImageWrapType?: (wrapType: string) => void;
+  /** Callback for image transform (rotate/flip) */
+  onImageTransform?: (action: 'rotateCW' | 'rotateCCW' | 'flipH' | 'flipV') => void;
   /** Table context when cursor is in a table */
   tableContext?: {
     isInTable: boolean;
@@ -347,6 +349,7 @@ export function Toolbar({
   onInsertImage,
   imageContext,
   onImageWrapType,
+  onImageTransform,
   tableContext,
   onTableAction,
 }: ToolbarProps) {
@@ -967,6 +970,42 @@ export function Toolbar({
           >
             <MaterialSymbol name="flip_to_front" size={ICON_SIZE} />
           </ToolbarButton>
+          {onImageTransform && (
+            <>
+              <ToolbarButton
+                onClick={() => onImageTransform('rotateCW')}
+                disabled={disabled}
+                title="Rotate clockwise"
+                ariaLabel="Rotate clockwise"
+              >
+                <MaterialSymbol name="rotate_right" size={ICON_SIZE} />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => onImageTransform('rotateCCW')}
+                disabled={disabled}
+                title="Rotate counter-clockwise"
+                ariaLabel="Rotate counter-clockwise"
+              >
+                <MaterialSymbol name="rotate_left" size={ICON_SIZE} />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => onImageTransform('flipH')}
+                disabled={disabled}
+                title="Flip horizontal"
+                ariaLabel="Flip horizontal"
+              >
+                <MaterialSymbol name="swap_horiz" size={ICON_SIZE} />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => onImageTransform('flipV')}
+                disabled={disabled}
+                title="Flip vertical"
+                ariaLabel="Flip vertical"
+              >
+                <MaterialSymbol name="swap_vert" size={ICON_SIZE} />
+              </ToolbarButton>
+            </>
+          )}
         </ToolbarGroup>
       )}
 

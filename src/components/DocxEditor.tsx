@@ -285,6 +285,7 @@ interface EditorState {
     wrapType: string;
     displayMode: string;
     cssFloat: string | null;
+    transform: string | null;
   } | null;
 }
 
@@ -571,6 +572,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
             wrapType: (selectedNode.attrs.wrapType as string) ?? 'inline',
             displayMode: (selectedNode.attrs.displayMode as string) ?? 'inline',
             cssFloat: (selectedNode.attrs.cssFloat as string) ?? null,
+            transform: (selectedNode.attrs.transform as string) ?? null,
           };
         }
       }
@@ -764,6 +766,56 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         wrapType,
         displayMode,
         cssFloat,
+      });
+      view.dispatch(tr.scrollIntoView());
+      focusActiveEditor();
+    },
+    [getActiveEditorView, focusActiveEditor, state.pmImageContext]
+  );
+
+  // Handle image transform (rotate/flip)
+  const handleImageTransform = useCallback(
+    (action: 'rotateCW' | 'rotateCCW' | 'flipH' | 'flipV') => {
+      const view = getActiveEditorView();
+      if (!view || !state.pmImageContext) return;
+
+      const pos = state.pmImageContext.pos;
+      const node = view.state.doc.nodeAt(pos);
+      if (!node || node.type.name !== 'image') return;
+
+      const currentTransform = (node.attrs.transform as string) || '';
+
+      // Parse current rotation and flip state
+      const rotateMatch = currentTransform.match(/rotate\((-?\d+(?:\.\d+)?)deg\)/);
+      let rotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
+      let hasFlipH = /scaleX\(-1\)/.test(currentTransform);
+      let hasFlipV = /scaleY\(-1\)/.test(currentTransform);
+
+      switch (action) {
+        case 'rotateCW':
+          rotation = (rotation + 90) % 360;
+          break;
+        case 'rotateCCW':
+          rotation = (rotation - 90 + 360) % 360;
+          break;
+        case 'flipH':
+          hasFlipH = !hasFlipH;
+          break;
+        case 'flipV':
+          hasFlipV = !hasFlipV;
+          break;
+      }
+
+      // Build new transform string
+      const parts: string[] = [];
+      if (rotation !== 0) parts.push(`rotate(${rotation}deg)`);
+      if (hasFlipH) parts.push('scaleX(-1)');
+      if (hasFlipV) parts.push('scaleY(-1)');
+      const newTransform = parts.length > 0 ? parts.join(' ') : null;
+
+      const tr = view.state.tr.setNodeMarkup(pos, undefined, {
+        ...node.attrs,
+        transform: newTransform,
       });
       view.dispatch(tr.scrollIntoView());
       focusActiveEditor();
@@ -1630,6 +1682,7 @@ body { background: white; }
                     onInsertImage={handleInsertImageClick}
                     imageContext={state.pmImageContext}
                     onImageWrapType={handleImageWrapType}
+                    onImageTransform={handleImageTransform}
                     tableContext={state.pmTableContext}
                     onTableAction={handleTableAction}
                   >

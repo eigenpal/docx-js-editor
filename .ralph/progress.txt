@@ -122,3 +122,12 @@
 [2026-02-06 12:40] STATUS: testing
 [2026-02-06 12:40] NOTES: typecheck passed, 30/30 tests pass (26 formatting + 4 table)
 [2026-02-06 12:40] STATUS: done
+
+[2026-02-06 12:45] TASK: 3.3 Image rotation + flip UI
+[2026-02-06 12:45] STATUS: editing
+[2026-02-06 12:45] NOTES: Adding rotate CW/CCW + flip H/V buttons to image toolbar in Toolbar.tsx
+[2026-02-06 12:48] NOTES: Added handleImageTransform handler with rotate/flip logic, parsing current CSS transform
+[2026-02-06 12:49] NOTES: Added 4 buttons (rotateCW, rotateCCW, flipH, flipV) to image toolbar section
+[2026-02-06 12:50] STATUS: testing
+[2026-02-06 12:50] NOTES: typecheck passed, 4/4 table tests pass
+[2026-02-06 12:50] STATUS: done
