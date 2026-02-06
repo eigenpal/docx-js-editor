@@ -54,6 +54,7 @@ import { TablePropertiesDialog } from './dialogs/TablePropertiesDialog';
 import { ImagePositionDialog, type ImagePositionData } from './dialogs/ImagePositionDialog';
 import { ImagePropertiesDialog, type ImagePropertiesData } from './dialogs/ImagePropertiesDialog';
 import { HeaderFooterEditor } from './HeaderFooterEditor';
+import { FootnotePropertiesDialog } from './dialogs/FootnotePropertiesDialog';
 import { getBuiltinTableStyle, type TableStylePreset } from './ui/TableStyleGallery';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import {
@@ -366,6 +367,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   const [imagePositionOpen, setImagePositionOpen] = useState(false);
   // Image properties dialog state
   const [imagePropsOpen, setImagePropsOpen] = useState(false);
+  // Footnote properties dialog state
+  const [footnotePropsOpen, setFootnotePropsOpen] = useState(false);
   // Header/footer editing state
   const [hfEditPosition, setHfEditPosition] = useState<'header' | 'footer' | null>(null);
 
@@ -948,6 +951,32 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       focusActiveEditor();
     },
     [getActiveEditorView, focusActiveEditor, state.pmImageContext]
+  );
+
+  // Handle footnote/endnote properties update
+  const handleApplyFootnoteProperties = useCallback(
+    (
+      footnotePr: import('../types/document').FootnoteProperties,
+      endnotePr: import('../types/document').EndnoteProperties
+    ) => {
+      if (!history.state?.package) return;
+      const newDoc = {
+        ...history.state.package.document,
+        finalSectionProperties: {
+          ...history.state.package.document.finalSectionProperties,
+          footnotePr,
+          endnotePr,
+        },
+      };
+      history.push({
+        ...history.state,
+        package: {
+          ...history.state.package,
+          document: newDoc,
+        },
+      });
+    },
+    [history]
   );
 
   // Handle table action from Toolbar - use ProseMirror commands
@@ -2048,6 +2077,13 @@ body { background: white; }
                   }
                 : undefined
             }
+          />
+          <FootnotePropertiesDialog
+            isOpen={footnotePropsOpen}
+            onClose={() => setFootnotePropsOpen(false)}
+            onApply={handleApplyFootnoteProperties}
+            footnotePr={history.state?.package.document?.finalSectionProperties?.footnotePr}
+            endnotePr={history.state?.package.document?.finalSectionProperties?.endnotePr}
           />
           {/* Header/Footer editor overlay */}
           {hfEditPosition && (headerContent || footerContent) && (

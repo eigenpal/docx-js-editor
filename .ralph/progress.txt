@@ -264,3 +264,16 @@
 [2026-02-06 15:12] STATUS: testing
 [2026-02-06 15:12] NOTES: typecheck passed, 58/61 tests pass (3 pre-existing skips)
 [2026-02-06 15:12] STATUS: done
+
+[2026-02-06 15:15] TASK: 6.2 Footnote/endnote properties
+[2026-02-06 15:15] STATUS: starting
+[2026-02-06 15:18] STATUS: editing
+[2026-02-06 15:18] NOTES: Created FootnotePropertiesDialog.tsx — position, numFmt, numStart, numRestart for both footnotes and endnotes
+[2026-02-06 15:19] NOTES: Wired in DocxEditor: footnotePropsOpen state, handleApplyFootnoteProperties updates finalSectionProperties
+[2026-02-06 15:20] STATUS: testing
+[2026-02-06 15:20] NOTES: typecheck passed, 26/27 tests pass (1 pre-existing skip)
+[2026-02-06 15:20] STATUS: done
+
+[2026-02-06 15:15] TASK: 6.2 Footnote/endnote properties
+[2026-02-06 15:15] STATUS: starting
+[2026-02-06 15:15] NOTES: Position, numbering format, restart rules per section. Infrastructure already parsed/serialized.
