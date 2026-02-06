@@ -742,6 +742,9 @@ function serializeParagraphContent(content: ParagraphContent): string {
       return serializeTrackedChange('ins', content);
     case 'deletion':
       return serializeTrackedChange('del', content);
+    case 'mathEquation':
+      // Round-trip the raw OMML XML directly
+      return content.ommlXml || '';
     default:
       return '';
   }

@@ -19,7 +19,7 @@
  * - pic: Pictures
  */
 
-import { xml2js, type Element as XmlElement } from 'xml-js';
+import { xml2js, js2xml, type Element as XmlElement } from 'xml-js';
 
 // Re-export Element type for consumers
 export type { Element as XmlElement } from 'xml-js';
@@ -86,6 +86,13 @@ export function parseXml(xml: string): XmlElement {
   }) as XmlElement;
 
   return result;
+}
+
+/**
+ * Serialize an XmlElement back to an XML string
+ */
+export function elementToXml(element: XmlElement): string {
+  return js2xml({ elements: [element] }, { compact: false, spaces: 0 });
 }
 
 /**

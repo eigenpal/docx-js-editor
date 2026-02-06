@@ -36,6 +36,7 @@ import type {
   InlineSdt,
   Insertion,
   Deletion,
+  MathEquation,
 } from '../../types/document';
 import { emuToPixels } from '../../docx/imageParser';
 import { createStyleResolver, type StyleResolver } from '../styles';
@@ -136,6 +137,9 @@ function convertParagraph(
     } else if (content.type === 'deletion') {
       const delNodes = convertTrackedChange(content, 'deletion', styleRunFormatting);
       inlineNodes.push(...delNodes);
+    } else if (content.type === 'mathEquation') {
+      const mathNode = convertMathEquation(content);
+      if (mathNode) inlineNodes.push(mathNode);
     }
     // Skip other content types for now (bookmarks, etc.)
   }
@@ -664,6 +668,17 @@ function convertField(field: SimpleField | ComplexField): PMNode | null {
     fieldKind: field.type === 'simpleField' ? 'simple' : 'complex',
     fldLock: field.fldLock ?? false,
     dirty: field.dirty ?? false,
+  });
+}
+
+/**
+ * Convert a MathEquation to a ProseMirror math node.
+ */
+function convertMathEquation(math: MathEquation): PMNode | null {
+  return schema.node('math', {
+    display: math.display,
+    ommlXml: math.ommlXml,
+    plainText: math.plainText || '',
   });
 }
 

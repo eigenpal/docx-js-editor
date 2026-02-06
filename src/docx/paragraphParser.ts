@@ -37,6 +37,7 @@ import type {
   Insertion,
   Deletion,
   TrackedChangeInfo,
+  MathEquation,
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import type { NumberingMap } from './numberingParser';
@@ -47,6 +48,7 @@ import {
   getChildElements,
   parseBooleanElement,
   parseNumericAttribute,
+  elementToXml,
   type XmlElement,
 } from './xmlParser';
 import { parseRun, parseRunProperties } from './runParser';
@@ -146,6 +148,32 @@ function parseListItems(el: XmlElement): { displayText: string; value: string }[
     }
   }
   return items;
+}
+
+/**
+ * Extract plain text from a math element (recursive text content extraction)
+ */
+function extractMathText(el: XmlElement): string {
+  let text = '';
+  if (el.type === 'text' && typeof el.text === 'string') {
+    return el.text;
+  }
+  if (el.elements) {
+    for (const child of el.elements) {
+      // m:t elements contain the actual math text
+      const childName = child.name?.replace(/^.*:/, '') ?? '';
+      if (childName === 't' && child.elements) {
+        for (const t of child.elements) {
+          if (t.type === 'text' && typeof t.text === 'string') {
+            text += t.text;
+          }
+        }
+      } else {
+        text += extractMathText(child);
+      }
+    }
+  }
+  return text;
 }
 
 // ============================================================================
@@ -948,9 +976,20 @@ function parseParagraphContents(
       }
 
       case 'oMath':
-      case 'oMathPara':
-        // Math content - skip for now (would need math parser)
+      case 'oMathPara': {
+        // Math equations — store raw OMML XML and extract text fallback
+        const isBlock = localName === 'oMathPara';
+        const ommlXml = elementToXml(child);
+        const plainText = extractMathText(child);
+        const mathEq: MathEquation = {
+          type: 'mathEquation',
+          display: isBlock ? 'block' : 'inline',
+          ommlXml,
+          plainText: plainText || undefined,
+        };
+        contents.push(mathEq);
         break;
+      }
 
       default:
         // Unknown element - skip

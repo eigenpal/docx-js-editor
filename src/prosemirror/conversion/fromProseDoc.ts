@@ -40,6 +40,7 @@ import type {
   InlineSdt,
   SdtProperties,
   TrackedChangeInfo,
+  MathEquation,
 } from '../../types/document';
 import type {
   ParagraphAttrs,
@@ -411,6 +412,14 @@ function extractParagraphContent(paragraph: PMNode): ParagraphContent[] {
         currentMarksKey = null;
       }
       content.push(createInlineSdtFromNode(node));
+    } else if (node.type.name === 'math') {
+      // Math ends current run and emits a MathEquation content item
+      if (currentRun) {
+        content.push(currentRun);
+        currentRun = null;
+        currentMarksKey = null;
+      }
+      content.push(createMathFromNode(node));
     }
   });
 
@@ -564,6 +573,24 @@ function createFieldFromNode(node: PMNode): SimpleField | ComplexField {
     content: [displayRun],
     fldLock: attrs.fldLock || undefined,
     dirty: attrs.dirty || undefined,
+  };
+}
+
+/**
+ * Create a MathEquation from a PM math node
+ */
+function createMathFromNode(node: PMNode): MathEquation {
+  const attrs = node.attrs as {
+    display: string;
+    ommlXml: string;
+    plainText: string;
+  };
+
+  return {
+    type: 'mathEquation',
+    display: (attrs.display as 'inline' | 'block') || 'inline',
+    ommlXml: attrs.ommlXml,
+    plainText: attrs.plainText || undefined,
   };
 }
 

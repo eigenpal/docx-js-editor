@@ -90,6 +90,7 @@ export type {
   Comment,
   CommentRangeStart,
   CommentRangeEnd,
+  MathEquation,
   TrackedChangeInfo,
   Insertion,
   Deletion,

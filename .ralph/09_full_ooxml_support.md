@@ -72,7 +72,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 - [x] **7.6 Content control (SDT) editing** — Make structured document tags editable with proper UI. Rich text, plain text, date, dropdown, checkbox controls.
 - [x] **7.7 Comments sidebar** — Parse comment ranges. Highlight commented text. Sidebar with comment list. Add/reply/resolve commands.
 - [x] **7.8 Tracked changes (foundation)** — Parse `w:ins`/`w:del`/`w:rPrChange`. Render insertions (underline) and deletions (strikethrough). Accept/reject commands.
-- [ ] **7.9 Math equations (OMML)** — Read-only rendering first via MathML/KaTeX. Parse `m:oMath` structure. Display inline and block equations.
+- [x] **7.9 Math equations (OMML)** — Read-only rendering first via MathML/KaTeX. Parse `m:oMath` structure. Display inline and block equations.
 - [ ] **7.10 Improved image serialization** — Full DrawingML XML generation for images on DOCX export (currently minimal). Shapes + text boxes XML serialization.
 
 ---

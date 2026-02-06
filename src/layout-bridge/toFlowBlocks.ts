@@ -232,6 +232,18 @@ function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksO
         pmEnd: childPos + child.nodeSize,
       };
       runs.push(run);
+    } else if (child.type.name === 'math') {
+      // Math node — render as plain text fallback in layout
+      const text = (child.attrs.plainText as string) || '[equation]';
+      const run: TextRun = {
+        kind: 'text',
+        text,
+        italic: true,
+        fontFamily: 'Cambria Math',
+        pmStart: childPos,
+        pmEnd: childPos + child.nodeSize,
+      };
+      runs.push(run);
     }
   });
 
