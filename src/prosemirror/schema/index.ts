@@ -1,24 +1,19 @@
 /**
  * ProseMirror Schema for DOCX Editor
  *
- * Combines node and mark specifications into a complete schema.
- * This schema supports:
- * - Paragraphs with full OOXML formatting (alignment, spacing, indentation, lists)
- * - Text with all formatting marks (bold, italic, underline, colors, fonts)
- * - Images and line breaks
- * - Hyperlinks
+ * Singleton ExtensionManager that builds the schema and initializes runtime.
+ * Legacy code imports `schema` and commands from here; new code should use
+ * ExtensionManager directly.
  */
 
-import { Schema } from 'prosemirror-model';
-import { nodes } from './nodes';
-import { marks } from './marks';
+import { createStarterKit } from '../extensions/StarterKit';
+import { ExtensionManager } from '../extensions/ExtensionManager';
 
-export { nodes } from './nodes';
-export { marks } from './marks';
-
+// Re-export type interfaces (used by toProseDoc, fromProseDoc, and other modules)
 export type {
   ParagraphAttrs,
   ImageAttrs,
+  ImagePositionAttrs,
   TableAttrs,
   TableRowAttrs,
   TableCellAttrs,
@@ -32,12 +27,14 @@ export type {
 } from './marks';
 
 /**
- * The complete ProseMirror schema for the DOCX editor
+ * Singleton ExtensionManager — builds schema + initializes runtime (plugins, commands, keymaps)
  */
-export const schema = new Schema({
-  nodes,
-  marks,
-});
+const mgr = new ExtensionManager(createStarterKit());
+mgr.buildSchema();
+mgr.initializeRuntime();
+
+export const singletonManager = mgr;
+export const schema = mgr.getSchema();
 
 /**
  * Export types for convenience

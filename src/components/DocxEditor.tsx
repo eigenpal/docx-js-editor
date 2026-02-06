@@ -64,6 +64,10 @@ import { executeCommand } from '../agent/executor';
 import { useTableSelection } from '../hooks/useTableSelection';
 import { useDocumentHistory } from '../hooks/useHistory';
 
+// Extension system
+import { createStarterKit } from '../prosemirror/extensions/StarterKit';
+import { ExtensionManager } from '../prosemirror/extensions/ExtensionManager';
+
 // ProseMirror editor
 import {
   type SelectionState,
@@ -331,6 +335,14 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     groupingInterval: 500,
     enableKeyboardShortcuts: true,
   });
+
+  // Extension manager — built once, provides schema + plugins + commands
+  const extensionManager = useMemo(() => {
+    const mgr = new ExtensionManager(createStarterKit());
+    mgr.buildSchema();
+    mgr.initializeRuntime();
+    return mgr;
+  }, []);
 
   // Refs
   const pagedEditorRef = useRef<PagedEditorRef>(null);
@@ -1395,6 +1407,7 @@ body { background: white; }
                   footerContent={footerContent}
                   zoom={state.zoom}
                   readOnly={readOnly}
+                  extensionManager={extensionManager}
                   onDocumentChange={handleDocumentChange}
                   onSelectionChange={(_from, _to) => {
                     // Extract full selection state from PM and use the standard handler

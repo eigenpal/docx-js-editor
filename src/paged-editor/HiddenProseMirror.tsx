@@ -25,15 +25,12 @@ import {
   type Plugin,
 } from 'prosemirror-state';
 import { EditorView, type DirectEditorProps } from 'prosemirror-view';
-import { history, undo, redo } from 'prosemirror-history';
-import { keymap } from 'prosemirror-keymap';
-import { baseKeymap, toggleMark } from 'prosemirror-commands';
-import { columnResizing, tableEditing } from 'prosemirror-tables';
+import { undo, redo } from 'prosemirror-history';
 
 import { schema } from '../prosemirror/schema';
 import { toProseDoc, createEmptyDoc } from '../prosemirror/conversion';
 import { fromProseDoc } from '../prosemirror/conversion/fromProseDoc';
-import { createListKeymap } from '../prosemirror/plugins/keymap';
+import type { ExtensionManager } from '../prosemirror/extensions/ExtensionManager';
 import type { Document, Theme, StyleDefinitions } from '../types/document';
 
 // Import ProseMirror CSS
@@ -61,6 +58,8 @@ export interface HiddenProseMirrorProps {
   onSelectionChange?: (state: EditorState) => void;
   /** External ProseMirror plugins */
   externalPlugins?: Plugin[];
+  /** Extension manager for plugins/schema/commands (optional — falls back to default) */
+  extensionManager?: ExtensionManager;
   /** Callback when EditorView is ready */
   onEditorViewReady?: (view: EditorView) => void;
   /** Callback when EditorView is destroyed */
@@ -130,38 +129,24 @@ const HIDDEN_HOST_STYLES: CSSProperties = {
 
 /**
  * Create ProseMirror state from document
+ *
+ * When an ExtensionManager is provided, it supplies the schema and plugins.
+ * Otherwise falls back to the default singleton schema with no extension plugins.
  */
 function createInitialState(
   document: Document | null,
   styles: StyleDefinitions | null | undefined,
+  manager?: ExtensionManager,
   externalPlugins: Plugin[] = []
 ): EditorState {
+  const activeSchema = manager?.getSchema() ?? schema;
   const doc = document ? toProseDoc(document, { styles: styles ?? undefined }) : createEmptyDoc();
 
-  const plugins: Plugin[] = [
-    history(),
-    columnResizing({
-      handleWidth: 5,
-      cellMinWidth: 25,
-      lastColumnResizable: true,
-    }),
-    tableEditing(),
-    createListKeymap(),
-    keymap({
-      'Mod-z': undo,
-      'Mod-y': redo,
-      'Mod-Shift-z': redo,
-      'Mod-b': toggleMark(schema.marks.bold),
-      'Mod-i': toggleMark(schema.marks.italic),
-      'Mod-u': toggleMark(schema.marks.underline),
-    }),
-    keymap(baseKeymap),
-    ...externalPlugins,
-  ];
+  const plugins: Plugin[] = [...(manager?.getPlugins() ?? []), ...externalPlugins];
 
   return EditorState.create({
     doc,
-    schema,
+    schema: activeSchema,
     plugins,
   });
 }
@@ -194,6 +179,7 @@ const HiddenProseMirrorComponent = forwardRef<HiddenProseMirrorRef, HiddenProseM
       onTransaction,
       onSelectionChange,
       externalPlugins = [],
+      extensionManager,
       onEditorViewReady,
       onEditorViewDestroy,
       onKeyDown,
@@ -239,7 +225,7 @@ const HiddenProseMirrorComponent = forwardRef<HiddenProseMirrorRef, HiddenProseM
     const createView = useCallback(() => {
       if (!hostRef.current || isDestroyingRef.current) return;
 
-      const initialState = createInitialState(document, styles, externalPlugins);
+      const initialState = createInitialState(document, styles, extensionManager, externalPlugins);
 
       const editorProps: DirectEditorProps = {
         state: initialState,
@@ -283,6 +269,7 @@ const HiddenProseMirrorComponent = forwardRef<HiddenProseMirrorRef, HiddenProseM
       document,
       styles,
       externalPlugins,
+      extensionManager,
       readOnly,
       // Callbacks removed from dependencies - accessed via refs
     ]);
@@ -341,12 +328,12 @@ const HiddenProseMirrorComponent = forwardRef<HiddenProseMirrorRef, HiddenProseM
       lastDocumentIdRef.current = currentDocId;
 
       // Create new state from document
-      const newState = createInitialState(document, styles, externalPlugins);
+      const newState = createInitialState(document, styles, extensionManager, externalPlugins);
       viewRef.current.updateState(newState);
 
       // Use ref to avoid infinite loop when callback is unstable
       onSelectionChangeRef.current?.(newState);
-    }, [document, styles, externalPlugins]);
+    }, [document, styles, extensionManager, externalPlugins]);
     // NOTE: onSelectionChange removed from dependencies - accessed via ref to prevent infinite loops
 
     // Update editable state

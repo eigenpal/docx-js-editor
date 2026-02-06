@@ -5,12 +5,13 @@
  * - Schema for DOCX document structure
  * - Bidirectional conversion between Document and PM
  * - React wrapper component
- * - Plugins for keymap and selection tracking
+ * - Plugins for selection tracking
  * - Commands for formatting
+ * - Extension system for schema, plugins, and keymaps
  */
 
 // Schema
-export { schema, nodes, marks } from './schema';
+export { schema, singletonManager } from './schema';
 export type {
   ParagraphAttrs,
   ImageAttrs,
@@ -36,12 +37,8 @@ export type { SelectionState } from './selectionState';
 // Re-export TextSelection for restoring selections after toolbar interactions
 export { TextSelection } from 'prosemirror-state';
 
-// Plugins
+// Plugins (selection tracker only — keymaps are now in extension system)
 export {
-  createKeymap,
-  createBaseKeymap,
-  createListKeymap,
-  createEditorKeymaps,
   createSelectionTrackerPlugin,
   extractSelectionContext,
   getSelectionContext,

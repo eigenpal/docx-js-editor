@@ -120,6 +120,8 @@ export interface PagedEditorProps {
   onSelectionChange?: (from: number, to: number) => void;
   /** External ProseMirror plugins. */
   externalPlugins?: Plugin[];
+  /** Extension manager for plugins/schema/commands (optional — falls back to default) */
+  extensionManager?: import('../prosemirror/extensions/ExtensionManager').ExtensionManager;
   /** Callback when editor is ready. */
   onReady?: (ref: PagedEditorRef) => void;
   /** Callback when rendered DOM context is ready. */
@@ -825,6 +827,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
       onDocumentChange,
       onSelectionChange,
       externalPlugins = EMPTY_PLUGINS,
+      extensionManager,
       onReady,
       onRenderedDomContextReady,
       pluginOverlays,
@@ -1773,6 +1776,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
           onTransaction={handleTransaction}
           onSelectionChange={handleSelectionChange}
           externalPlugins={externalPlugins}
+          extensionManager={extensionManager}
           onEditorViewReady={handleEditorViewReady}
           onKeyDown={handlePMKeyDown}
         />

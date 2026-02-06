@@ -68,7 +68,6 @@ export type { ResolvedStyleAttrs } from './paragraph';
 export {
   isInTable,
   getTableContext,
-  createTable,
   insertTable,
   addRowAbove,
   addRowBelow,

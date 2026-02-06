@@ -1,21 +1,9 @@
 /**
  * ProseMirror Plugins
  *
- * Collection of plugins for the DOCX editor.
+ * Selection tracker plugin for the DOCX editor.
+ * Keymap plugins are now provided by the extension system.
  */
-
-export {
-  createKeymap,
-  createBaseKeymap,
-  createListKeymap,
-  createEditorKeymaps,
-  insertHardBreak,
-  exitListOnEmptyEnter,
-  splitListItem,
-  backspaceExitList,
-  increaseListIndent,
-  decreaseListIndent,
-} from './keymap';
 
 export {
   createSelectionTrackerPlugin,
