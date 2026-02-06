@@ -237,3 +237,18 @@
 [2026-02-06 14:40] TASK: 5.2 Section break editing
 [2026-02-06 14:40] STATUS: starting
 [2026-02-06 14:40] NOTES: Need to visualize section boundaries, insert/delete section breaks
+[2026-02-06 14:45] STATUS: editing
+[2026-02-06 14:45] NOTES: Added sectionBreakType attr to ParagraphAttrs + ParagraphExtension, CSS visual indicator, insert/remove commands
+[2026-02-06 14:46] STATUS: testing
+[2026-02-06 14:46] NOTES: typecheck passed, 30/31 tests pass
+[2026-02-06 14:46] STATUS: done
+
+[2026-02-06 14:50] TASK: 5.3 Page borders
+[2026-02-06 14:50] STATUS: starting
+[2026-02-06 14:50] NOTES: Render section-level page borders on page container. CSS border with full OOXML border spec styles.
+[2026-02-06 14:52] STATUS: editing
+[2026-02-06 14:52] NOTES: Added pageBorders+theme to RenderPageOptions, applyPageBorders in applyPageStyles using borderToStyle utility
+[2026-02-06 14:53] NOTES: Passed pageBorders+theme from PagedEditor to renderPages
+[2026-02-06 14:54] STATUS: testing
+[2026-02-06 14:54] NOTES: typecheck passed, 55/56 tests pass (1 pre-existing skip)
+[2026-02-06 14:54] STATUS: done

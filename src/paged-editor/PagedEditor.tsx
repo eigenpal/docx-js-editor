@@ -984,6 +984,8 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
               footerDistance: sectionProperties?.footerDistance
                 ? twipsToPixels(sectionProperties.footerDistance)
                 : undefined,
+              pageBorders: sectionProperties?.pageBorders,
+              theme: _theme,
             } as RenderPageOptions & { pageGap?: number; blockLookup?: BlockLookup });
 
             stepTime = performance.now() - stepStart;

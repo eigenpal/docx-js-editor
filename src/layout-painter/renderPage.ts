@@ -26,6 +26,9 @@ import { renderParagraphFragment, type FloatingImageInfo } from './renderParagra
 import { renderTableFragment } from './renderTable';
 import { renderImageFragment } from './renderImage';
 import type { BlockLookup } from './index';
+import type { BorderSpec } from '../types/document';
+import { borderToStyle } from '../utils/formatToStyle';
+import type { Theme } from '../types/document';
 
 /**
  * Page-level floating image that has been extracted from paragraphs.
@@ -110,6 +113,16 @@ export interface RenderPageOptions {
   footerDistance?: number;
   /** Block lookup for rendering actual content. */
   blockLookup?: BlockLookup;
+  /** OOXML page borders from section properties. */
+  pageBorders?: {
+    top?: BorderSpec;
+    bottom?: BorderSpec;
+    left?: BorderSpec;
+    right?: BorderSpec;
+    offsetFrom?: 'page' | 'text';
+  };
+  /** Theme for resolving border colors. */
+  theme?: Theme | null;
 }
 
 /**
@@ -140,6 +153,23 @@ function applyPageStyles(
 
   if (options.showShadow) {
     element.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
+  }
+
+  // Apply OOXML page borders
+  if (options.pageBorders) {
+    const pb = options.pageBorders;
+    const sides = ['top', 'bottom', 'left', 'right'] as const;
+    const cssSides = ['Top', 'Bottom', 'Left', 'Right'] as const;
+
+    for (let i = 0; i < sides.length; i++) {
+      const border = pb[sides[i]];
+      if (border && border.style !== 'none' && border.style !== 'nil') {
+        const styles = borderToStyle(border, cssSides[i], options.theme);
+        for (const [key, value] of Object.entries(styles)) {
+          (element.style as unknown as Record<string, string>)[key] = String(value);
+        }
+      }
+    }
   }
 }
 
