@@ -123,6 +123,7 @@ const paragraphNodeSpec: NodeSpec = {
     keepLines: { default: null },
     defaultTextFormatting: { default: null },
     sectionBreakType: { default: null },
+    outlineLevel: { default: null },
   },
   parseDOM: [
     {
@@ -472,6 +473,73 @@ export const ParagraphExtension = createNodeExtension({
         insertSectionBreak: (breakType: 'nextPage' | 'continuous' | 'oddPage' | 'evenPage') =>
           setParagraphAttr('sectionBreakType', breakType),
         removeSectionBreak: () => setParagraphAttr('sectionBreakType', null),
+        generateTOC: () => {
+          return (
+            state: EditorState,
+            dispatch?: (tr: import('prosemirror-state').Transaction) => void
+          ) => {
+            if (!dispatch) return true;
+
+            // Collect headings with outline levels
+            const headings: { text: string; level: number }[] = [];
+            state.doc.descendants((node) => {
+              if (node.type.name === 'paragraph') {
+                const level = node.attrs.outlineLevel;
+                const styleId = node.attrs.styleId as string | null;
+                // Heading styles typically have outline levels, or detect from styleId
+                let effectiveLevel = level;
+                if (effectiveLevel == null && styleId) {
+                  const match = styleId.match(/^[Hh]eading(\d)$/);
+                  if (match) effectiveLevel = parseInt(match[1], 10) - 1;
+                }
+                if (effectiveLevel != null && effectiveLevel >= 0 && effectiveLevel <= 8) {
+                  let text = '';
+                  node.forEach((child) => {
+                    if (child.isText) text += child.text || '';
+                  });
+                  if (text.trim()) {
+                    headings.push({ text: text.trim(), level: effectiveLevel });
+                  }
+                }
+              }
+            });
+
+            if (headings.length === 0) return false;
+
+            // Build TOC paragraphs and insert at cursor
+            const { schema: s } = state;
+            const tocNodes: import('prosemirror-model').Node[] = [];
+
+            // TOC title
+            tocNodes.push(
+              s.node('paragraph', { alignment: 'center' }, [
+                s.text('Table of Contents', [s.marks.bold.create()]),
+              ])
+            );
+
+            // TOC entries
+            for (const h of headings) {
+              const indent = h.level * 720; // 0.5 inch per level
+              tocNodes.push(
+                s.node(
+                  'paragraph',
+                  {
+                    indentLeft: indent > 0 ? indent : null,
+                  },
+                  [s.text(h.text)]
+                )
+              );
+            }
+
+            const tr = state.tr;
+            const insertPos = state.selection.from;
+            for (let i = tocNodes.length - 1; i >= 0; i--) {
+              tr.insert(insertPos, tocNodes[i]);
+            }
+            dispatch(tr.scrollIntoView());
+            return true;
+          };
+        },
         setTabs: (tabs: TabStop[]) => setParagraphAttr('tabs', tabs.length > 0 ? tabs : null),
         addTabStop: (
           position: number,

@@ -81,6 +81,9 @@ export interface ParagraphAttrs {
 
   // Section break type — marks end of a section
   sectionBreakType?: 'nextPage' | 'continuous' | 'oddPage' | 'evenPage';
+
+  // Outline level for TOC (0-9)
+  outlineLevel?: number;
 }
 
 /**

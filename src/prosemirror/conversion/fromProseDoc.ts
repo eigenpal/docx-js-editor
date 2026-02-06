@@ -138,7 +138,8 @@ function paragraphAttrsToFormatting(attrs: ParagraphAttrs): ParagraphFormatting 
     attrs.styleId ||
     attrs.borders ||
     attrs.shading ||
-    attrs.tabs;
+    attrs.tabs ||
+    attrs.outlineLevel != null;
 
   if (!hasFormatting) {
     return undefined;
@@ -159,6 +160,7 @@ function paragraphAttrsToFormatting(attrs: ParagraphAttrs): ParagraphFormatting 
     borders: attrs.borders || undefined,
     shading: attrs.shading || undefined,
     tabs: attrs.tabs || undefined,
+    outlineLevel: attrs.outlineLevel ?? undefined,
   };
 }
 

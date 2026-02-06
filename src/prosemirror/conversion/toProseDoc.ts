@@ -162,6 +162,9 @@ function paragraphFormattingToAttrs(
     attrs.keepNext = formatting?.keepNext ?? stylePpr?.keepNext;
     attrs.keepLines = formatting?.keepLines ?? stylePpr?.keepLines;
 
+    // Outline level (for TOC)
+    attrs.outlineLevel = formatting?.outlineLevel ?? stylePpr?.outlineLevel;
+
     // Section break type from paragraph-level section properties
     if (paragraph.sectionProperties?.sectionStart) {
       const st = paragraph.sectionProperties.sectionStart;
@@ -193,6 +196,9 @@ function paragraphFormattingToAttrs(
     attrs.pageBreakBefore = formatting?.pageBreakBefore;
     attrs.keepNext = formatting?.keepNext;
     attrs.keepLines = formatting?.keepLines;
+
+    // Outline level
+    attrs.outlineLevel = formatting?.outlineLevel;
   }
 
   // Section break type from paragraph-level section properties
