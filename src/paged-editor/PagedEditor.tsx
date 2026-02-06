@@ -1876,8 +1876,17 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
       (view: EditorView) => {
         runLayoutPipeline(view.state);
         updateSelectionOverlay(view.state);
+
+        // Auto-focus the editor so the user can start typing immediately
+        if (!readOnly) {
+          // Use requestAnimationFrame to ensure DOM is ready
+          requestAnimationFrame(() => {
+            view.focus();
+            setIsFocused(true);
+          });
+        }
       },
-      [runLayoutPipeline, updateSelectionOverlay]
+      [runLayoutPipeline, updateSelectionOverlay, readOnly]
     );
 
     // =========================================================================

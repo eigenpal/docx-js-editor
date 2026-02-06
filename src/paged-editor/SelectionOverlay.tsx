@@ -100,7 +100,7 @@ const Caret: React.FC<{
   blinkInterval: number;
   isFocused: boolean;
 }> = ({ position, color, width, blinkInterval, isFocused }) => {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(isFocused);
   const blinkTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -117,8 +117,8 @@ const Caret: React.FC<{
         setVisible((v) => !v);
       }, blinkInterval);
     } else {
-      // Show solid caret when not focused or blinking disabled
-      setVisible(isFocused);
+      // Hide caret when not focused
+      setVisible(false);
     }
 
     return () => {
@@ -126,12 +126,30 @@ const Caret: React.FC<{
         window.clearInterval(blinkTimerRef.current);
       }
     };
-  }, [isFocused, blinkInterval, position.x, position.y]);
+  }, [isFocused, blinkInterval]);
 
-  // Reset visibility when position changes (show immediately after typing)
+  // Reset blink cycle when position changes (show immediately after typing/navigation)
   useEffect(() => {
+    if (!isFocused) return;
+
     setVisible(true);
-  }, [position.x, position.y]);
+
+    // Restart blink timer from this moment
+    if (blinkTimerRef.current) {
+      window.clearInterval(blinkTimerRef.current);
+    }
+    if (blinkInterval > 0) {
+      blinkTimerRef.current = window.setInterval(() => {
+        setVisible((v) => !v);
+      }, blinkInterval);
+    }
+
+    return () => {
+      if (blinkTimerRef.current) {
+        window.clearInterval(blinkTimerRef.current);
+      }
+    };
+  }, [position.x, position.y, isFocused, blinkInterval]);
 
   return <div style={caretStyles(position, color, width, visible)} data-testid="caret" />;
 };
