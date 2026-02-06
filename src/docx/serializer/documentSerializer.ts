@@ -570,6 +570,14 @@ function serializeBlockContent(block: BlockContent): string {
     return serializeParagraph(block);
   } else if (block.type === 'table') {
     return serializeTable(block);
+  } else if (block.type === 'blockSdt') {
+    // Block-level SDT: wrap content in w:sdt
+    const contentXml = block.content.map((b) => serializeBlockContent(b)).join('');
+    const props = block.properties;
+    const prParts: string[] = [];
+    if (props.alias) prParts.push(`<w:alias w:val="${props.alias}"/>`);
+    if (props.tag) prParts.push(`<w:tag w:val="${props.tag}"/>`);
+    return `<w:sdt><w:sdtPr>${prParts.join('')}</w:sdtPr><w:sdtContent>${contentXml}</w:sdtContent></w:sdt>`;
   }
   return '';
 }

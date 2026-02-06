@@ -792,6 +792,71 @@ export interface Table {
 }
 
 // ============================================================================
+// STRUCTURED DOCUMENT TAGS (SDT / Content Controls)
+// ============================================================================
+
+/**
+ * SDT type (content control type)
+ */
+export type SdtType =
+  | 'richText'
+  | 'plainText'
+  | 'date'
+  | 'dropdown'
+  | 'comboBox'
+  | 'checkbox'
+  | 'picture'
+  | 'buildingBlockGallery'
+  | 'group'
+  | 'unknown';
+
+/**
+ * SDT properties (w:sdtPr)
+ */
+export interface SdtProperties {
+  /** SDT type */
+  sdtType: SdtType;
+  /** Alias (friendly name) */
+  alias?: string;
+  /** Tag (developer identifier) */
+  tag?: string;
+  /** Lock content editing */
+  lock?: 'sdtLocked' | 'contentLocked' | 'sdtContentLocked' | 'unlocked';
+  /** Placeholder text */
+  placeholder?: string;
+  /** Whether showing placeholder */
+  showingPlaceholder?: boolean;
+  /** Date format for date controls */
+  dateFormat?: string;
+  /** Dropdown/combobox list items */
+  listItems?: { displayText: string; value: string }[];
+  /** Checkbox checked state */
+  checked?: boolean;
+}
+
+/**
+ * Inline SDT (content control within a paragraph)
+ */
+export interface InlineSdt {
+  type: 'inlineSdt';
+  /** SDT properties */
+  properties: SdtProperties;
+  /** Content runs inside the control */
+  content: (Run | Hyperlink)[];
+}
+
+/**
+ * Block-level SDT (content control wrapping paragraphs/tables)
+ */
+export interface BlockSdt {
+  type: 'blockSdt';
+  /** SDT properties */
+  properties: SdtProperties;
+  /** Block content inside the control */
+  content: (Paragraph | Table)[];
+}
+
+// ============================================================================
 // PARAGRAPH
 // ============================================================================
 
@@ -804,7 +869,8 @@ export type ParagraphContent =
   | BookmarkStart
   | BookmarkEnd
   | SimpleField
-  | ComplexField;
+  | ComplexField
+  | InlineSdt;
 
 /**
  * Paragraph (w:p)
@@ -1076,7 +1142,7 @@ export interface SectionProperties {
 /**
  * Block-level content types
  */
-export type BlockContent = Paragraph | Table;
+export type BlockContent = Paragraph | Table | BlockSdt;
 
 /**
  * Section (implicit or explicit based on sectPr)

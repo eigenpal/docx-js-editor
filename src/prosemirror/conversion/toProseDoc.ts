@@ -33,6 +33,7 @@ import type {
   TableBorders,
   SimpleField,
   ComplexField,
+  InlineSdt,
 } from '../../types/document';
 import { emuToPixels } from '../../docx/imageParser';
 import { createStyleResolver, type StyleResolver } from '../styles';
@@ -111,6 +112,9 @@ function convertParagraph(paragraph: Paragraph, styleResolver: StyleResolver | n
     } else if (content.type === 'simpleField' || content.type === 'complexField') {
       const fieldNode = convertField(content);
       if (fieldNode) inlineNodes.push(fieldNode);
+    } else if (content.type === 'inlineSdt') {
+      const sdtNode = convertInlineSdt(content, styleRunFormatting);
+      if (sdtNode) inlineNodes.push(sdtNode);
     }
     // Skip other content types for now (bookmarks, etc.)
   }
@@ -591,6 +595,40 @@ function convertField(field: SimpleField | ComplexField): PMNode | null {
     fldLock: field.fldLock ?? false,
     dirty: field.dirty ?? false,
   });
+}
+
+/**
+ * Convert an InlineSdt to a ProseMirror sdt node with inline content.
+ */
+function convertInlineSdt(sdt: InlineSdt, styleRunFormatting?: TextFormatting): PMNode | null {
+  const props = sdt.properties;
+  const inlineNodes: PMNode[] = [];
+
+  for (const content of sdt.content) {
+    if (content.type === 'run') {
+      const runNodes = convertRun(content, styleRunFormatting);
+      inlineNodes.push(...runNodes);
+    } else if (content.type === 'hyperlink') {
+      const linkNodes = convertHyperlink(content, styleRunFormatting);
+      inlineNodes.push(...linkNodes);
+    }
+  }
+
+  return schema.node(
+    'sdt',
+    {
+      sdtType: props.sdtType,
+      alias: props.alias ?? null,
+      tag: props.tag ?? null,
+      lock: props.lock ?? null,
+      placeholder: props.placeholder ?? null,
+      showingPlaceholder: props.showingPlaceholder ?? false,
+      dateFormat: props.dateFormat ?? null,
+      listItems: props.listItems ? JSON.stringify(props.listItems) : null,
+      checked: props.checked ?? null,
+    },
+    inlineNodes.length > 0 ? inlineNodes : undefined
+  );
 }
 
 /**

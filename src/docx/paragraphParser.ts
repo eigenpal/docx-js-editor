@@ -32,6 +32,8 @@ import type {
   ParagraphAlignment,
   RelationshipMap,
   MediaFile,
+  InlineSdt,
+  SdtProperties,
 } from '../types/document';
 import type { StyleMap } from './styleParser';
 import type { NumberingMap } from './numberingParser';
@@ -52,6 +54,96 @@ import {
 } from './bookmarkParser';
 import { parseSectionProperties } from './sectionParser';
 import { consolidateParagraphContent } from './runConsolidator';
+
+// ============================================================================
+// SDT PROPERTIES PARSER
+// ============================================================================
+
+/**
+ * Parse SDT properties (w:sdtPr) element
+ */
+function parseSdtProperties(sdtPr: XmlElement | null): SdtProperties {
+  const props: SdtProperties = { sdtType: 'richText' };
+  if (!sdtPr || !sdtPr.elements) return props;
+
+  for (const el of sdtPr.elements) {
+    if (el.type !== 'element') continue;
+    const name = el.name?.replace(/^w:/, '') ?? '';
+
+    switch (name) {
+      case 'alias':
+        props.alias = getAttribute(el, 'w', 'val') ?? undefined;
+        break;
+      case 'tag':
+        props.tag = getAttribute(el, 'w', 'val') ?? undefined;
+        break;
+      case 'lock':
+        props.lock = (getAttribute(el, 'w', 'val') ?? 'unlocked') as SdtProperties['lock'];
+        break;
+      case 'placeholder': {
+        const docPart = findChild(el, 'w', 'docPart');
+        if (docPart) {
+          const valEl = findChild(docPart, 'w', 'val');
+          props.placeholder = valEl ? (getAttribute(valEl, 'w', 'val') ?? undefined) : undefined;
+        }
+        break;
+      }
+      case 'showingPlcHdr':
+        props.showingPlaceholder = true;
+        break;
+      case 'text':
+        props.sdtType = 'plainText';
+        break;
+      case 'date':
+        props.sdtType = 'date';
+        props.dateFormat = getAttribute(el, 'w', 'fullDate') ?? undefined;
+        break;
+      case 'dropDownList':
+        props.sdtType = 'dropdown';
+        props.listItems = parseListItems(el);
+        break;
+      case 'comboBox':
+        props.sdtType = 'comboBox';
+        props.listItems = parseListItems(el);
+        break;
+      case 'checkbox': {
+        props.sdtType = 'checkbox';
+        const checked = findChild(el, 'w14', 'checked') ?? findChild(el, 'w', 'checked');
+        props.checked = checked
+          ? getAttribute(checked, 'w14', 'val') === '1' || getAttribute(checked, 'w', 'val') === '1'
+          : false;
+        break;
+      }
+      case 'picture':
+        props.sdtType = 'picture';
+        break;
+      case 'docPartObj':
+        props.sdtType = 'buildingBlockGallery';
+        break;
+      case 'group':
+        props.sdtType = 'group';
+        break;
+    }
+  }
+
+  return props;
+}
+
+function parseListItems(el: XmlElement): { displayText: string; value: string }[] {
+  const items: { displayText: string; value: string }[] = [];
+  for (const child of el.elements ?? []) {
+    if (
+      child.type === 'element' &&
+      (child.name === 'w:listItem' || child.name?.endsWith(':listItem'))
+    ) {
+      items.push({
+        displayText: getAttribute(child, 'w', 'displayText') ?? '',
+        value: getAttribute(child, 'w', 'value') ?? '',
+      });
+    }
+  }
+  return items;
+}
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -774,16 +866,27 @@ function parseParagraphContents(
         break;
 
       case 'sdt': {
-        // Structured document tag - extract content from sdtContent
-        const sdtContent = (child.elements ?? []).find(
+        // Structured document tag - extract properties and content
+        const sdtPr = (child.elements ?? []).find(
+          (el: XmlElement) =>
+            el.type === 'element' && (el.name === 'w:sdtPr' || el.name?.endsWith(':sdtPr'))
+        );
+        const sdtContentEl = (child.elements ?? []).find(
           (el: XmlElement) =>
             el.type === 'element' &&
             (el.name === 'w:sdtContent' || el.name?.endsWith(':sdtContent'))
         );
-        if (sdtContent) {
-          // Recursively parse the content inside SDT
-          const sdtParsed = parseParagraphContents(sdtContent, styles, theme, null, rels, media);
-          contents.push(...sdtParsed);
+        if (sdtContentEl) {
+          const sdtParsed = parseParagraphContents(sdtContentEl, styles, theme, null, rels, media);
+          const properties = parseSdtProperties(sdtPr ?? null);
+          const inlineSdt: InlineSdt = {
+            type: 'inlineSdt',
+            properties,
+            content: sdtParsed.filter(
+              (c): c is Run | Hyperlink => c.type === 'run' || c.type === 'hyperlink'
+            ),
+          };
+          contents.push(inlineSdt);
         }
         break;
       }

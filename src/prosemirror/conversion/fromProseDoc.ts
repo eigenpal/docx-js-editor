@@ -37,6 +37,8 @@ import type {
   SimpleField,
   ComplexField,
   FieldType,
+  InlineSdt,
+  SdtProperties,
 } from '../../types/document';
 import type {
   ParagraphAttrs,
@@ -296,6 +298,14 @@ function extractParagraphContent(paragraph: PMNode): ParagraphContent[] {
         currentMarksKey = null;
       }
       content.push(createFieldFromNode(node));
+    } else if (node.type.name === 'sdt') {
+      // SDT ends current run and emits an InlineSdt content item
+      if (currentRun) {
+        content.push(currentRun);
+        currentRun = null;
+        currentMarksKey = null;
+      }
+      content.push(createInlineSdtFromNode(node));
     }
   });
 
@@ -449,6 +459,37 @@ function createFieldFromNode(node: PMNode): SimpleField | ComplexField {
     content: [displayRun],
     fldLock: attrs.fldLock || undefined,
     dirty: attrs.dirty || undefined,
+  };
+}
+
+/**
+ * Create an InlineSdt from a PM sdt node
+ */
+function createInlineSdtFromNode(node: PMNode): InlineSdt {
+  const attrs = node.attrs as Record<string, unknown>;
+
+  const properties: SdtProperties = {
+    sdtType: (attrs.sdtType as SdtProperties['sdtType']) ?? 'richText',
+    alias: (attrs.alias as string) ?? undefined,
+    tag: (attrs.tag as string) ?? undefined,
+    lock: (attrs.lock as SdtProperties['lock']) ?? undefined,
+    placeholder: (attrs.placeholder as string) ?? undefined,
+    showingPlaceholder: (attrs.showingPlaceholder as boolean) ?? undefined,
+    dateFormat: (attrs.dateFormat as string) ?? undefined,
+    listItems: attrs.listItems ? JSON.parse(attrs.listItems as string) : undefined,
+    checked: attrs.checked != null ? (attrs.checked as boolean) : undefined,
+  };
+
+  // Extract content from the sdt node's children
+  const sdtContent = extractParagraphContent(node);
+  const content = sdtContent.filter(
+    (c): c is Run | Hyperlink => c.type === 'run' || c.type === 'hyperlink'
+  );
+
+  return {
+    type: 'inlineSdt',
+    properties,
+    content,
   };
 }
 

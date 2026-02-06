@@ -19,6 +19,7 @@ import type {
   BookmarkEnd,
   SimpleField,
   ComplexField,
+  InlineSdt,
   TabStop,
   BorderSpec,
   ShadingProperties,
@@ -629,6 +630,71 @@ function serializeComplexField(field: ComplexField): string {
 }
 
 /**
+ * Serialize an inline SDT (w:sdt)
+ */
+function serializeInlineSdt(sdt: InlineSdt): string {
+  const props = sdt.properties;
+  const prParts: string[] = [];
+
+  if (props.alias) prParts.push(`<w:alias w:val="${escapeXml(props.alias)}"/>`);
+  if (props.tag) prParts.push(`<w:tag w:val="${escapeXml(props.tag)}"/>`);
+  if (props.lock && props.lock !== 'unlocked') prParts.push(`<w:lock w:val="${props.lock}"/>`);
+  if (props.showingPlaceholder) prParts.push('<w:showingPlcHdr/>');
+
+  // Type-specific properties
+  switch (props.sdtType) {
+    case 'plainText':
+      prParts.push('<w:text/>');
+      break;
+    case 'date':
+      if (props.dateFormat) {
+        prParts.push(`<w:date w:fullDate="${escapeXml(props.dateFormat)}"/>`);
+      } else {
+        prParts.push('<w:date/>');
+      }
+      break;
+    case 'dropdown': {
+      const items = (props.listItems ?? [])
+        .map(
+          (i) =>
+            `<w:listItem w:displayText="${escapeXml(i.displayText)}" w:value="${escapeXml(i.value)}"/>`
+        )
+        .join('');
+      prParts.push(`<w:dropDownList>${items}</w:dropDownList>`);
+      break;
+    }
+    case 'comboBox': {
+      const items = (props.listItems ?? [])
+        .map(
+          (i) =>
+            `<w:listItem w:displayText="${escapeXml(i.displayText)}" w:value="${escapeXml(i.value)}"/>`
+        )
+        .join('');
+      prParts.push(`<w:comboBox>${items}</w:comboBox>`);
+      break;
+    }
+    case 'checkbox':
+      prParts.push(
+        `<w14:checkbox><w14:checked w14:val="${props.checked ? '1' : '0'}"/></w14:checkbox>`
+      );
+      break;
+    case 'picture':
+      prParts.push('<w:picture/>');
+      break;
+  }
+
+  const contentXml = sdt.content
+    .map((item) => {
+      if (item.type === 'run') return serializeRun(item);
+      if (item.type === 'hyperlink') return serializeHyperlink(item);
+      return '';
+    })
+    .join('');
+
+  return `<w:sdt><w:sdtPr>${prParts.join('')}</w:sdtPr><w:sdtContent>${contentXml}</w:sdtContent></w:sdt>`;
+}
+
+/**
  * Serialize a single paragraph content item
  */
 function serializeParagraphContent(content: ParagraphContent): string {
@@ -645,6 +711,8 @@ function serializeParagraphContent(content: ParagraphContent): string {
       return serializeSimpleField(content);
     case 'complexField':
       return serializeComplexField(content);
+    case 'inlineSdt':
+      return serializeInlineSdt(content);
     default:
       return '';
   }
@@ -760,6 +828,16 @@ export function getParagraphPlainText(paragraph: Paragraph): string {
         for (const item of run.content) {
           if (item.type === 'text') {
             texts.push(item.text);
+          }
+        }
+      }
+    } else if (content.type === 'inlineSdt') {
+      for (const item of content.content) {
+        if (item.type === 'run') {
+          for (const subItem of item.content) {
+            if (subItem.type === 'text') {
+              texts.push(subItem.text);
+            }
           }
         }
       }
