@@ -64,7 +64,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 
 ## Phase 7: Remaining OOXML Features (10 tasks)
 
-- [ ] **7.1 Additional text effects** — Emboss, imprint, outline, shadow, emphasis marks as mark extensions + toolbar toggles.
+- [x] **7.1 Additional text effects** — Emboss, imprint, outline, shadow, emphasis marks as mark extensions + toolbar toggles.
 - [ ] **7.2 Custom tab stop editor** — Ruler component with visual tab stop placement. Add/remove/change alignment(L/C/R/decimal)/leader(dot/dash/underline).
 - [ ] **7.3 Character spacing/position UI** — Font dialog or Format menu: spacing (twips), position (raise/lower), scale %, kerning.
 - [ ] **7.4 Table of Contents** — Parse TOC field codes. Generate from heading styles + outline levels. Update command.

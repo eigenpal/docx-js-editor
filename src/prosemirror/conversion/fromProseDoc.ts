@@ -613,6 +613,26 @@ function marksToTextFormatting(marks: readonly Mark[]): TextFormatting {
         formatting.smallCaps = true;
         break;
 
+      case 'emboss':
+        formatting.emboss = true;
+        break;
+
+      case 'imprint':
+        formatting.imprint = true;
+        break;
+
+      case 'textShadow':
+        formatting.shadow = true;
+        break;
+
+      case 'emphasisMark':
+        formatting.emphasisMark = mark.attrs.type || 'dot';
+        break;
+
+      case 'textOutline':
+        formatting.outline = true;
+        break;
+
       // hyperlink is handled separately
     }
   }

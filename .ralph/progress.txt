@@ -274,6 +274,16 @@
 [2026-02-06 15:20] NOTES: typecheck passed, 26/27 tests pass (1 pre-existing skip)
 [2026-02-06 15:20] STATUS: done
 
+[2026-02-06 15:25] TASK: 7.1 Additional text effects
+[2026-02-06 15:25] STATUS: starting
+[2026-02-06 15:25] NOTES: Emboss, imprint, outline, shadow, emphasis marks as mark extensions + toolbar toggles
+[2026-02-06 15:28] STATUS: editing
+[2026-02-06 15:28] NOTES: Created TextEffectsExtensions.ts — emboss, imprint, textShadow, emphasisMark, textOutline mark extensions
+[2026-02-06 15:29] NOTES: Registered in StarterKit, added toProseDoc/fromProseDoc conversion
+[2026-02-06 15:30] STATUS: testing
+[2026-02-06 15:30] NOTES: typecheck passed, 26/27 tests pass (1 pre-existing skip)
+[2026-02-06 15:30] STATUS: done
+
 [2026-02-06 15:15] TASK: 6.2 Footnote/endnote properties
 [2026-02-06 15:15] STATUS: starting
 [2026-02-06 15:15] NOTES: Position, numbering format, restart rules per section. Infrastructure already parsed/serialized.

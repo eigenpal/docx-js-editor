@@ -975,6 +975,31 @@ function textFormattingToMarks(
     marks.push(schema.mark('smallCaps'));
   }
 
+  // Emboss (w:emboss)
+  if (formatting.emboss) {
+    marks.push(schema.mark('emboss'));
+  }
+
+  // Imprint/Engrave (w:imprint)
+  if (formatting.imprint) {
+    marks.push(schema.mark('imprint'));
+  }
+
+  // Text shadow (w:shadow)
+  if (formatting.shadow) {
+    marks.push(schema.mark('textShadow'));
+  }
+
+  // Emphasis mark (w:em)
+  if (formatting.emphasisMark && formatting.emphasisMark !== 'none') {
+    marks.push(schema.mark('emphasisMark', { type: formatting.emphasisMark }));
+  }
+
+  // Text outline (w:outline)
+  if (formatting.outline) {
+    marks.push(schema.mark('textOutline'));
+  }
+
   return marks;
 }
 

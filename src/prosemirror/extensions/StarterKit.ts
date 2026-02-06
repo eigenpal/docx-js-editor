@@ -32,6 +32,13 @@ import { HyperlinkExtension } from './marks/HyperlinkExtension';
 import { AllCapsExtension } from './marks/AllCapsExtension';
 import { SmallCapsExtension } from './marks/SmallCapsExtension';
 import { FootnoteRefExtension } from './marks/FootnoteRefExtension';
+import {
+  EmbossExtension,
+  ImprintExtension,
+  TextShadowExtension,
+  EmphasisMarkExtension,
+  TextOutlineExtension,
+} from './marks/TextEffectsExtensions';
 
 // Nodes
 import { HardBreakExtension } from './nodes/HardBreakExtension';
@@ -100,6 +107,11 @@ export function createStarterKit(options: StarterKitOptions = {}): AnyExtension[
   add('allCaps', AllCapsExtension());
   add('smallCaps', SmallCapsExtension());
   add('footnoteRef', FootnoteRefExtension());
+  add('emboss', EmbossExtension());
+  add('imprint', ImprintExtension());
+  add('textShadow', TextShadowExtension());
+  add('emphasisMark', EmphasisMarkExtension());
+  add('textOutline', TextOutlineExtension());
 
   // Nodes
   add('hardBreak', HardBreakExtension());
