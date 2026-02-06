@@ -178,4 +178,6 @@ export interface TableCellAttrs {
   noWrap?: boolean;
   /** Cell borders — full BorderSpec per side (style, color, size) */
   borders?: { top?: BorderSpec; bottom?: BorderSpec; left?: BorderSpec; right?: BorderSpec };
+  /** Cell margins/padding in twips per side */
+  margins?: { top?: number; bottom?: number; left?: number; right?: number };
 }

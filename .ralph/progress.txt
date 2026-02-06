@@ -29,3 +29,15 @@
 [2026-02-06 10:49] NOTES: Added cellBorder action type to TableAction, per-side border buttons to dropdown
 [2026-02-06 10:50] NOTES: Wired borderTop/Bottom/Left/Right + cellBorder action in DocxEditor.tsx
 [2026-02-06 10:50] STATUS: done
+
+[2026-02-06 11:00] TASK: 1.4 Vertical alignment + cell margins UI
+[2026-02-06 11:00] STATUS: editing
+[2026-02-06 11:00] NOTES: Adding margins attr to TableCellAttrs, setCellVerticalAlign + setCellMargins commands, toProseDoc/fromProseDoc conversion, UI controls
+[2026-02-06 11:05] NOTES: Added margins attr to schema/nodes.ts, buildCellPaddingStyles in TableExtension.ts
+[2026-02-06 11:06] NOTES: Added setCellVerticalAlign + setCellMargins commands + re-exports
+[2026-02-06 11:07] NOTES: Updated toProseDoc.ts and fromProseDoc.ts for margin round-trip
+[2026-02-06 11:08] NOTES: Added VerticalAlignRow + CellMarginsRow UI in TableOptionsDropdown.tsx
+[2026-02-06 11:09] NOTES: Wired cellVerticalAlign + cellMargins actions in DocxEditor.tsx
+[2026-02-06 11:10] STATUS: testing
+[2026-02-06 11:10] NOTES: typecheck passed, 4/4 merge-split tests pass, 2 pre-existing failures confirmed
+[2026-02-06 11:10] STATUS: done

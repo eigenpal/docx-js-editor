@@ -598,10 +598,22 @@ function tableCellAttrsToFormatting(attrs: TableCellAttrs): TableCellFormatting 
     attrs.width ||
     attrs.verticalAlign ||
     attrs.backgroundColor ||
-    attrs.borders;
+    attrs.borders ||
+    attrs.margins;
 
   if (!hasFormatting) {
     return undefined;
+  }
+
+  // Convert margins (twips values) back to TableMeasurement objects
+  let margins: TableCellFormatting['margins'];
+  if (attrs.margins) {
+    const m = attrs.margins;
+    margins = {};
+    if (m.top != null) margins.top = { value: m.top, type: 'dxa' };
+    if (m.bottom != null) margins.bottom = { value: m.bottom, type: 'dxa' };
+    if (m.left != null) margins.left = { value: m.left, type: 'dxa' };
+    if (m.right != null) margins.right = { value: m.right, type: 'dxa' };
   }
 
   return {
@@ -619,6 +631,7 @@ function tableCellAttrsToFormatting(attrs: TableCellAttrs): TableCellFormatting 
         }
       : undefined,
     borders: attrs.borders as TableCellFormatting['borders'],
+    margins,
   };
 }
 

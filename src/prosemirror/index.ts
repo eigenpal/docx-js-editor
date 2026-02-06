@@ -112,6 +112,8 @@ export {
   setOutsideTableBorders,
   setInsideTableBorders,
   setCellBorder,
+  setCellVerticalAlign,
+  setCellMargins,
   setCellFillColor,
   setTableBorderColor,
 } from './commands';

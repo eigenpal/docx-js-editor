@@ -113,6 +113,8 @@ import {
   mergeCells as pmMergeCells,
   splitCell as pmSplitCell,
   setCellBorder,
+  setCellVerticalAlign,
+  setCellMargins,
   removeTableBorders,
   setAllTableBorders,
   setOutsideTableBorders,
@@ -696,6 +698,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
                 size: action.size,
                 color: { rgb: action.color.replace(/^#/, '') },
               })(view.state, view.dispatch);
+            } else if (action.type === 'cellVerticalAlign') {
+              setCellVerticalAlign(action.align)(view.state, view.dispatch);
+            } else if (action.type === 'cellMargins') {
+              setCellMargins(action.margins)(view.state, view.dispatch);
             }
           } else {
             // Fallback to legacy table selection handler for other actions

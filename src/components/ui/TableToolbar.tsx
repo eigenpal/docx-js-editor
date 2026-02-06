@@ -49,6 +49,11 @@ export type TableAction =
       style: string;
       size: number;
       color: string;
+    }
+  | { type: 'cellVerticalAlign'; align: 'top' | 'center' | 'bottom' }
+  | {
+      type: 'cellMargins';
+      margins: { top?: number; bottom?: number; left?: number; right?: number };
     };
 
 /**

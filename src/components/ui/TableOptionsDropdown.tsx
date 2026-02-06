@@ -296,6 +296,143 @@ function ColorPickerRow({
 }
 
 // ============================================================================
+// VERTICAL ALIGNMENT SUBCOMPONENT
+// ============================================================================
+
+const VALIGN_OPTIONS: { value: 'top' | 'center' | 'bottom'; icon: string; label: string }[] = [
+  { value: 'top', icon: 'vertical_align_top', label: 'Top' },
+  { value: 'center', icon: 'vertical_align_center', label: 'Middle' },
+  { value: 'bottom', icon: 'vertical_align_bottom', label: 'Bottom' },
+];
+
+function VerticalAlignRow({ onAction }: { onAction: (action: TableAction) => void }) {
+  return (
+    <div style={{ padding: '6px 12px' }}>
+      <div style={{ fontSize: 12, color: 'var(--doc-text-muted)', marginBottom: 4 }}>
+        Vertical alignment
+      </div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {VALIGN_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            title={opt.label}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: 28,
+              border: '1px solid var(--doc-border)',
+              borderRadius: 4,
+              backgroundColor: 'transparent',
+              cursor: 'pointer',
+            }}
+            onClick={() => onAction({ type: 'cellVerticalAlign', align: opt.value })}
+          >
+            <MaterialSymbol name={opt.icon} size={16} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// CELL MARGINS SUBCOMPONENT
+// ============================================================================
+
+function CellMarginsRow({ onAction }: { onAction: (action: TableAction) => void }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [marginValues, setMarginValues] = useState({ top: 0, bottom: 0, left: 108, right: 108 });
+
+  const handleApply = () => {
+    onAction({ type: 'cellMargins', margins: marginValues });
+    setIsExpanded(false);
+  };
+
+  return (
+    <div>
+      <button
+        type="button"
+        style={{
+          ...menuItemStyles,
+          backgroundColor: hoveredItem === 'main' ? 'var(--doc-bg-hover)' : 'transparent',
+        }}
+        onMouseEnter={() => setHoveredItem('main')}
+        onMouseLeave={() => setHoveredItem(null)}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <MaterialSymbol name="padding" size={18} />
+        <span style={{ flex: 1 }}>Cell margins</span>
+        <MaterialSymbol name={isExpanded ? 'expand_less' : 'expand_more'} size={18} />
+      </button>
+
+      {isExpanded && (
+        <div
+          style={{
+            backgroundColor: 'var(--doc-bg-muted)',
+            borderTop: '1px solid var(--doc-border)',
+            borderBottom: '1px solid var(--doc-border)',
+            padding: '8px 12px',
+          }}
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            {(['top', 'bottom', 'left', 'right'] as const).map((side) => (
+              <label
+                key={side}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
+              >
+                <span
+                  style={{ width: 42, textTransform: 'capitalize', color: 'var(--doc-text-muted)' }}
+                >
+                  {side}
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  step={20}
+                  value={marginValues[side]}
+                  onChange={(e) =>
+                    setMarginValues((prev) => ({ ...prev, [side]: Number(e.target.value) || 0 }))
+                  }
+                  style={{
+                    width: 60,
+                    padding: '2px 4px',
+                    border: '1px solid var(--doc-border)',
+                    borderRadius: 3,
+                    fontSize: 12,
+                  }}
+                />
+                <span style={{ fontSize: 10, color: 'var(--doc-text-muted)' }}>tw</span>
+              </label>
+            ))}
+          </div>
+          <button
+            type="button"
+            style={{
+              marginTop: 6,
+              padding: '4px 12px',
+              fontSize: 12,
+              border: '1px solid var(--doc-border)',
+              borderRadius: 4,
+              backgroundColor: 'var(--doc-primary)',
+              color: 'white',
+              cursor: 'pointer',
+              width: '100%',
+            }}
+            onClick={handleApply}
+          >
+            Apply
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -462,6 +599,13 @@ export function TableOptionsDropdown({
             onColorSelect={(color) => handleCellFillColor(color)}
             onNoColor={() => handleCellFillColor(null)}
           />
+
+          {/* Vertical alignment section */}
+          <div style={separatorStyles} role="separator" />
+          <VerticalAlignRow onAction={handleAction} />
+
+          {/* Cell margins section */}
+          <CellMarginsRow onAction={handleAction} />
         </div>
       )}
     </div>

@@ -101,6 +101,23 @@ export function setInsideTableBorders(
   return cmds.setInsideTableBorders()(state, dispatch);
 }
 
+// Vertical alignment
+export function setCellVerticalAlign(
+  align: 'top' | 'center' | 'bottom'
+): (state: EditorState, dispatch?: (tr: Transaction) => void) => boolean {
+  return cmds.setCellVerticalAlign(align);
+}
+
+// Cell margins
+export function setCellMargins(margins: {
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+}): (state: EditorState, dispatch?: (tr: Transaction) => void) => boolean {
+  return cmds.setCellMargins(margins);
+}
+
 // Cell styling
 export function setCellFillColor(
   color: string | null

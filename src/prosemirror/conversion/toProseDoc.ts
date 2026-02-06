@@ -499,6 +499,14 @@ function convertTableCell(
     backgroundColor: backgroundColor,
     noWrap: formatting?.noWrap,
     borders: borders,
+    margins: formatting?.margins
+      ? {
+          top: formatting.margins.top?.value,
+          bottom: formatting.margins.bottom?.value,
+          left: formatting.margins.left?.value,
+          right: formatting.margins.right?.value,
+        }
+      : undefined,
   };
 
   // Convert cell content (paragraphs and nested tables)

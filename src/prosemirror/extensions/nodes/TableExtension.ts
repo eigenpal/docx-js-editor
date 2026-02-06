@@ -155,6 +155,20 @@ function buildCellBorderStyles(attrs: TableCellAttrs): string[] {
   return styles;
 }
 
+// Convert cell margins (twips) to CSS padding
+function buildCellPaddingStyles(attrs: TableCellAttrs): string[] {
+  const margins = attrs.margins;
+  if (!margins) return ['padding: 4px 8px'];
+
+  const toPixels = (twips?: number) => (twips ? Math.round((twips / 20) * 1.333) : 0);
+  const top = toPixels(margins.top);
+  const right = toPixels(margins.right);
+  const bottom = toPixels(margins.bottom);
+  const left = toPixels(margins.left);
+
+  return [`padding: ${top}px ${right}px ${bottom}px ${left}px`];
+}
+
 function buildCellWidthStyles(attrs: TableCellAttrs): string[] {
   const styles: string[] = [];
 
@@ -184,6 +198,7 @@ const tableCellSpec: NodeSpec = {
     verticalAlign: { default: null },
     backgroundColor: { default: null },
     borders: { default: null },
+    margins: { default: null },
     noWrap: { default: false },
   },
   parseDOM: [
@@ -207,7 +222,8 @@ const tableCellSpec: NodeSpec = {
     if (attrs.colspan > 1) domAttrs.colspan = String(attrs.colspan);
     if (attrs.rowspan > 1) domAttrs.rowspan = String(attrs.rowspan);
 
-    const styles: string[] = ['padding: 4px 8px'];
+    const styles: string[] = [];
+    styles.push(...buildCellPaddingStyles(attrs));
 
     if (attrs.noWrap) {
       styles.push('white-space: nowrap');
@@ -245,6 +261,7 @@ const tableHeaderSpec: NodeSpec = {
     verticalAlign: { default: null },
     backgroundColor: { default: null },
     borders: { default: null },
+    margins: { default: null },
     noWrap: { default: false },
   },
   parseDOM: [
@@ -268,7 +285,8 @@ const tableHeaderSpec: NodeSpec = {
     if (attrs.colspan > 1) domAttrs.colspan = String(attrs.colspan);
     if (attrs.rowspan > 1) domAttrs.rowspan = String(attrs.rowspan);
 
-    const styles: string[] = ['padding: 4px 8px', 'font-weight: bold'];
+    const styles: string[] = ['font-weight: bold'];
+    styles.push(...buildCellPaddingStyles(attrs));
 
     if (attrs.noWrap) {
       styles.push('white-space: nowrap');
@@ -1075,6 +1093,63 @@ export const TablePluginExtension = createExtension({
       };
     }
 
+    function setCellVerticalAlign(align: 'top' | 'center' | 'bottom'): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
+
+        if (dispatch) {
+          const tr = state.tr;
+          const { $from } = state.selection;
+
+          for (let d = $from.depth; d > 0; d--) {
+            const node = $from.node(d);
+            if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+              const pos = $from.before(d);
+              const newAttrs = { ...node.attrs, verticalAlign: align };
+              tr.setNodeMarkup(pos, undefined, newAttrs);
+              dispatch(tr.scrollIntoView());
+              return true;
+            }
+          }
+        }
+
+        return true;
+      };
+    }
+
+    function setCellMargins(margins: {
+      top?: number;
+      bottom?: number;
+      left?: number;
+      right?: number;
+    }): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
+
+        if (dispatch) {
+          const tr = state.tr;
+          const { $from } = state.selection;
+
+          for (let d = $from.depth; d > 0; d--) {
+            const node = $from.node(d);
+            if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+              const pos = $from.before(d);
+              const currentMargins = node.attrs.margins || {};
+              const newMargins = { ...currentMargins, ...margins };
+              const newAttrs = { ...node.attrs, margins: newMargins };
+              tr.setNodeMarkup(pos, undefined, newAttrs);
+              dispatch(tr.scrollIntoView());
+              return true;
+            }
+          }
+        }
+
+        return true;
+      };
+    }
+
     function setTableBorderColor(color: string): Command {
       return (state, dispatch) => {
         const context = getTableContext(state);
@@ -1134,6 +1209,13 @@ export const TablePluginExtension = createExtension({
           spec: { style: string; size?: number; color?: { rgb: string } } | null
         ) => setCellBorder(side, spec),
         setTableBorders: (preset: BorderPreset) => setTableBorders(preset),
+        setCellVerticalAlign: (align: 'top' | 'center' | 'bottom') => setCellVerticalAlign(align),
+        setCellMargins: (margins: {
+          top?: number;
+          bottom?: number;
+          left?: number;
+          right?: number;
+        }) => setCellMargins(margins),
         setCellFillColor: (color: string | null) => setCellFillColor(color),
         setTableBorderColor: (color: string) => setTableBorderColor(color),
         removeTableBorders: () => setTableBorders('none'),
