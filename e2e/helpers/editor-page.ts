@@ -546,15 +546,9 @@ export class EditorPage {
    * Set font family
    */
   async setFontFamily(fontFamily: string): Promise<void> {
-    // Click on font picker trigger (uses Radix Select with aria-label)
-    const fontPicker = this.toolbar.locator('[aria-label="Select font family"]');
-    await fontPicker.click();
-    // Wait for dropdown to open
-    await this.page.waitForSelector('[role="listbox"]', { state: 'visible', timeout: 5000 });
-    // Select the font by exact name match
-    await this.page.getByRole('option', { name: fontFamily, exact: true }).click();
-    // Wait for dropdown to close
-    await this.page.waitForSelector('[role="listbox"]', { state: 'hidden', timeout: 5000 });
+    // Native <select> — use selectOption for reliable interaction
+    const fontPicker = this.toolbar.locator('select[aria-label="Select font family"]');
+    await fontPicker.selectOption({ label: fontFamily });
     // Refocus editor after selecting from dropdown
     await this.focus();
   }
@@ -792,11 +786,11 @@ export class EditorPage {
    * Set paragraph style
    */
   async setParagraphStyle(style: string): Promise<void> {
-    // Click on style picker dropdown (uses Radix Select with aria-label)
-    const stylePicker = this.toolbar.locator('[aria-label="Select paragraph style"]');
-    await stylePicker.click();
-    // Select style from dropdown using role="option" with exact text match
-    await this.page.getByRole('option', { name: style, exact: true }).click();
+    // Native <select> — use selectOption for reliable interaction
+    const stylePicker = this.toolbar.locator('select[aria-label="Select paragraph style"]');
+    await stylePicker.selectOption({ label: style });
+    // Refocus editor after selecting style
+    await this.focus();
   }
 
   /**
@@ -929,8 +923,11 @@ export class EditorPage {
    * Click on a specific table cell
    */
   async clickTableCell(tableIndex: number, row: number, col: number): Promise<void> {
-    const table = this.page.locator('table').nth(tableIndex);
-    const cell = table.locator('tr').nth(row).locator('td, th').nth(col);
+    // Visual pages render tables as div.layout-table (not <table> elements)
+    // Click on the visual cell — the paged editor maps clicks to ProseMirror
+    const table = this.page.locator('.paged-editor__pages .layout-table').nth(tableIndex);
+    const cell = table.locator('.layout-table-row').nth(row).locator('.layout-table-cell').nth(col);
+    await cell.scrollIntoViewIfNeeded();
     await cell.click();
   }
 
@@ -938,7 +935,7 @@ export class EditorPage {
    * Get table cell content
    */
   async getTableCellContent(tableIndex: number, row: number, col: number): Promise<string> {
-    const table = this.page.locator('table').nth(tableIndex);
+    const table = this.page.locator('.ProseMirror table').nth(tableIndex);
     const cell = table.locator('tr').nth(row).locator('td, th').nth(col);
     return (await cell.textContent()) ?? '';
   }
@@ -947,14 +944,14 @@ export class EditorPage {
    * Count tables in the document
    */
   async getTableCount(): Promise<number> {
-    return await this.page.locator('table').count();
+    return await this.page.locator('.ProseMirror table').count();
   }
 
   /**
    * Get table dimensions (rows x cols)
    */
   async getTableDimensions(tableIndex: number): Promise<{ rows: number; cols: number }> {
-    const table = this.page.locator('table').nth(tableIndex);
+    const table = this.page.locator('.ProseMirror table').nth(tableIndex);
     const rows = await table.locator('tr').count();
     const cols = await table.locator('tr').first().locator('td, th').count();
     return { rows, cols };
@@ -1066,7 +1063,7 @@ export class EditorPage {
    * Get cell background color
    */
   async getCellBackgroundColor(tableIndex: number, row: number, col: number): Promise<string> {
-    const table = this.page.locator('table').nth(tableIndex);
+    const table = this.page.locator('.ProseMirror table').nth(tableIndex);
     const cell = table.locator('tr').nth(row).locator('td, th').nth(col);
     const style = await cell.getAttribute('style');
     // Extract background-color from style
@@ -1078,7 +1075,7 @@ export class EditorPage {
    * Check if cell has visible borders (not all set to 'none')
    */
   async cellHasBorders(tableIndex: number, row: number, col: number): Promise<boolean> {
-    const table = this.page.locator('table').nth(tableIndex);
+    const table = this.page.locator('.ProseMirror table').nth(tableIndex);
     const cell = table.locator('tr').nth(row).locator('td, th').nth(col);
     const style = await cell.getAttribute('style');
 

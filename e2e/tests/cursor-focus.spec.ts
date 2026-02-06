@@ -26,7 +26,7 @@ test.describe('Cursor Focus - Toolbar Interactions', () => {
 
     // Verify editor has focus
     const editorHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(editorHasFocus).toBe(true);
@@ -36,7 +36,7 @@ test.describe('Cursor Focus - Toolbar Interactions', () => {
 
     // Verify editor still has focus after clicking toolbar
     const editorStillHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(editorStillHasFocus).toBe(true);
@@ -46,7 +46,7 @@ test.describe('Cursor Focus - Toolbar Interactions', () => {
 
     // Verify the text was added
     const text = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return editor?.textContent;
     });
     expect(text).toContain('Test text more text');
@@ -60,7 +60,7 @@ test.describe('Cursor Focus - Toolbar Interactions', () => {
 
     // Verify focus is maintained
     const editorHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(editorHasFocus).toBe(true);
@@ -74,7 +74,7 @@ test.describe('Cursor Focus - Toolbar Interactions', () => {
 
     // Verify focus is maintained
     const editorHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(editorHasFocus).toBe(true);
@@ -88,7 +88,7 @@ test.describe('Cursor Focus - Toolbar Interactions', () => {
 
     // Verify focus is maintained
     const editorHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(editorHasFocus).toBe(true);
@@ -98,7 +98,7 @@ test.describe('Cursor Focus - Toolbar Interactions', () => {
 
     // Verify focus is still maintained
     const stillHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(stillHasFocus).toBe(true);
@@ -112,7 +112,7 @@ test.describe('Cursor Focus - Toolbar Interactions', () => {
 
     // Verify focus is maintained
     const editorHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(editorHasFocus).toBe(true);
@@ -133,7 +133,7 @@ test.describe('Cursor Focus - Toolbar Interactions', () => {
 
     // Verify text was typed
     const text = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return editor?.textContent;
     });
     expect(text).toContain('Formatted text');
@@ -161,7 +161,7 @@ test.describe('Cursor Focus - Dropdown Interactions', () => {
 
     // Verify all text is present
     const text = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return editor?.textContent;
     });
     expect(text).toContain('Before After');
@@ -178,7 +178,7 @@ test.describe('Cursor Focus - Dropdown Interactions', () => {
 
     // Verify all text is present
     const text = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return editor?.textContent;
     });
     expect(text).toContain('Before After');
@@ -208,7 +208,7 @@ test.describe('Cursor Focus - Rapid Interactions', () => {
     await page.keyboard.type(' more');
 
     const text = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return editor?.textContent;
     });
     expect(text).toContain('Test more');
@@ -244,14 +244,14 @@ test.describe('Cursor Focus - Text Selection Preservation', () => {
 
     // Verify text is now bold
     const hasBold = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return editor?.querySelector('strong, b') !== null;
     });
     expect(hasBold).toBe(true);
 
     // Verify selection is still there (editor still has focus)
     const editorHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(editorHasFocus).toBe(true);
@@ -276,14 +276,14 @@ test.describe('Cursor Focus - Text Selection Preservation', () => {
 
     // Verify editor still has focus
     const editorHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(editorHasFocus).toBe(true);
 
     // Verify the font was applied (by checking for Georgia font style)
     const hasGeorgia = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       const span = editor?.querySelector('span[style*="Georgia"], span[style*="georgia"]');
       return span !== null;
     });
@@ -309,7 +309,7 @@ test.describe('Cursor Focus - Text Selection Preservation', () => {
 
     // Verify editor still has focus
     const editorHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(editorHasFocus).toBe(true);
@@ -343,7 +343,7 @@ test.describe('Cursor Focus - Background Click', () => {
 
     // Verify editor still has focus
     const editorHasFocus = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return document.activeElement === editor || editor?.contains(document.activeElement);
     });
     expect(editorHasFocus).toBe(true);
@@ -352,7 +352,7 @@ test.describe('Cursor Focus - Background Click', () => {
     await page.keyboard.type(' more');
 
     const text = await page.evaluate(() => {
-      const editor = document.querySelector('.prosemirror-editor-content');
+      const editor = document.querySelector('.ProseMirror');
       return editor?.textContent;
     });
     expect(text).toContain('Some text more');

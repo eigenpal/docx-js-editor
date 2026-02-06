@@ -90,6 +90,7 @@ interface SelectProps {
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
+  'aria-label'?: string;
 }
 
 function Select({
@@ -100,6 +101,7 @@ function Select({
   children,
   className: selectClassName,
   style: selectStyle,
+  'aria-label': ariaLabel,
 }: SelectProps) {
   const [internalValue, setInternalValue] = React.useState(defaultValue);
   const currentValue = value ?? internalValue;
@@ -131,6 +133,7 @@ function Select({
         value={currentValue}
         onChange={(e) => handleValueChange(e.target.value)}
         disabled={disabled}
+        aria-label={ariaLabel}
         className={cn(
           'h-8 px-2 py-1 rounded text-sm text-slate-700',
           'bg-transparent hover:bg-slate-100/80 focus:bg-slate-100/80',

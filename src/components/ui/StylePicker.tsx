@@ -216,6 +216,7 @@ export function StylePicker({
       disabled={disabled}
       className={cn('h-8 text-sm', className)}
       style={{ width: typeof width === 'number' ? `${width}px` : width }}
+      aria-label="Select paragraph style"
     >
       <SelectContent className="min-w-[200px]">
         {styleOptions.map((style) => (

@@ -37,7 +37,7 @@ test.describe('Cursor-Only List Operations', () => {
 
     // Verify the paragraph became a list item
     // Use 'p' selector to target paragraph element specifically (not span inside it)
-    const listItem = page.locator('.prosemirror-editor-content p');
+    const listItem = page.locator('.ProseMirror p');
     // Check for list marker or list styling
     const hasListStyle = await listItem.evaluate((el) => {
       const style = window.getComputedStyle(el);
@@ -127,7 +127,7 @@ test.describe('Cursor-Only Alignment Operations', () => {
     await editor.alignCenter();
 
     // Verify alignment changed
-    const paragraph = page.locator('.prosemirror-editor-content p');
+    const paragraph = page.locator('.ProseMirror p');
     const textAlign = await paragraph.evaluate((el) => {
       return window.getComputedStyle(el).textAlign;
     });
@@ -144,7 +144,7 @@ test.describe('Cursor-Only Alignment Operations', () => {
 
     await editor.alignRight();
 
-    const paragraph = page.locator('.prosemirror-editor-content p');
+    const paragraph = page.locator('.ProseMirror p');
     const textAlign = await paragraph.evaluate((el) => {
       return window.getComputedStyle(el).textAlign;
     });
@@ -159,7 +159,7 @@ test.describe('Cursor-Only Alignment Operations', () => {
 
     await editor.alignJustify();
 
-    const paragraph = page.locator('.prosemirror-editor-content p');
+    const paragraph = page.locator('.ProseMirror p');
     const textAlign = await paragraph.evaluate((el) => {
       return window.getComputedStyle(el).textAlign;
     });
@@ -179,7 +179,7 @@ test.describe('Cursor-Only Alignment Operations', () => {
     // Then reset to left
     await editor.alignLeft();
 
-    const paragraph = page.locator('.prosemirror-editor-content p');
+    const paragraph = page.locator('.ProseMirror p');
     const textAlign = await paragraph.evaluate((el) => {
       const align = window.getComputedStyle(el).textAlign;
       return align === 'start' ? 'left' : align;
@@ -197,7 +197,7 @@ test.describe('Cursor-Only Alignment Operations', () => {
     // Use keyboard shortcut
     await page.keyboard.press('Control+e');
 
-    const paragraph = page.locator('.prosemirror-editor-content p');
+    const paragraph = page.locator('.ProseMirror p');
     const textAlign = await paragraph.evaluate((el) => {
       return window.getComputedStyle(el).textAlign;
     });
@@ -225,7 +225,7 @@ test.describe('Cursor-Only Indentation Operations', () => {
     // Indent should work without selection
     await editor.indent();
 
-    const paragraph = page.locator('.prosemirror-editor-content p');
+    const paragraph = page.locator('.ProseMirror p');
     const marginLeft = await paragraph.evaluate((el) => {
       return window.getComputedStyle(el).marginLeft;
     });
@@ -260,7 +260,7 @@ test.describe('Cursor-Only Indentation Operations', () => {
     await editor.indent();
     await editor.indent();
 
-    const paragraph = page.locator('.prosemirror-editor-content p');
+    const paragraph = page.locator('.ProseMirror p');
     const marginLeft = await paragraph.evaluate((el) => {
       return parseInt(window.getComputedStyle(el).marginLeft, 10);
     });

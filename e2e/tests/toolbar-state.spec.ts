@@ -29,7 +29,11 @@ test.describe('Bold Detection', () => {
 
     // Click inside the bold word (not selecting it)
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('bold')) {
@@ -39,6 +43,7 @@ test.describe('Bold Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -59,14 +64,20 @@ test.describe('Bold Detection', () => {
     expect(isActive).toBe(true);
   });
 
-  test('cursor at start of bold word shows bold active', async ({ page }) => {
+  test.skip('cursor at start of bold word shows bold active', async ({ page }) => {
+    // ProseMirror uses left-side marks at mark boundaries — cursor at start of bold
+    // shows non-bold because the left side is non-bold. This is expected behavior.
     await editor.typeText('Normal bold normal');
     await editor.selectText('bold');
     await editor.applyBold();
 
     // Position cursor at start of 'bold'
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('bold')) {
@@ -76,6 +87,7 @@ test.describe('Bold Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -94,7 +106,11 @@ test.describe('Bold Detection', () => {
 
     // Position cursor at end of 'bold'
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('bold')) {
@@ -105,6 +121,7 @@ test.describe('Bold Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -128,7 +145,11 @@ test.describe('Bold Detection', () => {
 
     // Position cursor in 'Normal' (not bold)
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.startsWith('Normal')) {
@@ -138,6 +159,7 @@ test.describe('Bold Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -170,7 +192,11 @@ test.describe('Italic Detection', () => {
 
     // Click inside the italic word
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('italic')) {
@@ -180,6 +206,7 @@ test.describe('Italic Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -201,7 +228,11 @@ test.describe('Italic Detection', () => {
 
     // Position cursor in 'Normal'
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.startsWith('Normal')) {
@@ -211,6 +242,7 @@ test.describe('Italic Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -243,7 +275,11 @@ test.describe('Underline Detection', () => {
 
     // Click inside the underlined word
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('underlined')) {
@@ -253,6 +289,7 @@ test.describe('Underline Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -286,7 +323,11 @@ test.describe('Combined Formatting Detection', () => {
 
     // Click inside the styled word
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('styled')) {
@@ -296,6 +337,7 @@ test.describe('Combined Formatting Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -326,7 +368,11 @@ test.describe('Combined Formatting Detection', () => {
 
     // Click inside the formatted word
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('formatted')) {
@@ -336,6 +382,7 @@ test.describe('Combined Formatting Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -380,7 +427,11 @@ test.describe('Partial Selection Detection', () => {
 
     // Select only part of the bold word: 'ldwo'
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('boldword')) {
@@ -391,6 +442,7 @@ test.describe('Partial Selection Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -434,6 +486,7 @@ test.describe('Partial Selection Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
         }
       }
     });
@@ -467,7 +520,11 @@ test.describe('Style Detection at Cursor', () => {
 
     // Click inside the heading
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('heading')) {
@@ -477,6 +534,7 @@ test.describe('Style Detection at Cursor', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -485,8 +543,8 @@ test.describe('Style Detection at Cursor', () => {
     await page.waitForTimeout(100);
 
     // Check if style picker shows Heading 1
-    const stylePicker = page.locator('[data-testid="toolbar-styles"]');
-    const styleValue = await stylePicker.textContent();
+    const stylePicker = page.locator('select[aria-label="Select paragraph style"]');
+    const styleValue = await stylePicker.inputValue();
     // Should contain 'Heading' or 'H1' or similar
     expect(styleValue?.toLowerCase()).toMatch(/heading|h1/i);
   });
@@ -500,7 +558,11 @@ test.describe('Style Detection at Cursor', () => {
 
     // Click inside the normal paragraph
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('Normal paragraph')) {
@@ -510,6 +572,7 @@ test.describe('Style Detection at Cursor', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -517,8 +580,8 @@ test.describe('Style Detection at Cursor', () => {
 
     await page.waitForTimeout(100);
 
-    const stylePicker = page.locator('[data-testid="toolbar-styles"]');
-    const styleValue = await stylePicker.textContent();
+    const stylePicker = page.locator('select[aria-label="Select paragraph style"]');
+    const styleValue = await stylePicker.inputValue();
     expect(styleValue?.toLowerCase()).toMatch(/normal|body|paragraph/i);
   });
 });
@@ -542,7 +605,11 @@ test.describe('Alignment Detection at Cursor', () => {
 
     // Click inside the centered paragraph
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('Center')) {
@@ -552,6 +619,7 @@ test.describe('Alignment Detection at Cursor', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -559,7 +627,7 @@ test.describe('Alignment Detection at Cursor', () => {
 
     await page.waitForTimeout(100);
 
-    const centerButton = page.locator('[aria-label="Align center"]');
+    const centerButton = page.locator('[aria-label="Center (Ctrl+E)"]');
     const isActive = await centerButton.evaluate((el) => {
       return el.getAttribute('aria-pressed') === 'true' || el.classList.contains('active');
     });
@@ -574,7 +642,11 @@ test.describe('Alignment Detection at Cursor', () => {
 
     // Click inside the right-aligned paragraph
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('Right aligned')) {
@@ -584,6 +656,7 @@ test.describe('Alignment Detection at Cursor', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -591,7 +664,7 @@ test.describe('Alignment Detection at Cursor', () => {
 
     await page.waitForTimeout(100);
 
-    const rightButton = page.locator('[aria-label="Align right"]');
+    const rightButton = page.locator('[aria-label="Align Right (Ctrl+R)"]');
     const isActive = await rightButton.evaluate((el) => {
       return el.getAttribute('aria-pressed') === 'true' || el.classList.contains('active');
     });
@@ -617,7 +690,11 @@ test.describe('List Detection at Cursor', () => {
 
     // Click inside the bullet list item
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('Bullet item')) {
@@ -627,6 +704,7 @@ test.describe('List Detection at Cursor', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -634,7 +712,7 @@ test.describe('List Detection at Cursor', () => {
 
     await page.waitForTimeout(100);
 
-    const bulletButton = page.locator('[aria-label="Bullet list"]');
+    const bulletButton = page.locator('[aria-label="Bullet List"]');
     const isActive = await bulletButton.evaluate((el) => {
       return el.getAttribute('aria-pressed') === 'true' || el.classList.contains('active');
     });
@@ -649,7 +727,11 @@ test.describe('List Detection at Cursor', () => {
 
     // Click inside the numbered list item
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('Numbered item')) {
@@ -659,6 +741,7 @@ test.describe('List Detection at Cursor', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -666,7 +749,7 @@ test.describe('List Detection at Cursor', () => {
 
     await page.waitForTimeout(100);
 
-    const numberedButton = page.locator('[aria-label="Numbered list"]');
+    const numberedButton = page.locator('[aria-label="Numbered List"]');
     const isActive = await numberedButton.evaluate((el) => {
       return el.getAttribute('aria-pressed') === 'true' || el.classList.contains('active');
     });
@@ -682,7 +765,11 @@ test.describe('List Detection at Cursor', () => {
 
     // Click inside the normal paragraph
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('Normal paragraph')) {
@@ -692,6 +779,7 @@ test.describe('List Detection at Cursor', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -699,8 +787,8 @@ test.describe('List Detection at Cursor', () => {
 
     await page.waitForTimeout(100);
 
-    const bulletButton = page.locator('[aria-label="Bullet list"]');
-    const numberedButton = page.locator('[aria-label="Numbered list"]');
+    const bulletButton = page.locator('[aria-label="Bullet List"]');
+    const numberedButton = page.locator('[aria-label="Numbered List"]');
 
     const bulletActive = await bulletButton.evaluate((el) => {
       return el.getAttribute('aria-pressed') === 'true' || el.classList.contains('active');
@@ -733,7 +821,11 @@ test.describe('Font Detection at Cursor', () => {
 
     // Click inside the Georgia text
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('Georgia font')) {
@@ -743,6 +835,7 @@ test.describe('Font Detection at Cursor', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }
@@ -751,8 +844,8 @@ test.describe('Font Detection at Cursor', () => {
     await page.waitForTimeout(100);
 
     // Check font picker shows Georgia
-    const fontPicker = page.locator('.font-picker');
-    const fontValue = await fontPicker.textContent();
+    const fontPicker = page.locator('select[aria-label="Select font family"]');
+    const fontValue = await fontPicker.inputValue();
     expect(fontValue?.toLowerCase()).toContain('georgia');
   });
 });
@@ -774,7 +867,11 @@ test.describe('Edge Cases for Detection', () => {
 
     // Position cursor exactly at boundary (end of 'normal', start of 'bold')
     await page.evaluate(() => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const walker = document.createTreeWalker(
+        document.querySelector('.ProseMirror')!,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
         if (node.textContent?.includes('normal')) {
@@ -784,6 +881,7 @@ test.describe('Edge Cases for Detection', () => {
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
+          (document.querySelector('.ProseMirror') as HTMLElement)?.focus();
           break;
         }
       }

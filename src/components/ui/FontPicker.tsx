@@ -113,6 +113,7 @@ export function FontPicker({
       disabled={disabled}
       className={cn('h-8 text-sm', className)}
       style={{ width: typeof width === 'number' ? `${width}px` : width }}
+      aria-label="Select font family"
     >
       <SelectContent className="max-h-[300px]">
         {groupedFonts['sans-serif'].length > 0 && (
