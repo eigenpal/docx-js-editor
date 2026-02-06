@@ -1,0 +1,12 @@
+[2026-02-06 10:30] TASK: 1.1 Cell merge/split via prosemirror-tables
+[2026-02-06 10:30] STATUS: starting
+[2026-02-06 10:30] NOTES: Created plan file 09_full_ooxml_support.md. Now implementing cell merge/split.
+[2026-02-06 10:35] STATUS: editing
+[2026-02-06 10:35] NOTES: Imported mergeCells, splitCell, CellSelection from prosemirror-tables into TableExtension.ts
+[2026-02-06 10:36] NOTES: Updated getTableContext() to detect CellSelection for hasMultiCellSelection
+[2026-02-06 10:36] NOTES: Added mergeCells/splitCell commands to TablePluginExtension
+[2026-02-06 10:37] NOTES: Updated commands/table.ts to delegate to real implementations
+[2026-02-06 10:37] NOTES: Added mergeCells/splitCell cases to DocxEditor.tsx handleTableAction
+[2026-02-06 10:38] STATUS: testing
+[2026-02-06 10:38] NOTES: typecheck passed, 32/32 existing table tests pass, 4/4 new merge/split tests pass
+[2026-02-06 10:39] STATUS: done

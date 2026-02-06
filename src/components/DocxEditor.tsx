@@ -110,6 +110,8 @@ import {
   addColumnRight,
   deleteColumn as pmDeleteColumn,
   deleteTable as pmDeleteTable,
+  mergeCells as pmMergeCells,
+  splitCell as pmSplitCell,
   removeTableBorders,
   setAllTableBorders,
   setOutsideTableBorders,
@@ -635,6 +637,12 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           break;
         case 'deleteTable':
           pmDeleteTable(view.state, view.dispatch);
+          break;
+        case 'mergeCells':
+          pmMergeCells(view.state, view.dispatch);
+          break;
+        case 'splitCell':
+          pmSplitCell(view.state, view.dispatch);
           break;
         // Border actions
         case 'borderAll':

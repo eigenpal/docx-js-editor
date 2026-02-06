@@ -8,7 +8,13 @@
 import type { NodeSpec, Node as PMNode } from 'prosemirror-model';
 import { TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import { Selection, type Command } from 'prosemirror-state';
-import { columnResizing, tableEditing } from 'prosemirror-tables';
+import {
+  columnResizing,
+  tableEditing,
+  mergeCells as pmMergeCells,
+  splitCell as pmSplitCell,
+  CellSelection,
+} from 'prosemirror-tables';
 import { createNodeExtension, createExtension } from '../create';
 import type { ExtensionContext, ExtensionRuntime, AnyExtension } from '../types';
 import type { TableAttrs, TableRowAttrs, TableCellAttrs } from '../../schema/nodes';
@@ -285,7 +291,11 @@ export interface TableContextInfo {
 }
 
 function getTableContext(state: EditorState): TableContextInfo {
-  const { $from } = state.selection;
+  const { selection } = state;
+  const { $from } = selection;
+
+  // Detect CellSelection (multi-cell selection from prosemirror-tables)
+  const isCellSel = selection instanceof CellSelection;
 
   let table: PMNode | undefined;
   let tablePos: number | undefined;
@@ -354,7 +364,7 @@ function getTableContext(state: EditorState): TableContextInfo {
     columnIndex,
     rowCount,
     columnCount,
-    hasMultiCellSelection: false,
+    hasMultiCellSelection: isCellSel,
     canSplitCell: !!canSplitCell,
   };
 }
@@ -1044,6 +1054,8 @@ export const TablePluginExtension = createExtension({
         addColumnRight: () => addColumnRight,
         deleteColumn: () => deleteColumn,
         deleteTable: () => deleteTable,
+        mergeCells: () => pmMergeCells,
+        splitCell: () => pmSplitCell,
         setTableBorders: (preset: BorderPreset) => setTableBorders(preset),
         setCellFillColor: (color: string | null) => setCellFillColor(color),
         setTableBorderColor: (color: string) => setTableBorderColor(color),

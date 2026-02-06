@@ -54,12 +54,12 @@ export function deleteTable(state: EditorState, dispatch?: (tr: Transaction) => 
   return cmds.deleteTable()(state, dispatch);
 }
 
-// Merge/Split (stubs — full implementation requires prosemirror-tables)
-export function mergeCells(_state: EditorState, _dispatch?: (tr: Transaction) => void): boolean {
-  return false;
+// Merge/Split — delegated to prosemirror-tables via singleton extension manager
+export function mergeCells(state: EditorState, dispatch?: (tr: Transaction) => void): boolean {
+  return cmds.mergeCells()(state, dispatch);
 }
-export function splitCell(_state: EditorState, _dispatch?: (tr: Transaction) => void): boolean {
-  return false;
+export function splitCell(state: EditorState, dispatch?: (tr: Transaction) => void): boolean {
+  return cmds.splitCell()(state, dispatch);
 }
 
 // Borders
