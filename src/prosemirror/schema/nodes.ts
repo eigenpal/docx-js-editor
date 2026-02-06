@@ -126,6 +126,12 @@ export interface ImageAttrs {
   distRight?: number;
   /** Position for floating images (horizontal and vertical alignment) */
   position?: ImagePositionAttrs;
+  /** Border width in pixels */
+  borderWidth?: number;
+  /** Border color as CSS color string */
+  borderColor?: string;
+  /** Border style (CSS border-style value) */
+  borderStyle?: string;
 }
 
 /**

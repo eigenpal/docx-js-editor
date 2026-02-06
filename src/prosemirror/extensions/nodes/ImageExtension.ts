@@ -28,6 +28,9 @@ export const ImageExtension = createNodeExtension({
       distLeft: { default: null },
       distRight: { default: null },
       position: { default: null },
+      borderWidth: { default: null },
+      borderColor: { default: null },
+      borderStyle: { default: null },
     },
     parseDOM: [
       {
@@ -45,6 +48,11 @@ export const ImageExtension = createNodeExtension({
             displayMode: (element.dataset.displayMode as ImageAttrs['displayMode']) || 'inline',
             cssFloat: (element.dataset.cssFloat as ImageAttrs['cssFloat']) || undefined,
             transform: element.dataset.transform || undefined,
+            borderWidth: element.dataset.borderWidth
+              ? Number(element.dataset.borderWidth)
+              : undefined,
+            borderColor: element.dataset.borderColor || undefined,
+            borderStyle: element.dataset.borderStyle || undefined,
           };
         },
       },
@@ -63,6 +71,9 @@ export const ImageExtension = createNodeExtension({
       if (attrs.displayMode) domAttrs['data-display-mode'] = attrs.displayMode;
       if (attrs.cssFloat) domAttrs['data-css-float'] = attrs.cssFloat;
       if (attrs.transform) domAttrs['data-transform'] = attrs.transform;
+      if (attrs.borderWidth) domAttrs['data-border-width'] = String(attrs.borderWidth);
+      if (attrs.borderColor) domAttrs['data-border-color'] = attrs.borderColor;
+      if (attrs.borderStyle) domAttrs['data-border-style'] = attrs.borderStyle;
 
       const styles: string[] = [];
 
@@ -115,6 +126,12 @@ export const ImageExtension = createNodeExtension({
 
       if (attrs.transform) {
         styles.push(`transform: ${attrs.transform}`);
+      }
+
+      if (attrs.borderWidth && attrs.borderWidth > 0) {
+        const bStyle = attrs.borderStyle || 'solid';
+        const bColor = attrs.borderColor || '#000000';
+        styles.push(`border: ${attrs.borderWidth}px ${bStyle} ${bColor}`);
       }
 
       domAttrs.style = styles.join('; ');

@@ -33,7 +33,7 @@ The editor has excellent OOXML parsing (~90% coverage) but limited editing capab
 - [x] **3.2 Text wrapping mode selector** — `setImageWrapType(type, side?)` command updates wrapType+displayMode+cssFloat atomically. Floating toolbar with 7 mode icons on selected image.
 - [x] **3.3 Image rotation + flip UI** — Circular rotation handle above selected image. Drag to rotate. Flip H/V buttons in image toolbar. Updates `transform` attr.
 - [x] **3.4 Image positioning dialog** — Modal: horizontal/vertical alignment or offset, relative to page/column/margin/paragraph. Distance from text controls.
-- [ ] **3.5 Image alt text + border/outline** — Alt text editor in image properties. Border style/color/width applied as CSS border + serialized to `a:ln`.
+- [x] **3.5 Image alt text + border/outline** — Alt text editor in image properties. Border style/color/width applied as CSS border + serialized to `a:ln`.
 - [ ] **3.6 Image drag to reposition** — Floating images draggable to new position. Ghost outline during drag. Updates posOffset attrs. Inline images reorder in text flow.
 
 ---

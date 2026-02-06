@@ -171,6 +171,8 @@ export interface ToolbarProps {
   onImageTransform?: (action: 'rotateCW' | 'rotateCCW' | 'flipH' | 'flipV') => void;
   /** Callback to open image position dialog */
   onOpenImagePosition?: () => void;
+  /** Callback to open image properties dialog (alt text + border) */
+  onOpenImageProperties?: () => void;
   /** Table context when cursor is in a table */
   tableContext?: {
     isInTable: boolean;
@@ -353,6 +355,7 @@ export function Toolbar({
   onImageWrapType,
   onImageTransform,
   onOpenImagePosition,
+  onOpenImageProperties,
   tableContext,
   onTableAction,
 }: ToolbarProps) {
@@ -981,6 +984,16 @@ export function Toolbar({
               ariaLabel="Image position"
             >
               <MaterialSymbol name="open_with" size={ICON_SIZE} />
+            </ToolbarButton>
+          )}
+          {onOpenImageProperties && (
+            <ToolbarButton
+              onClick={onOpenImageProperties}
+              disabled={disabled}
+              title="Image properties (alt text, border)..."
+              ariaLabel="Image properties"
+            >
+              <MaterialSymbol name="tune" size={ICON_SIZE} />
             </ToolbarButton>
           )}
           {onImageTransform && (

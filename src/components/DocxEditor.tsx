@@ -52,6 +52,7 @@ import {
 import { HyperlinkDialog, useHyperlinkDialog, type HyperlinkData } from './dialogs/HyperlinkDialog';
 import { TablePropertiesDialog } from './dialogs/TablePropertiesDialog';
 import { ImagePositionDialog, type ImagePositionData } from './dialogs/ImagePositionDialog';
+import { ImagePropertiesDialog, type ImagePropertiesData } from './dialogs/ImagePropertiesDialog';
 import { getBuiltinTableStyle, type TableStylePreset } from './ui/TableStyleGallery';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import {
@@ -287,6 +288,10 @@ interface EditorState {
     displayMode: string;
     cssFloat: string | null;
     transform: string | null;
+    alt: string | null;
+    borderWidth: number | null;
+    borderColor: string | null;
+    borderStyle: string | null;
   } | null;
 }
 
@@ -358,6 +363,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   const [tablePropsOpen, setTablePropsOpen] = useState(false);
   // Image position dialog state
   const [imagePositionOpen, setImagePositionOpen] = useState(false);
+  // Image properties dialog state
+  const [imagePropsOpen, setImagePropsOpen] = useState(false);
 
   // History hook for undo/redo - start with null document
   const history = useDocumentHistory<Document | null>(initialDocument || null, {
@@ -576,6 +583,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
             displayMode: (selectedNode.attrs.displayMode as string) ?? 'inline',
             cssFloat: (selectedNode.attrs.cssFloat as string) ?? null,
             transform: (selectedNode.attrs.transform as string) ?? null,
+            alt: (selectedNode.attrs.alt as string) ?? null,
+            borderWidth: (selectedNode.attrs.borderWidth as number) ?? null,
+            borderColor: (selectedNode.attrs.borderColor as string) ?? null,
+            borderStyle: (selectedNode.attrs.borderStyle as string) ?? null,
           };
         }
       }
@@ -851,6 +862,34 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         distBottom: data.distBottom ?? node.attrs.distBottom,
         distLeft: data.distLeft ?? node.attrs.distLeft,
         distRight: data.distRight ?? node.attrs.distRight,
+      });
+      view.dispatch(tr.scrollIntoView());
+      focusActiveEditor();
+    },
+    [getActiveEditorView, focusActiveEditor, state.pmImageContext]
+  );
+
+  // Open image properties dialog
+  const handleOpenImageProperties = useCallback(() => {
+    setImagePropsOpen(true);
+  }, []);
+
+  // Apply image properties (alt text + border)
+  const handleApplyImageProperties = useCallback(
+    (data: ImagePropertiesData) => {
+      const view = getActiveEditorView();
+      if (!view || !state.pmImageContext) return;
+
+      const pos = state.pmImageContext.pos;
+      const node = view.state.doc.nodeAt(pos);
+      if (!node || node.type.name !== 'image') return;
+
+      const tr = view.state.tr.setNodeMarkup(pos, undefined, {
+        ...node.attrs,
+        alt: data.alt ?? null,
+        borderWidth: data.borderWidth ?? null,
+        borderColor: data.borderColor ?? null,
+        borderStyle: data.borderStyle ?? null,
       });
       view.dispatch(tr.scrollIntoView());
       focusActiveEditor();
@@ -1719,6 +1758,7 @@ body { background: white; }
                     onImageWrapType={handleImageWrapType}
                     onImageTransform={handleImageTransform}
                     onOpenImagePosition={handleOpenImagePosition}
+                    onOpenImageProperties={handleOpenImageProperties}
                     tableContext={state.pmTableContext}
                     onTableAction={handleTableAction}
                   >
@@ -1884,6 +1924,21 @@ body { background: white; }
             isOpen={imagePositionOpen}
             onClose={() => setImagePositionOpen(false)}
             onApply={handleApplyImagePosition}
+          />
+          <ImagePropertiesDialog
+            isOpen={imagePropsOpen}
+            onClose={() => setImagePropsOpen(false)}
+            onApply={handleApplyImageProperties}
+            currentData={
+              state.pmImageContext
+                ? {
+                    alt: state.pmImageContext.alt ?? undefined,
+                    borderWidth: state.pmImageContext.borderWidth ?? undefined,
+                    borderColor: state.pmImageContext.borderColor ?? undefined,
+                    borderStyle: state.pmImageContext.borderStyle ?? undefined,
+                  }
+                : undefined
+            }
           />
           {/* Hidden file input for image insertion */}
           <input

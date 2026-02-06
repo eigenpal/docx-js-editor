@@ -139,3 +139,17 @@
 [2026-02-06 13:01] STATUS: testing
 [2026-02-06 13:01] NOTES: typecheck passed, 4/4 table tests pass
 [2026-02-06 13:01] STATUS: done
+
+[2026-02-06 13:02] TASK: 3.5 Image alt text + border/outline
+[2026-02-06 13:02] STATUS: starting
+[2026-02-06 13:02] NOTES: Need to add alt text editor in image properties, border style/color/width as CSS + a:ln serialization
+[2026-02-06 13:05] STATUS: editing
+[2026-02-06 13:05] NOTES: Adding borderWidth/borderColor/borderStyle attrs to ImageAttrs + ImageExtension, creating ImagePropertiesDialog
+[2026-02-06 13:10] NOTES: Added border attrs to ImageAttrs, ImageExtension (parseDOM/toDOM with CSS border rendering)
+[2026-02-06 13:11] NOTES: Created ImagePropertiesDialog.tsx with alt text textarea + border width/style/color + preview
+[2026-02-06 13:12] NOTES: Added imagePropsOpen state, handleOpenImageProperties, handleApplyImageProperties to DocxEditor
+[2026-02-06 13:13] NOTES: Added outline field to Image type, border parsing in toProseDoc, round-trip in fromProseDoc
+[2026-02-06 13:14] NOTES: Added "Properties" button (tune icon) to Toolbar image section
+[2026-02-06 13:15] STATUS: testing
+[2026-02-06 13:15] NOTES: typecheck passed, 30/31 tests pass (1 pre-existing skip)
+[2026-02-06 13:15] STATUS: done

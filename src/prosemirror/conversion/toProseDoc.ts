@@ -759,6 +759,33 @@ function convertImage(image: Image): PMNode {
     };
   }
 
+  // Convert outline to border attrs
+  let borderWidth: number | undefined;
+  let borderColor: string | undefined;
+  let borderStyle: string | undefined;
+  if (image.outline && image.outline.width) {
+    // Convert EMU to pixels (1 EMU = 1/914400 inch, 1 inch = 96 px)
+    borderWidth = Math.round((image.outline.width / 914400) * 96 * 100) / 100;
+    if (image.outline.color?.rgb) {
+      borderColor = `#${image.outline.color.rgb}`;
+    }
+    // Map OOXML dash styles to CSS border styles
+    const styleMap: Record<string, string> = {
+      solid: 'solid',
+      dot: 'dotted',
+      dash: 'dashed',
+      lgDash: 'dashed',
+      dashDot: 'dashed',
+      lgDashDot: 'dashed',
+      lgDashDotDot: 'dashed',
+      sysDot: 'dotted',
+      sysDash: 'dashed',
+      sysDashDot: 'dashed',
+      sysDashDotDot: 'dashed',
+    };
+    borderStyle = image.outline.style ? styleMap[image.outline.style] || 'solid' : 'solid';
+  }
+
   return schema.node('image', {
     src: image.src || '',
     alt: image.alt,
@@ -775,6 +802,9 @@ function convertImage(image: Image): PMNode {
     distLeft: distLeft,
     distRight: distRight,
     position: position,
+    borderWidth: borderWidth,
+    borderColor: borderColor,
+    borderStyle: borderStyle,
   });
 }
 

@@ -421,6 +421,8 @@ export interface Image {
   padding?: ImagePadding;
   /** Whether this is a decorative image */
   decorative?: boolean;
+  /** Image outline/border */
+  outline?: ShapeOutline;
   /** Image effects */
   effects?: {
     brightness?: number;

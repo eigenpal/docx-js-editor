@@ -370,6 +370,30 @@ function createImageRun(node: PMNode): Run {
     wrap: { type: 'inline' },
   };
 
+  // Round-trip border/outline
+  if (attrs.borderWidth && attrs.borderWidth > 0) {
+    const cssToOoxmlStyle: Record<string, string> = {
+      solid: 'solid',
+      dotted: 'dot',
+      dashed: 'dash',
+      double: 'solid',
+      groove: 'solid',
+      ridge: 'solid',
+      inset: 'solid',
+      outset: 'solid',
+    };
+    image.outline = {
+      // Convert pixels back to EMU (1 px = 914400/96 EMU)
+      width: Math.round(attrs.borderWidth * (914400 / 96)),
+      color: attrs.borderColor ? { rgb: attrs.borderColor.replace('#', '') } : undefined,
+      style: attrs.borderStyle
+        ? (cssToOoxmlStyle[
+            attrs.borderStyle
+          ] as import('../../types/content').ShapeOutline['style']) || 'solid'
+        : 'solid',
+    };
+  }
+
   const drawingContent: DrawingContent = {
     type: 'drawing',
     image,
