@@ -69,7 +69,8 @@ export type TableAction =
         justification?: 'left' | 'center' | 'right' | null;
       };
     }
-  | { type: 'openTableProperties' };
+  | { type: 'openTableProperties' }
+  | { type: 'applyTableStyle'; styleId: string };
 
 /**
  * Border style preset

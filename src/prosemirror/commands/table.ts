@@ -172,6 +172,17 @@ export function setTableProperties(props: {
   return cmds.setTableProperties(props);
 }
 
+// Table style gallery
+export function applyTableStyle(styleData: {
+  styleId: string;
+  tableBorders?: Record<string, unknown>;
+  conditionals?: Record<string, unknown>;
+  look?: Record<string, boolean>;
+}): (state: EditorState, dispatch?: (tr: Transaction) => void) => boolean {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return cmds.applyTableStyle(styleData as any);
+}
+
 // Cell styling
 export function setCellFillColor(
   color: string | null

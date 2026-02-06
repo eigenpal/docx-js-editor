@@ -121,6 +121,7 @@ export {
   distributeColumns,
   autoFitContents,
   setTableProperties,
+  applyTableStyle,
   setCellFillColor,
   setTableBorderColor,
 } from './commands';

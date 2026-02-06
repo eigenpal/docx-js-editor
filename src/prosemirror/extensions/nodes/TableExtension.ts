@@ -1361,6 +1361,173 @@ export const TablePluginExtension = createExtension({
       };
     }
 
+    /**
+     * Apply a table style to the current table.
+     * Accepts pre-resolved style data (borders, shading per conditional type).
+     */
+    function applyTableStyle(styleData: {
+      styleId: string;
+      tableBorders?: {
+        top?: { style: string; size?: number; color?: { rgb: string } };
+        bottom?: { style: string; size?: number; color?: { rgb: string } };
+        left?: { style: string; size?: number; color?: { rgb: string } };
+        right?: { style: string; size?: number; color?: { rgb: string } };
+        insideH?: { style: string; size?: number; color?: { rgb: string } };
+        insideV?: { style: string; size?: number; color?: { rgb: string } };
+      };
+      conditionals?: Record<
+        string,
+        {
+          backgroundColor?: string;
+          borders?: {
+            top?: { style: string; size?: number; color?: { rgb: string } } | null;
+            bottom?: { style: string; size?: number; color?: { rgb: string } } | null;
+            left?: { style: string; size?: number; color?: { rgb: string } } | null;
+            right?: { style: string; size?: number; color?: { rgb: string } } | null;
+          };
+          bold?: boolean;
+          color?: string;
+        }
+      >;
+      look?: {
+        firstRow?: boolean;
+        lastRow?: boolean;
+        firstCol?: boolean;
+        lastCol?: boolean;
+        noHBand?: boolean;
+        noVBand?: boolean;
+      };
+    }): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
+
+        if (dispatch) {
+          let tr = state.tr;
+          const table = context.table;
+          const tablePos = context.tablePos;
+          const totalRows = table.childCount;
+          const look = styleData.look ?? {
+            firstRow: true,
+            lastRow: false,
+            noHBand: false,
+            noVBand: true,
+          };
+          const conditionals = styleData.conditionals ?? {};
+          const tableBorders = styleData.tableBorders;
+
+          // Update table node attrs with styleId
+          tr = tr.setNodeMarkup(tablePos, undefined, {
+            ...table.attrs,
+            styleId: styleData.styleId,
+          });
+
+          // Walk through all rows and cells to apply conditional formatting
+          let dataRowIndex = 0;
+          let rowOffset = tablePos + 1; // Skip table open tag
+
+          for (let rowIdx = 0; rowIdx < totalRows; rowIdx++) {
+            const row = table.child(rowIdx);
+            const isFirstRow = rowIdx === 0 && !!look.firstRow;
+            const isLastRow = rowIdx === totalRows - 1 && !!look.lastRow;
+            const bandingEnabled = look.noHBand !== true;
+            const totalCols = row.childCount;
+
+            // Determine row-level conditional type
+            let condType: string | undefined;
+            if (isFirstRow) {
+              condType = 'firstRow';
+            } else if (isLastRow) {
+              condType = 'lastRow';
+            } else if (bandingEnabled) {
+              condType = dataRowIndex % 2 === 0 ? 'band1Horz' : 'band2Horz';
+              dataRowIndex++;
+            } else {
+              dataRowIndex++;
+            }
+
+            let cellOffset = rowOffset + 1; // Skip row open tag
+
+            for (let colIdx = 0; colIdx < totalCols; colIdx++) {
+              const cell = row.child(colIdx);
+              const cellPos = tr.mapping.map(cellOffset);
+
+              // Determine cell-level conditional (column overrides can apply)
+              let cellCondType = condType;
+              const isFirstCol = colIdx === 0 && !!look.firstCol;
+              const isLastCol = colIdx === totalCols - 1 && !!look.lastCol;
+
+              // Corner cells take highest priority
+              if (isFirstRow && isFirstCol && conditionals['nwCell']) {
+                cellCondType = 'nwCell';
+              } else if (isFirstRow && isLastCol && conditionals['neCell']) {
+                cellCondType = 'neCell';
+              } else if (isLastRow && isFirstCol && conditionals['swCell']) {
+                cellCondType = 'swCell';
+              } else if (isLastRow && isLastCol && conditionals['seCell']) {
+                cellCondType = 'seCell';
+              } else if (isFirstCol) {
+                cellCondType = 'firstCol';
+              } else if (isLastCol) {
+                cellCondType = 'lastCol';
+              }
+
+              // Resolve conditional style for this cell
+              const cond = cellCondType ? conditionals[cellCondType] : undefined;
+
+              // Build new cell attrs
+              const newAttrs = { ...cell.attrs };
+
+              // Apply background color
+              if (cond?.backgroundColor) {
+                newAttrs.backgroundColor = cond.backgroundColor;
+              } else {
+                newAttrs.backgroundColor = null;
+              }
+
+              // Apply borders: conditional borders override table borders
+              const cellBorders: Record<string, unknown> = {};
+              const sides = ['top', 'bottom', 'left', 'right'] as const;
+              for (const side of sides) {
+                if (cond?.borders && cond.borders[side] !== undefined) {
+                  cellBorders[side] = cond.borders[side];
+                } else if (tableBorders) {
+                  // Map table-level border to cell: insideH for top/bottom between rows, insideV for left/right between cols
+                  if (
+                    (side === 'top' && rowIdx > 0) ||
+                    (side === 'bottom' && rowIdx < totalRows - 1)
+                  ) {
+                    cellBorders[side] = tableBorders.insideH ?? tableBorders[side];
+                  } else if (
+                    (side === 'left' && colIdx > 0) ||
+                    (side === 'right' && colIdx < totalCols - 1)
+                  ) {
+                    cellBorders[side] = tableBorders.insideV ?? tableBorders[side];
+                  } else {
+                    cellBorders[side] = tableBorders[side];
+                  }
+                }
+              }
+              if (Object.keys(cellBorders).length > 0) {
+                newAttrs.borders = cellBorders;
+              } else {
+                newAttrs.borders = null;
+              }
+
+              tr = tr.setNodeMarkup(cellPos, undefined, newAttrs);
+              cellOffset += cell.nodeSize;
+            }
+
+            rowOffset += row.nodeSize;
+          }
+
+          dispatch(tr.scrollIntoView());
+        }
+
+        return true;
+      };
+    }
+
     function setTableProperties(props: {
       width?: number | null;
       widthType?: string | null;
@@ -1487,6 +1654,8 @@ export const TablePluginExtension = createExtension({
           widthType?: string | null;
           justification?: 'left' | 'center' | 'right' | null;
         }) => setTableProperties(props),
+        applyTableStyle: (styleData: Parameters<typeof applyTableStyle>[0]) =>
+          applyTableStyle(styleData),
         setCellFillColor: (color: string | null) => setCellFillColor(color),
         setTableBorderColor: (color: string) => setTableBorderColor(color),
         removeTableBorders: () => setTableBorders('none'),

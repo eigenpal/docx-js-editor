@@ -51,6 +51,7 @@ import {
 } from './dialogs/FindReplaceDialog';
 import { HyperlinkDialog, useHyperlinkDialog, type HyperlinkData } from './dialogs/HyperlinkDialog';
 import { TablePropertiesDialog } from './dialogs/TablePropertiesDialog';
+import { getBuiltinTableStyle, type TableStylePreset } from './ui/TableStyleGallery';
 import { DocumentAgent } from '../agent/DocumentAgent';
 import {
   DefaultLoadingIndicator,
@@ -123,6 +124,7 @@ import {
   distributeColumns,
   autoFitContents,
   setTableProperties,
+  applyTableStyle,
   removeTableBorders,
   setAllTableBorders,
   setOutsideTableBorders,
@@ -729,6 +731,72 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
               setTablePropsOpen(true);
             } else if (action.type === 'tableProperties') {
               setTableProperties(action.props)(view.state, view.dispatch);
+            } else if (action.type === 'applyTableStyle') {
+              // Resolve style data from built-in presets or document styles
+              let preset: TableStylePreset | undefined = getBuiltinTableStyle(action.styleId);
+              if (!preset && history.state?.package.styles) {
+                const styleResolver = createStyleResolver(history.state.package.styles);
+                const docStyle = styleResolver.getStyle(action.styleId);
+                if (docStyle) {
+                  // Convert to preset inline (same as documentStyleToPreset)
+                  preset = { id: docStyle.styleId, name: docStyle.name ?? docStyle.styleId };
+                  if (docStyle.tblPr?.borders) {
+                    const b = docStyle.tblPr.borders;
+                    preset.tableBorders = {};
+                    for (const side of [
+                      'top',
+                      'bottom',
+                      'left',
+                      'right',
+                      'insideH',
+                      'insideV',
+                    ] as const) {
+                      const bs = b[side];
+                      if (bs) {
+                        preset.tableBorders[side] = {
+                          style: bs.style,
+                          size: bs.size,
+                          color: bs.color?.rgb ? { rgb: bs.color.rgb } : undefined,
+                        };
+                      }
+                    }
+                  }
+                  if (docStyle.tblStylePr) {
+                    preset.conditionals = {};
+                    for (const cond of docStyle.tblStylePr) {
+                      const entry: Record<string, unknown> = {};
+                      if (cond.tcPr?.shading?.fill)
+                        entry.backgroundColor = `#${cond.tcPr.shading.fill}`;
+                      if (cond.tcPr?.borders) {
+                        const borders: Record<string, unknown> = {};
+                        for (const s of ['top', 'bottom', 'left', 'right'] as const) {
+                          const bs2 = cond.tcPr.borders[s];
+                          if (bs2)
+                            borders[s] = {
+                              style: bs2.style,
+                              size: bs2.size,
+                              color: bs2.color?.rgb ? { rgb: bs2.color.rgb } : undefined,
+                            };
+                        }
+                        entry.borders = borders;
+                      }
+                      if (cond.rPr?.bold) entry.bold = true;
+                      if (cond.rPr?.color?.rgb) entry.color = `#${cond.rPr.color.rgb}`;
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (preset.conditionals as any)[cond.type] = entry;
+                    }
+                  }
+                  preset.look = { firstRow: true, lastRow: false, noHBand: false, noVBand: true };
+                }
+              }
+              if (preset) {
+                applyTableStyle({
+                  styleId: preset.id,
+                  tableBorders: preset.tableBorders,
+                  conditionals: preset.conditionals,
+                  look: preset.look,
+                })(view.state, view.dispatch);
+              }
             }
           } else {
             // Fallback to legacy table selection handler for other actions

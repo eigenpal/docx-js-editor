@@ -83,3 +83,18 @@
 [2026-02-06 11:49] STATUS: testing
 [2026-02-06 11:49] NOTES: typecheck passed, 4/4 table tests pass
 [2026-02-06 11:49] STATUS: done
+
+[2026-02-06 12:00] TASK: 2.4 Table style gallery
+[2026-02-06 12:00] STATUS: starting
+[2026-02-06 12:00] NOTES: Research complete. StyleResolver has getStyle() but no getTableStyles(). toProseDoc already resolves conditional formatting. Need: getTableStyles(), applyTableStyle command, TableStyleGallery.tsx component
+[2026-02-06 12:02] STATUS: editing
+[2026-02-06 12:02] NOTES: Adding getTableStyles() to StyleResolver, predefined table styles, applyTableStyle command
+[2026-02-06 12:08] NOTES: Added getTableStyles() to StyleResolver
+[2026-02-06 12:09] NOTES: Added applyTableStyle command to TableExtension.ts — walks all cells applying conditional formatting (firstRow/lastRow/banded/firstCol/lastCol/corners)
+[2026-02-06 12:10] NOTES: Created TableStyleGallery.tsx with 14 built-in styles, visual previews, support for doc styles
+[2026-02-06 12:11] NOTES: Added re-exports through commands/table.ts → commands/index.ts → prosemirror/index.ts
+[2026-02-06 12:12] NOTES: Wired gallery in Toolbar.tsx, action handler in DocxEditor.tsx
+[2026-02-06 12:13] STATUS: testing
+[2026-02-06 12:13] NOTES: typecheck passed, running table tests
+[2026-02-06 12:14] NOTES: 4/4 merge-split tests pass, 13/15 scenario table tests pass (2 pre-existing failures)
+[2026-02-06 12:14] STATUS: done

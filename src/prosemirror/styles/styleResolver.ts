@@ -122,6 +122,24 @@ export class StyleResolver {
   }
 
   /**
+   * Get all available table styles (for style gallery)
+   */
+  getTableStyles(): Style[] {
+    const styles: Style[] = [];
+    for (const style of this.stylesById.values()) {
+      if (style.type === 'table' && !style.hidden && !style.semiHidden) {
+        styles.push(style);
+      }
+    }
+    return styles.sort((a, b) => {
+      const priorityA = a.uiPriority ?? 99;
+      const priorityB = b.uiPriority ?? 99;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+      return (a.name ?? a.styleId).localeCompare(b.name ?? b.styleId);
+    });
+  }
+
+  /**
    * Resolve run (character) style properties
    *
    * @param styleId - The character style ID to resolve
