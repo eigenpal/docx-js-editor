@@ -17,6 +17,7 @@ import { Tooltip } from './Tooltip';
 import { MaterialSymbol } from './MaterialSymbol';
 import { cn } from '../../lib/utils';
 import type { TableAction } from './TableToolbar';
+import type { TableContextInfo } from '../../prosemirror/extensions/nodes/TableExtension';
 
 // ============================================================================
 // TYPES
@@ -28,12 +29,7 @@ export interface TableOptionsDropdownProps {
   /** Whether the dropdown is disabled */
   disabled?: boolean;
   /** Table context for enabling/disabling actions */
-  tableContext?: {
-    rowCount?: number;
-    columnCount?: number;
-    canSplitCell?: boolean;
-    hasMultiCellSelection?: boolean;
-  };
+  tableContext?: TableContextInfo | null;
   /** Additional CSS class */
   className?: string;
   /** Tooltip text */
@@ -195,6 +191,25 @@ const colorGridStyles: CSSProperties = {
   gridTemplateColumns: 'repeat(10, 1fr)',
   gap: 2,
   padding: '8px 12px',
+};
+
+const alignmentRowStyles: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  padding: '8px 16px',
+};
+
+const alignmentButtonStyles: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 32,
+  height: 28,
+  borderRadius: 6,
+  border: '1px solid var(--doc-border)',
+  backgroundColor: 'transparent',
+  cursor: 'pointer',
 };
 
 // ============================================================================
@@ -736,6 +751,52 @@ function TablePropertiesRow({ onAction }: { onAction: (action: TableAction) => v
 }
 
 // ============================================================================
+// TABLE ALIGNMENT
+// ============================================================================
+
+function TableAlignmentRow({
+  onAction,
+  justification,
+}: {
+  onAction: (action: TableAction) => void;
+  justification: 'left' | 'center' | 'right';
+}) {
+  const makeButton = (value: 'left' | 'center' | 'right', icon: string, label: string) => {
+    const isActive = justification === value;
+    return (
+      <button
+        type="button"
+        style={{
+          ...alignmentButtonStyles,
+          backgroundColor: isActive ? 'var(--doc-primary-light)' : 'transparent',
+          borderColor: isActive ? 'var(--doc-primary)' : 'var(--doc-border)',
+          color: isActive ? 'var(--doc-primary)' : 'var(--doc-text)',
+        }}
+        onClick={() => onAction({ type: 'tableProperties', props: { justification: value } })}
+        title={label}
+        aria-label={label}
+      >
+        <MaterialSymbol name={icon} size={18} />
+      </button>
+    );
+  };
+
+  return (
+    <>
+      <div style={separatorStyles} role="separator" />
+      <div style={alignmentRowStyles}>
+        <span style={{ fontSize: 13, color: 'var(--doc-text-muted)', flex: 1 }}>
+          Table alignment
+        </span>
+        {makeButton('left', 'format_align_left', 'Align table left')}
+        {makeButton('center', 'format_align_center', 'Align table center')}
+        {makeButton('right', 'format_align_right', 'Align table right')}
+      </div>
+    </>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -749,6 +810,9 @@ export function TableOptionsDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const currentJustification =
+    (tableContext?.table?.attrs?.justification as 'left' | 'center' | 'right' | null | undefined) ??
+    'left';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -918,6 +982,7 @@ export function TableOptionsDropdown({
           <HeaderRowRow onAction={handleAction} />
           <DistributeColumnsRow onAction={handleAction} />
           <AutoFitRow onAction={handleAction} />
+          <TableAlignmentRow onAction={handleAction} justification={currentJustification} />
           <TablePropertiesRow onAction={handleAction} />
         </div>
       )}

@@ -31,6 +31,7 @@ import type {
   TableFormatting,
   TableRowFormatting,
   TableCellFormatting,
+  TableBorders,
   ShapeContent,
   Shape,
   NoteReferenceContent,
@@ -881,6 +882,33 @@ function marksToTextFormatting(marks: readonly Mark[]): TextFormatting {
 /**
  * Convert a ProseMirror table node to our Table type
  */
+function inferTableBorders(rows: TableRow[]): TableBorders | undefined {
+  for (const row of rows) {
+    for (const cell of row.cells) {
+      const borders = cell.formatting?.borders;
+      if (borders) {
+        const base =
+          borders.top ||
+          borders.left ||
+          borders.right ||
+          borders.bottom ||
+          borders.insideH ||
+          borders.insideV;
+        if (!base) return undefined;
+        return {
+          top: borders.top ?? base,
+          bottom: borders.bottom ?? base,
+          left: borders.left ?? base,
+          right: borders.right ?? base,
+          insideH: borders.insideH ?? borders.bottom ?? base,
+          insideV: borders.insideV ?? borders.right ?? base,
+        };
+      }
+    }
+  }
+  return undefined;
+}
+
 function convertPMTable(node: PMNode): Table {
   const attrs = node.attrs as TableAttrs;
   const rows: TableRow[] = [];
@@ -891,9 +919,27 @@ function convertPMTable(node: PMNode): Table {
     }
   });
 
+  const formatting = tableAttrsToFormatting(attrs) || undefined;
+  if (!formatting?.borders) {
+    const inferredBorders = inferTableBorders(rows);
+    if (inferredBorders) {
+      if (formatting) {
+        formatting.borders = inferredBorders;
+      } else {
+        // No other formatting — create a minimal formatting object with borders
+        // so borders persist on round-trip.
+        return {
+          type: 'table',
+          formatting: { borders: inferredBorders },
+          rows,
+        };
+      }
+    }
+  }
+
   return {
     type: 'table',
-    formatting: tableAttrsToFormatting(attrs),
+    formatting,
     rows,
   };
 }

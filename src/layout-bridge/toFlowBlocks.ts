@@ -61,6 +61,17 @@ function nextBlockId(): string {
   return `block-${++blockIdCounter}`;
 }
 
+function formatNumberedMarker(counters: number[], level: number): string {
+  const parts: number[] = [];
+  for (let i = 0; i <= level; i += 1) {
+    const value = counters[i] ?? 0;
+    if (value <= 0) break;
+    parts.push(value);
+  }
+  if (parts.length === 0) return '1.';
+  return `${parts.join('.')}.`;
+}
+
 /**
  * Reset the block ID counter (useful for testing).
  */
@@ -727,22 +738,51 @@ export function toFlowBlocks(doc: PMNode, options: ToFlowBlocksOptions = {}): Fl
 
   const blocks: FlowBlock[] = [];
   const offset = 0; // Start at document beginning
+  const listCounters = new Map<number, number[]>();
 
   doc.forEach((node, nodeOffset) => {
     const pos = offset + nodeOffset;
 
     switch (node.type.name) {
       case 'paragraph':
-        blocks.push(convertParagraph(node, pos, opts));
+        {
+          const block = convertParagraph(node, pos, opts);
+          const pmAttrs = node.attrs as PMParagraphAttrs;
+
+          if (pmAttrs.numPr) {
+            if (!pmAttrs.listMarker) {
+              const numId = pmAttrs.numPr.numId;
+              if (numId == null) break;
+              const level = pmAttrs.numPr.ilvl ?? 0;
+              const counters = listCounters.get(numId) ?? new Array(9).fill(0);
+
+              counters[level] = (counters[level] ?? 0) + 1;
+              for (let i = level + 1; i < counters.length; i += 1) {
+                counters[i] = 0;
+              }
+
+              listCounters.set(numId, counters);
+
+              const marker = pmAttrs.listIsBullet ? '•' : formatNumberedMarker(counters, level);
+              block.attrs = { ...block.attrs, listMarker: marker };
+            }
+          } else {
+            listCounters.clear();
+          }
+
+          blocks.push(block);
+        }
         break;
 
       case 'table':
         blocks.push(convertTable(node, pos, opts));
+        listCounters.clear();
         break;
 
       case 'image':
         // Standalone image block (if not inline)
         blocks.push(convertImage(node, pos));
+        listCounters.clear();
         break;
 
       case 'horizontalRule':
@@ -754,6 +794,7 @@ export function toFlowBlocks(doc: PMNode, options: ToFlowBlocksOptions = {}): Fl
           pmEnd: pos + node.nodeSize,
         };
         blocks.push(pageBreak);
+        listCounters.clear();
         break;
     }
   });

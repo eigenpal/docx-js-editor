@@ -51,7 +51,6 @@ import {
   getAttribute,
   parseNumericAttribute,
   parseBooleanElement,
-  parseColorElement,
   type XmlElement,
 } from './xmlParser';
 
@@ -116,14 +115,17 @@ export function parseBorderSpec(element: XmlElement | null): BorderSpec | undefi
     border.space = space;
   }
 
-  // Color
-  const colorData = parseColorElement(element);
-  if (colorData) {
+  // Color (border uses w:color, not w:val)
+  const color = getAttribute(element, 'w', 'color');
+  const themeColor = getAttribute(element, 'w', 'themeColor');
+  const themeTint = getAttribute(element, 'w', 'themeTint');
+  const themeShade = getAttribute(element, 'w', 'themeShade');
+  if (color || themeColor || themeTint || themeShade) {
     border.color = {
-      rgb: colorData.val,
-      themeColor: colorData.themeColor as ColorValue['themeColor'],
-      themeTint: colorData.themeTint,
-      themeShade: colorData.themeShade,
+      rgb: color ?? undefined,
+      themeColor: themeColor as ColorValue['themeColor'],
+      themeTint: themeTint ?? undefined,
+      themeShade: themeShade ?? undefined,
     };
   }
 

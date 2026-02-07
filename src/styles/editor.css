@@ -389,10 +389,6 @@
   transition: background-color 0.15s;
 }
 
-.layout-table:hover .layout-table-resize-handle {
-  background-color: rgba(66, 133, 244, 0.15);
-}
-
 .layout-table-resize-handle:hover,
 .layout-table-resize-handle.dragging {
   background-color: rgba(66, 133, 244, 0.6);
@@ -403,11 +399,6 @@
 .layout-table-edge-handle-bottom {
   background-color: transparent;
   transition: background-color 0.15s;
-}
-
-.layout-table:hover .layout-table-row-resize-handle,
-.layout-table:hover .layout-table-edge-handle-bottom {
-  background-color: rgba(66, 133, 244, 0.15);
 }
 
 .layout-table-row-resize-handle:hover,
@@ -421,10 +412,6 @@
 .layout-table-edge-handle-right {
   background-color: transparent;
   transition: background-color 0.15s;
-}
-
-.layout-table:hover .layout-table-edge-handle-right {
-  background-color: rgba(66, 133, 244, 0.15);
 }
 
 .layout-table-edge-handle-right:hover,

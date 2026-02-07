@@ -49,11 +49,21 @@ function toggleList(numId: number): Command {
         seen.add(pos);
 
         if (isInSameList) {
-          tr = tr.setNodeMarkup(pos, undefined, { ...node.attrs, numPr: null });
+          tr = tr.setNodeMarkup(pos, undefined, {
+            ...node.attrs,
+            numPr: null,
+            listIsBullet: null,
+            listNumFmt: null,
+            listMarker: null,
+          });
         } else {
+          const isBullet = numId === 1;
           tr = tr.setNodeMarkup(pos, undefined, {
             ...node.attrs,
             numPr: { numId, ilvl: node.attrs.numPr?.ilvl || 0 },
+            listIsBullet: isBullet,
+            listNumFmt: isBullet ? null : 'decimal',
+            listMarker: null,
           });
         }
       }
@@ -114,7 +124,13 @@ const decreaseListLevel: Command = (state, dispatch) => {
   if (currentLevel <= 0) {
     dispatch(
       state.tr
-        .setNodeMarkup(paragraphPos, undefined, { ...paragraph.attrs, numPr: null })
+        .setNodeMarkup(paragraphPos, undefined, {
+          ...paragraph.attrs,
+          numPr: null,
+          listIsBullet: null,
+          listNumFmt: null,
+          listMarker: null,
+        })
         .scrollIntoView()
     );
   } else {
@@ -142,7 +158,13 @@ const removeList: Command = (state, dispatch) => {
   state.doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
     if (node.type.name === 'paragraph' && node.attrs.numPr && !seen.has(pos)) {
       seen.add(pos);
-      tr = tr.setNodeMarkup(pos, undefined, { ...node.attrs, numPr: null });
+      tr = tr.setNodeMarkup(pos, undefined, {
+        ...node.attrs,
+        numPr: null,
+        listIsBullet: null,
+        listNumFmt: null,
+        listMarker: null,
+      });
     }
   });
 
@@ -196,6 +218,9 @@ function exitListOnEmptyEnter(): Command {
       const tr = state.tr.setNodeMarkup($from.before(), undefined, {
         ...paragraph.attrs,
         numPr: null,
+        listIsBullet: null,
+        listNumFmt: null,
+        listMarker: null,
       });
       dispatch(tr);
     }
@@ -243,6 +268,9 @@ function backspaceExitList(): Command {
       const tr = state.tr.setNodeMarkup($from.before(), undefined, {
         ...paragraph.attrs,
         numPr: null,
+        listIsBullet: null,
+        listNumFmt: null,
+        listMarker: null,
       });
       dispatch(tr);
     }
@@ -290,6 +318,9 @@ function decreaseListIndent(): Command {
         const tr = state.tr.setNodeMarkup($from.before(), undefined, {
           ...paragraph.attrs,
           numPr: null,
+          listIsBullet: null,
+          listNumFmt: null,
+          listMarker: null,
         });
         dispatch(tr);
       }

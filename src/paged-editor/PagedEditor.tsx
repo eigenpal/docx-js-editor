@@ -408,6 +408,8 @@ function measureBlock(
       });
 
     case 'table': {
+      const TABLE_CELL_PADDING_Y = 6;
+      const TABLE_MIN_ROW_HEIGHT = 24;
       // Simple table measure - calculate dimensions with proper column handling
       const tableBlock = block as TableBlock;
       // columnWidths are already in pixels (converted in toFlowBlocks)
@@ -458,6 +460,7 @@ function measureBlock(
             if ('totalHeight' in m) return h + m.totalHeight;
             return h;
           }, 0);
+          cell.height += TABLE_CELL_PADDING_Y * 2;
           maxHeight = Math.max(maxHeight, cell.height);
         }
 
@@ -471,7 +474,7 @@ function measureBlock(
         } else if (explicitHeight && heightRule === 'atLeast') {
           row.height = Math.max(maxHeight, explicitHeight);
         } else {
-          row.height = maxHeight;
+          row.height = Math.max(maxHeight, TABLE_MIN_ROW_HEIGHT);
         }
       }
 

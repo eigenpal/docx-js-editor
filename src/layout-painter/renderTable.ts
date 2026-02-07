@@ -158,6 +158,7 @@ function renderNestedTable(
       rowIndex,
       y,
       measure.columnWidths,
+      block.rows.length,
       context,
       doc,
       spanningCells,
@@ -204,6 +205,12 @@ function renderTableCell(
   cellMeasure: TableCellMeasure,
   x: number,
   rowHeight: number,
+  borderFlags: {
+    isFirstRow: boolean;
+    isLastRow: boolean;
+    isFirstCol: boolean;
+    isLastCol: boolean;
+  },
   context: RenderContext,
   doc: Document
 ): HTMLElement {
@@ -218,14 +225,15 @@ function renderTableCell(
   cellEl.style.height = `${rowHeight}px`;
   cellEl.style.overflow = 'hidden';
   cellEl.style.boxSizing = 'border-box';
-  cellEl.style.padding = '2px 4px';
+  cellEl.style.padding = '6px 8px';
 
   // Apply borders - use cell borders if available, otherwise no border
   if (cell.borders) {
-    applyBorder(cellEl, 'top', cell.borders.top);
+    // Collapse shared borders to avoid double-thick lines.
+    if (borderFlags.isFirstRow) applyBorder(cellEl, 'top', cell.borders.top);
     applyBorder(cellEl, 'right', cell.borders.right);
     applyBorder(cellEl, 'bottom', cell.borders.bottom);
-    applyBorder(cellEl, 'left', cell.borders.left);
+    if (borderFlags.isFirstCol) applyBorder(cellEl, 'left', cell.borders.left);
   }
   // No default border - cells without explicit borders should be borderless
 
@@ -293,6 +301,7 @@ function renderTableRow(
   rowIndex: number,
   y: number,
   columnWidths: number[],
+  totalRows: number,
   context: RenderContext,
   doc: Document,
   spanningCells?: Map<string, SpanningCell>,
@@ -358,7 +367,20 @@ function renderTableRow(
       }
     }
 
-    const cellEl = renderTableCell(cell, cellMeasure, x, cellHeight, context, doc);
+    const isFirstRow = rowIndex === 0;
+    const isLastRow = rowIndex + rowSpan >= totalRows;
+    const isFirstCol = columnIndex === 0;
+    const isLastCol = columnIndex + colSpan >= columnWidths.length;
+
+    const cellEl = renderTableCell(
+      cell,
+      cellMeasure,
+      x,
+      cellHeight,
+      { isFirstRow, isLastRow, isFirstCol, isLastCol },
+      context,
+      doc
+    );
     cellEl.dataset.cellIndex = String(cellIndex);
     cellEl.dataset.columnIndex = String(columnIndex);
 
@@ -489,6 +511,7 @@ export function renderTableFragment(
       rowIndex,
       y,
       measure.columnWidths,
+      block.rows.length,
       context,
       doc,
       spanningCells,

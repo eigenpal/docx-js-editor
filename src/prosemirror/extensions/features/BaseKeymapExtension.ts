@@ -13,7 +13,6 @@ import {
   selectAll,
   selectParentNode,
 } from 'prosemirror-commands';
-import { keymap } from 'prosemirror-keymap';
 import { createExtension } from '../create';
 import { Priority } from '../types';
 import type { ExtensionRuntime, ExtensionContext } from '../types';
@@ -36,19 +35,15 @@ export const BaseKeymapExtension = createExtension({
   onSchemaReady(_ctx: ExtensionContext): ExtensionRuntime {
     return {
       keyboardShortcuts: {
+        // Base keymap provides default editing commands
+        ...baseKeymap,
         // Override some keys with better defaults
         Enter: splitBlock,
         Backspace: chainCommands(deleteSelection, joinBackward),
         Delete: chainCommands(deleteSelection, joinForward),
         'Mod-a': selectAll,
         Escape: selectParentNode,
-        // Everything else comes from baseKeymap via plugin
       },
-      plugins: [
-        // baseKeymap provides all the default editing commands
-        // It's added as a plugin so extensions registered at higher priority can override keys
-        keymap(baseKeymap),
-      ],
     };
   },
 });

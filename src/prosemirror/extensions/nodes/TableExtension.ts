@@ -607,10 +607,33 @@ export const TablePluginExtension = createExtension({
 
     // ---- Commands ----
 
+    function buildCellAttrsFromTemplate(
+      templateCell: PMNode | null,
+      overrides: Record<string, unknown> = {}
+    ): Record<string, unknown> {
+      const baseAttrs = templateCell?.attrs ?? {};
+      return {
+        colspan: baseAttrs.colspan || 1,
+        rowspan: 1,
+        colwidth: baseAttrs.colwidth,
+        width: baseAttrs.width,
+        widthType: baseAttrs.widthType,
+        verticalAlign: baseAttrs.verticalAlign,
+        backgroundColor: baseAttrs.backgroundColor,
+        borders: baseAttrs.borders,
+        margins: baseAttrs.margins,
+        textDirection: baseAttrs.textDirection,
+        noWrap: baseAttrs.noWrap,
+        ...overrides,
+      };
+    }
+
     function createTable(rows: number, cols: number, borderColor: string = '000000'): PMNode {
       const tableRows: PMNode[] = [];
       const defaultContentWidthTwips = 9360;
       const colWidthTwips = Math.floor(defaultContentWidthTwips / cols);
+      const defaultRowHeightTwips = 360; // 0.25in ≈ 24px at 96 DPI
+      const defaultRowHeightRule = 'atLeast';
 
       const defaultBorder = { style: 'single', size: 4, color: { rgb: borderColor } };
       const defaultBorders = {
@@ -633,7 +656,12 @@ export const TablePluginExtension = createExtension({
           };
           cells.push(schema.nodes.tableCell.create(cellAttrs, paragraph));
         }
-        tableRows.push(schema.nodes.tableRow.create(null, cells));
+        tableRows.push(
+          schema.nodes.tableRow.create(
+            { height: defaultRowHeightTwips, heightRule: defaultRowHeightRule },
+            cells
+          )
+        );
       }
 
       const columnWidths = Array(cols).fill(colWidthTwips);
@@ -706,14 +734,16 @@ export const TablePluginExtension = createExtension({
         const cells: PMNode[] = [];
         rowNode.forEach((cell) => {
           const paragraph = schema.nodes.paragraph.create();
-          cells.push(
-            schema.nodes.tableCell.create(
-              { colspan: cell.attrs.colspan || 1, rowspan: 1 },
-              paragraph
-            )
-          );
+          const cellAttrs = buildCellAttrsFromTemplate(cell);
+          cells.push(schema.nodes.tableCell.create(cellAttrs, paragraph));
         });
-        const newRow = schema.nodes.tableRow.create(null, cells);
+        const newRow = schema.nodes.tableRow.create(
+          {
+            height: rowNode.attrs.height ?? 360,
+            heightRule: rowNode.attrs.heightRule ?? 'atLeast',
+          },
+          cells
+        );
 
         let rowPos = context.tablePos + 1;
         for (let i = 0; i < context.rowIndex; i++) {
@@ -742,14 +772,16 @@ export const TablePluginExtension = createExtension({
         const cells: PMNode[] = [];
         rowNode.forEach((cell) => {
           const paragraph = schema.nodes.paragraph.create();
-          cells.push(
-            schema.nodes.tableCell.create(
-              { colspan: cell.attrs.colspan || 1, rowspan: 1 },
-              paragraph
-            )
-          );
+          const cellAttrs = buildCellAttrsFromTemplate(cell);
+          cells.push(schema.nodes.tableCell.create(cellAttrs, paragraph));
         });
-        const newRow = schema.nodes.tableRow.create(null, cells);
+        const newRow = schema.nodes.tableRow.create(
+          {
+            height: rowNode.attrs.height ?? 360,
+            heightRule: rowNode.attrs.heightRule ?? 'atLeast',
+          },
+          cells
+        );
 
         let rowPos = context.tablePos + 1;
         for (let i = 0; i <= context.rowIndex; i++) {
@@ -812,7 +844,10 @@ export const TablePluginExtension = createExtension({
             row.forEach((cell) => {
               if (colIdx === context.columnIndex) {
                 const paragraph = schema.nodes.paragraph.create();
-                const cellAttrs: any = { colspan: 1, rowspan: 1 };
+                const cellAttrs: any = buildCellAttrsFromTemplate(cell, {
+                  colspan: 1,
+                  rowspan: 1,
+                });
                 if (rowIndex === 0) {
                   cellAttrs.width = newColWidthPercent;
                   cellAttrs.widthType = 'pct';
@@ -826,7 +861,10 @@ export const TablePluginExtension = createExtension({
 
             if (colIdx <= context.columnIndex!) {
               const paragraph = schema.nodes.paragraph.create();
-              const cellAttrs: any = { colspan: 1, rowspan: 1 };
+              const cellAttrs: any = buildCellAttrsFromTemplate(
+                row.child(row.childCount - 1) ?? null,
+                { colspan: 1, rowspan: 1 }
+              );
               if (rowIndex === 0) {
                 cellAttrs.width = newColWidthPercent;
                 cellAttrs.widthType = 'pct';
@@ -893,7 +931,10 @@ export const TablePluginExtension = createExtension({
 
               if (!inserted && colIdx > context.columnIndex!) {
                 const paragraph = schema.nodes.paragraph.create();
-                const cellAttrs: any = { colspan: 1, rowspan: 1 };
+                const cellAttrs: any = buildCellAttrsFromTemplate(cell, {
+                  colspan: 1,
+                  rowspan: 1,
+                });
                 if (rowIndex === 0) {
                   cellAttrs.width = newColWidthPercent;
                   cellAttrs.widthType = 'pct';
@@ -906,7 +947,10 @@ export const TablePluginExtension = createExtension({
 
             if (!inserted) {
               const paragraph = schema.nodes.paragraph.create();
-              const cellAttrs: any = { colspan: 1, rowspan: 1 };
+              const cellAttrs: any = buildCellAttrsFromTemplate(
+                row.child(row.childCount - 1) ?? null,
+                { colspan: 1, rowspan: 1 }
+              );
               if (rowIndex === 0) {
                 cellAttrs.width = newColWidthPercent;
                 cellAttrs.widthType = 'pct';
