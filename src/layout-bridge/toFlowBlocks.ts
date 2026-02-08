@@ -32,6 +32,8 @@ import type {
   FontSizeAttrs,
   FontFamilyAttrs,
 } from '../prosemirror/schema/marks';
+import type { Theme } from '../types/document';
+import { resolveColor } from '../utils/colorResolver';
 
 /**
  * Options for the conversion.
@@ -41,6 +43,8 @@ export type ToFlowBlocksOptions = {
   defaultFont?: string;
   /** Default font size in points. */
   defaultSize?: number;
+  /** Theme for resolving theme colors. */
+  theme?: Theme | null;
 };
 
 const DEFAULT_FONT = 'Calibri';
@@ -82,7 +86,7 @@ export function resetBlockIdCounter(): void {
 /**
  * Extract run formatting from ProseMirror marks.
  */
-function extractRunFormatting(marks: readonly Mark[]): RunFormatting {
+function extractRunFormatting(marks: readonly Mark[], theme?: Theme | null): RunFormatting {
   const formatting: RunFormatting = {};
 
   for (const mark of marks) {
@@ -98,9 +102,10 @@ function extractRunFormatting(marks: readonly Mark[]): RunFormatting {
       case 'underline': {
         const attrs = mark.attrs as UnderlineAttrs;
         if (attrs.style || attrs.color) {
+          const underlineColor = attrs.color ? resolveColor(attrs.color, theme) : undefined;
           formatting.underline = {
             style: attrs.style,
-            color: attrs.color?.rgb ? `#${attrs.color.rgb}` : undefined,
+            color: underlineColor,
           };
         } else {
           formatting.underline = true;
@@ -114,8 +119,16 @@ function extractRunFormatting(marks: readonly Mark[]): RunFormatting {
 
       case 'textColor': {
         const attrs = mark.attrs as TextColorAttrs;
-        if (attrs.rgb) {
-          formatting.color = `#${attrs.rgb}`;
+        if (attrs.themeColor || attrs.rgb) {
+          formatting.color = resolveColor(
+            {
+              rgb: attrs.rgb,
+              themeColor: attrs.themeColor,
+              themeTint: attrs.themeTint,
+              themeShade: attrs.themeShade,
+            },
+            theme
+          );
         }
         break;
       }
@@ -165,13 +178,14 @@ function extractRunFormatting(marks: readonly Mark[]): RunFormatting {
 function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksOptions): Run[] {
   const runs: Run[] = [];
   const offset = startPos + 1; // +1 for opening tag
+  const theme = _options.theme;
 
   node.forEach((child, childOffset) => {
     const childPos = offset + childOffset;
 
     if (child.isText && child.text) {
       // Text node - create text run
-      const formatting = extractRunFormatting(child.marks);
+      const formatting = extractRunFormatting(child.marks, theme);
       const run: TextRun = {
         kind: 'text',
         text: child.text,
@@ -190,7 +204,7 @@ function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksO
       runs.push(run);
     } else if (child.type.name === 'tab') {
       // Tab character
-      const formatting = extractRunFormatting(child.marks);
+      const formatting = extractRunFormatting(child.marks, theme);
       const run: TabRun = {
         kind: 'tab',
         ...formatting,
@@ -262,7 +276,7 @@ function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksO
       child.forEach((sdtChild, sdtChildOffset) => {
         const sdtChildPos = sdtInnerOffset + sdtChildOffset;
         if (sdtChild.isText && sdtChild.text) {
-          const formatting = extractRunFormatting(sdtChild.marks);
+          const formatting = extractRunFormatting(sdtChild.marks, theme);
           const run: TextRun = {
             kind: 'text',
             text: sdtChild.text,
@@ -279,7 +293,7 @@ function paragraphToRuns(node: PMNode, startPos: number, _options: ToFlowBlocksO
           };
           runs.push(run);
         } else if (sdtChild.type.name === 'tab') {
-          const formatting = extractRunFormatting(sdtChild.marks);
+          const formatting = extractRunFormatting(sdtChild.marks, theme);
           const run: TabRun = {
             kind: 'tab',
             ...formatting,

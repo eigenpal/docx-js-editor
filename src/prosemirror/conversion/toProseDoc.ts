@@ -31,6 +31,7 @@ import type {
   TableCell,
   TableCellFormatting,
   TableBorders,
+  TableLook,
   SimpleField,
   ComplexField,
   InlineSdt,
@@ -96,7 +97,8 @@ export function toProseDoc(document: Document, options?: ToProseDocOptions): PMN
 function convertParagraph(
   paragraph: Paragraph,
   styleResolver: StyleResolver | null,
-  activeCommentIds?: Set<number>
+  activeCommentIds?: Set<number>,
+  extraRunFormatting?: TextFormatting
 ): PMNode {
   const attrs = paragraphFormattingToAttrs(paragraph, styleResolver);
   const inlineNodes: PMNode[] = [];
@@ -111,31 +113,48 @@ function convertParagraph(
     styleRunFormatting = resolved.runFormatting;
   }
 
+  // Merge in paragraph-level run properties and extra formatting (e.g., table style conditional rPr)
+  const withParagraphRunProps = mergeTextFormatting(
+    styleRunFormatting,
+    paragraph.formatting?.runProperties
+  );
+  const mergedStyleRunFormatting = mergeTextFormatting(withParagraphRunProps, extraRunFormatting);
+
   for (const content of paragraph.content) {
     if (content.type === 'commentRangeStart') {
       commentIds.add(content.id);
     } else if (content.type === 'commentRangeEnd') {
       commentIds.delete(content.id);
     } else if (content.type === 'run') {
-      let runNodes = convertRun(content, styleRunFormatting);
+      let runNodes = convertRun(content, mergedStyleRunFormatting, styleResolver);
       if (commentIds.size > 0) {
         runNodes = applyCommentMarks(runNodes, commentIds);
       }
       inlineNodes.push(...runNodes);
     } else if (content.type === 'hyperlink') {
-      const linkNodes = convertHyperlink(content, styleRunFormatting);
+      const linkNodes = convertHyperlink(content, mergedStyleRunFormatting, styleResolver);
       inlineNodes.push(...linkNodes);
     } else if (content.type === 'simpleField' || content.type === 'complexField') {
       const fieldNode = convertField(content);
       if (fieldNode) inlineNodes.push(fieldNode);
     } else if (content.type === 'inlineSdt') {
-      const sdtNode = convertInlineSdt(content, styleRunFormatting);
+      const sdtNode = convertInlineSdt(content, mergedStyleRunFormatting, styleResolver);
       if (sdtNode) inlineNodes.push(sdtNode);
     } else if (content.type === 'insertion') {
-      const insNodes = convertTrackedChange(content, 'insertion', styleRunFormatting);
+      const insNodes = convertTrackedChange(
+        content,
+        'insertion',
+        mergedStyleRunFormatting,
+        styleResolver
+      );
       inlineNodes.push(...insNodes);
     } else if (content.type === 'deletion') {
-      const delNodes = convertTrackedChange(content, 'deletion', styleRunFormatting);
+      const delNodes = convertTrackedChange(
+        content,
+        'deletion',
+        mergedStyleRunFormatting,
+        styleResolver
+      );
       inlineNodes.push(...delNodes);
     } else if (content.type === 'mathEquation') {
       const mathNode = convertMathEquation(content);
@@ -171,14 +190,15 @@ function applyCommentMarks(nodes: PMNode[], commentIds: Set<number>): PMNode[] {
 function convertTrackedChange(
   change: Insertion | Deletion,
   markType: 'insertion' | 'deletion',
-  styleRunFormatting?: TextFormatting
+  styleRunFormatting?: TextFormatting,
+  styleResolver?: StyleResolver | null
 ): PMNode[] {
   const nodes: PMNode[] = [];
   for (const item of change.content) {
     if (item.type === 'run') {
-      nodes.push(...convertRun(item, styleRunFormatting));
+      nodes.push(...convertRun(item, styleRunFormatting, styleResolver));
     } else if (item.type === 'hyperlink') {
-      nodes.push(...convertHyperlink(item, styleRunFormatting));
+      nodes.push(...convertHyperlink(item, styleRunFormatting, styleResolver));
     }
   }
 
@@ -225,6 +245,7 @@ function paragraphFormattingToAttrs(
   if (styleResolver) {
     const resolved = styleResolver.resolveParagraphStyle(styleId);
     const stylePpr = resolved.paragraphFormatting;
+    const styleRpr = resolved.runFormatting;
 
     // Apply style-based values as defaults (inline overrides)
     attrs.alignment = formatting?.alignment ?? stylePpr?.alignment;
@@ -247,6 +268,10 @@ function paragraphFormattingToAttrs(
 
     // Outline level (for TOC)
     attrs.outlineLevel = formatting?.outlineLevel ?? stylePpr?.outlineLevel;
+
+    // Default run properties (pPr/rPr)
+    const resolvedRunProps = resolveTextFormatting(formatting?.runProperties, styleResolver);
+    attrs.defaultTextFormatting = mergeTextFormatting(styleRpr, resolvedRunProps);
 
     // Section break type from paragraph-level section properties
     if (paragraph.sectionProperties?.sectionStart) {
@@ -282,6 +307,9 @@ function paragraphFormattingToAttrs(
 
     // Outline level
     attrs.outlineLevel = formatting?.outlineLevel;
+
+    // Default run properties (pPr/rPr)
+    attrs.defaultTextFormatting = resolveTextFormatting(formatting?.runProperties, styleResolver);
   }
 
   // Section break type from paragraph-level section properties
@@ -313,7 +341,74 @@ function resolveTableStyleConditional(
   if (!style?.tblStylePr) return undefined;
 
   const conditional = style.tblStylePr.find((p) => p.type === conditionType);
-  return conditional ? { tcPr: conditional.tcPr, rPr: conditional.rPr } : undefined;
+  if (!conditional) return undefined;
+
+  const runPropsFromPpr = resolveTextFormatting(conditional.pPr?.runProperties, styleResolver);
+  const resolvedRpr = resolveTextFormatting(conditional.rPr, styleResolver);
+  const mergedRunProps = mergeTextFormatting(runPropsFromPpr, resolvedRpr);
+
+  return {
+    tcPr: conditional.tcPr,
+    rPr: mergedRunProps,
+  };
+}
+
+function mergeConditionalStyles(
+  base?: { tcPr?: TableCellFormatting; rPr?: TextFormatting },
+  override?: { tcPr?: TableCellFormatting; rPr?: TextFormatting }
+): { tcPr?: TableCellFormatting; rPr?: TextFormatting } | undefined {
+  if (!base && !override) return undefined;
+  if (!base) return override;
+  if (!override) return base;
+
+  const merged: { tcPr?: TableCellFormatting; rPr?: TextFormatting } = {};
+
+  const baseTcPr = base.tcPr;
+  const overrideTcPr = override.tcPr;
+  if (baseTcPr || overrideTcPr) {
+    const tcPr: TableCellFormatting = {
+      ...(baseTcPr ?? {}),
+      ...(overrideTcPr ?? {}),
+    };
+
+    if (baseTcPr?.borders || overrideTcPr?.borders) {
+      tcPr.borders = {
+        ...(baseTcPr?.borders ?? {}),
+        ...(overrideTcPr?.borders ?? {}),
+      };
+    }
+
+    if (baseTcPr?.shading || overrideTcPr?.shading) {
+      tcPr.shading = {
+        ...(baseTcPr?.shading ?? {}),
+        ...(overrideTcPr?.shading ?? {}),
+      };
+    }
+
+    if (baseTcPr?.margins || overrideTcPr?.margins) {
+      tcPr.margins = {
+        ...(baseTcPr?.margins ?? {}),
+        ...(overrideTcPr?.margins ?? {}),
+      };
+    }
+
+    merged.tcPr = tcPr;
+  }
+
+  merged.rPr = mergeTextFormatting(base.rPr, override.rPr);
+
+  return merged;
+}
+
+function resolveTextFormatting(
+  formatting: TextFormatting | undefined,
+  styleResolver: StyleResolver | null
+): TextFormatting | undefined {
+  if (!formatting) return undefined;
+  if (!formatting.styleId || !styleResolver) return formatting;
+
+  const styleFormatting = styleResolver.resolveRunStyle(formatting.styleId);
+  return mergeTextFormatting(styleFormatting, formatting);
 }
 
 /**
@@ -402,42 +497,43 @@ function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode
   const tableStyle = tableStyleId ? styleResolver?.getStyle(tableStyleId) : undefined;
   const resolvedTableBorders = table.formatting?.borders ?? tableStyle?.tblPr?.borders;
 
-  // Get firstRow style if enabled
-  const firstRowStyle = look?.firstRow
-    ? resolveTableStyleConditional(styleResolver, tableStyleId, 'firstRow')
-    : undefined;
+  const conditionalStyles = {
+    wholeTable: resolveTableStyleConditional(styleResolver, tableStyleId, 'wholeTable'),
+    firstRow: resolveTableStyleConditional(styleResolver, tableStyleId, 'firstRow'),
+    lastRow: resolveTableStyleConditional(styleResolver, tableStyleId, 'lastRow'),
+    firstCol: resolveTableStyleConditional(styleResolver, tableStyleId, 'firstCol'),
+    lastCol: resolveTableStyleConditional(styleResolver, tableStyleId, 'lastCol'),
+    band1Horz: resolveTableStyleConditional(styleResolver, tableStyleId, 'band1Horz'),
+    band2Horz: resolveTableStyleConditional(styleResolver, tableStyleId, 'band2Horz'),
+    band1Vert: resolveTableStyleConditional(styleResolver, tableStyleId, 'band1Vert'),
+    band2Vert: resolveTableStyleConditional(styleResolver, tableStyleId, 'band2Vert'),
+    nwCell: resolveTableStyleConditional(styleResolver, tableStyleId, 'nwCell'),
+    neCell: resolveTableStyleConditional(styleResolver, tableStyleId, 'neCell'),
+    swCell: resolveTableStyleConditional(styleResolver, tableStyleId, 'swCell'),
+    seCell: resolveTableStyleConditional(styleResolver, tableStyleId, 'seCell'),
+  };
 
-  // Get lastRow style if enabled
-  const lastRowStyle = look?.lastRow
-    ? resolveTableStyleConditional(styleResolver, tableStyleId, 'lastRow')
-    : undefined;
-
-  // Get banded row styles if horizontal banding is enabled (noHBand is false or undefined)
-  const bandingEnabled = look?.noHBand !== true;
-  const band1HorzStyle = bandingEnabled
-    ? resolveTableStyleConditional(styleResolver, tableStyleId, 'band1Horz')
-    : undefined;
-  const band2HorzStyle = bandingEnabled
-    ? resolveTableStyleConditional(styleResolver, tableStyleId, 'band2Horz')
-    : undefined;
+  const bandingEnabledH = look?.noHBand !== true;
+  const bandingEnabledV = look?.noVBand !== true;
 
   // Track data row index (excluding header rows) for banding
   let dataRowIndex = 0;
   const totalRows = table.rows.length;
+  const totalColumns =
+    columnWidths?.length ??
+    table.rows[0]?.cells.reduce((sum, cell) => sum + (cell.formatting?.gridSpan ?? 1), 0) ??
+    0;
   const rows = table.rows.map((row, rowIndex) => {
     const isHeader = rowIndex === 0 && !!look?.firstRow;
     const isLastRow = rowIndex === totalRows - 1 && !!look?.lastRow;
 
-    // Determine conditional style for this row
-    // lastRow takes precedence over banding for the final row
-    let conditionalStyle: { tcPr?: TableCellFormatting; rPr?: TextFormatting } | undefined;
-    if (isHeader) {
-      conditionalStyle = firstRowStyle;
-    } else if (isLastRow) {
-      conditionalStyle = lastRowStyle;
-    } else if (bandingEnabled) {
-      // Alternate between band1 and band2 for data rows
-      conditionalStyle = dataRowIndex % 2 === 0 ? band1HorzStyle : band2HorzStyle;
+    const rowBandStyle =
+      bandingEnabledH && !isHeader && !isLastRow
+        ? dataRowIndex % 2 === 0
+          ? conditionalStyles.band1Horz
+          : conditionalStyles.band2Horz
+        : undefined;
+    if (bandingEnabledH && !isHeader && !isLastRow) {
       dataRowIndex++;
     }
 
@@ -447,10 +543,14 @@ function convertTable(table: Table, styleResolver: StyleResolver | null): PMNode
       isHeader,
       columnWidths,
       totalWidth,
-      conditionalStyle,
+      conditionalStyles,
+      rowBandStyle,
+      bandingEnabledV,
+      look,
       resolvedTableBorders, // Pass resolved table borders (own or from style)
       rowIndex,
       totalRows,
+      totalColumns,
       rowSpanMap
     );
   });
@@ -467,10 +567,28 @@ function convertTableRow(
   isHeaderRow: boolean,
   columnWidths?: number[],
   totalWidth?: number,
-  conditionalStyle?: { tcPr?: TableCellFormatting; rPr?: TextFormatting },
+  conditionalStyles?: {
+    wholeTable?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    firstRow?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    lastRow?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    firstCol?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    lastCol?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    band1Horz?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    band2Horz?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    band1Vert?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    band2Vert?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    nwCell?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    neCell?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    swCell?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+    seCell?: { tcPr?: TableCellFormatting; rPr?: TextFormatting };
+  },
+  rowBandStyle?: { tcPr?: TableCellFormatting; rPr?: TextFormatting },
+  bandingEnabledV?: boolean,
+  tableLook?: TableLook,
   tableBorders?: TableBorders,
   rowIndex?: number,
   totalRows?: number,
+  totalColumns?: number,
   rowSpanMap?: Map<string, { rowSpan: number; skip: boolean }>
 ): PMNode {
   const attrs: TableRowAttrs = {
@@ -482,6 +600,10 @@ function convertTableRow(
   const numCells = row.cells.length;
   const isFirstRow = rowIndex === 0;
   const isLastRow = rowIndex === (totalRows ?? 1) - 1;
+  const rowCnf = row.formatting?.conditionalFormat;
+  const rowIsFirstRow = rowCnf?.firstRow ?? isFirstRow;
+  const rowIsLastRow = rowCnf?.lastRow ?? isLastRow;
+  const totalCols = totalColumns ?? numCells;
 
   // Track column index for mapping to columnWidths (accounting for colspan)
   let colIndex = 0;
@@ -516,8 +638,119 @@ function convertTableRow(
     }
 
     // Determine cell position for table border application
-    const isFirstCol = cellIndex === 0;
-    const isLastCol = cellIndex === numCells - 1;
+    const isFirstCol = colIndex - colspan === 0;
+    const isLastCol = colIndex === totalCols;
+    const cellCnf = cell.formatting?.conditionalFormat;
+    const cellIsFirstRow = cellCnf?.firstRow ?? rowIsFirstRow;
+    const cellIsLastRow = cellCnf?.lastRow ?? rowIsLastRow;
+    const cellIsFirstCol = cellCnf?.firstColumn ?? isFirstCol;
+    const cellIsLastCol = cellCnf?.lastColumn ?? isLastCol;
+
+    // Determine vertical banding style based on column index
+    let vertBandStyle: { tcPr?: TableCellFormatting; rPr?: TextFormatting } | undefined;
+    if (bandingEnabledV) {
+      const firstColOffset = tableLook?.firstColumn ? 1 : 0;
+      const bandColIndex = colIndex - colspan - firstColOffset;
+      const isEligible =
+        bandColIndex >= 0 &&
+        !(tableLook?.lastColumn && cellIsLastCol) &&
+        !(tableLook?.firstColumn && cellIsFirstCol);
+      if (isEligible) {
+        vertBandStyle =
+          bandColIndex % 2 === 0 ? conditionalStyles?.band1Vert : conditionalStyles?.band2Vert;
+      }
+    }
+
+    if (cellCnf?.oddVBand) {
+      vertBandStyle = conditionalStyles?.band1Vert;
+    } else if (cellCnf?.evenVBand) {
+      vertBandStyle = conditionalStyles?.band2Vert;
+    }
+
+    let effectiveRowBandStyle = rowBandStyle;
+    if (rowCnf?.oddHBand) {
+      effectiveRowBandStyle = conditionalStyles?.band1Horz;
+    } else if (rowCnf?.evenHBand) {
+      effectiveRowBandStyle = conditionalStyles?.band2Horz;
+    }
+    if (cellCnf?.oddHBand) {
+      effectiveRowBandStyle = conditionalStyles?.band1Horz;
+    } else if (cellCnf?.evenHBand) {
+      effectiveRowBandStyle = conditionalStyles?.band2Horz;
+    }
+
+    // Build conditional style precedence (wholeTable -> banding -> row/col -> corners)
+    let cellConditionalStyle = conditionalStyles?.wholeTable;
+    cellConditionalStyle = mergeConditionalStyles(cellConditionalStyle, effectiveRowBandStyle);
+    cellConditionalStyle = mergeConditionalStyles(cellConditionalStyle, vertBandStyle);
+    if (cellIsFirstRow && (tableLook?.firstRow || rowCnf?.firstRow || cellCnf?.firstRow)) {
+      cellConditionalStyle = mergeConditionalStyles(
+        cellConditionalStyle,
+        conditionalStyles?.firstRow
+      );
+    }
+    if (cellIsLastRow && (tableLook?.lastRow || rowCnf?.lastRow || cellCnf?.lastRow)) {
+      cellConditionalStyle = mergeConditionalStyles(
+        cellConditionalStyle,
+        conditionalStyles?.lastRow
+      );
+    }
+    if (cellIsFirstCol && (tableLook?.firstColumn || rowCnf?.firstColumn || cellCnf?.firstColumn)) {
+      cellConditionalStyle = mergeConditionalStyles(
+        cellConditionalStyle,
+        conditionalStyles?.firstCol
+      );
+    }
+    if (cellIsLastCol && (tableLook?.lastColumn || rowCnf?.lastColumn || cellCnf?.lastColumn)) {
+      cellConditionalStyle = mergeConditionalStyles(
+        cellConditionalStyle,
+        conditionalStyles?.lastCol
+      );
+    }
+    if (
+      cellIsFirstRow &&
+      cellIsFirstCol &&
+      (tableLook?.firstRow || rowCnf?.firstRow || cellCnf?.firstRow) &&
+      (tableLook?.firstColumn || rowCnf?.firstColumn || cellCnf?.firstColumn)
+    ) {
+      cellConditionalStyle = mergeConditionalStyles(
+        cellConditionalStyle,
+        conditionalStyles?.nwCell
+      );
+    }
+    if (
+      cellIsFirstRow &&
+      cellIsLastCol &&
+      (tableLook?.firstRow || rowCnf?.firstRow || cellCnf?.firstRow) &&
+      (tableLook?.lastColumn || rowCnf?.lastColumn || cellCnf?.lastColumn)
+    ) {
+      cellConditionalStyle = mergeConditionalStyles(
+        cellConditionalStyle,
+        conditionalStyles?.neCell
+      );
+    }
+    if (
+      cellIsLastRow &&
+      cellIsFirstCol &&
+      (tableLook?.lastRow || rowCnf?.lastRow || cellCnf?.lastRow) &&
+      (tableLook?.firstColumn || rowCnf?.firstColumn || cellCnf?.firstColumn)
+    ) {
+      cellConditionalStyle = mergeConditionalStyles(
+        cellConditionalStyle,
+        conditionalStyles?.swCell
+      );
+    }
+    if (
+      cellIsLastRow &&
+      cellIsLastCol &&
+      (tableLook?.lastRow || rowCnf?.lastRow || cellCnf?.lastRow) &&
+      (tableLook?.lastColumn || rowCnf?.lastColumn || cellCnf?.lastColumn)
+    ) {
+      cellConditionalStyle = mergeConditionalStyles(
+        cellConditionalStyle,
+        conditionalStyles?.seCell
+      );
+    }
 
     cells.push(
       convertTableCell(
@@ -525,7 +758,7 @@ function convertTableRow(
         styleResolver,
         isHeaderRow,
         gridWidth,
-        conditionalStyle,
+        cellConditionalStyle,
         tableBorders,
         isFirstRow,
         isLastRow,
@@ -576,33 +809,26 @@ function convertTableCell(
 
   // Convert borders — preserve full BorderSpec per side
   // Priority: cell borders > conditional style borders > table borders
-  const cellBorders = formatting?.borders ?? conditionalStyle?.tcPr?.borders;
-  let borders:
-    | {
-        top?: import('../../types/document').BorderSpec;
-        bottom?: import('../../types/document').BorderSpec;
-        left?: import('../../types/document').BorderSpec;
-        right?: import('../../types/document').BorderSpec;
+  const baseBorders = tableBorders
+    ? {
+        top: isFirstRow ? tableBorders.top : tableBorders.insideH,
+        bottom: isLastRow ? tableBorders.bottom : tableBorders.insideH,
+        left: isFirstCol ? tableBorders.left : tableBorders.insideV,
+        right: isLastCol ? tableBorders.right : tableBorders.insideV,
       }
-    | undefined;
+    : undefined;
 
-  if (cellBorders) {
-    borders = {
-      top: cellBorders.top,
-      bottom: cellBorders.bottom,
-      left: cellBorders.left,
-      right: cellBorders.right,
-    };
-  } else if (tableBorders) {
-    // Fall back to table-level borders based on cell position
-    // Table borders: top/bottom/left/right for outer edges, insideH/insideV for internal
-    borders = {
-      top: isFirstRow ? tableBorders.top : tableBorders.insideH,
-      bottom: isLastRow ? tableBorders.bottom : tableBorders.insideH,
-      left: isFirstCol ? tableBorders.left : tableBorders.insideV,
-      right: isLastCol ? tableBorders.right : tableBorders.insideV,
-    };
-  }
+  const conditionalBorders = conditionalStyle?.tcPr?.borders;
+  const cellBorders = formatting?.borders;
+
+  const borders =
+    baseBorders || conditionalBorders || cellBorders
+      ? {
+          ...(baseBorders ?? {}),
+          ...(conditionalBorders ?? {}),
+          ...(cellBorders ?? {}),
+        }
+      : undefined;
 
   const attrs: TableCellAttrs = {
     colspan: formatting?.gridSpan ?? 1,
@@ -628,7 +854,7 @@ function convertTableCell(
   const contentNodes: PMNode[] = [];
   for (const content of cell.content) {
     if (content.type === 'paragraph') {
-      contentNodes.push(convertParagraph(content, styleResolver));
+      contentNodes.push(convertParagraph(content, styleResolver, undefined, conditionalStyle?.rPr));
     } else if (content.type === 'table') {
       // Nested tables - recursively convert
       contentNodes.push(convertTable(content, styleResolver));
@@ -686,16 +912,20 @@ function convertMathEquation(math: MathEquation): PMNode | null {
 /**
  * Convert an InlineSdt to a ProseMirror sdt node with inline content.
  */
-function convertInlineSdt(sdt: InlineSdt, styleRunFormatting?: TextFormatting): PMNode | null {
+function convertInlineSdt(
+  sdt: InlineSdt,
+  styleRunFormatting?: TextFormatting,
+  styleResolver?: StyleResolver | null
+): PMNode | null {
   const props = sdt.properties;
   const inlineNodes: PMNode[] = [];
 
   for (const content of sdt.content) {
     if (content.type === 'run') {
-      const runNodes = convertRun(content, styleRunFormatting);
+      const runNodes = convertRun(content, styleRunFormatting, styleResolver);
       inlineNodes.push(...runNodes);
     } else if (content.type === 'hyperlink') {
-      const linkNodes = convertHyperlink(content, styleRunFormatting);
+      const linkNodes = convertHyperlink(content, styleRunFormatting, styleResolver);
       inlineNodes.push(...linkNodes);
     }
   }
@@ -723,12 +953,22 @@ function convertInlineSdt(sdt: InlineSdt, styleRunFormatting?: TextFormatting): 
  * @param run - The run to convert
  * @param styleFormatting - Text formatting from the paragraph's style (e.g., Heading1's font size/color)
  */
-function convertRun(run: Run, styleFormatting?: TextFormatting): PMNode[] {
+function convertRun(
+  run: Run,
+  styleFormatting?: TextFormatting,
+  styleResolver?: StyleResolver | null
+): PMNode[] {
   const nodes: PMNode[] = [];
 
   // Merge style formatting with run's inline formatting
   // Inline formatting takes precedence over style formatting
-  const mergedFormatting = mergeTextFormatting(styleFormatting, run.formatting);
+  const runStyleFormatting = run.formatting?.styleId
+    ? styleResolver?.resolveRunStyle(run.formatting.styleId)
+    : undefined;
+  const mergedFormatting = mergeTextFormatting(
+    mergeTextFormatting(styleFormatting, runStyleFormatting),
+    run.formatting
+  );
   const marks = textFormattingToMarks(mergedFormatting);
 
   for (const content of run.content) {
@@ -759,7 +999,16 @@ function mergeTextFormatting(
   if (source.underline !== undefined) result.underline = source.underline;
   if (source.strike !== undefined) result.strike = source.strike;
   if (source.doubleStrike !== undefined) result.doubleStrike = source.doubleStrike;
-  if (source.color !== undefined) result.color = source.color;
+  if (source.color !== undefined) {
+    const hasExplicitColor =
+      source.color.rgb ||
+      source.color.themeColor ||
+      source.color.themeTint ||
+      source.color.themeShade;
+    if (!source.color.auto || hasExplicitColor) {
+      result.color = source.color;
+    }
+  }
   if (source.highlight !== undefined) result.highlight = source.highlight;
   if (source.fontSize !== undefined) result.fontSize = source.fontSize;
   if (source.fontFamily !== undefined) result.fontFamily = source.fontFamily;
@@ -1011,7 +1260,11 @@ function convertImage(image: Image): PMNode {
  * @param hyperlink - The hyperlink to convert
  * @param styleFormatting - Text formatting from the paragraph's style
  */
-function convertHyperlink(hyperlink: Hyperlink, styleFormatting?: TextFormatting): PMNode[] {
+function convertHyperlink(
+  hyperlink: Hyperlink,
+  styleFormatting?: TextFormatting,
+  styleResolver?: StyleResolver | null
+): PMNode[] {
   const nodes: PMNode[] = [];
 
   // Create link mark
@@ -1024,7 +1277,13 @@ function convertHyperlink(hyperlink: Hyperlink, styleFormatting?: TextFormatting
   for (const child of hyperlink.children) {
     if (child.type === 'run') {
       // Merge style formatting with run's inline formatting
-      const mergedFormatting = mergeTextFormatting(styleFormatting, child.formatting);
+      const runStyleFormatting = child.formatting?.styleId
+        ? styleResolver?.resolveRunStyle(child.formatting.styleId)
+        : undefined;
+      const mergedFormatting = mergeTextFormatting(
+        mergeTextFormatting(styleFormatting, runStyleFormatting),
+        child.formatting
+      );
       const runMarks = textFormattingToMarks(mergedFormatting);
       // Add link mark to run marks
       const allMarks = [...runMarks, linkMark];

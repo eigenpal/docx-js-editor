@@ -54,6 +54,7 @@ function renderCellContent(
   const contentEl = doc.createElement('div');
   contentEl.className = TABLE_CLASS_NAMES.cellContent;
   contentEl.style.position = 'relative';
+  contentEl.style.width = `${cellMeasure.width}px`;
 
   let cursorY = 0;
 
@@ -121,6 +122,14 @@ function renderNestedTable(
   // Positioning (relative, not absolute)
   tableEl.style.position = 'relative';
   tableEl.style.width = `${measure.totalWidth}px`;
+  tableEl.style.display = 'block';
+
+  if (block.justification === 'center') {
+    tableEl.style.marginLeft = 'auto';
+    tableEl.style.marginRight = 'auto';
+  } else if (block.justification === 'right') {
+    tableEl.style.marginLeft = 'auto';
+  }
 
   // Store metadata
   tableEl.dataset.blockId = String(block.id);
@@ -187,7 +196,7 @@ function applyBorder(
     | 'borderBottom'
     | 'borderLeft';
 
-  if (!border || border.style === 'none' || border.width === 0) {
+  if (!border || border.style === 'none' || border.style === 'nil' || border.width === 0) {
     el.style[styleProp] = 'none';
   } else {
     const width = border.width ?? 1;
@@ -230,7 +239,11 @@ function renderTableCell(
   // Apply borders - use cell borders if available, otherwise no border
   if (cell.borders) {
     // Collapse shared borders to avoid double-thick lines.
-    if (borderFlags.isFirstRow) applyBorder(cellEl, 'top', cell.borders.top);
+    // Apply top on first row always; on other rows only when an explicit top border
+    // is set (e.g. lastRow conditional style) to show borders like the line above "Total".
+    if (borderFlags.isFirstRow || borderFlags.isLastRow) {
+      applyBorder(cellEl, 'top', cell.borders.top);
+    }
     applyBorder(cellEl, 'right', cell.borders.right);
     applyBorder(cellEl, 'bottom', cell.borders.bottom);
     if (borderFlags.isFirstCol) applyBorder(cellEl, 'left', cell.borders.left);

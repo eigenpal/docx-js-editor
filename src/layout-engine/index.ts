@@ -342,17 +342,17 @@ function layoutTable(
     const isLastFragment = currentRowIndex + fittingRows >= rows.length;
 
     // Calculate x position based on table justification
-    let x = paginator.getColumnX(state.columnIndex);
+    let desiredX = paginator.getColumnX(state.columnIndex);
     if (block.justification === 'center') {
-      x = x + (paginator.columnWidth - measure.totalWidth) / 2;
+      desiredX = desiredX + (paginator.columnWidth - measure.totalWidth) / 2;
     } else if (block.justification === 'right') {
-      x = x + paginator.columnWidth - measure.totalWidth;
+      desiredX = desiredX + paginator.columnWidth - measure.totalWidth;
     }
 
     const fragment: TableFragment = {
       kind: 'table',
       blockId: block.id,
-      x,
+      x: desiredX,
       y: 0, // Will be set by addFragment
       width: measure.totalWidth,
       height: rowsHeight,
@@ -366,6 +366,7 @@ function layoutTable(
 
     const result = paginator.addFragment(fragment, rowsHeight, 0, 0);
     fragment.y = result.y;
+    fragment.x = desiredX;
 
     currentRowIndex += fittingRows;
 

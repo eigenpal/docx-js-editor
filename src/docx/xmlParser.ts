@@ -81,6 +81,9 @@ export function parseXml(xml: string): XmlElement {
     // around hyperlinks and other inline elements. DOCX uses xml:space="preserve"
     // to indicate significant whitespace, but we need to preserve all text as-is.
     trim: false,
+    // IMPORTANT: Without this, xml-js silently drops whitespace-only text nodes
+    // (e.g. <w:t xml:space="preserve"> </w:t> loses the space).
+    captureSpacesBetweenElements: true,
     attributesKey: 'attributes',
     textKey: 'text',
   }) as XmlElement;

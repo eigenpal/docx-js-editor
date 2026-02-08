@@ -448,6 +448,8 @@ export interface TableRowFormatting {
   justification?: 'left' | 'center' | 'right';
   /** Hidden row */
   hidden?: boolean;
+  /** Conditional format style */
+  conditionalFormat?: ConditionalFormatStyle;
 }
 
 /**

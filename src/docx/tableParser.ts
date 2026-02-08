@@ -531,6 +531,10 @@ export function parseTableRowProperties(
   const hidden = parseBooleanElement(findChild(trPrElement, 'w', 'hidden'));
   if (hidden) formatting.hidden = true;
 
+  // Conditional format style (w:cnfStyle)
+  const conditionalFormat = parseConditionalFormatStyle(findChild(trPrElement, 'w', 'cnfStyle'));
+  if (conditionalFormat) formatting.conditionalFormat = conditionalFormat;
+
   if (Object.keys(formatting).length === 0) return undefined;
 
   return formatting;

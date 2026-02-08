@@ -422,6 +422,8 @@ function measureTableBlock(tableBlock: TableBlock, contentWidth: number): TableM
 interface FloatingZoneWithAnchor extends FloatingImageZone {
   /** Block index where this floating image is anchored */
   anchorBlockIndex: number;
+  /** If true, zone is positioned relative to margin/page and applies to all blocks */
+  isMarginRelative?: boolean;
 }
 
 function extractFloatingZones(blocks: FlowBlock[], contentWidth: number): FloatingZoneWithAnchor[] {
@@ -487,12 +489,16 @@ function extractFloatingZones(blocks: FlowBlock[], contentWidth: number): Floati
       }
 
       if (leftMargin > 0 || rightMargin > 0) {
+        // Images positioned relative to margin/page apply globally (before their anchor paragraph)
+        const isMarginRelative =
+          position?.vertical?.relativeTo === 'margin' || position?.vertical?.relativeTo === 'page';
         zones.push({
           leftMargin,
           rightMargin,
           topY: topY - distTop,
           bottomY: bottomY + distBottom,
           anchorBlockIndex: blockIndex,
+          isMarginRelative,
         });
       }
     }
@@ -617,36 +623,53 @@ function measureBlocks(blocks: FlowBlock[], contentWidth: number): Measure[] {
   // Pre-extract floating image exclusion zones with anchor block indices
   const floatingZonesWithAnchors = extractFloatingZones(blocks, contentWidth);
 
-  // Find the anchor block indices where floating zones become active
-  const anchorIndices = new Set(floatingZonesWithAnchors.map((z) => z.anchorBlockIndex));
+  // Find the anchor block indices where paragraph-relative floating zones become active
+  const anchorIndices = new Set(
+    floatingZonesWithAnchors.filter((z) => !z.isMarginRelative).map((z) => z.anchorBlockIndex)
+  );
 
-  // Convert to plain FloatingImageZone for measureParagraph
-  const floatingZones: FloatingImageZone[] = floatingZonesWithAnchors.map((z) => ({
-    leftMargin: z.leftMargin,
-    rightMargin: z.rightMargin,
-    topY: z.topY,
-    bottomY: z.bottomY,
-  }));
+  // Separate margin-relative zones (apply globally) from paragraph-relative zones
+  const marginRelativeZones: FloatingImageZone[] = floatingZonesWithAnchors
+    .filter((z) => z.isMarginRelative)
+    .map((z) => ({
+      leftMargin: z.leftMargin,
+      rightMargin: z.rightMargin,
+      topY: z.topY,
+      bottomY: z.bottomY,
+    }));
+
+  const paragraphRelativeZones: FloatingImageZone[] = floatingZonesWithAnchors
+    .filter((z) => !z.isMarginRelative)
+    .map((z) => ({
+      leftMargin: z.leftMargin,
+      rightMargin: z.rightMargin,
+      topY: z.topY,
+      bottomY: z.bottomY,
+    }));
 
   // Track cumulative Y position for floating zone overlap calculation
   // This resets when we reach a block with page-level floating images
   let cumulativeY = 0;
-  let zonesActive = false;
+  let paragraphZonesActive = false;
 
   return blocks.map((block, blockIndex) => {
-    // Check if this block is an anchor for floating images
+    // Check if this block is an anchor for paragraph-relative floating images
     // If so, reset cumulative Y so zones apply from this point
     if (anchorIndices.has(blockIndex)) {
       cumulativeY = 0;
-      zonesActive = true;
+      paragraphZonesActive = true;
     }
 
-    // Only pass zones if they're active (we've reached or passed an anchor block)
-    const activeZones = zonesActive ? floatingZones : undefined;
+    // Margin-relative zones always apply; paragraph-relative only after anchor
+    const activeZones = [
+      ...marginRelativeZones,
+      ...(paragraphZonesActive ? paragraphRelativeZones : []),
+    ];
+    const zones = activeZones.length > 0 ? activeZones : undefined;
 
     try {
       const blockStart = performance.now();
-      const measure = measureBlock(block, contentWidth, activeZones, cumulativeY);
+      const measure = measureBlock(block, contentWidth, zones, cumulativeY);
       const blockTime = performance.now() - blockStart;
       if (blockTime > 500) {
         console.warn(
@@ -1052,7 +1075,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         try {
           // Step 1: Convert PM doc to flow blocks
           let stepStart = performance.now();
-          const newBlocks = toFlowBlocks(state.doc);
+          const newBlocks = toFlowBlocks(state.doc, { theme: _theme });
           let stepTime = performance.now() - stepStart;
           if (stepTime > 500) {
             console.warn(
