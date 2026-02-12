@@ -399,6 +399,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   // Save the last known selection for restoring after toolbar interactions
   const lastSelectionRef = useRef<{ from: number; to: number } | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  // Keep history.state accessible in stable callbacks without stale closures
+  const historyStateRef = useRef(history.state);
+  historyStateRef.current = history.state;
 
   // Helper to get the active editor's view
   const getActiveEditorView = useCallback(() => {
@@ -517,10 +520,7 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
       const view = getActiveEditorView();
       if (view) {
         const { from, to } = view.state.selection;
-        // Only save non-empty selections (when text is actually selected)
-        if (from !== to) {
-          lastSelectionRef.current = { from, to };
-        }
+        lastSelectionRef.current = { from, to };
       }
 
       // Also check table context from ProseMirror
@@ -1090,8 +1090,9 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
             } else if (action.type === 'applyTableStyle') {
               // Resolve style data from built-in presets or document styles
               let preset: TableStylePreset | undefined = getBuiltinTableStyle(action.styleId);
-              if (!preset && history.state?.package.styles) {
-                const styleResolver = createStyleResolver(history.state.package.styles);
+              const currentDocForTable = historyStateRef.current;
+              if (!preset && currentDocForTable?.package.styles) {
+                const styleResolver = createStyleResolver(currentDocForTable.package.styles);
                 const docStyle = styleResolver.getStyle(action.styleId);
                 if (docStyle) {
                   // Convert to preset inline (same as documentStyleToPreset)
@@ -1176,11 +1177,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
     // Restore selection if it was lost during toolbar interaction
     // This happens when user clicks on dropdown menus (font picker, style picker, etc.)
     const { from, to } = view.state.selection;
-    const isEmptySelection = from === to;
     const savedSelection = lastSelectionRef.current;
 
-    if (isEmptySelection && savedSelection && savedSelection.from !== savedSelection.to) {
-      // Selection was lost - restore it before applying the format
+    if (savedSelection && (from !== savedSelection.from || to !== savedSelection.to)) {
+      // Selection was lost (focus moved to dropdown portal) - restore it
       try {
         const tr = view.state.tr.setSelection(
           TextSelection.create(view.state.doc, savedSelection.from, savedSelection.to)
@@ -1288,8 +1288,10 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
           break;
         case 'applyStyle': {
           // Resolve style to get its formatting properties
-          const styleResolver = history.state?.package.styles
-            ? createStyleResolver(history.state.package.styles)
+          // Use ref to avoid stale closure (handleFormat has [] deps)
+          const currentDoc = historyStateRef.current;
+          const styleResolver = currentDoc?.package.styles
+            ? createStyleResolver(currentDoc.package.styles)
             : null;
 
           if (styleResolver) {

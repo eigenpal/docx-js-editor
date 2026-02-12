@@ -36,10 +36,14 @@
     "dist"
   ],
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --config examples/vite/vite.config.ts",
+    "dev:nextjs": "cd examples/nextjs && npm run dev",
+    "dev:remix": "cd examples/remix && npm run dev",
+    "dev:astro": "cd examples/astro && npm run dev",
+    "dev:demo": "bash examples/dev-all.sh",
     "build": "tsup && bun run build:css",
     "build:css": "tailwindcss -c ./tailwind.config.lib.js -i ./src/styles/editor.css -o ./dist/styles.css --minify",
-    "build:demo": "vite build",
+    "build:demo": "vite build --config examples/vite/vite.config.ts",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:e2e": "npx playwright test",
@@ -67,6 +71,7 @@
     }
   },
   "dependencies": {
+    "@radix-ui/react-select": "^2.2.6",
     "clsx": "^2.1.0",
     "docxtemplater": "^3.50.0",
     "jszip": "^3.10.1",
@@ -86,8 +91,8 @@
     "@playwright/test": "^1.58.1",
     "@testing-library/react": "^16.0.0",
     "@types/bun": "^1.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/react": "19.0.8",
+    "@types/react-dom": "19.0.3",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "@vitejs/plugin-react": "^5.1.2",

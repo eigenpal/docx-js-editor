@@ -6,7 +6,7 @@
  */
 
 import * as React from 'react';
-import { Select, SelectContent, SelectItem } from './Select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from './Select';
 import { cn } from '../../lib/utils';
 import type { Style, StyleType, Theme } from '../../types/document';
 
@@ -38,11 +38,7 @@ export interface StylePickerProps {
   theme?: Theme | null;
   disabled?: boolean;
   className?: string;
-  placeholder?: string;
   width?: number | string;
-  showPreview?: boolean;
-  styleTypes?: StyleType[];
-  quickFormatOnly?: boolean;
 }
 
 // ============================================================================
@@ -110,41 +106,44 @@ const DEFAULT_STYLES: StyleOption[] = [
 // COMPONENT
 // ============================================================================
 
+/** Google Docs heading color */
+const HEADING_COLOR = '#4a6c8c';
+
+/** Preview sizes per style (px), matching Google Docs dropdown appearance */
+const STYLE_PREVIEW_SIZES: Record<string, number> = {
+  Title: 26,
+  Subtitle: 18,
+  Heading1: 24,
+  Heading2: 18,
+  Heading3: 16,
+  Heading4: 14,
+  Heading5: 13,
+  Heading6: 13,
+  Normal: 14,
+};
+
 /**
  * Get inline styles for a style option's visual preview
  */
 function getStylePreviewCSS(style: StyleOption): React.CSSProperties {
   const css: React.CSSProperties = {};
 
-  // Font size - convert half-points to pixels (rough approximation for preview)
-  // Scale down for dropdown display
-  if (style.fontSize) {
-    // Map style font sizes to reasonable dropdown preview sizes
-    const ptSize = style.fontSize / 2;
-    if (ptSize >= 20) {
-      css.fontSize = '20px'; // Large (Title, Heading 1)
-    } else if (ptSize >= 16) {
-      css.fontSize = '16px'; // Medium (Heading 2)
-    } else if (ptSize >= 14) {
-      css.fontSize = '14px'; // Small-medium (Heading 3)
-    } else {
-      css.fontSize = '13px'; // Normal
-    }
-  }
+  css.fontSize = `${STYLE_PREVIEW_SIZES[style.styleId] ?? 14}px`;
+  css.lineHeight = '1.3';
 
-  // Bold
   if (style.bold) {
     css.fontWeight = 'bold';
   }
 
-  // Italic
   if (style.italic) {
     css.fontStyle = 'italic';
   }
 
-  // Color
+  // Use explicit color if provided, otherwise apply heading color for heading styles
   if (style.color) {
     css.color = `#${style.color}`;
+  } else if (style.styleId.startsWith('Heading')) {
+    css.color = HEADING_COLOR;
   }
 
   return css;
@@ -156,9 +155,7 @@ export function StylePicker({
   styles,
   disabled = false,
   className,
-  placeholder: _placeholder = 'Normal text',
   width = 120,
-  quickFormatOnly = true,
 }: StylePickerProps) {
   // Convert document styles to options with visual info
   const styleOptions = React.useMemo(() => {
@@ -166,10 +163,23 @@ export function StylePicker({
       return DEFAULT_STYLES;
     }
 
+    // Only show the core set matching Google Docs
+    const ALLOWED_STYLE_IDS = new Set([
+      'Normal',
+      'Title',
+      'Subtitle',
+      'Heading1',
+      'Heading2',
+      'Heading3',
+      'Heading4',
+      'Heading5',
+      'Heading6',
+    ]);
+
     // Build options from document styles
     const docStyles = styles
       .filter((s) => s.type === 'paragraph')
-      .filter((s) => !quickFormatOnly || s.qFormat)
+      .filter((s) => ALLOWED_STYLE_IDS.has(s.styleId))
       .map((s) => ({
         styleId: s.styleId,
         name: s.name || s.styleId,
@@ -200,7 +210,7 @@ export function StylePicker({
 
     // Sort by priority
     return merged.sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99));
-  }, [styles, quickFormatOnly]);
+  }, [styles]);
 
   const handleValueChange = React.useCallback(
     (newValue: string) => {
@@ -209,18 +219,21 @@ export function StylePicker({
     [onChange]
   );
 
+  const currentValue = value || 'Normal';
+  const displayName = styleOptions.find((s) => s.styleId === currentValue)?.name || currentValue;
+
   return (
-    <Select
-      value={value || 'Normal'}
-      onValueChange={handleValueChange}
-      disabled={disabled}
-      className={cn('h-8 text-sm', className)}
-      style={{ width: typeof width === 'number' ? `${width}px` : width }}
-      aria-label="Select paragraph style"
-    >
-      <SelectContent className="min-w-[200px]">
+    <Select value={currentValue} onValueChange={handleValueChange} disabled={disabled}>
+      <SelectTrigger
+        className={cn('h-8 text-sm', className)}
+        style={{ width: typeof width === 'number' ? `${width}px` : width }}
+        aria-label="Select paragraph style"
+      >
+        <span className="truncate">{displayName}</span>
+      </SelectTrigger>
+      <SelectContent className="min-w-[260px] max-h-[400px]">
         {styleOptions.map((style) => (
-          <SelectItem key={style.styleId} value={style.styleId} className="py-2">
+          <SelectItem key={style.styleId} value={style.styleId} className="py-2.5 px-3">
             <span style={getStylePreviewCSS(style)}>{style.name}</span>
           </SelectItem>
         ))}

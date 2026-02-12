@@ -6,7 +6,16 @@
  */
 
 import * as React from 'react';
-import { Select, SelectContent, SelectItem, SelectLabel, SelectSeparator } from './Select';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from './Select';
 import { cn } from '../../lib/utils';
 
 // ============================================================================
@@ -77,9 +86,13 @@ export function LineSpacingPicker({
       value={currentOption.twipsValue.toString()}
       onValueChange={handleValueChange}
       disabled={disabled}
-      className={cn('h-8 text-sm gap-1', className)}
-      style={{ width: typeof width === 'number' ? `${width}px` : width }}
     >
+      <SelectTrigger
+        className={cn('h-8 text-sm gap-1', className)}
+        style={{ width: typeof width === 'number' ? `${width}px` : width }}
+      >
+        <SelectValue>{currentOption.label}</SelectValue>
+      </SelectTrigger>
       <SelectContent>
         {options.map((option) => (
           <SelectItem key={option.twipsValue} value={option.twipsValue.toString()}>
@@ -87,7 +100,9 @@ export function LineSpacingPicker({
           </SelectItem>
         ))}
         <SelectSeparator />
-        <SelectLabel>Paragraph spacing</SelectLabel>
+        <SelectGroup>
+          <SelectLabel>Paragraph spacing</SelectLabel>
+        </SelectGroup>
       </SelectContent>
     </Select>
   );

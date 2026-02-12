@@ -367,6 +367,17 @@ function makeApplyStyle(schema: Schema) {
         }
       }
 
+      // Mark types that are controlled by style definitions
+      const styleControlledMarks = [
+        schema.marks.bold,
+        schema.marks.italic,
+        schema.marks.fontSize,
+        schema.marks.fontFamily,
+        schema.marks.textColor,
+        schema.marks.underline,
+        schema.marks.strike,
+      ].filter(Boolean);
+
       state.doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
         if (node.type.name === 'paragraph' && !seen.has(pos)) {
           seen.add(pos);
@@ -390,11 +401,18 @@ function makeApplyStyle(schema: Schema) {
 
           tr = tr.setNodeMarkup(pos, undefined, newAttrs);
 
-          if (styleMarks.length > 0) {
+          // Only modify marks when we have resolved style attrs
+          // (fallback path without resolvedAttrs just sets styleId)
+          if (resolvedAttrs) {
             const paragraphStart = pos + 1;
             const paragraphEnd = pos + node.nodeSize - 1;
 
             if (paragraphEnd > paragraphStart) {
+              // Clear old style-controlled marks first
+              for (const markType of styleControlledMarks) {
+                tr = tr.removeMark(paragraphStart, paragraphEnd, markType);
+              }
+              // Then add the new style's marks
               for (const mark of styleMarks) {
                 tr = tr.addMark(paragraphStart, paragraphEnd, mark);
               }

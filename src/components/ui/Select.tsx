@@ -1,255 +1,182 @@
 /**
- * Select Component (Native HTML)
+ * Select Component (Radix UI + Tailwind)
  *
- * A minimal, accessible select using native HTML.
- * Replaces Radix UI to avoid React 19 compose-refs issues.
+ * A minimal, accessible select dropdown using Radix UI primitives.
  */
 
 import * as React from 'react';
+import * as SelectPrimitive from '@radix-ui/react-select';
 import { cn } from '../../lib/utils';
 
-// ============================================================================
-// SIMPLE SELECT (recommended)
-// ============================================================================
+const Select = SelectPrimitive.Root;
+const SelectGroup = SelectPrimitive.Group;
+const SelectValue = SelectPrimitive.Value;
 
-export interface SimpleSelectProps extends Omit<
-  React.SelectHTMLAttributes<HTMLSelectElement>,
-  'onChange'
-> {
-  value?: string;
-  onValueChange?: (value: string) => void;
-  options: { value: string; label: string; style?: React.CSSProperties }[];
-  placeholder?: string;
-}
-
-export function SimpleSelect({
-  value,
-  onValueChange,
-  options,
-  placeholder,
+function SelectTrigger({
   className,
-  disabled,
+  children,
+  onMouseDown,
   ...props
-}: SimpleSelectProps) {
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>) {
   return (
-    <select
-      value={value}
-      onChange={(e) => onValueChange?.(e.target.value)}
-      disabled={disabled}
+    <SelectPrimitive.Trigger
       className={cn(
-        'h-8 px-2 py-1 rounded text-sm text-slate-700',
-        'bg-transparent hover:bg-slate-100/80 focus:bg-slate-100/80',
-        'focus:outline-none cursor-pointer transition-colors duration-150',
+        'flex h-8 items-center justify-between gap-1 rounded px-2 py-1',
+        'text-sm text-slate-700 bg-transparent',
+        'hover:bg-slate-100/80 focus:outline-none focus:bg-slate-100/80',
         'disabled:cursor-not-allowed disabled:opacity-50',
+        'transition-colors duration-150',
+        '[&>span]:truncate',
         className
       )}
-      style={{
-        // Inline styles for cross-environment compatibility
-        WebkitAppearance: 'none',
-        MozAppearance: 'none',
-        appearance: 'none',
-        paddingRight: '1.5rem',
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960' fill='%2364748b'%3E%3Cpath d='M480-360 280-560h400L480-360Z'/%3E%3C/svg%3E")`,
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: '1rem',
-        backgroundPosition: 'right 0.25rem center',
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onMouseDown?.(e);
       }}
       {...props}
     >
-      {placeholder && (
-        <option value="" disabled>
-          {placeholder}
-        </option>
-      )}
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value} style={opt.style}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
+      {children}
+      <SelectPrimitive.Icon asChild>
+        <ChevronDownIcon className="h-4 w-4 text-slate-400 shrink-0" />
+      </SelectPrimitive.Icon>
+    </SelectPrimitive.Trigger>
   );
 }
 
-// ============================================================================
-// RADIX-COMPATIBLE API (for existing consumers)
-// ============================================================================
-
-interface SelectContextValue {
-  value: string;
-  onValueChange: (value: string) => void;
-  disabled?: boolean;
-}
-
-const SelectContext = React.createContext<SelectContextValue | null>(null);
-
-interface SelectProps {
-  value?: string;
-  defaultValue?: string;
-  onValueChange?: (value: string) => void;
-  disabled?: boolean;
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-  'aria-label'?: string;
-}
-
-function Select({
-  value,
-  defaultValue = '',
-  onValueChange,
-  disabled,
+function SelectContent({
+  className,
   children,
-  className: selectClassName,
-  style: selectStyle,
-  'aria-label': ariaLabel,
-}: SelectProps) {
-  const [internalValue, setInternalValue] = React.useState(defaultValue);
-  const currentValue = value ?? internalValue;
-
-  const handleValueChange = React.useCallback(
-    (newValue: string) => {
-      if (value === undefined) {
-        setInternalValue(newValue);
-      }
-      onValueChange?.(newValue);
-    },
-    [value, onValueChange]
-  );
-
-  // Extract SelectContent children to render inside native select
-  const items: React.ReactNode[] = [];
-  React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child) && child.type === SelectContent) {
-      const props = child.props as { children?: React.ReactNode };
-      items.push(props.children);
-    }
-  });
-
+  position = 'popper',
+  onCloseAutoFocus,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>) {
   return (
-    <SelectContext.Provider
-      value={{ value: currentValue, onValueChange: handleValueChange, disabled }}
+    <SelectPrimitive.Portal>
+      {/* Wrap in .ep-root so Tailwind scoped utilities apply inside the portal */}
+      <div className="ep-root">
+        <SelectPrimitive.Content
+          className={cn(
+            'relative z-50 max-h-72 min-w-[8rem] overflow-hidden',
+            'rounded-lg border border-slate-200 bg-white shadow-lg',
+            'data-[state=open]:animate-in data-[state=closed]:animate-out',
+            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+            'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+            'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
+            position === 'popper' &&
+              'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
+            className
+          )}
+          position={position}
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            onCloseAutoFocus?.(e);
+          }}
+          {...props}
+        >
+          <SelectPrimitive.Viewport
+            className={cn(
+              'p-1',
+              position === 'popper' &&
+                'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]'
+            )}
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            {children}
+          </SelectPrimitive.Viewport>
+        </SelectPrimitive.Content>
+      </div>
+    </SelectPrimitive.Portal>
+  );
+}
+
+function SelectLabel({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>) {
+  return (
+    <SelectPrimitive.Label
+      className={cn('px-2 py-1.5 text-xs font-medium text-slate-500', className)}
+      {...props}
+    />
+  );
+}
+
+function SelectItem({
+  className,
+  children,
+  onMouseDown,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>) {
+  return (
+    <SelectPrimitive.Item
+      className={cn(
+        'relative flex w-full cursor-pointer select-none items-center',
+        'rounded px-2 py-1.5 text-sm text-slate-700 outline-none',
+        'hover:bg-slate-100 focus:bg-slate-100',
+        'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        className
+      )}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onMouseDown?.(e);
+      }}
+      {...props}
     >
-      <select
-        value={currentValue}
-        onChange={(e) => handleValueChange(e.target.value)}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        className={cn(
-          'h-8 px-2 py-1 rounded text-sm text-slate-700',
-          'bg-transparent hover:bg-slate-100/80 focus:bg-slate-100/80',
-          'focus:outline-none cursor-pointer transition-colors duration-150',
-          'disabled:cursor-not-allowed disabled:opacity-50',
-          selectClassName
-        )}
-        style={{
-          // Inline styles for cross-environment compatibility
-          WebkitAppearance: 'none',
-          MozAppearance: 'none',
-          appearance: 'none',
-          paddingRight: '1.5rem',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960' fill='%2364748b'%3E%3Cpath d='M480-360 280-560h400L480-360Z'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: '1rem',
-          backgroundPosition: 'right 0.25rem center',
-          ...selectStyle,
-        }}
-      >
-        {items}
-      </select>
-    </SelectContext.Provider>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          <CheckIcon className="h-4 w-4" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+    </SelectPrimitive.Item>
   );
 }
 
-// These components are for API compatibility but don't render anything special
-interface SelectTriggerProps {
-  children?: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-  'aria-label'?: string;
-}
-
-function SelectTrigger(_props: SelectTriggerProps) {
-  // Not used in native implementation - select is always visible
-  return null;
-}
-
-interface SelectValueProps {
-  placeholder?: string;
-  children?: React.ReactNode;
-}
-
-function SelectValue(_props: SelectValueProps) {
-  // Not used - native select shows value automatically
-  return null;
-}
-
-interface SelectContentProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-function SelectContent({ children }: SelectContentProps) {
-  // This is extracted by Select parent and rendered inside native select
-  return <>{children}</>;
-}
-
-interface SelectItemProps {
-  value: string;
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-  className?: string;
-  disabled?: boolean;
-}
-
-/**
- * Extract plain text from React children.
- * Native <option> elements can only contain text, not HTML elements.
- */
-function extractText(children: React.ReactNode): string {
-  if (typeof children === 'string') return children;
-  if (typeof children === 'number') return String(children);
-  if (Array.isArray(children)) return children.map(extractText).join('');
-  if (React.isValidElement(children)) {
-    const props = children.props as { children?: React.ReactNode };
-    return extractText(props.children);
-  }
-  return '';
-}
-
-function SelectItem({ value, children, style: _style, disabled }: SelectItemProps) {
-  // Native <option> can only contain text - extract text from any nested elements
+function SelectSeparator({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>) {
   return (
-    <option value={value} disabled={disabled}>
-      {extractText(children)}
-    </option>
+    <SelectPrimitive.Separator
+      className={cn('-mx-1 my-1 h-px bg-slate-100', className)}
+      {...props}
+    />
   );
 }
 
-interface SelectGroupProps {
-  children: React.ReactNode;
-}
-
-function SelectGroup({ children }: SelectGroupProps) {
-  return <>{children}</>;
-}
-
-interface SelectLabelProps {
-  children?: React.ReactNode;
-  className?: string;
-}
-
-function SelectLabel({ children }: SelectLabelProps) {
-  // Render as disabled option to act as group label
+// Icons
+function ChevronDownIcon({ className }: { className?: string }) {
   return (
-    <option disabled style={{ fontWeight: 500, color: '#64748b' }}>
-      {extractText(children)}
-    </option>
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path
+        fillRule="evenodd"
+        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+        clipRule="evenodd"
+      />
+    </svg>
   );
 }
 
-function SelectSeparator() {
-  // Native select doesn't support visual separators
-  return null;
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path
+        fillRule="evenodd"
+        d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
 }
 
 export {

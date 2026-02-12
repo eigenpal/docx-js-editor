@@ -746,10 +746,7 @@ export function Toolbar({
             styles={documentStyles}
             theme={theme}
             disabled={disabled}
-            width={75}
-            placeholder="Normal"
-            showPreview={true}
-            quickFormatOnly={true}
+            width={150}
           />
         </ToolbarGroup>
       )}

@@ -12,6 +12,8 @@ import {
   SelectGroup,
   SelectLabel,
   SelectSeparator,
+  SelectTrigger,
+  SelectValue,
 } from './Select';
 import { cn } from '../../lib/utils';
 
@@ -107,14 +109,14 @@ export function FontPicker({
   }, [fonts]);
 
   return (
-    <Select
-      value={displayValue}
-      onValueChange={handleValueChange}
-      disabled={disabled}
-      className={cn('h-8 text-sm', className)}
-      style={{ width: typeof width === 'number' ? `${width}px` : width }}
-      aria-label="Select font family"
-    >
+    <Select value={displayValue} onValueChange={handleValueChange} disabled={disabled}>
+      <SelectTrigger
+        className={cn('h-8 text-sm', className)}
+        style={{ minWidth: typeof width === 'number' ? `${width}px` : width }}
+        aria-label="Select font family"
+      >
+        <SelectValue placeholder={placeholder}>{displayValue}</SelectValue>
+      </SelectTrigger>
       <SelectContent className="max-h-[300px]">
         {groupedFonts['sans-serif'].length > 0 && (
           <SelectGroup>
@@ -167,9 +169,4 @@ export function FontPicker({
       </SelectContent>
     </Select>
   );
-}
-
-// Helper function for font resolution (kept for compatibility)
-export function resolveFontFamily(fontFamily: string): string {
-  return fontFamily;
 }
