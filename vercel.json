@@ -1,12 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "",
-  "outputDirectory": ".",
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "destination": "https://docx-editor-vite.vercel.app/$1",
-      "permanent": false
-    }
-  ]
+  "buildCommand": "bun run build:demo",
+  "outputDirectory": "examples/vite/dist",
+  "installCommand": "bun install",
+  "framework": "vite",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
