@@ -68,6 +68,38 @@ const clearIndentOnBackspace: Command = (state, dispatch) => {
   return true;
 };
 
+/**
+ * Custom Enter handler that splits the block and clears paragraph borders
+ * on the new paragraph. In Word, pressing Enter does NOT propagate paragraph
+ * borders (w:pBdr) to the new paragraph. This matches that behavior.
+ */
+const splitBlockClearBorders: Command = (state, dispatch, view) => {
+  // First, perform the standard split
+  if (!splitBlock(state, dispatch, view)) {
+    return false;
+  }
+
+  // After split, the cursor is in the new (second) paragraph.
+  // We need to clear borders on it. Since splitBlock already dispatched,
+  // we need to work with the updated state from the view.
+  if (dispatch && view) {
+    const newState = view.state;
+    const { $from } = newState.selection;
+    const paragraph = $from.parent;
+
+    if (paragraph.type.name === 'paragraph' && paragraph.attrs.borders) {
+      const pos = $from.before();
+      const tr = newState.tr.setNodeMarkup(pos, undefined, {
+        ...paragraph.attrs,
+        borders: null,
+      });
+      dispatch(tr.scrollIntoView());
+    }
+  }
+
+  return true;
+};
+
 export const BaseKeymapExtension = createExtension({
   name: 'baseKeymap',
   priority: Priority.Low,
@@ -77,7 +109,7 @@ export const BaseKeymapExtension = createExtension({
         // Base keymap provides default editing commands
         ...baseKeymap,
         // Override some keys with better defaults
-        Enter: splitBlock,
+        Enter: splitBlockClearBorders,
         Backspace: chainCommands(deleteSelection, clearIndentOnBackspace, joinBackward),
         Delete: chainCommands(deleteSelection, joinForward),
         'Mod-a': selectAll,

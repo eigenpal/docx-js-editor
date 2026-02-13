@@ -118,10 +118,10 @@ export const ImageExtension = createNodeExtension({
         styles.push('margin-right: auto');
         domAttrs.class += ' docx-image-block';
 
-        const marginTop = attrs.distTop ?? 8;
-        const marginBottom = attrs.distBottom ?? 8;
-        styles.push(`margin-top: ${marginTop}px`);
-        styles.push(`margin-bottom: ${marginBottom}px`);
+        const marginTop = attrs.distTop ?? 0;
+        const marginBottom = attrs.distBottom ?? 0;
+        if (marginTop > 0) styles.push(`margin-top: ${marginTop}px`);
+        if (marginBottom > 0) styles.push(`margin-bottom: ${marginBottom}px`);
       }
 
       if (attrs.transform) {

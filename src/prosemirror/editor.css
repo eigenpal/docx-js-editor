@@ -314,6 +314,12 @@
   clear: both;
 }
 
+/* Paragraphs containing only a block image: remove text-indent and center */
+.prosemirror-editor .ProseMirror p:has(> img.docx-image-block:only-child) {
+  text-indent: 0 !important;
+  text-align: center;
+}
+
 /* Clear floats after paragraphs containing floated images */
 .prosemirror-editor .ProseMirror p:has(img.docx-image-float)::after {
   content: '';

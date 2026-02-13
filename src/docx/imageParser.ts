@@ -289,24 +289,44 @@ const WRAP_ELEMENTS = [
 ];
 
 /**
- * Parse wrap element to ImageWrap
+ * Parse wrap element to ImageWrap.
+ *
+ * Distance attributes (distT/distB/distL/distR) can appear on both
+ * the wp:anchor element and the wrap child element. The wrap child
+ * element values take priority; anchor-level values are used as fallbacks.
  */
-function parseWrapElement(wrapEl: XmlElement | null, behindDoc: boolean): ImageWrap {
+function parseWrapElement(
+  wrapEl: XmlElement | null,
+  behindDoc: boolean,
+  anchorDistances?: { distT?: number; distB?: number; distL?: number; distR?: number }
+): ImageWrap {
   if (!wrapEl) {
     // No wrap element = wrapNone
-    return {
+    const wrap: ImageWrap = {
       type: behindDoc ? 'behind' : 'inFront',
     };
+    // Use anchor-level distances as fallback
+    if (anchorDistances?.distT !== undefined) wrap.distT = anchorDistances.distT;
+    if (anchorDistances?.distB !== undefined) wrap.distB = anchorDistances.distB;
+    if (anchorDistances?.distL !== undefined) wrap.distL = anchorDistances.distL;
+    if (anchorDistances?.distR !== undefined) wrap.distR = anchorDistances.distR;
+    return wrap;
   }
 
   const wrapName = wrapEl.name || '';
   const wrapType = wrapName.replace('wp:', '');
 
-  // Parse common distance attributes
-  const distT = parseNumericAttribute(wrapEl, null, 'distT') ?? undefined;
-  const distB = parseNumericAttribute(wrapEl, null, 'distB') ?? undefined;
-  const distL = parseNumericAttribute(wrapEl, null, 'distL') ?? undefined;
-  const distR = parseNumericAttribute(wrapEl, null, 'distR') ?? undefined;
+  // Parse distance attributes from the wrap child element
+  const wrapDistT = parseNumericAttribute(wrapEl, null, 'distT') ?? undefined;
+  const wrapDistB = parseNumericAttribute(wrapEl, null, 'distB') ?? undefined;
+  const wrapDistL = parseNumericAttribute(wrapEl, null, 'distL') ?? undefined;
+  const wrapDistR = parseNumericAttribute(wrapEl, null, 'distR') ?? undefined;
+
+  // Wrap child values take priority, then anchor-level values
+  const distT = wrapDistT ?? anchorDistances?.distT;
+  const distB = wrapDistB ?? anchorDistances?.distB;
+  const distL = wrapDistL ?? anchorDistances?.distL;
+  const distR = wrapDistR ?? anchorDistances?.distR;
 
   // Parse wrapText attribute
   const wrapText = getAttribute(wrapEl, null, 'wrapText') ?? undefined;
@@ -622,11 +642,23 @@ function parseInline(
   const xfrm = findPictureTransform(inlineEl);
   const transform = parseTransform(xfrm);
 
+  // Read distance attributes from wp:inline (OOXML spec: distT, distB, distL, distR)
+  const distT = parseNumericAttribute(inlineEl, null, 'distT') ?? undefined;
+  const distB = parseNumericAttribute(inlineEl, null, 'distB') ?? undefined;
+  const distL = parseNumericAttribute(inlineEl, null, 'distL') ?? undefined;
+  const distR = parseNumericAttribute(inlineEl, null, 'distR') ?? undefined;
+
+  const wrap: ImageWrap = { type: 'inline' };
+  if (distT !== undefined) wrap.distT = distT;
+  if (distB !== undefined) wrap.distB = distB;
+  if (distL !== undefined) wrap.distL = distL;
+  if (distR !== undefined) wrap.distR = distR;
+
   const image: Image = {
     type: 'image',
     rId,
     size,
-    wrap: { type: 'inline' },
+    wrap,
   };
 
   // Add optional properties
@@ -671,9 +703,17 @@ function parseAnchor(
   // Check behindDoc attribute
   const behindDoc = getAttribute(anchorEl, null, 'behindDoc') === '1';
 
-  // Parse wrap element
+  // Read distance attributes from the wp:anchor element itself (fallback values)
+  const anchorDistances = {
+    distT: parseNumericAttribute(anchorEl, null, 'distT') ?? undefined,
+    distB: parseNumericAttribute(anchorEl, null, 'distB') ?? undefined,
+    distL: parseNumericAttribute(anchorEl, null, 'distL') ?? undefined,
+    distR: parseNumericAttribute(anchorEl, null, 'distR') ?? undefined,
+  };
+
+  // Parse wrap element (wrap child values take priority over anchor-level values)
   const wrapEl = findAnyOf(anchorEl, WRAP_ELEMENTS);
-  const wrap = parseWrapElement(wrapEl, behindDoc);
+  const wrap = parseWrapElement(wrapEl, behindDoc, anchorDistances);
 
   // Parse position
   const posH = findByFullName(anchorEl, 'wp:positionH');

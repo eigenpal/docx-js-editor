@@ -326,6 +326,11 @@ function renderBlockImage(run: ImageRun, doc: Document): HTMLElement {
   img.src = run.src;
   img.width = run.width;
   img.height = run.height;
+  // Global CSS reset (Tailwind preflight) sets img { display: block },
+  // which makes text-align: center on the container ineffective.
+  // Use margin: auto on the img itself to center it.
+  img.style.marginLeft = 'auto';
+  img.style.marginRight = 'auto';
   if (run.alt) {
     img.alt = run.alt;
   }
