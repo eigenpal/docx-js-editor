@@ -905,6 +905,11 @@ export function TableOptionsDropdown({
           style={dropdownStyles}
           role="menu"
           aria-label="Table options menu"
+          onMouseDown={(e) => {
+            // Prevent ProseMirror from reclaiming focus when interacting
+            // with form inputs (row height, cell margins, etc.) inside the dropdown
+            e.stopPropagation();
+          }}
         >
           {/* Regular menu items */}
           {MENU_ITEMS.map((item, index) => {

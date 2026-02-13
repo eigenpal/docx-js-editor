@@ -1252,31 +1252,72 @@ export const TablePluginExtension = createExtension({
 
         if (dispatch) {
           const tr = state.tr;
-          // Borders always apply to ALL cells in the table
-          const cells = getAllTableCellPositions(state);
+          const table = context.table;
+          const tableStart = context.tablePos;
 
           const solidBorder = { style: 'single', size: 4, color: { rgb: '000000' } };
           const noBorder = { style: 'none' as const };
 
-          for (const { pos, node } of cells) {
-            let borders;
-            switch (preset) {
-              case 'all':
-              case 'outside':
-                borders = {
-                  top: solidBorder,
-                  bottom: solidBorder,
-                  left: solidBorder,
-                  right: solidBorder,
-                };
-                break;
-              case 'inside':
-              case 'none':
-                borders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
-                break;
+          // Build grid: determine row/col position for each cell
+          const totalRows = table.childCount;
+          let totalCols = 0;
+          if (totalRows > 0) {
+            const firstRow = table.child(0);
+            for (let c = 0; c < firstRow.childCount; c++) {
+              totalCols += (firstRow.child(c).attrs.colspan as number) || 1;
             }
-            tr.setNodeMarkup(tr.mapping.map(pos), undefined, { ...node.attrs, borders });
           }
+
+          table.forEach((row, rowOffset, rowIdx) => {
+            if (row.type.name !== 'tableRow') return;
+            let colIdx = 0;
+            row.forEach((cell, cellOffset) => {
+              const pos = tableStart + rowOffset + cellOffset + 2;
+              const colspan = (cell.attrs.colspan as number) || 1;
+              const isFirstRow = rowIdx === 0;
+              const isLastRow = rowIdx === totalRows - 1;
+              const isFirstCol = colIdx === 0;
+              const isLastCol = colIdx + colspan >= totalCols;
+
+              let borders;
+              switch (preset) {
+                case 'all':
+                  borders = {
+                    top: solidBorder,
+                    bottom: solidBorder,
+                    left: solidBorder,
+                    right: solidBorder,
+                  };
+                  break;
+                case 'outside':
+                  borders = {
+                    top: isFirstRow ? solidBorder : noBorder,
+                    bottom: isLastRow ? solidBorder : noBorder,
+                    left: isFirstCol ? solidBorder : noBorder,
+                    right: isLastCol ? solidBorder : noBorder,
+                  };
+                  break;
+                case 'inside':
+                  borders = {
+                    top: isFirstRow ? noBorder : solidBorder,
+                    bottom: isLastRow ? noBorder : solidBorder,
+                    left: isFirstCol ? noBorder : solidBorder,
+                    right: isLastCol ? noBorder : solidBorder,
+                  };
+                  break;
+                case 'none':
+                  borders = {
+                    top: noBorder,
+                    bottom: noBorder,
+                    left: noBorder,
+                    right: noBorder,
+                  };
+                  break;
+              }
+              tr.setNodeMarkup(tr.mapping.map(pos), undefined, { ...cell.attrs, borders });
+              colIdx += colspan;
+            });
+          });
           dispatch(tr.scrollIntoView());
         }
 
