@@ -226,7 +226,7 @@ export async function parseDocx(input: DocxInput, options: ParseOptions = {}): P
     // ========================================================================
     onProgress('Parsing comments...', 75);
     const comments = timeStage('comments', () =>
-      parseComments(raw.commentsXml, styles, theme, rels, media)
+      parseComments(raw.commentsXml, styles, theme, rels, media, raw.commentsExtensibleXml)
     );
     if (comments.length > 0) {
       documentBody.comments = comments;
