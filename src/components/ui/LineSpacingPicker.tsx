@@ -14,9 +14,9 @@ import {
   SelectLabel,
   SelectSeparator,
   SelectTrigger,
-  SelectValue,
 } from './Select';
 import { cn } from '../../lib/utils';
+import { IconLineSpacing } from './Icons';
 
 // ============================================================================
 // TYPES
@@ -63,7 +63,6 @@ export function LineSpacingPicker({
   options = DEFAULT_OPTIONS,
   disabled = false,
   className,
-  width = 90,
 }: LineSpacingPickerProps) {
   // Find current option by twips value
   const currentOption = React.useMemo(() => {
@@ -88,10 +87,11 @@ export function LineSpacingPicker({
       disabled={disabled}
     >
       <SelectTrigger
-        className={cn('h-8 text-sm gap-1', className)}
-        style={{ width: typeof width === 'number' ? `${width}px` : width }}
+        className={cn('h-8 text-sm gap-0.5 px-2', className)}
+        style={{ width: 'auto' }}
+        title={`Line spacing: ${currentOption.label}`}
       >
-        <SelectValue>{currentOption.label}</SelectValue>
+        <IconLineSpacing className="h-5 w-5 shrink-0" />
       </SelectTrigger>
       <SelectContent>
         {options.map((option) => (
