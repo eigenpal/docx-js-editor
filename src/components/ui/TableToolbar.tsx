@@ -46,6 +46,7 @@ export type TableAction =
   | 'borderRight'
   | { type: 'cellFillColor'; color: string | null }
   | { type: 'borderColor'; color: string }
+  | { type: 'borderWidth'; size: number }
   | {
       type: 'cellBorder';
       side: 'top' | 'bottom' | 'left' | 'right' | 'all';

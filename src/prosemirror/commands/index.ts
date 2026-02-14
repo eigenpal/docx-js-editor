@@ -99,5 +99,6 @@ export {
   applyTableStyle,
   setCellFillColor,
   setTableBorderColor,
+  setTableBorderWidth,
 } from './table';
 export type { TableContextInfo, BorderPreset } from './table';

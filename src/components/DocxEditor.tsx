@@ -140,6 +140,7 @@ import {
   setInsideTableBorders,
   setCellFillColor,
   setTableBorderColor,
+  setTableBorderWidth,
   type TableContextInfo,
 } from '../prosemirror';
 
@@ -402,6 +403,8 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
   // Keep history.state accessible in stable callbacks without stale closures
   const historyStateRef = useRef(history.state);
   historyStateRef.current = history.state;
+  // Track current border color/width for border presets (like Google Docs)
+  const borderSpecRef = useRef({ style: 'single', size: 4, color: { rgb: '000000' } });
 
   // Helper to get the active editor's view
   const getActiveEditorView = useCallback(() => {
@@ -1016,43 +1019,31 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
         case 'splitCell':
           pmSplitCell(view.state, view.dispatch);
           break;
-        // Border actions
+        // Border actions — use current border spec from toolbar
         case 'borderAll':
-          setAllTableBorders(view.state, view.dispatch);
+          setAllTableBorders(view.state, view.dispatch, borderSpecRef.current);
           break;
         case 'borderOutside':
-          setOutsideTableBorders(view.state, view.dispatch);
+          setOutsideTableBorders(view.state, view.dispatch, borderSpecRef.current);
           break;
         case 'borderInside':
-          setInsideTableBorders(view.state, view.dispatch);
+          setInsideTableBorders(view.state, view.dispatch, borderSpecRef.current);
           break;
         case 'borderNone':
           removeTableBorders(view.state, view.dispatch);
           break;
-        // Per-side border actions (toggle with default style)
+        // Per-side border actions (use current border spec)
         case 'borderTop':
-          setCellBorder('top', { style: 'single', size: 4, color: { rgb: '000000' } })(
-            view.state,
-            view.dispatch
-          );
+          setCellBorder('top', borderSpecRef.current)(view.state, view.dispatch);
           break;
         case 'borderBottom':
-          setCellBorder('bottom', { style: 'single', size: 4, color: { rgb: '000000' } })(
-            view.state,
-            view.dispatch
-          );
+          setCellBorder('bottom', borderSpecRef.current)(view.state, view.dispatch);
           break;
         case 'borderLeft':
-          setCellBorder('left', { style: 'single', size: 4, color: { rgb: '000000' } })(
-            view.state,
-            view.dispatch
-          );
+          setCellBorder('left', borderSpecRef.current)(view.state, view.dispatch);
           break;
         case 'borderRight':
-          setCellBorder('right', { style: 'single', size: 4, color: { rgb: '000000' } })(
-            view.state,
-            view.dispatch
-          );
+          setCellBorder('right', borderSpecRef.current)(view.state, view.dispatch);
           break;
         default:
           // Handle complex actions (with parameters)
@@ -1060,7 +1051,12 @@ export const DocxEditor = forwardRef<DocxEditorRef, DocxEditorProps>(function Do
             if (action.type === 'cellFillColor') {
               setCellFillColor(action.color)(view.state, view.dispatch);
             } else if (action.type === 'borderColor') {
+              const rgb = action.color.replace(/^#/, '');
+              borderSpecRef.current = { ...borderSpecRef.current, color: { rgb } };
               setTableBorderColor(action.color)(view.state, view.dispatch);
+            } else if (action.type === 'borderWidth') {
+              borderSpecRef.current = { ...borderSpecRef.current, size: action.size };
+              setTableBorderWidth(action.size)(view.state, view.dispatch);
             } else if (action.type === 'cellBorder') {
               setCellBorder(action.side, {
                 style: action.style,

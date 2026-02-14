@@ -24,7 +24,11 @@ import { ZoomControl } from './ui/ZoomControl';
 import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
 import { TableGridPicker } from './ui/TableGridPicker';
-import { TableOptionsDropdown } from './ui/TableOptionsDropdown';
+import { TableBorderPicker } from './ui/TableBorderPicker';
+import { TableBorderColorPicker } from './ui/TableBorderColorPicker';
+import { TableBorderWidthPicker } from './ui/TableBorderWidthPicker';
+import { TableCellFillPicker } from './ui/TableCellFillPicker';
+import { TableMoreDropdown } from './ui/TableMoreDropdown';
 import { ShapeGallery } from './ui/ShapeGallery';
 import type { TableAction } from './ui/TableToolbar';
 import { cn } from '../lib/utils';
@@ -1047,11 +1051,14 @@ export function Toolbar({
       {/* Table Options - shown when cursor is in a table */}
       {tableContext?.isInTable && onTableAction && (
         <ToolbarGroup label="Table">
-          <TableOptionsDropdown
+          <TableBorderPicker onAction={handleTableAction} disabled={disabled} />
+          <TableBorderColorPicker onAction={handleTableAction} disabled={disabled} />
+          <TableBorderWidthPicker onAction={handleTableAction} disabled={disabled} />
+          <TableCellFillPicker onAction={handleTableAction} disabled={disabled} />
+          <TableMoreDropdown
             onAction={handleTableAction}
             disabled={disabled}
             tableContext={tableContext}
-            tooltip="Table options"
           />
         </ToolbarGroup>
       )}

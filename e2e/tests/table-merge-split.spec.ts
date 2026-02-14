@@ -64,26 +64,15 @@ test.describe('Table Cell Merge/Split', () => {
     await editor.clickTableCell(0, 0, 0);
     await page.waitForTimeout(300);
 
-    // Open table options
-    const tableOptionsButton = page.locator('[data-testid="toolbar-table-options"]');
-    if (await tableOptionsButton.isVisible()) {
-      await tableOptionsButton.click();
-      await page.waitForTimeout(200);
-
-      // Look for split cell menu item - should be disabled
-      const splitItem = page.locator('[role="menu"]').locator('text=Split Cell');
-      if (await splitItem.isVisible()) {
-        // Check if the menu item has disabled styling or aria-disabled
-        const isDisabled = await splitItem.evaluate((el: HTMLElement) => {
-          return (
-            el.getAttribute('aria-disabled') === 'true' ||
-            el.classList.contains('disabled') ||
-            (el as HTMLButtonElement).disabled === true ||
-            el.closest('[aria-disabled="true"]') !== null
-          );
-        });
-        expect(isDisabled).toBe(true);
-      }
+    // Open More dropdown and check split cell menu item is disabled
+    await page.locator('[data-testid="toolbar-table-more"]').click();
+    await page.waitForSelector('[role="menu"]', { state: 'visible', timeout: 5000 });
+    const splitItem = page.getByRole('menuitem', { name: 'Split cell' });
+    if (await splitItem.isVisible()) {
+      const isDisabled = await splitItem.evaluate(
+        (el: HTMLElement) => (el as HTMLButtonElement).disabled === true
+      );
+      expect(isDisabled).toBe(true);
     }
   });
 
@@ -95,25 +84,15 @@ test.describe('Table Cell Merge/Split', () => {
     await editor.clickTableCell(0, 0, 0);
     await page.waitForTimeout(300);
 
-    // Open table options
-    const tableOptionsButton = page.locator('[data-testid="toolbar-table-options"]');
-    if (await tableOptionsButton.isVisible()) {
-      await tableOptionsButton.click();
-      await page.waitForTimeout(200);
-
-      // Look for merge cells menu item - should be disabled
-      const mergeItem = page.locator('[role="menu"]').locator('text=Merge Cells');
-      if (await mergeItem.isVisible()) {
-        const isDisabled = await mergeItem.evaluate((el: HTMLElement) => {
-          return (
-            el.getAttribute('aria-disabled') === 'true' ||
-            el.classList.contains('disabled') ||
-            (el as HTMLButtonElement).disabled === true ||
-            el.closest('[aria-disabled="true"]') !== null
-          );
-        });
-        expect(isDisabled).toBe(true);
-      }
+    // Open More dropdown and check merge cells menu item is disabled
+    await page.locator('[data-testid="toolbar-table-more"]').click();
+    await page.waitForSelector('[role="menu"]', { state: 'visible', timeout: 5000 });
+    const mergeItem = page.getByRole('menuitem', { name: 'Merge cells' });
+    if (await mergeItem.isVisible()) {
+      const isDisabled = await mergeItem.evaluate(
+        (el: HTMLElement) => (el as HTMLButtonElement).disabled === true
+      );
+      expect(isDisabled).toBe(true);
     }
   });
 });

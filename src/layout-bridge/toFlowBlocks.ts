@@ -423,7 +423,7 @@ function convertParagraphAttrs(pmAttrs: PMParagraphAttrs): ParagraphAttrs {
       }
       // Convert size from eighths of a point to pixels
       // 1 point = 1.333px at 96 DPI, size is in eighths of a point
-      const widthPx = border.size ? Math.max(1, Math.ceil((border.size / 8) * 1.333)) : 1;
+      const widthPx = border.size ? Math.max(1, Math.round((border.size / 8) * 1.333)) : 1;
       // Convert color
       let color = '#000000';
       if (border.color?.rgb) {

@@ -622,6 +622,55 @@ export function IconVerticalAlignBottom(props: IconProps) {
   );
 }
 
+// Table toolbar icons
+export function IconLineWeight(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M120-160v-40h720v40H120Zm0-120v-80h720v80H120Zm0-160v-120h720v120H120Zm0-200v-160h720v160H120Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconKeyboardArrowUp(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M480-528 296-344l-56-56 240-240 240 240-56 56-184-184Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconKeyboardArrowDown(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconKeyboardArrowLeft(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconKeyboardArrowRight(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+    </SvgIcon>
+  );
+}
+
+export function IconMoreVert(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm0-240q-33 0-56.5-23.5T400-720q0-33 23.5-56.5T480-800q33 0 56.5 23.5T560-720q0 33-23.5 56.5T480-640Z" />
+    </SvgIcon>
+  );
+}
+
 // ============================================================================
 // ICON MAP - for MaterialSymbol compatibility
 // ============================================================================
@@ -701,6 +750,13 @@ const iconMap: Record<string, React.ComponentType<IconProps>> = {
   vertical_align_top: IconVerticalAlignTop,
   vertical_align_center: IconVerticalAlignCenter,
   vertical_align_bottom: IconVerticalAlignBottom,
+  // Table toolbar new icons
+  line_weight: IconLineWeight,
+  keyboard_arrow_up: IconKeyboardArrowUp,
+  keyboard_arrow_down: IconKeyboardArrowDown,
+  keyboard_arrow_left: IconKeyboardArrowLeft,
+  keyboard_arrow_right: IconKeyboardArrowRight,
+  more_vert: IconMoreVert,
 };
 
 /**

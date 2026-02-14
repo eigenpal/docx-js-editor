@@ -557,7 +557,7 @@ test.describe('Table Edge Cases', () => {
     await editor.clickTableCell(0, 0, 0);
 
     // Try to delete the only row
-    await editor.openTableOptions();
+    await editor.openTableMore();
 
     // The delete row button should be disabled when there's only one row
     const deleteRowItem = page.getByRole('menuitem', { name: 'Delete row' });
@@ -576,7 +576,7 @@ test.describe('Table Edge Cases', () => {
     await editor.clickTableCell(0, 0, 0);
 
     // Try to delete the only column
-    await editor.openTableOptions();
+    await editor.openTableMore();
 
     // The delete column button should be disabled when there's only one column
     const deleteColItem = page.getByRole('menuitem', { name: 'Delete column' });
