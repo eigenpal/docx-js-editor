@@ -1044,16 +1044,18 @@ function renderListMarker(
   span.className = 'layout-list-marker';
   span.style.display = 'inline-block';
 
-  // Add the marker text with a trailing space for consistent separation
-  // The tab character after the marker in Word provides this spacing
-  span.textContent = marker + '\u00A0'; // Non-breaking space ensures gap
+  // In Word, the marker character is followed by a tab that extends to the
+  // text indent position. We emulate this by left-aligning the marker within
+  // the hanging indent box — the marker sits at the start and the remaining
+  // space acts as the tab gap, just like Word.
+  span.textContent = marker;
 
-  // The marker box should fill the hanging indent space
+  // The marker box fills the hanging indent space
   const hanging = indent?.hanging ?? 24; // Default 24px if not specified
 
-  // Use min-width so short markers fill the space, but long markers can extend
+  // min-width so short markers fill the space; long markers can extend
   span.style.minWidth = `${hanging}px`;
-  span.style.textAlign = 'right'; // Right-align so marker stays close to text
+  span.style.textAlign = 'left';
   span.style.boxSizing = 'border-box';
 
   return span;
