@@ -309,6 +309,25 @@ bun run typecheck && npx playwright test --timeout=60000 --workers=4
 
 ---
 
+## Browser Testing — Prefer Claude in Chrome
+
+When testing UI changes visually (verifying rendering, screenshots for PRs, interactive testing):
+
+- **Prefer the Claude in Chrome extension** (`mcp__claude-in-chrome__*` tools) over Playwright MCP
+- Chrome extension connects to the user's actual Chrome browser — faster, supports file uploads natively
+- Use `tabs_context_mcp` first, then navigate to `http://localhost:5173/`
+- For file uploads: use `find` to locate the file input, then `left_click` on it (Chrome handles the OS dialog)
+- For scrolling the editor: use `javascript_tool` to find and scroll the pages container
+- Take screenshots with `computer` action `screenshot` — these can be attached to PR comments
+
+**Playwright MCP** is better for:
+
+- Automated E2E test runs (`npx playwright test`)
+- File upload via `browser_file_upload` (when file is in project dir)
+- Headless/CI scenarios
+
+---
+
 ## Rules
 
 - **Screenshots:** Save to `screenshots/` folder

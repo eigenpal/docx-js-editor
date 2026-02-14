@@ -1072,23 +1072,33 @@ export function parseParagraph(
           numFmt: level.numFmt,
         };
 
-        // Apply level's paragraph properties (indentation)
-        // For list items, the numbering definition's indentation should control
-        // the layout, so we override paragraph-level indentation with level's
+        // Apply level's paragraph properties (indentation) as defaults.
+        // Per OOXML spec, direct w:ind on the paragraph overrides numbering
+        // level indent — only use numbering indent as fallback.
         if (level.pPr) {
           if (!paragraph.formatting) {
             paragraph.formatting = {};
           }
-          // Apply level indent - this overrides any paragraph-level indent
-          // since list indentation should come from the numbering definition
-          if (level.pPr.indentLeft !== undefined) {
+          const directInd = pPr ? findChild(pPr, 'w', 'ind') : null;
+          const hasDirectLeft =
+            directInd != null &&
+            (getAttribute(directInd, 'w', 'left') !== null ||
+              getAttribute(directInd, 'w', 'start') !== null);
+          const hasDirectFirstLineOrHanging =
+            directInd != null &&
+            (getAttribute(directInd, 'w', 'firstLine') !== null ||
+              getAttribute(directInd, 'w', 'hanging') !== null);
+
+          if (!hasDirectLeft && level.pPr.indentLeft !== undefined) {
             paragraph.formatting.indentLeft = level.pPr.indentLeft;
           }
-          if (level.pPr.indentFirstLine !== undefined) {
-            paragraph.formatting.indentFirstLine = level.pPr.indentFirstLine;
-          }
-          if (level.pPr.hangingIndent !== undefined) {
-            paragraph.formatting.hangingIndent = level.pPr.hangingIndent;
+          if (!hasDirectFirstLineOrHanging) {
+            if (level.pPr.indentFirstLine !== undefined) {
+              paragraph.formatting.indentFirstLine = level.pPr.indentFirstLine;
+            }
+            if (level.pPr.hangingIndent !== undefined) {
+              paragraph.formatting.hangingIndent = level.pPr.hangingIndent;
+            }
           }
         }
       }

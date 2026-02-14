@@ -898,7 +898,6 @@ export function Toolbar({
               value={currentFormatting.lineSpacing}
               onChange={handleLineSpacingChange}
               disabled={disabled}
-              width={65}
             />
           )}
         </ToolbarGroup>

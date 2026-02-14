@@ -101,6 +101,10 @@ const increaseListLevel: Command = (state, dispatch) => {
       .setNodeMarkup(paragraphPos, undefined, {
         ...paragraph.attrs,
         numPr: { ...paragraph.attrs.numPr, ilvl: currentLevel + 1 },
+        // Clear explicit indentation so layout engine computes from new level
+        indentLeft: null,
+        indentFirstLine: null,
+        hangingIndent: null,
       })
       .scrollIntoView()
   );
@@ -130,6 +134,9 @@ const decreaseListLevel: Command = (state, dispatch) => {
           listIsBullet: null,
           listNumFmt: null,
           listMarker: null,
+          indentLeft: null,
+          indentFirstLine: null,
+          hangingIndent: null,
         })
         .scrollIntoView()
     );
@@ -139,6 +146,9 @@ const decreaseListLevel: Command = (state, dispatch) => {
         .setNodeMarkup(paragraphPos, undefined, {
           ...paragraph.attrs,
           numPr: { ...paragraph.attrs.numPr, ilvl: currentLevel - 1 },
+          indentLeft: null,
+          indentFirstLine: null,
+          hangingIndent: null,
         })
         .scrollIntoView()
     );
@@ -295,6 +305,10 @@ function increaseListIndent(): Command {
       const tr = state.tr.setNodeMarkup($from.before(), undefined, {
         ...paragraph.attrs,
         numPr: { ...numPr, ilvl: currentLevel + 1 },
+        // Clear explicit indentation so layout engine computes from new level
+        indentLeft: null,
+        indentFirstLine: null,
+        hangingIndent: null,
       });
       dispatch(tr);
     }
@@ -321,6 +335,10 @@ function decreaseListIndent(): Command {
           listIsBullet: null,
           listNumFmt: null,
           listMarker: null,
+          // Clear list-specific indentation when removing list
+          indentLeft: null,
+          indentFirstLine: null,
+          hangingIndent: null,
         });
         dispatch(tr);
       }
@@ -331,6 +349,10 @@ function decreaseListIndent(): Command {
       const tr = state.tr.setNodeMarkup($from.before(), undefined, {
         ...paragraph.attrs,
         numPr: { ...numPr, ilvl: currentLevel - 1 },
+        // Clear explicit indentation so layout engine computes from new level
+        indentLeft: null,
+        indentFirstLine: null,
+        hangingIndent: null,
       });
       dispatch(tr);
     }
