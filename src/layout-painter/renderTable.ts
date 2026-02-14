@@ -244,9 +244,12 @@ function renderTableCell(
   // Apply borders - use cell borders if available, otherwise no border
   if (cell.borders) {
     // Collapse shared borders to avoid double-thick lines.
-    // Apply top on first row always; on other rows only when an explicit top border
-    // is set (e.g. lastRow conditional style) to show borders like the line above "Total".
-    if (borderFlags.isFirstRow || borderFlags.isLastRow) {
+    // Strategy: "bottom wins" for rows, "right wins" for columns.
+    // Each cell's bottom border represents the shared edge with the row below.
+    // Each cell's right border represents the shared edge with the column to its right.
+    // Only the first row draws its top border (table's top edge).
+    // Only the first column draws its left border (table's left edge).
+    if (borderFlags.isFirstRow) {
       applyBorder(cellEl, 'top', cell.borders.top);
     }
     applyBorder(cellEl, 'right', cell.borders.right);
