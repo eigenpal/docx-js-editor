@@ -380,6 +380,8 @@ function convertParagraphAttrs(pmAttrs: PMParagraphAttrs): ParagraphAttrs {
   // Indentation - handle list item fallback calculation
   // For list items without explicit indentation, calculate based on level
   let indentLeft = pmAttrs.indentLeft;
+  let indentFirstLine = pmAttrs.indentFirstLine;
+  let hangingIndent = pmAttrs.hangingIndent;
   if (pmAttrs.numPr?.numId && indentLeft == null) {
     // Fallback: calculate indentation based on level
     // Each level indents 0.5 inch (720 twips) more
@@ -387,9 +389,14 @@ function convertParagraphAttrs(pmAttrs: PMParagraphAttrs): ParagraphAttrs {
     // Base indentation: 0.5 inch (720 twips) per level
     // Level 0 = 720 twips, Level 1 = 1440 twips, etc.
     indentLeft = (level + 1) * 720;
+    // Default hanging indent of 360 twips for the list marker
+    if (indentFirstLine == null) {
+      indentFirstLine = -360;
+      hangingIndent = true;
+    }
   }
 
-  if (indentLeft != null || pmAttrs.indentRight != null || pmAttrs.indentFirstLine != null) {
+  if (indentLeft != null || pmAttrs.indentRight != null || indentFirstLine != null) {
     attrs.indent = {};
     if (indentLeft != null) {
       attrs.indent.left = twipsToPixels(indentLeft);
@@ -397,12 +404,12 @@ function convertParagraphAttrs(pmAttrs: PMParagraphAttrs): ParagraphAttrs {
     if (pmAttrs.indentRight != null) {
       attrs.indent.right = twipsToPixels(pmAttrs.indentRight);
     }
-    if (pmAttrs.indentFirstLine != null) {
-      if (pmAttrs.hangingIndent) {
+    if (indentFirstLine != null) {
+      if (hangingIndent) {
         // Hanging indent: indentFirstLine is stored as negative, convert to positive for rendering
-        attrs.indent.hanging = Math.abs(twipsToPixels(pmAttrs.indentFirstLine));
+        attrs.indent.hanging = Math.abs(twipsToPixels(indentFirstLine));
       } else {
-        attrs.indent.firstLine = twipsToPixels(pmAttrs.indentFirstLine);
+        attrs.indent.firstLine = twipsToPixels(indentFirstLine);
       }
     }
   }
