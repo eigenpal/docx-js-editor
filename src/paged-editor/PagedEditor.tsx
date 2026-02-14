@@ -1049,6 +1049,9 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     // Cell selection drag state
     const isCellDraggingRef = useRef(false);
     const cellDragAnchorPosRef = useRef<number | null>(null);
+    const cellDragStartXYRef = useRef<{ x: number; y: number } | null>(null);
+    const dblClickCellEscalateRef = useRef<number | null>(null); // cell pos to escalate to on next drag
+    const CELL_DRAG_THRESHOLD = 3; // px: tiny threshold to distinguish click from drag
 
     // Selection gate - ensures selection renders only when layout is current
     const syncCoordinator = useMemo(() => new LayoutSelectionGate(), []);
@@ -1770,10 +1773,13 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
           const cellPos = findCellPosFromPmPos(pmPos);
           if (cellPos !== null) {
             cellDragAnchorPosRef.current = cellPos;
+            cellDragStartXYRef.current = { x: e.clientX, y: e.clientY };
           } else {
             cellDragAnchorPosRef.current = null;
+            cellDragStartXYRef.current = null;
           }
           isCellDraggingRef.current = false;
+          dblClickCellEscalateRef.current = null;
 
           // Start dragging
           isDraggingRef.current = true;
@@ -1874,18 +1880,46 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         const pmPos = getPositionFromMouse(e.clientX, e.clientY);
         if (pmPos === null) return;
 
-        // Check if we're dragging across table cells
-        if (cellDragAnchorPosRef.current !== null) {
+        // After double-click word selection in a cell, any movement escalates to cell selection
+        if (dblClickCellEscalateRef.current !== null) {
+          const anchorCellPos = dblClickCellEscalateRef.current;
+          dblClickCellEscalateRef.current = null; // consume - only escalate once
+          isCellDraggingRef.current = true;
           const currentCellPos = findCellPosFromPmPos(pmPos);
-          if (currentCellPos !== null && currentCellPos !== cellDragAnchorPosRef.current) {
-            isCellDraggingRef.current = true;
-            hiddenPMRef.current.setCellSelection(cellDragAnchorPosRef.current, currentCellPos);
-            return;
+          hiddenPMRef.current.setCellSelection(anchorCellPos, currentCellPos ?? anchorCellPos);
+          return;
+        }
+
+        // Check if we're dragging in/across table cells (Google Docs style)
+        // Any drag that starts in a cell immediately selects that cell,
+        // then extends to adjacent cells as the user drags further.
+        if (cellDragAnchorPosRef.current !== null) {
+          // If already in cell-drag mode, continue updating cell selection
+          if (isCellDraggingRef.current) {
+            const currentCellPos = findCellPosFromPmPos(pmPos);
+            if (currentCellPos !== null) {
+              hiddenPMRef.current.setCellSelection(cellDragAnchorPosRef.current, currentCellPos);
+              return;
+            }
           }
-          // If already in cell-drag mode but still moving, update head cell
-          if (isCellDraggingRef.current && currentCellPos !== null) {
-            hiddenPMRef.current.setCellSelection(cellDragAnchorPosRef.current, currentCellPos);
-            return;
+
+          // Once past tiny threshold (to distinguish click from drag),
+          // immediately select the anchor cell
+          const startXY = cellDragStartXYRef.current;
+          if (startXY) {
+            const dx = e.clientX - startXY.x;
+            const dy = e.clientY - startXY.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist >= CELL_DRAG_THRESHOLD) {
+              isCellDraggingRef.current = true;
+              const currentCellPos = findCellPosFromPmPos(pmPos);
+              // Select from anchor cell to current cell (may be same cell)
+              hiddenPMRef.current.setCellSelection(
+                cellDragAnchorPosRef.current,
+                currentCellPos ?? cellDragAnchorPosRef.current
+              );
+              return;
+            }
           }
         }
 
@@ -2067,6 +2101,8 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
 
       isDraggingRef.current = false;
       isCellDraggingRef.current = false;
+      cellDragStartXYRef.current = null;
+      dblClickCellEscalateRef.current = null;
       // Keep dragAnchorRef for potential shift-click extension
     }, []);
 
@@ -2105,7 +2141,7 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
           }
         }
 
-        // Double-click for word selection
+        // Double-click: word selection first, then ready to escalate to cell selection on any drag
         if (e.detail === 2 && hiddenPMRef.current) {
           const pmPos = getPositionFromMouse(e.clientX, e.clientY);
           if (pmPos !== null) {
@@ -2113,6 +2149,13 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
             if (view) {
               const { doc } = view.state;
               const $pos = doc.resolve(pmPos);
+
+              // If inside a table cell, mark ready for immediate cell escalation on drag
+              const cellPos = findCellPosFromPmPos(pmPos);
+              if (cellPos !== null) {
+                dblClickCellEscalateRef.current = cellPos;
+              }
+
               const parent = $pos.parent;
 
               // Find word boundaries
