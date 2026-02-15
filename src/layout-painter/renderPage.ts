@@ -776,14 +776,11 @@ export function renderPage(
 
   pageEl.appendChild(contentEl);
 
-  // Render header if provided
-  if (options.headerContent && options.headerContent.blocks.length > 0) {
-    // Default header distance is 0.5 inch (48px) from page top if not specified
+  // Render header area (always rendered for hover hint / double-click target)
+  {
     const defaultHeaderDistance = 48;
     const headerDistance = options.headerDistance ?? page.margins.header ?? defaultHeaderDistance;
     const headerContentWidth = page.size.w - page.margins.left - page.margins.right;
-    // Calculate max header height (from header distance to top margin)
-    // Ensure at least some height even if margins are weird
     const maxHeaderHeight = Math.max(page.margins.top - headerDistance, 48);
 
     const headerEl = doc.createElement('div');
@@ -793,26 +790,27 @@ export function renderPage(
     headerEl.style.left = `${page.margins.left}px`;
     headerEl.style.right = `${page.margins.right}px`;
     headerEl.style.width = `${headerContentWidth}px`;
-    // Clip header content to prevent overflow into body area
     headerEl.style.maxHeight = `${maxHeaderHeight}px`;
     headerEl.style.overflow = 'hidden';
+    // Minimum height so empty areas are clickable
+    headerEl.style.minHeight = '20px';
 
-    const headerContentEl = renderHeaderFooterContent(
-      options.headerContent,
-      { ...context, section: 'header', contentWidth: headerContentWidth },
-      options
-    );
-    headerEl.appendChild(headerContentEl);
+    if (options.headerContent && options.headerContent.blocks.length > 0) {
+      const headerContentEl = renderHeaderFooterContent(
+        options.headerContent,
+        { ...context, section: 'header', contentWidth: headerContentWidth },
+        options
+      );
+      headerEl.appendChild(headerContentEl);
+    }
     pageEl.appendChild(headerEl);
   }
 
-  // Render footer if provided
-  if (options.footerContent && options.footerContent.blocks.length > 0) {
-    // Default footer distance is 0.5 inch (48px) from page bottom if not specified
+  // Render footer area (always rendered for hover hint / double-click target)
+  {
     const defaultFooterDistance = 48;
     const footerDistance = options.footerDistance ?? page.margins.footer ?? defaultFooterDistance;
     const footerContentWidth = page.size.w - page.margins.left - page.margins.right;
-    // Calculate max footer height (from footer distance to bottom margin)
     const maxFooterHeight = Math.max(page.margins.bottom - footerDistance, 48);
 
     const footerEl = doc.createElement('div');
@@ -822,16 +820,18 @@ export function renderPage(
     footerEl.style.left = `${page.margins.left}px`;
     footerEl.style.right = `${page.margins.right}px`;
     footerEl.style.width = `${footerContentWidth}px`;
-    // Clip footer content to prevent overflow into body area
     footerEl.style.maxHeight = `${maxFooterHeight}px`;
     footerEl.style.overflow = 'hidden';
+    footerEl.style.minHeight = '20px';
 
-    const footerContentEl = renderHeaderFooterContent(
-      options.footerContent,
-      { ...context, section: 'footer', contentWidth: footerContentWidth },
-      options
-    );
-    footerEl.appendChild(footerContentEl);
+    if (options.footerContent && options.footerContent.blocks.length > 0) {
+      const footerContentEl = renderHeaderFooterContent(
+        options.footerContent,
+        { ...context, section: 'footer', contentWidth: footerContentWidth },
+        options
+      );
+      footerEl.appendChild(footerContentEl);
+    }
     pageEl.appendChild(footerEl);
   }
 
