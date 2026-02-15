@@ -98,20 +98,18 @@ Use Task tool with subagent_type="Explore" to find all files that handle selecti
 
 ### Fast Verification Cycle
 
-**DO NOT run the full test suite — EVER.** Only run tests for the specific feature area you changed. Use the test file mapping below to find the right test file.
+**DO NOT run the full test suite.** Run targeted tests only:
 
 ```bash
 # Step 1: Type check (fast, catches 90% of issues)
 bun run typecheck
 
-# Step 2: Run ONLY the relevant test file(s) — NEVER run all tests
+# Step 2: Run ONLY the relevant test file(s)
 npx playwright test tests/<relevant>.spec.ts --timeout=30000 --workers=4
 
 # Step 3: If fixing a specific test, use --grep
 npx playwright test --grep "test name pattern" --timeout=30000
 ```
-
-**Known flaky/failing tests (pre-existing, not regressions):** `formatting.spec.ts` (bold toggle/undo/redo), `text-editing.spec.ts` (clipboard ops). These require specific browser setup and fail in CI-like environments.
 
 ### Test File Mapping
 

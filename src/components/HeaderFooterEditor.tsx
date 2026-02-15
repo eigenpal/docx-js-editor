@@ -11,6 +11,9 @@ import React, { useRef, useEffect, useCallback, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+import { history } from 'prosemirror-history';
+import { keymap } from 'prosemirror-keymap';
+import { baseKeymap } from 'prosemirror-commands';
 
 import { schema, singletonManager } from '../prosemirror/schema';
 import { headerFooterToProseDoc } from '../prosemirror/conversion/toProseDoc';
@@ -122,8 +125,8 @@ export function HeaderFooterEditor({
       styles: styles || undefined,
     });
 
-    // Use plugins from the singleton manager (already includes history + keymaps)
-    const plugins = singletonManager.getPlugins();
+    // Build plugins from the singleton manager + fresh history for this editor
+    const plugins = [...singletonManager.getPlugins(), history(), keymap(baseKeymap)];
 
     const state = EditorState.create({
       doc: pmDoc,

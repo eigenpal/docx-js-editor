@@ -1735,56 +1735,14 @@ body { background: white; }
   }, [history.state]);
 
   // Handle header/footer double-click — open editing overlay
-  // If no header/footer exists, create an empty one so the user can add content
   const handleHeaderFooterDoubleClick = useCallback(
     (position: 'header' | 'footer') => {
       const hf = position === 'header' ? headerContent : footerContent;
       if (hf) {
         setHfEditPosition(position);
-        return;
       }
-
-      // Create empty header/footer for docs that don't have one yet
-      if (!history.state?.package) return;
-      const pkg = history.state.package;
-      const sectionProps = pkg.document?.finalSectionProperties;
-      if (!sectionProps) return;
-
-      const rId = `rId_new_${position}`;
-      const emptyHf: HeaderFooter = {
-        type: position === 'header' ? 'header' : 'footer',
-        hdrFtrType: 'default',
-        content: [{ type: 'paragraph', children: [], properties: {} }] as any,
-      };
-
-      const mapKey = position === 'header' ? 'headers' : 'footers';
-      const newMap = new Map(pkg[mapKey] ?? []);
-      newMap.set(rId, emptyHf);
-
-      const refKey = position === 'header' ? 'headerReferences' : 'footerReferences';
-      const existingRefs = sectionProps[refKey] ?? [];
-      const newRef = { type: 'default' as const, rId };
-
-      const newDoc: Document = {
-        ...history.state,
-        package: {
-          ...pkg,
-          [mapKey]: newMap,
-          document: pkg.document
-            ? {
-                ...pkg.document,
-                finalSectionProperties: {
-                  ...sectionProps,
-                  [refKey]: [...existingRefs, newRef],
-                },
-              }
-            : pkg.document,
-        },
-      };
-      history.push(newDoc);
-      setHfEditPosition(position);
     },
-    [headerContent, footerContent, history]
+    [headerContent, footerContent]
   );
 
   // Handle header/footer save — update document package with edited content
@@ -1802,28 +1760,27 @@ body { background: white; }
           ? sectionProps?.headerReferences
           : sectionProps?.footerReferences;
       const defaultRef = refs?.find((r) => r.type === 'default');
-      const mapKey = hfEditPosition === 'header' ? 'headers' : 'footers';
-      const map = pkg[mapKey];
+      const map = hfEditPosition === 'header' ? pkg.headers : pkg.footers;
 
       if (defaultRef?.rId && map) {
         const existing = map.get(defaultRef.rId);
-        const updated: HeaderFooter = {
-          type: hfEditPosition,
-          hdrFtrType: 'default',
-          ...existing,
-          content,
-        };
-        const newMap = new Map(map);
-        newMap.set(defaultRef.rId, updated);
+        if (existing) {
+          const updated: HeaderFooter = {
+            ...existing,
+            content,
+          };
+          map.set(defaultRef.rId, updated);
 
-        const newDoc: Document = {
-          ...history.state,
-          package: {
-            ...pkg,
-            [mapKey]: newMap,
-          },
-        };
-        history.push(newDoc);
+          // Force re-render by creating a new Document reference
+          const newDoc: Document = {
+            ...history.state,
+            package: {
+              ...pkg,
+              [hfEditPosition === 'header' ? 'headers' : 'footers']: new Map(map),
+            },
+          };
+          history.push(newDoc);
+        }
       }
 
       setHfEditPosition(null);
@@ -2132,7 +2089,7 @@ body { background: white; }
             endnotePr={history.state?.package.document?.finalSectionProperties?.endnotePr}
           />
           {/* Header/Footer editor overlay */}
-          {hfEditPosition && (hfEditPosition === 'header' ? headerContent : footerContent) && (
+          {hfEditPosition && (headerContent || footerContent) && (
             <HeaderFooterEditor
               headerFooter={
                 (hfEditPosition === 'header' ? headerContent : footerContent) as HeaderFooter
