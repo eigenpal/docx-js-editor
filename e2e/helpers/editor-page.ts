@@ -958,19 +958,18 @@ export class EditorPage {
   }
 
   /**
-   * Open table options dropdown (must be in a table first)
+   * Open table "More" dropdown (must be in a table first)
    */
-  async openTableOptions(): Promise<void> {
-    await this.page.locator('[data-testid="toolbar-table-options"]').click();
+  async openTableMore(): Promise<void> {
+    await this.page.locator('[data-testid="toolbar-table-more"]').click();
     await this.page.waitForSelector('[role="menu"]', { state: 'visible', timeout: 5000 });
   }
 
   /**
-   * Click a table menu item
+   * Click a table menu item in the More dropdown
    */
   async clickTableMenuItem(itemName: string): Promise<void> {
     await this.page.getByRole('menuitem', { name: itemName }).click();
-    // Wait for menu to close
     await this.page.waitForTimeout(100);
   }
 
@@ -978,7 +977,7 @@ export class EditorPage {
    * Add a row above current cell
    */
   async addRowAbove(): Promise<void> {
-    await this.openTableOptions();
+    await this.openTableMore();
     await this.clickTableMenuItem('Insert row above');
   }
 
@@ -986,7 +985,7 @@ export class EditorPage {
    * Add a row below current cell
    */
   async addRowBelow(): Promise<void> {
-    await this.openTableOptions();
+    await this.openTableMore();
     await this.clickTableMenuItem('Insert row below');
   }
 
@@ -994,7 +993,7 @@ export class EditorPage {
    * Add a column to the left
    */
   async addColumnLeft(): Promise<void> {
-    await this.openTableOptions();
+    await this.openTableMore();
     await this.clickTableMenuItem('Insert column left');
   }
 
@@ -1002,7 +1001,7 @@ export class EditorPage {
    * Add a column to the right
    */
   async addColumnRight(): Promise<void> {
-    await this.openTableOptions();
+    await this.openTableMore();
     await this.clickTableMenuItem('Insert column right');
   }
 
@@ -1010,7 +1009,7 @@ export class EditorPage {
    * Delete current row
    */
   async deleteRow(): Promise<void> {
-    await this.openTableOptions();
+    await this.openTableMore();
     await this.clickTableMenuItem('Delete row');
   }
 
@@ -1018,7 +1017,7 @@ export class EditorPage {
    * Delete current column
    */
   async deleteColumn(): Promise<void> {
-    await this.openTableOptions();
+    await this.openTableMore();
     await this.clickTableMenuItem('Delete column');
   }
 
@@ -1026,7 +1025,7 @@ export class EditorPage {
    * Delete entire table
    */
   async deleteTable(): Promise<void> {
-    await this.openTableOptions();
+    await this.openTableMore();
     await this.clickTableMenuItem('Delete table');
   }
 
@@ -1034,29 +1033,27 @@ export class EditorPage {
    * Set all borders on current cell
    */
   async setAllBorders(): Promise<void> {
-    await this.openTableOptions();
-    await this.clickTableMenuItem('All borders');
+    await this.page.locator('[data-testid="toolbar-table-borders"]').click();
+    await this.page.waitForTimeout(100);
+    await this.page.locator('button[title="All borders"]').click();
   }
 
   /**
    * Remove borders from current cell
    */
   async removeBorders(): Promise<void> {
-    await this.openTableOptions();
-    await this.clickTableMenuItem('Remove borders');
+    await this.page.locator('[data-testid="toolbar-table-borders"]').click();
+    await this.page.waitForTimeout(100);
+    await this.page.locator('button[title="No borders"]').click();
   }
 
   /**
    * Set cell fill color
    */
   async setCellFillColor(color: string): Promise<void> {
-    await this.openTableOptions();
-    // Click on cell fill color button
-    await this.page.getByRole('button', { name: 'Cell fill color' }).click();
-    // Wait for color picker to expand
+    await this.page.locator('[data-testid="toolbar-table-cell-fill"]').click();
     await this.page.waitForTimeout(100);
-    // Click the color by title
-    await this.page.locator(`[title="${color}"]`).click();
+    await this.page.locator(`button[title="${color}"]`).click();
   }
 
   /**

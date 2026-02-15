@@ -240,23 +240,25 @@ export {
   formatPageRange as formatPrintPageRange,
   isPrintSupported,
 } from './components/ui/PrintPreview';
+export { TableBorderPicker, type TableBorderPickerProps } from './components/ui/TableBorderPicker';
 export {
-  TableBorderPicker,
-  type TableBorderPickerProps,
-  type BorderConfig,
-  type BorderPosition,
-  type BorderStyleType,
-  createBorderSpec,
-  createBorderConfig,
-  getBorderPositionLabel,
-  getAvailableBorderStyles,
-  getAvailableBorderWidths,
-  mapStyleToCss,
-  BORDER_STYLES,
-  BORDER_WIDTHS,
-  BORDER_POSITIONS,
-  DEFAULT_BORDER_CONFIG,
-} from './components/ui/TableBorderPicker';
+  TableBorderColorPicker,
+  type TableBorderColorPickerProps,
+} from './components/ui/TableBorderColorPicker';
+export {
+  TableBorderWidthPicker,
+  type TableBorderWidthPickerProps,
+} from './components/ui/TableBorderWidthPicker';
+export {
+  TableCellFillPicker,
+  type TableCellFillPickerProps,
+} from './components/ui/TableCellFillPicker';
+export { TableMergeButton, type TableMergeButtonProps } from './components/ui/TableMergeButton';
+export {
+  TableInsertButtons,
+  type TableInsertButtonsProps,
+} from './components/ui/TableInsertButtons';
+export { TableMoreDropdown, type TableMoreDropdownProps } from './components/ui/TableMoreDropdown';
 export {
   CellBackgroundPicker,
   type CellBackgroundPickerProps,

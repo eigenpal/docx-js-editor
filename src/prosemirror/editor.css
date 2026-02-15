@@ -453,7 +453,13 @@
   margin-bottom: 0;
 }
 
-/* Selected cell highlight */
+/* Active cell (cursor is inside this cell) — subtle outline so user knows which cell will be affected */
+.prosemirror-editor .ProseMirror .activeCell {
+  outline: 2px solid rgba(66, 133, 244, 0.5);
+  outline-offset: -2px;
+}
+
+/* Selected cell highlight (multi-cell CellSelection) */
 .prosemirror-editor .ProseMirror .selectedCell {
   background-color: rgba(66, 133, 244, 0.15);
 }

@@ -127,5 +127,6 @@ export {
   applyTableStyle,
   setCellFillColor,
   setTableBorderColor,
+  setTableBorderWidth,
 } from './commands';
 export type { TableContextInfo, BorderPreset } from './commands';

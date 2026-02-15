@@ -1,490 +1,152 @@
 /**
- * TableBorderPicker Component
+ * TableBorderPicker - Google Docs-style border preset popover
  *
- * UI for changing table/cell border styling:
- * - Border style (none, single, double, dashed, dotted, etc.)
- * - Border color
- * - Border width
- * - Which borders to apply (all, top, bottom, left, right, inside, outside)
+ * Shows a grid of border preset buttons: All, Outside, Inside,
+ * Top, Bottom, Left, Right, and Clear.
  */
 
-import React, { useState, useCallback } from 'react';
-import type { CSSProperties, ReactNode } from 'react';
-import type { BorderSpec } from '../../types/document';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Button } from './Button';
+import { Tooltip } from './Tooltip';
 import { MaterialSymbol } from './MaterialSymbol';
+import { cn } from '../../lib/utils';
+import type { TableAction } from './TableToolbar';
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
-/**
- * Border style options (OOXML border styles)
- */
-export type BorderStyleType =
-  | 'none'
-  | 'single'
-  | 'double'
-  | 'dotted'
-  | 'dashed'
-  | 'dashSmallGap'
-  | 'dotDash'
-  | 'dotDotDash'
-  | 'triple'
-  | 'thick'
-  | 'thickThinSmallGap'
-  | 'thinThickSmallGap';
-
-/**
- * Border position options
- */
-export type BorderPosition =
-  | 'all'
-  | 'outside'
-  | 'inside'
-  | 'top'
-  | 'bottom'
-  | 'left'
-  | 'right'
-  | 'insideHorizontal'
-  | 'insideVertical'
-  | 'none';
-
-/**
- * Border configuration
- */
-export interface BorderConfig {
-  style: BorderStyleType;
-  color: string;
-  width: number; // in eighths of a point
-}
-
-/**
- * Props for TableBorderPicker
- */
 export interface TableBorderPickerProps {
-  /** Current border configuration */
-  currentBorder?: BorderConfig;
-  /** Callback when border is applied */
-  onApply?: (position: BorderPosition, config: BorderConfig) => void;
-  /** Whether the picker is disabled */
+  onAction: (action: TableAction) => void;
   disabled?: boolean;
-  /** Additional CSS class */
-  className?: string;
-  /** Additional inline styles */
-  style?: CSSProperties;
-  /** Compact mode */
-  compact?: boolean;
 }
 
-// ============================================================================
-// STYLES
-// ============================================================================
-
-const STYLES: Record<string, CSSProperties> = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-    padding: '8px',
-    backgroundColor: '#fff',
-    borderRadius: '4px',
-    border: '1px solid #e0e0e0',
-    minWidth: '200px',
-  },
-  row: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  label: {
-    fontSize: '12px',
-    color: '#666',
-    minWidth: '50px',
-  },
-  select: {
-    flex: 1,
-    padding: '4px 8px',
-    border: '1px solid #d0d0d0',
-    borderRadius: '3px',
-    fontSize: '12px',
-    backgroundColor: '#fff',
-    cursor: 'pointer',
-  },
-  colorInput: {
-    width: '32px',
-    height: '24px',
-    padding: '0',
-    border: '1px solid #d0d0d0',
-    borderRadius: '3px',
-    cursor: 'pointer',
-  },
-  widthInput: {
-    width: '50px',
-    padding: '4px 8px',
-    border: '1px solid #d0d0d0',
-    borderRadius: '3px',
-    fontSize: '12px',
-    textAlign: 'right' as const,
-  },
-  positionGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(5, 1fr)',
-    gap: '4px',
-  },
-  positionButton: {
-    padding: '4px',
-    border: '1px solid #d0d0d0',
-    borderRadius: '3px',
-    backgroundColor: '#fff',
-    cursor: 'pointer',
-    fontSize: '10px',
-    transition: 'all 0.15s',
-  },
-  positionButtonActive: {
-    backgroundColor: '#1a73e8',
-    borderColor: '#1a73e8',
-    color: '#fff',
-  },
-  applyButton: {
-    padding: '6px 12px',
-    border: 'none',
-    borderRadius: '3px',
-    backgroundColor: '#1a73e8',
-    color: '#fff',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: 500,
-    transition: 'background-color 0.15s',
-  },
-  preview: {
-    width: '60px',
-    height: '40px',
-    border: '1px solid #d0d0d0',
-    borderRadius: '3px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  previewInner: {
-    width: '40px',
-    height: '24px',
-    borderRadius: '2px',
-  },
-};
-
-// ============================================================================
-// ICONS (using Material Symbols)
-// ============================================================================
-
-const ICON_SIZE = 16;
-
-function BorderAllIcon(): React.ReactElement {
-  return <MaterialSymbol name="border_all" size={ICON_SIZE} />;
-}
-
-function BorderOutsideIcon(): React.ReactElement {
-  return <MaterialSymbol name="border_outer" size={ICON_SIZE} />;
-}
-
-function BorderInsideIcon(): React.ReactElement {
-  return <MaterialSymbol name="border_inner" size={ICON_SIZE} />;
-}
-
-function BorderNoneIcon(): React.ReactElement {
-  return <MaterialSymbol name="border_clear" size={ICON_SIZE} />;
-}
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-/**
- * Available border styles
- */
-export const BORDER_STYLES: { value: BorderStyleType; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'single', label: 'Single' },
-  { value: 'double', label: 'Double' },
-  { value: 'dotted', label: 'Dotted' },
-  { value: 'dashed', label: 'Dashed' },
-  { value: 'thick', label: 'Thick' },
-  { value: 'triple', label: 'Triple' },
+const BORDER_PRESETS: { action: TableAction; icon: string; label: string }[] = [
+  { action: 'borderAll', icon: 'border_all', label: 'All borders' },
+  { action: 'borderOutside', icon: 'border_outer', label: 'Outside borders' },
+  { action: 'borderInside', icon: 'border_inner', label: 'Inside borders' },
+  { action: 'borderTop', icon: 'border_top', label: 'Top border' },
+  { action: 'borderBottom', icon: 'border_bottom', label: 'Bottom border' },
+  { action: 'borderLeft', icon: 'border_left', label: 'Left border' },
+  { action: 'borderRight', icon: 'border_right', label: 'Right border' },
+  { action: 'borderNone', icon: 'border_clear', label: 'No borders' },
 ];
 
-/**
- * Available border widths (in eighths of a point)
- */
-export const BORDER_WIDTHS: { value: number; label: string }[] = [
-  { value: 4, label: '½ pt' },
-  { value: 8, label: '1 pt' },
-  { value: 12, label: '1½ pt' },
-  { value: 16, label: '2 pt' },
-  { value: 24, label: '3 pt' },
-  { value: 36, label: '4½ pt' },
-  { value: 48, label: '6 pt' },
-];
+export function TableBorderPicker({ onAction, disabled = false }: TableBorderPickerProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-/**
- * Border position options
- */
-export const BORDER_POSITIONS: { value: BorderPosition; label: string; icon: ReactNode }[] = [
-  { value: 'all', label: 'All', icon: <BorderAllIcon /> },
-  { value: 'outside', label: 'Outside', icon: <BorderOutsideIcon /> },
-  { value: 'inside', label: 'Inside', icon: <BorderInsideIcon /> },
-  { value: 'none', label: 'None', icon: <BorderNoneIcon /> },
-];
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
 
-/**
- * Default border configuration
- */
-export const DEFAULT_BORDER_CONFIG: BorderConfig = {
-  style: 'single',
-  color: '#000000',
-  width: 8, // 1 pt
-};
-
-// ============================================================================
-// COMPONENTS
-// ============================================================================
-
-/**
- * TableBorderPicker - UI for styling table/cell borders
- */
-export function TableBorderPicker({
-  currentBorder = DEFAULT_BORDER_CONFIG,
-  onApply,
-  disabled = false,
-  className,
-  style: additionalStyle,
-  compact = false,
-}: TableBorderPickerProps): React.ReactElement {
-  const [borderConfig, setBorderConfig] = useState<BorderConfig>(currentBorder);
-  const [selectedPosition, setSelectedPosition] = useState<BorderPosition>('all');
-
-  // Handle style change
-  const handleStyleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setBorderConfig((prev) => ({ ...prev, style: e.target.value as BorderStyleType }));
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   }, []);
 
-  // Handle color change
-  const handleColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setBorderConfig((prev) => ({ ...prev, color: e.target.value }));
-  }, []);
+  const handlePreset = useCallback(
+    (action: TableAction) => {
+      onAction(action);
+      setIsOpen(false);
+    },
+    [onAction]
+  );
 
-  // Handle width change
-  const handleWidthChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setBorderConfig((prev) => ({ ...prev, width: parseInt(e.target.value, 10) }));
-  }, []);
-
-  // Handle position selection
-  const handlePositionClick = useCallback((position: BorderPosition) => {
-    setSelectedPosition(position);
-  }, []);
-
-  // Handle apply
-  const handleApply = useCallback(() => {
-    onApply?.(selectedPosition, borderConfig);
-  }, [onApply, selectedPosition, borderConfig]);
-
-  // Generate preview style
-  const previewStyle: CSSProperties = {
-    ...STYLES.previewInner,
-    border:
-      borderConfig.style === 'none'
-        ? '1px dashed #ccc'
-        : `${borderConfig.width / 8}pt ${mapStyleToCss(borderConfig.style)} ${borderConfig.color}`,
-  };
-
-  const containerStyle: CSSProperties = {
-    ...STYLES.container,
-    ...additionalStyle,
-  };
-
-  const classNames = ['docx-table-border-picker'];
-  if (className) classNames.push(className);
-  if (compact) classNames.push('docx-table-border-picker-compact');
+  const button = (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      className={cn(
+        'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80',
+        isOpen && 'bg-slate-100',
+        disabled && 'opacity-30 cursor-not-allowed'
+      )}
+      onMouseDown={handleMouseDown}
+      onClick={() => !disabled && setIsOpen((prev) => !prev)}
+      disabled={disabled}
+      aria-label="Border style"
+      aria-expanded={isOpen}
+      aria-haspopup="true"
+      data-testid="toolbar-table-borders"
+    >
+      <MaterialSymbol name="border_all" size={20} />
+      <MaterialSymbol name="arrow_drop_down" size={14} className="-ml-1" />
+    </Button>
+  );
 
   return (
-    <div className={classNames.join(' ')} style={containerStyle}>
-      {/* Border Style */}
-      <div style={STYLES.row}>
-        <span style={STYLES.label}>Style:</span>
-        <select
-          value={borderConfig.style}
-          onChange={handleStyleChange}
-          disabled={disabled}
-          style={STYLES.select}
-        >
-          {BORDER_STYLES.map((style) => (
-            <option key={style.value} value={style.value}>
-              {style.label}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
+      {!isOpen ? <Tooltip content="Borders">{button}</Tooltip> : button}
 
-      {/* Border Color */}
-      <div style={STYLES.row}>
-        <span style={STYLES.label}>Color:</span>
-        <input
-          type="color"
-          value={borderConfig.color}
-          onChange={handleColorChange}
-          disabled={disabled}
-          style={STYLES.colorInput}
-        />
-        <span style={{ fontSize: '11px', color: '#666' }}>{borderConfig.color}</span>
-      </div>
-
-      {/* Border Width */}
-      <div style={STYLES.row}>
-        <span style={STYLES.label}>Width:</span>
-        <select
-          value={borderConfig.width}
-          onChange={handleWidthChange}
-          disabled={disabled}
-          style={STYLES.select}
-        >
-          {BORDER_WIDTHS.map((width) => (
-            <option key={width.value} value={width.value}>
-              {width.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Border Position */}
-      <div style={STYLES.row}>
-        <span style={STYLES.label}>Apply to:</span>
-        <div style={STYLES.positionGrid}>
-          {BORDER_POSITIONS.map((pos) => (
-            <button
-              key={pos.value}
-              type="button"
-              onClick={() => handlePositionClick(pos.value)}
-              disabled={disabled}
-              style={{
-                ...STYLES.positionButton,
-                ...(selectedPosition === pos.value ? STYLES.positionButtonActive : {}),
-              }}
-              title={pos.label}
-              aria-label={pos.label}
-              aria-pressed={selectedPosition === pos.value}
-            >
-              {pos.icon}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Preview and Apply */}
-      <div style={{ ...STYLES.row, justifyContent: 'space-between', marginTop: '4px' }}>
-        <div style={STYLES.preview}>
-          <div style={previewStyle} />
-        </div>
-        <button
-          type="button"
-          onClick={handleApply}
-          disabled={disabled}
+      {isOpen && !disabled && (
+        <div
           style={{
-            ...STYLES.applyButton,
-            opacity: disabled ? 0.5 : 1,
-            cursor: disabled ? 'not-allowed' : 'pointer',
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            marginTop: 4,
+            backgroundColor: 'white',
+            border: '1px solid var(--doc-border)',
+            borderRadius: 8,
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
+            padding: 6,
+            zIndex: 1000,
           }}
+          onMouseDown={(e) => e.stopPropagation()}
         >
-          Apply Border
-        </button>
-      </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 2,
+            }}
+          >
+            {BORDER_PRESETS.map(({ action, icon, label }) => (
+              <button
+                key={typeof action === 'string' ? action : action.type}
+                type="button"
+                title={label}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 32,
+                  height: 32,
+                  border: '1px solid transparent',
+                  borderRadius: 4,
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                  color: 'var(--doc-text)',
+                }}
+                onMouseDown={(e) => e.preventDefault()}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                    'var(--doc-bg-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+                }}
+                onClick={() => handlePreset(action)}
+              >
+                <MaterialSymbol name={icon} size={18} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-/**
- * Map OOXML border style to CSS border-style
- */
-export function mapStyleToCss(style: BorderStyleType): string {
-  const mapping: Record<BorderStyleType, string> = {
-    none: 'none',
-    single: 'solid',
-    double: 'double',
-    dotted: 'dotted',
-    dashed: 'dashed',
-    dashSmallGap: 'dashed',
-    dotDash: 'dashed',
-    dotDotDash: 'dashed',
-    triple: 'double',
-    thick: 'solid',
-    thickThinSmallGap: 'double',
-    thinThickSmallGap: 'double',
-  };
-  return mapping[style] || 'solid';
-}
-
-/**
- * Create BorderSpec from BorderConfig
- */
-export function createBorderSpec(config: BorderConfig): BorderSpec {
-  return {
-    style: config.style as BorderSpec['style'],
-    color: { rgb: config.color.replace('#', '') },
-    size: config.width,
-    space: 0,
-  };
-}
-
-/**
- * Create BorderConfig from BorderSpec
- */
-export function createBorderConfig(spec: BorderSpec | undefined): BorderConfig {
-  if (!spec || spec.style === 'none' || spec.style === 'nil') {
-    return { ...DEFAULT_BORDER_CONFIG, style: 'none' };
-  }
-  return {
-    style: (spec.style as BorderStyleType) || 'single',
-    color: spec.color?.rgb ? `#${spec.color.rgb}` : '#000000',
-    width: spec.size ?? 8,
-  };
-}
-
-/**
- * Get border position label
- */
-export function getBorderPositionLabel(position: BorderPosition): string {
-  const labels: Record<BorderPosition, string> = {
-    all: 'All Borders',
-    outside: 'Outside Borders',
-    inside: 'Inside Borders',
-    top: 'Top Border',
-    bottom: 'Bottom Border',
-    left: 'Left Border',
-    right: 'Right Border',
-    insideHorizontal: 'Inside Horizontal',
-    insideVertical: 'Inside Vertical',
-    none: 'No Borders',
-  };
-  return labels[position];
-}
-
-/**
- * Get available border styles
- */
-export function getAvailableBorderStyles(): typeof BORDER_STYLES {
-  return BORDER_STYLES;
-}
-
-/**
- * Get available border widths
- */
-export function getAvailableBorderWidths(): typeof BORDER_WIDTHS {
-  return BORDER_WIDTHS;
-}
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 export default TableBorderPicker;

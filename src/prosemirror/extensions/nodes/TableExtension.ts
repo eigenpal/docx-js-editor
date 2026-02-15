@@ -6,8 +6,15 @@
  */
 
 import type { NodeSpec, Node as PMNode } from 'prosemirror-model';
-import { TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
+import {
+  Plugin,
+  PluginKey,
+  TextSelection,
+  type EditorState,
+  type Transaction,
+} from 'prosemirror-state';
 import { Selection, type Command } from 'prosemirror-state';
+import { Decoration, DecorationSet } from 'prosemirror-view';
 import {
   columnResizing,
   tableEditing,
@@ -149,7 +156,7 @@ function buildCellBorderStyles(attrs: TableCellAttrs): string[] {
     if (!border || !border.style || border.style === 'none' || border.style === 'nil') {
       return 'none';
     }
-    const widthPx = border.size ? Math.max(1, Math.ceil((border.size / 8) * 1.333)) : 1;
+    const widthPx = border.size ? Math.max(1, Math.round((border.size / 8) * 1.333)) : 1;
     const cssStyle = BORDER_STYLE_CSS[border.style] || 'solid';
     const color = border.color?.rgb ? `#${border.color.rgb}` : '#000000';
     return `${widthPx}px ${cssStyle} ${color}`;
@@ -1229,53 +1236,185 @@ export const TablePluginExtension = createExtension({
     }
 
     /**
-     * Get ALL cell positions in the table (regardless of selection).
+     * Build a full grid map of all cells in the table: pos → grid info.
+     * Also builds a reverse lookup by (rowIdx, colIdx).
      */
-    function getAllTableCellPositions(state: EditorState): { pos: number; node: PMNode }[] {
-      const context = getTableContext(state);
-      if (!context.isInTable || context.tablePos === undefined || !context.table) return [];
+    function buildTableGrid(table: PMNode, tableStart: number) {
+      const cellByPos = new Map<
+        number,
+        { rowIdx: number; colIdx: number; colspan: number; pos: number; node: PMNode }
+      >();
+      const cellByRC = new Map<string, number>(); // "row,col" → pos
+      const totalRows = table.childCount;
+      let totalCols = 0;
 
-      const cells: { pos: number; node: PMNode }[] = [];
-      const tableStart = context.tablePos;
-      context.table.descendants((node, pos) => {
-        if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
-          cells.push({ pos: tableStart + pos + 1, node });
-        }
+      table.forEach((row, rowOffset, rowIdx) => {
+        if (row.type.name !== 'tableRow') return;
+        let colIdx = 0;
+        row.forEach((cell, cellOffset) => {
+          const pos = tableStart + rowOffset + cellOffset + 2;
+          const colspan = (cell.attrs.colspan as number) || 1;
+          cellByPos.set(pos, { rowIdx, colIdx, colspan, pos, node: cell });
+          cellByRC.set(`${rowIdx},${colIdx}`, pos);
+          colIdx += colspan;
+        });
+        totalCols = Math.max(totalCols, colIdx);
       });
-      return cells;
+
+      return { cellByPos, cellByRC, totalRows, totalCols };
     }
 
-    function setTableBorders(preset: BorderPreset): Command {
+    function setTableBorders(
+      preset: BorderPreset,
+      borderSpec?: { style: string; size: number; color: { rgb: string } }
+    ): Command {
       return (state, dispatch) => {
         const context = getTableContext(state);
         if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
 
         if (dispatch) {
           const tr = state.tr;
-          // Borders always apply to ALL cells in the table
-          const cells = getAllTableCellPositions(state);
+          const table = context.table;
+          const tableStart = context.tablePos;
 
-          const solidBorder = { style: 'single', size: 4, color: { rgb: '000000' } };
+          // Use provided spec or default to thin black border
+          const solidBorder = borderSpec ?? { style: 'single', size: 4, color: { rgb: '000000' } };
           const noBorder = { style: 'none' as const };
 
-          for (const { pos, node } of cells) {
-            let borders;
+          const { cellByPos, cellByRC } = buildTableGrid(table, tableStart);
+
+          // Get target cells — selection or cursor cell
+          const targetCells = getTargetCellPositions(state);
+
+          // Determine grid bounds of the target cells for outside/inside presets
+          let minRow = Infinity,
+            maxRow = -1,
+            minCol = Infinity,
+            maxCol = -1;
+          for (const { pos } of targetCells) {
+            const info = cellByPos.get(pos);
+            if (info) {
+              minRow = Math.min(minRow, info.rowIdx);
+              maxRow = Math.max(maxRow, info.rowIdx);
+              minCol = Math.min(minCol, info.colIdx);
+              maxCol = Math.max(maxCol, info.colIdx + info.colspan - 1);
+            }
+          }
+
+          // Track which cells we've already modified (avoid double-modify)
+          const modified = new Map<number, Record<string, unknown>>();
+          const getAttrs = (pos: number, node: PMNode) => {
+            return modified.get(pos) ?? { ...node.attrs };
+          };
+          const setAttrs = (pos: number, attrs: Record<string, unknown>) => {
+            modified.set(pos, attrs);
+          };
+
+          // Apply borders to each target cell + update adjacent cells on shared edges
+          for (const { pos } of targetCells) {
+            const info = cellByPos.get(pos);
+            if (!info) continue;
+
+            const isTopEdge = info.rowIdx === minRow;
+            const isBottomEdge = info.rowIdx === maxRow;
+            const isLeftEdge = info.colIdx === minCol;
+            const isRightEdge = info.colIdx + info.colspan - 1 === maxCol;
+
+            // Determine which borders to set on this cell
+            let cellBorders: Record<string, typeof solidBorder | typeof noBorder>;
             switch (preset) {
               case 'all':
-              case 'outside':
-                borders = {
+                cellBorders = {
                   top: solidBorder,
                   bottom: solidBorder,
                   left: solidBorder,
                   right: solidBorder,
                 };
                 break;
+              case 'outside':
+                cellBorders = {
+                  top: isTopEdge ? solidBorder : noBorder,
+                  bottom: isBottomEdge ? solidBorder : noBorder,
+                  left: isLeftEdge ? solidBorder : noBorder,
+                  right: isRightEdge ? solidBorder : noBorder,
+                };
+                break;
               case 'inside':
+                cellBorders = {
+                  top: isTopEdge ? noBorder : solidBorder,
+                  bottom: isBottomEdge ? noBorder : solidBorder,
+                  left: isLeftEdge ? noBorder : solidBorder,
+                  right: isRightEdge ? noBorder : solidBorder,
+                };
+                break;
               case 'none':
-                borders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+                cellBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
                 break;
             }
-            tr.setNodeMarkup(tr.mapping.map(pos), undefined, { ...node.attrs, borders });
+
+            // Update target cell
+            const attrs = getAttrs(pos, info.node);
+            const existingBorders = (attrs.borders as Record<string, unknown>) || {};
+            setAttrs(pos, { ...attrs, borders: { ...existingBorders, ...cellBorders } });
+
+            // Update adjacent cells' matching edges (edge-based borders like Google Docs)
+            // Top edge → adjacent cell above needs matching bottom
+            if (cellBorders.top) {
+              const adjPos = cellByRC.get(`${info.rowIdx - 1},${info.colIdx}`);
+              if (adjPos !== undefined) {
+                const adj = cellByPos.get(adjPos)!;
+                const adjAttrs = getAttrs(adjPos, adj.node);
+                const adjBorders = (adjAttrs.borders as Record<string, unknown>) || {};
+                setAttrs(adjPos, {
+                  ...adjAttrs,
+                  borders: { ...adjBorders, bottom: cellBorders.top },
+                });
+              }
+            }
+            // Bottom edge → adjacent cell below needs matching top
+            if (cellBorders.bottom) {
+              const adjPos = cellByRC.get(`${info.rowIdx + 1},${info.colIdx}`);
+              if (adjPos !== undefined) {
+                const adj = cellByPos.get(adjPos)!;
+                const adjAttrs = getAttrs(adjPos, adj.node);
+                const adjBorders = (adjAttrs.borders as Record<string, unknown>) || {};
+                setAttrs(adjPos, {
+                  ...adjAttrs,
+                  borders: { ...adjBorders, top: cellBorders.bottom },
+                });
+              }
+            }
+            // Left edge → adjacent cell to the left needs matching right
+            if (cellBorders.left) {
+              const adjPos = cellByRC.get(`${info.rowIdx},${info.colIdx - 1}`);
+              if (adjPos !== undefined) {
+                const adj = cellByPos.get(adjPos)!;
+                const adjAttrs = getAttrs(adjPos, adj.node);
+                const adjBorders = (adjAttrs.borders as Record<string, unknown>) || {};
+                setAttrs(adjPos, {
+                  ...adjAttrs,
+                  borders: { ...adjBorders, right: cellBorders.left },
+                });
+              }
+            }
+            // Right edge → adjacent cell to the right needs matching left
+            if (cellBorders.right) {
+              const adjPos = cellByRC.get(`${info.rowIdx},${info.colIdx + info.colspan}`);
+              if (adjPos !== undefined) {
+                const adj = cellByPos.get(adjPos)!;
+                const adjAttrs = getAttrs(adjPos, adj.node);
+                const adjBorders = (adjAttrs.borders as Record<string, unknown>) || {};
+                setAttrs(adjPos, {
+                  ...adjAttrs,
+                  borders: { ...adjBorders, left: cellBorders.right },
+                });
+              }
+            }
+          }
+
+          // Apply all accumulated changes to the transaction
+          for (const [pos, attrs] of modified) {
+            tr.setNodeMarkup(tr.mapping.map(pos), undefined, attrs);
           }
           dispatch(tr.scrollIntoView());
         }
@@ -1319,24 +1458,52 @@ export const TablePluginExtension = createExtension({
           const tr = state.tr;
           const cells = getTargetCellPositions(state);
           const borderValue = spec || { style: 'none' };
+          const { cellByPos, cellByRC } = buildTableGrid(context.table, context.tablePos);
+
+          const modified = new Map<number, Record<string, unknown>>();
+          const getAttrs = (p: number, n: PMNode) => modified.get(p) ?? { ...n.attrs };
+          const setAttrs = (p: number, a: Record<string, unknown>) => modified.set(p, a);
+
+          // Map of side → adjacent side + row/col offset
+          const adjacentMap: Record<string, { adjSide: string; dRow: number; dCol: number }> = {
+            top: { adjSide: 'bottom', dRow: -1, dCol: 0 },
+            bottom: { adjSide: 'top', dRow: 1, dCol: 0 },
+            left: { adjSide: 'right', dRow: 0, dCol: -1 },
+            right: { adjSide: 'left', dRow: 0, dCol: 1 },
+          };
 
           for (const { pos, node } of cells) {
-            const currentBorders = node.attrs.borders || {};
-            let newBorders;
-            if (side === 'all') {
-              newBorders = {
-                top: borderValue,
-                bottom: borderValue,
-                left: borderValue,
-                right: borderValue,
-              };
-            } else {
-              newBorders = { ...currentBorders, [side]: borderValue };
+            const info = cellByPos.get(pos);
+            const attrs = getAttrs(pos, node);
+            const currentBorders = (attrs.borders as Record<string, unknown>) || {};
+
+            const sides = side === 'all' ? ['top', 'bottom', 'left', 'right'] : [side];
+            const newBorders = { ...currentBorders };
+            for (const s of sides) {
+              newBorders[s] = borderValue;
+
+              // Sync adjacent cell's matching edge
+              if (info) {
+                const adj = adjacentMap[s];
+                const adjColIdx =
+                  s === 'right' ? info.colIdx + info.colspan : info.colIdx + adj.dCol;
+                const adjPos = cellByRC.get(`${info.rowIdx + adj.dRow},${adjColIdx}`);
+                if (adjPos !== undefined) {
+                  const adjInfo = cellByPos.get(adjPos)!;
+                  const adjAttrs = getAttrs(adjPos, adjInfo.node);
+                  const adjBorders = (adjAttrs.borders as Record<string, unknown>) || {};
+                  setAttrs(adjPos, {
+                    ...adjAttrs,
+                    borders: { ...adjBorders, [adj.adjSide]: borderValue },
+                  });
+                }
+              }
             }
-            tr.setNodeMarkup(tr.mapping.map(pos), undefined, {
-              ...node.attrs,
-              borders: newBorders,
-            });
+            setAttrs(pos, { ...attrs, borders: newBorders });
+          }
+
+          for (const [p, a] of modified) {
+            tr.setNodeMarkup(tr.mapping.map(p), undefined, a);
           }
           dispatch(tr.scrollIntoView());
         }
@@ -1788,23 +1955,116 @@ export const TablePluginExtension = createExtension({
 
         if (dispatch) {
           const tr = state.tr;
-          // Border color applies to all cells in the table
-          const cells = getAllTableCellPositions(state);
+          const cells = getTargetCellPositions(state);
           const rgb = color.replace(/^#/, '');
           const defaultBorder = { style: 'single', size: 4 };
+          const { cellByPos, cellByRC } = buildTableGrid(context.table, context.tablePos);
+
+          const modified = new Map<number, Record<string, unknown>>();
+          const getAttrs = (p: number, n: PMNode) => modified.get(p) ?? { ...n.attrs };
+          const setAttrs = (p: number, a: Record<string, unknown>) => modified.set(p, a);
+
+          const adjacentMap: Record<string, { adjSide: string; dRow: number; dCol: number }> = {
+            top: { adjSide: 'bottom', dRow: -1, dCol: 0 },
+            bottom: { adjSide: 'top', dRow: 1, dCol: 0 },
+            left: { adjSide: 'right', dRow: 0, dCol: -1 },
+            right: { adjSide: 'left', dRow: 0, dCol: 1 },
+          };
 
           for (const { pos, node } of cells) {
-            const currentBorders = node.attrs.borders || {};
-            const newBorders = {
-              top: { ...defaultBorder, ...currentBorders.top, color: { rgb } },
-              bottom: { ...defaultBorder, ...currentBorders.bottom, color: { rgb } },
-              left: { ...defaultBorder, ...currentBorders.left, color: { rgb } },
-              right: { ...defaultBorder, ...currentBorders.right, color: { rgb } },
-            };
-            tr.setNodeMarkup(tr.mapping.map(pos), undefined, {
-              ...node.attrs,
-              borders: newBorders,
-            });
+            const info = cellByPos.get(pos);
+            const attrs = getAttrs(pos, node);
+            const currentBorders = (attrs.borders as Record<string, Record<string, unknown>>) || {};
+            const newBorders: Record<string, unknown> = {};
+
+            for (const side of ['top', 'bottom', 'left', 'right'] as const) {
+              const borderVal = { ...defaultBorder, ...currentBorders[side], color: { rgb } };
+              newBorders[side] = borderVal;
+
+              // Sync adjacent cell's matching edge
+              if (info) {
+                const adj = adjacentMap[side];
+                const adjColIdx =
+                  side === 'right' ? info.colIdx + info.colspan : info.colIdx + adj.dCol;
+                const adjPos = cellByRC.get(`${info.rowIdx + adj.dRow},${adjColIdx}`);
+                if (adjPos !== undefined) {
+                  const adjInfo = cellByPos.get(adjPos)!;
+                  const adjAttrs = getAttrs(adjPos, adjInfo.node);
+                  const adjBorders = (adjAttrs.borders as Record<string, unknown>) || {};
+                  setAttrs(adjPos, {
+                    ...adjAttrs,
+                    borders: { ...adjBorders, [adj.adjSide]: borderVal },
+                  });
+                }
+              }
+            }
+            setAttrs(pos, { ...attrs, borders: { ...currentBorders, ...newBorders } });
+          }
+
+          for (const [p, a] of modified) {
+            tr.setNodeMarkup(tr.mapping.map(p), undefined, a);
+          }
+          dispatch(tr.scrollIntoView());
+        }
+
+        return true;
+      };
+    }
+
+    function setTableBorderWidth(size: number): Command {
+      return (state, dispatch) => {
+        const context = getTableContext(state);
+        if (!context.isInTable || context.tablePos === undefined || !context.table) return false;
+
+        if (dispatch) {
+          const tr = state.tr;
+          const cells = getTargetCellPositions(state);
+          const defaultBorder = { style: 'single', color: { rgb: '000000' } };
+          const { cellByPos, cellByRC } = buildTableGrid(context.table, context.tablePos);
+
+          const modified = new Map<number, Record<string, unknown>>();
+          const getAttrs = (p: number, n: PMNode) => modified.get(p) ?? { ...n.attrs };
+          const setAttrs = (p: number, a: Record<string, unknown>) => modified.set(p, a);
+
+          const adjacentMap: Record<string, { adjSide: string; dRow: number; dCol: number }> = {
+            top: { adjSide: 'bottom', dRow: -1, dCol: 0 },
+            bottom: { adjSide: 'top', dRow: 1, dCol: 0 },
+            left: { adjSide: 'right', dRow: 0, dCol: -1 },
+            right: { adjSide: 'left', dRow: 0, dCol: 1 },
+          };
+
+          for (const { pos, node } of cells) {
+            const info = cellByPos.get(pos);
+            const attrs = getAttrs(pos, node);
+            const currentBorders = (attrs.borders as Record<string, Record<string, unknown>>) || {};
+            const newBorders: Record<string, unknown> = {};
+
+            for (const side of ['top', 'bottom', 'left', 'right'] as const) {
+              const borderVal = { ...defaultBorder, ...currentBorders[side], size };
+              newBorders[side] = borderVal;
+
+              // Sync adjacent cell's matching edge
+              if (info) {
+                const adj = adjacentMap[side];
+                const adjColIdx =
+                  side === 'right' ? info.colIdx + info.colspan : info.colIdx + adj.dCol;
+                const adjPos = cellByRC.get(`${info.rowIdx + adj.dRow},${adjColIdx}`);
+                if (adjPos !== undefined) {
+                  const adjInfo = cellByPos.get(adjPos)!;
+                  const adjAttrs = getAttrs(adjPos, adjInfo.node);
+                  const adjBorders = (adjAttrs.borders as Record<string, unknown>) || {};
+                  setAttrs(adjPos, {
+                    ...adjAttrs,
+                    borders: { ...adjBorders, [adj.adjSide]: borderVal },
+                  });
+                }
+              }
+            }
+            setAttrs(pos, { ...attrs, borders: { ...currentBorders, ...newBorders } });
+          }
+
+          for (const [p, a] of modified) {
+            tr.setNodeMarkup(tr.mapping.map(p), undefined, a);
           }
           dispatch(tr.scrollIntoView());
         }
@@ -1872,6 +2132,31 @@ export const TablePluginExtension = createExtension({
       };
     }
 
+    // Active cell highlight plugin — adds a CSS class to the cell containing the cursor
+    const activeCellKey = new PluginKey('activeCell');
+    const activeCellPlugin = new Plugin({
+      key: activeCellKey,
+      props: {
+        decorations(state) {
+          const { selection } = state;
+          // Skip if already a CellSelection (prosemirror-tables handles that)
+          if (selection instanceof CellSelection) return DecorationSet.empty;
+
+          const { $from } = selection;
+          for (let d = $from.depth; d > 0; d--) {
+            const node = $from.node(d);
+            if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+              const pos = $from.before(d);
+              return DecorationSet.create(state.doc, [
+                Decoration.node(pos, pos + node.nodeSize, { class: 'activeCell' }),
+              ]);
+            }
+          }
+          return DecorationSet.empty;
+        },
+      },
+    });
+
     return {
       plugins: [
         columnResizing({
@@ -1880,6 +2165,7 @@ export const TablePluginExtension = createExtension({
           lastColumnResizable: true,
         }),
         tableEditing(),
+        activeCellPlugin,
       ],
       keyboardShortcuts: {
         Backspace: chainCommands(deleteTableIfSelected(), preventTableMergeAtGap()),
@@ -1903,7 +2189,10 @@ export const TablePluginExtension = createExtension({
           side: 'top' | 'bottom' | 'left' | 'right' | 'all',
           spec: { style: string; size?: number; color?: { rgb: string } } | null
         ) => setCellBorder(side, spec),
-        setTableBorders: (preset: BorderPreset) => setTableBorders(preset),
+        setTableBorders: (
+          preset: BorderPreset,
+          borderSpec?: { style: string; size: number; color: { rgb: string } }
+        ) => setTableBorders(preset, borderSpec),
         setCellVerticalAlign: (align: 'top' | 'center' | 'bottom') => setCellVerticalAlign(align),
         setCellMargins: (margins: {
           top?: number;
@@ -1927,10 +2216,23 @@ export const TablePluginExtension = createExtension({
           applyTableStyle(styleData),
         setCellFillColor: (color: string | null) => setCellFillColor(color),
         setTableBorderColor: (color: string) => setTableBorderColor(color),
+        setTableBorderWidth: (size: number) => setTableBorderWidth(size),
         removeTableBorders: () => setTableBorders('none'),
-        setAllTableBorders: () => setTableBorders('all'),
-        setOutsideTableBorders: () => setTableBorders('outside'),
-        setInsideTableBorders: () => setTableBorders('inside'),
+        setAllTableBorders: (borderSpec?: {
+          style: string;
+          size: number;
+          color: { rgb: string };
+        }) => setTableBorders('all', borderSpec),
+        setOutsideTableBorders: (borderSpec?: {
+          style: string;
+          size: number;
+          color: { rgb: string };
+        }) => setTableBorders('outside', borderSpec),
+        setInsideTableBorders: (borderSpec?: {
+          style: string;
+          size: number;
+          color: { rgb: string };
+        }) => setTableBorders('inside', borderSpec),
       },
     };
   },

@@ -83,9 +83,10 @@ export function setCellBorder(
 
 // Borders
 export function setTableBorders(
-  preset: import('../extensions/nodes/TableExtension').BorderPreset
+  preset: import('../extensions/nodes/TableExtension').BorderPreset,
+  borderSpec?: { style: string; size: number; color: { rgb: string } }
 ): (state: EditorState, dispatch?: (tr: Transaction) => void) => boolean {
-  return cmds.setTableBorders(preset);
+  return cmds.setTableBorders(preset, borderSpec);
 }
 export function removeTableBorders(
   state: EditorState,
@@ -95,21 +96,24 @@ export function removeTableBorders(
 }
 export function setAllTableBorders(
   state: EditorState,
-  dispatch?: (tr: Transaction) => void
+  dispatch?: (tr: Transaction) => void,
+  borderSpec?: { style: string; size: number; color: { rgb: string } }
 ): boolean {
-  return cmds.setAllTableBorders()(state, dispatch);
+  return cmds.setAllTableBorders(borderSpec)(state, dispatch);
 }
 export function setOutsideTableBorders(
   state: EditorState,
-  dispatch?: (tr: Transaction) => void
+  dispatch?: (tr: Transaction) => void,
+  borderSpec?: { style: string; size: number; color: { rgb: string } }
 ): boolean {
-  return cmds.setOutsideTableBorders()(state, dispatch);
+  return cmds.setOutsideTableBorders(borderSpec)(state, dispatch);
 }
 export function setInsideTableBorders(
   state: EditorState,
-  dispatch?: (tr: Transaction) => void
+  dispatch?: (tr: Transaction) => void,
+  borderSpec?: { style: string; size: number; color: { rgb: string } }
 ): boolean {
-  return cmds.setInsideTableBorders()(state, dispatch);
+  return cmds.setInsideTableBorders(borderSpec)(state, dispatch);
 }
 
 // Vertical alignment
@@ -204,4 +208,9 @@ export function setTableBorderColor(
   color: string
 ): (state: EditorState, dispatch?: (tr: Transaction) => void) => boolean {
   return cmds.setTableBorderColor(color);
+}
+export function setTableBorderWidth(
+  size: number
+): (state: EditorState, dispatch?: (tr: Transaction) => void) => boolean {
+  return cmds.setTableBorderWidth(size);
 }

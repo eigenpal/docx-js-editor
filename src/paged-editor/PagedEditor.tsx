@@ -1049,6 +1049,9 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
     // Cell selection drag state
     const isCellDraggingRef = useRef(false);
     const cellDragAnchorPosRef = useRef<number | null>(null);
+    const cellDragLastPmPosRef = useRef<number | null>(null);
+    const cellDragOverflowXRef = useRef<number | null>(null);
+    const CELL_SELECT_OVERFLOW_PX = 5; // px of continued drag after text selection maxes out
 
     // Selection gate - ensures selection renders only when layout is current
     const syncCoordinator = useMemo(() => new LayoutSelectionGate(), []);
@@ -1768,12 +1771,10 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         if (pmPos !== null) {
           // Check if click is inside a table cell - track for potential cell drag selection
           const cellPos = findCellPosFromPmPos(pmPos);
-          if (cellPos !== null) {
-            cellDragAnchorPosRef.current = cellPos;
-          } else {
-            cellDragAnchorPosRef.current = null;
-          }
+          cellDragAnchorPosRef.current = cellPos;
           isCellDraggingRef.current = false;
+          cellDragLastPmPosRef.current = null;
+          cellDragOverflowXRef.current = null;
 
           // Start dragging
           isDraggingRef.current = true;
@@ -1874,22 +1875,51 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
         const pmPos = getPositionFromMouse(e.clientX, e.clientY);
         if (pmPos === null) return;
 
-        // Check if we're dragging across table cells
+        // Dragging in table cells: text selection first, cell selection when crossing boundary
         if (cellDragAnchorPosRef.current !== null) {
+          // If already in cell-drag mode, continue updating cell selection
+          if (isCellDraggingRef.current) {
+            const currentCellPos = findCellPosFromPmPos(pmPos);
+            if (currentCellPos !== null) {
+              hiddenPMRef.current.setCellSelection(cellDragAnchorPosRef.current, currentCellPos);
+              return;
+            }
+          }
+
+          // Switch to cell selection when drag crosses into a different cell
           const currentCellPos = findCellPosFromPmPos(pmPos);
           if (currentCellPos !== null && currentCellPos !== cellDragAnchorPosRef.current) {
             isCellDraggingRef.current = true;
             hiddenPMRef.current.setCellSelection(cellDragAnchorPosRef.current, currentCellPos);
+            cellDragOverflowXRef.current = null;
             return;
           }
-          // If already in cell-drag mode but still moving, update head cell
-          if (isCellDraggingRef.current && currentCellPos !== null) {
-            hiddenPMRef.current.setCellSelection(cellDragAnchorPosRef.current, currentCellPos);
-            return;
+
+          // Detect when text selection has maxed out within the cell:
+          // If pmPos stops changing but mouse keeps moving, user has dragged past text content
+          if (cellDragLastPmPosRef.current !== null && pmPos === cellDragLastPmPosRef.current) {
+            if (cellDragOverflowXRef.current === null) {
+              cellDragOverflowXRef.current = e.clientX;
+            } else if (
+              Math.abs(e.clientX - cellDragOverflowXRef.current) >= CELL_SELECT_OVERFLOW_PX
+            ) {
+              // Overflow threshold reached — select the entire cell
+              isCellDraggingRef.current = true;
+              hiddenPMRef.current.setCellSelection(
+                cellDragAnchorPosRef.current,
+                cellDragAnchorPosRef.current
+              );
+              cellDragOverflowXRef.current = null;
+              return;
+            }
+          } else {
+            // Position is still advancing — reset overflow tracking
+            cellDragOverflowXRef.current = null;
+            cellDragLastPmPosRef.current = pmPos;
           }
         }
 
-        // Regular text selection drag
+        // Regular text selection drag (within cell or outside tables)
         const anchor = dragAnchorRef.current;
         hiddenPMRef.current.setSelection(anchor, pmPos);
       },
@@ -2067,6 +2097,8 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
 
       isDraggingRef.current = false;
       isCellDraggingRef.current = false;
+      cellDragLastPmPosRef.current = null;
+      cellDragOverflowXRef.current = null;
       // Keep dragAnchorRef for potential shift-click extension
     }, []);
 
@@ -2105,10 +2137,19 @@ const PagedEditorComponent = forwardRef<PagedEditorRef, PagedEditorProps>(
           }
         }
 
-        // Double-click for word selection
+        // Double-click: select entire cell (CellSelection) if in table, otherwise word selection
         if (e.detail === 2 && hiddenPMRef.current) {
           const pmPos = getPositionFromMouse(e.clientX, e.clientY);
           if (pmPos !== null) {
+            // If inside a table cell, select the entire cell
+            const cellPos = findCellPosFromPmPos(pmPos);
+            if (cellPos !== null) {
+              e.preventDefault();
+              e.stopPropagation();
+              hiddenPMRef.current.setCellSelection(cellPos, cellPos);
+              return;
+            }
+
             const view = hiddenPMRef.current.getView();
             if (view) {
               const { doc } = view.state;
