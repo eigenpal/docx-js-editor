@@ -24,28 +24,28 @@ export function DefaultLoadingIndicator(): React.ReactElement {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100%',
+        gap: '20px',
         color: 'var(--doc-text-muted)',
       }}
     >
       <div
         style={{
-          width: '40px',
-          height: '40px',
+          width: '36px',
+          height: '36px',
           border: '3px solid var(--doc-border)',
-          borderTop: '3px solid var(--doc-primary)',
+          borderTopColor: 'var(--doc-primary)',
           borderRadius: '50%',
-          animation: 'docx-spin 1s linear infinite',
+          animation: 'docx-spin 0.8s linear infinite',
         }}
       />
       <style>
         {`
           @keyframes docx-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
           }
         `}
       </style>
-      <div style={{ marginTop: '16px' }}>Loading document...</div>
+      <div style={{ fontSize: '14px' }}>Loading document...</div>
     </div>
   );
 }

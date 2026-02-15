@@ -5,3 +5,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Mobile responsive overrides */
+@media (max-width: 768px) {
+  /* Compact toolbar on mobile - horizontal scroll instead of wrapping */
+  .ep-root [role='toolbar'] {
+    padding: 4px 4px;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    min-height: 36px;
+  }
+  .ep-root [role='toolbar']::-webkit-scrollbar {
+    display: none;
+  }
+}
