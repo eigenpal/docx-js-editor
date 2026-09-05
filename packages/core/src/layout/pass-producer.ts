@@ -68,6 +68,7 @@ interface PassProducerEntry {
   readonly displayMode: RevisionDisplayMode;
   readonly authorFilter: RevisionAuthorFilter | undefined;
   readonly pageNumberFormat: string | undefined;
+  readonly compatibilityMode: number | undefined;
   readonly producer: string;
 }
 
@@ -88,7 +89,8 @@ function passProducerEntryMatches(
   defaultTabStopPt: number | undefined,
   displayMode: RevisionDisplayMode,
   authorFilter: RevisionAuthorFilter | undefined,
-  pageNumberFormat: string | undefined
+  pageNumberFormat: string | undefined,
+  compatibilityMode: number | undefined
 ): entry is PassProducerEntry {
   return (
     entry != null &&
@@ -97,7 +99,8 @@ function passProducerEntryMatches(
     entry.defaultTabStopPt === defaultTabStopPt &&
     entry.displayMode === displayMode &&
     entry.authorFilter === authorFilter &&
-    entry.pageNumberFormat === pageNumberFormat
+    entry.pageNumberFormat === pageNumberFormat &&
+    entry.compatibilityMode === compatibilityMode
   );
 }
 
@@ -123,7 +126,8 @@ export function passProducerOf(
   defaultTabStopPt: number | undefined,
   displayMode: RevisionDisplayMode,
   authorFilter?: RevisionAuthorFilter,
-  pageNumberFormat?: string
+  pageNumberFormat?: string,
+  compatibilityMode?: number
 ): string {
   const entry = styleCascade ? passProducersByCascade.get(styleCascade) : cascadeFreeProducerSlot;
   if (
@@ -134,7 +138,8 @@ export function passProducerOf(
       defaultTabStopPt,
       displayMode,
       authorFilter,
-      pageNumberFormat
+      pageNumberFormat,
+      compatibilityMode
     )
   ) {
     return entry.producer;
@@ -146,7 +151,8 @@ export function passProducerOf(
     (defaultTabStopPt !== undefined ? `|dts:${defaultTabStopPt}` : '') +
     (displayMode === DEFAULT_REVISION_DISPLAY_MODE ? '' : `|rev:${displayMode}`) +
     (authorFilter ? `|reviewers:${authorFilter.cacheKey}` : '') +
-    (pageNumberFormat !== undefined ? `|pnf:${pageNumberFormat}` : '');
+    (pageNumberFormat !== undefined ? `|pnf:${pageNumberFormat}` : '') +
+    (compatibilityMode !== undefined ? `|compat:${compatibilityMode}` : '');
   const fresh: PassProducerEntry = {
     base,
     noteMarks,
@@ -154,6 +160,7 @@ export function passProducerOf(
     displayMode,
     authorFilter,
     pageNumberFormat,
+    compatibilityMode,
     producer,
   };
   if (styleCascade) passProducersByCascade.set(styleCascade, fresh);

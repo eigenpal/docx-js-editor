@@ -4,7 +4,7 @@
 import { borderExtentPt, type CellBorderBox } from './table-borders.ts';
 import type { CellMarginsPt, SemanticTableCell, SemanticTableRow } from './semantic-table.ts';
 
-/** Per-side content inset: authored margins plus the extent of the rule on that side. */
+/** Per-side content inset, including the applicable border clearance. */
 export interface CellContentInsets {
   readonly top: number;
   readonly right: number;
@@ -14,14 +14,27 @@ export interface CellContentInsets {
 
 export function contentInsets(
   margins: CellMarginsPt,
-  borders: SemanticTableCell['borders']
+  borders: SemanticTableCell['borders'],
+  legacyCollapsedContentAlignment = false
 ): CellContentInsets {
-  // Border extents shrink the content box (border-box model) so thick rules do not cover text.
+  const leftExtent = borderExtentPt(borders.left);
+  const rightExtent = borderExtentPt(borders.right);
+  const simpleRules = [borders.left, borders.right].every(
+    (edge) => edge.state !== 'edge' || edge.style === 'single' || edge.style === 'thick'
+  );
+  // The admitted legacy table's margins already start at the collapsed grid lines. Only
+  // reuse that budget when BOTH margins clear their half-strokes; thick/asymmetric cases
+  // keep the existing conservative inset. This is not a general Word border-box model.
+  const marginCoversRules =
+    legacyCollapsedContentAlignment &&
+    simpleRules &&
+    margins.left >= leftExtent / 2 &&
+    margins.right >= rightExtent / 2;
   return {
     top: margins.top + borderExtentPt(borders.top),
-    right: margins.right + borderExtentPt(borders.right),
+    right: margins.right + (marginCoversRules ? 0 : rightExtent),
     bottom: margins.bottom + borderExtentPt(borders.bottom),
-    left: margins.left + borderExtentPt(borders.left),
+    left: margins.left + (marginCoversRules ? 0 : leftExtent),
   };
 }
 

@@ -323,6 +323,8 @@ export interface SemanticLayoutOptions {
    * here — which is why the prepared-block memo does not key on it.
    */
   readonly defaultTabStopPt?: number;
+  /** Explicit Word compatibility mode; absent retains existing geometry. */
+  readonly compatibilityMode?: number;
   /**
    * Turns a typed `w:hyperlink` into the SANITIZED record its spans carry.
    *
@@ -945,7 +947,8 @@ function layoutBlocksPass(
     defaultTabStopPt,
     displayMode,
     authorFilter,
-    options.bodyPageNumberFormat
+    options.bodyPageNumberFormat,
+    options.compatibilityMode
   );
 
   // Prepass and incremental keys use the first region. Placement re-prepares a block when it
@@ -2039,6 +2042,7 @@ function layoutBlocksPass(
       displayMode,
       ...(authorFilter ? { revisionAuthorFilter: authorFilter } : {}),
       deps: tableDeps,
+      compatibilityMode: options.compatibilityMode,
       shiftAnchor: (paragraphId, dy) =>
         shiftAnchoredDrawingRecords(pendingAnchoredDrawings, paragraphId, dy),
       // A sink, not the array: completing a page replaces `pageFragments`, and a reference

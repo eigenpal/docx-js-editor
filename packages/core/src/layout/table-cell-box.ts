@@ -6,7 +6,8 @@
 // rule, and a row that continues onto the next page has to drop the rule it did not close
 // before that inset is computed again for the continuation.
 
-import { borderExtentPt, type CellBorderBox } from './table-borders.ts';
+import type { CellBorderBox } from './table-borders.ts';
+import { contentInsets as sharedContentInsets } from './table-cell-geometry.ts';
 import type { CellMarginsPt } from './table-cell-margins.ts';
 import type { SemanticTableCell, SemanticTableRow } from './semantic-table.ts';
 
@@ -18,17 +19,13 @@ export interface CellContentInsets {
   readonly left: number;
 }
 
-/** Margin plus rule, per side: a thick rule shortens the text column, it does not cover it. */
+/** Shared inset policy, including the narrowly admitted legacy collapsed-table case. */
 export function contentInsets(
   margins: CellMarginsPt,
-  borders: SemanticTableCell['borders']
+  borders: SemanticTableCell['borders'],
+  legacyCollapsedContentAlignment = false
 ): CellContentInsets {
-  return {
-    top: margins.top + borderExtentPt(borders.top),
-    right: margins.right + borderExtentPt(borders.right),
-    bottom: margins.bottom + borderExtentPt(borders.bottom),
-    left: margins.left + borderExtentPt(borders.left),
-  };
+  return sharedContentInsets(margins, borders, legacyCollapsedContentAlignment);
 }
 
 function suppressSplitBorders(

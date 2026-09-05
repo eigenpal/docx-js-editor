@@ -47,6 +47,7 @@ export const SEMANTIC_LAYOUT_OPTION_ROLES = Object.freeze({
   numberingIndex: 'document-coordinator',
   listItems: 'layout-internal',
   defaultTabStopPt: 'document-coordinator',
+  compatibilityMode: 'document-coordinator',
   projectLink: 'document-coordinator',
   projectFieldLink: 'document-coordinator',
   documentProperties: 'document-coordinator',
@@ -86,6 +87,7 @@ export interface LayoutDocumentViewOptions {
   readonly styleCascade?: () => StyleCascadeTable | undefined;
   readonly numberingIndex?: () => NumberingIndex;
   readonly defaultTabStopPt?: () => number;
+  readonly compatibilityMode?: () => number | undefined;
   readonly furniture: DocumentFurnitureSource;
   /** Body/story projection paired with every cache identity it requires. */
   readonly linkProjectors: DocumentLinkProjectors;
@@ -115,6 +117,7 @@ const _LAYOUT_DOCUMENT_VIEW_OPTION_SINKS = {
   styleCascade: 'both',
   numberingIndex: 'both',
   defaultTabStopPt: 'both',
+  compatibilityMode: 'semantic-layout',
   furniture: 'semantic-layout',
   linkProjectors: 'both',
   projectFieldLink: 'both',
@@ -175,6 +178,7 @@ export function layoutDocumentView(options: LayoutDocumentViewOptions): Semantic
     numberingIndex: options.numberingIndex,
     defaultTabStopPt,
     furniture: options.furniture,
+    compatibilityMode: options.compatibilityMode,
     linkProjectors: options.linkProjectors,
     projectFieldLink: options.projectFieldLink,
     inlineDrawingLayout: options.inlineDrawingLayout,
@@ -190,6 +194,7 @@ export function layoutDocumentView(options: LayoutDocumentViewOptions): Semantic
     producer: semanticInputs.producer,
     styleCascade: semanticInputs.styleCascade?.(),
     defaultTabStopPt: semanticInputs.defaultTabStopPt,
+    compatibilityMode: semanticInputs.compatibilityMode?.(),
     numberingIndex: semanticInputs.numberingIndex?.(),
     sectionFurniture: semanticInputs.furniture.sectionFurniture(),
     furniture: semanticInputs.furniture.furniture(),

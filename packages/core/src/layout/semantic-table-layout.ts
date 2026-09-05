@@ -1314,7 +1314,11 @@ export function layoutRowFragmentBounded(
     const inset = Math.min(gap, Math.max((slotW - MIN_CELL_BOX_PT) / 2, 0));
     const cellX = slotX + inset;
     const cellW = Math.max(slotW - 2 * inset, MIN_CELL_BOX_PT);
-    const insets = contentInsets(cell.margins, cell.borders);
+    const insets = contentInsets(
+      cell.margins,
+      cell.borders,
+      cell.legacyContentAlignment === true && cellSpacingPt === 0
+    );
     const topInset = isContinuation ? borderExtentPt(cell.borders.top) : insets.top;
     // Always reserve bottom inset so the fragment never paints into the margin/border band.
     // A detached head answers to the page and to its own SPAN, and to nothing about this

@@ -515,6 +515,7 @@ export function openDocumentForExport(
         defaultTabStopPt: state.styles.defaultTabStopPt,
         numberingIndex: state.styles.numberingIndex,
         furniture: source,
+        compatibilityMode: state.styles.compatibilityMode,
         linkProjectors: state.links,
         projectFieldLink: (spec) => fieldLinks.project(spec),
         inlineDrawingLayout: state.drawingBundle.bodyContext,

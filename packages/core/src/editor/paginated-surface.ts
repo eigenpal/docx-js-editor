@@ -762,7 +762,8 @@ export function mountPaginatedSurface(
   let lastSelectionMs = 0;
 
   // Style and numbering indexes are identity-memoized and shared by every story.
-  const { styleCascade, numberingIndex, defaultTabStopPt } = createSurfaceStyleDeps(session);
+  const { styleCascade, numberingIndex, defaultTabStopPt, compatibilityMode } =
+    createSurfaceStyleDeps(session);
   // Word's "style for following paragraph". Its own lane, because it is a question about
   // `styles.xml` rather than about the selection an Enter is standing in.
   const nextStyle = createNextStyleWrites({
@@ -1237,6 +1238,7 @@ export function mountPaginatedSurface(
       defaultTabStopPt,
       numberingIndex,
       furniture: activeFurnitureSource,
+      compatibilityMode,
       linkProjectors,
       projectFieldLink: (spec) => fieldLinks.project(spec),
       inlineDrawingLayout: drawingBundle.bodyContext,
