@@ -1,3 +1,11 @@
+import { enforcesFormsProtection, sectionProtectsForms } from './forms-protection.ts';
+export {
+  enforcesFormsProtection,
+  formsProtectionEnabled,
+  sectionProtectsForms,
+} from './forms-protection.ts';
+import { protectedTextFormEditRefusal } from './tree-op-field-results.ts';
+import { textFormFieldForEdit } from './text-form-fields.ts';
 // Writing content controls: values, metadata, insertion, removal — and the locks that refuse.
 //
 // EVERY refusal in this module is a STORE refusal. A widget that greys a button out is a
@@ -219,6 +227,14 @@ export interface TreeOpTarget {
   readonly nodeId: string;
   /** UTF-16 offsets inside the node this op addresses. Absent means the node itself. */
   readonly range?: OffsetSpan;
+  /** The applier's point-placement rule, when this target inserts content. */
+  readonly point?:
+    | 'run-content'
+    | 'paragraph-sibling'
+    | 'inline-control-split'
+    | 'container-marker';
+  /** Boundary affinity for run-content insertion. */
+  readonly bias?: 'left' | 'right';
   /**
    * The range is a point at which content is WRITTEN, so the leading edge is inside.
    *
@@ -235,15 +251,35 @@ export interface TreeOpTarget {
 }
 
 /** A point at which content is written: the leading edge of a control belongs to the control. */
-const writingAt = (nodeId: string, offset: number): TreeOpReach => ({
+const writingAt = (
+  nodeId: string,
+  offset: number,
+  bias: 'left' | 'right' = 'left'
+): TreeOpReach => ({
   kind: 'nodes',
-  targets: [{ nodeId, range: { start: offset, end: offset }, writes: true }],
+  targets: [
+    { nodeId, range: { start: offset, end: offset }, writes: true, point: 'run-content', bias },
+  ],
+});
+
+/** A structural inline sibling that the applier always places directly in the paragraph. */
+const siblingAt = (nodeId: string, offset: number): TreeOpReach => ({
+  kind: 'nodes',
+  targets: [
+    { nodeId, range: { start: offset, end: offset }, writes: true, point: 'paragraph-sibling' },
+  ],
+});
+
+/** A new inline control splits each existing inline control that strictly contains the caret. */
+const splittingControlAt = (nodeId: string, offset: number): TreeOpReach => ({
+  kind: 'nodes',
+  targets: [{ nodeId, range: { start: offset, end: offset }, point: 'inline-control-split' }],
 });
 
 /** A point that writes nothing into the run it names — a marker, or a split. */
 const beside = (nodeId: string, offset: number): TreeOpReach => ({
   kind: 'nodes',
-  targets: [{ nodeId, range: { start: offset, end: offset } }],
+  targets: [{ nodeId, range: { start: offset, end: offset }, point: 'container-marker' }],
 });
 const over = (nodeId: string, start: number, end: number): TreeOpReach => ({
   kind: 'nodes',
@@ -291,7 +327,7 @@ const TREE_OP_REACH: {
   // the control the refusals are resolved against — the offset no longer decides.
   insertText: (op) =>
     op.inside === undefined
-      ? writingAt(op.paragraphId, op.offset)
+      ? writingAt(op.paragraphId, op.offset, op.bias)
       : {
           kind: 'control',
           controlId: op.inside,
@@ -303,10 +339,12 @@ const TREE_OP_REACH: {
   insertHardBreak: (op) => writingAt(op.paragraphId, op.offset),
   insertPageBreak: (op) => writingAt(op.paragraphId, op.offset),
   insertPageField: (op) => writingAt(op.paragraphId, op.offset),
-  // A comment marker and a note reference are anchors beside the text, not text: neither lands
-  // in a control's content when placed at its edge.
+  // Plain anchors sit beside text. A tracked note uses the tracked run-content applier.
   insertCommentMarker: (op) => beside(op.paragraphId, op.offset),
-  insertNote: (op) => writingAt(op.paragraphId, op.offset),
+  insertNote: (op) =>
+    op.revision === undefined
+      ? beside(op.paragraphId, op.offset)
+      : writingAt(op.paragraphId, op.offset),
   setRunProperties: (op) => over(op.paragraphId, op.start, op.end),
   insertHyperlink: (op) => over(op.paragraphId, op.start, op.end),
   // An insertion AUTHORS a control beside the runs, and never writes into one. `writes` is
@@ -316,9 +354,8 @@ const TREE_OP_REACH: {
   // like the range shape, and a caret at a control's EDGE lands outside that control, which is
   // exactly where the applier puts it.
   insertContentControl: (op) => over(op.paragraphId, op.start, op.end),
-  insertInlineContentControl: (op) => writingAt(op.paragraphId, op.offset),
-  // A fragment paste writes content at the offset, exactly like typing there.
-  insertFragment: (op) => writingAt(op.paragraphId, op.offset),
+  insertInlineContentControl: (op) => splittingControlAt(op.paragraphId, op.offset),
+  insertFragment: (op) => siblingAt(op.paragraphId, op.offset),
   // A split at a control's edge moves the whole control to one side of the break and changes
   // nothing it holds, so neither edge is inside. A split WITHIN it is, and the range says so.
   splitParagraph: (op) => beside(op.paragraphId, op.offset),
@@ -479,6 +516,7 @@ const TREE_OP_REACH: {
   // Page numbers rewrite runs in the result paragraphs the op names, and nothing else.
   rewriteTocPageNumbers: (op) => ({ kind: 'nodes', targets: inParagraphs(op.updates) }),
   // A field-result refresh rewrites result runs in the paragraphs the op names, nothing else.
+  setTextFormFieldDefault: (op) => whole(op.fieldNodeId),
   refreshFieldResults: (op) => ({ kind: 'nodes', targets: inParagraphs(op.updates) }),
   replaceStoryBlocks: (op) => ({
     kind: 'nodes',
@@ -618,6 +656,59 @@ function resolveReach(part: OoxmlPart, reach: TreeOpReach): ResolvedReach {
   const touches: ControlTouch[] = [];
   const unprotected: string[] = [];
   for (const target of reach.targets) {
+    const targetNode = findNode(part, target.nodeId);
+    if (
+      targetNode?.kind === 'paragraph' &&
+      target.point === 'inline-control-split' &&
+      target.range !== undefined
+    ) {
+      const enclosing = enclosingContentControls(part, targetNode.id);
+      for (let index = 0; index < enclosing.length; index += 1) {
+        touches.push({
+          control: enclosing[index]!,
+          locks: locksOf(enclosing.slice(0, index + 1)),
+          removed: false,
+          discarded: false,
+        });
+      }
+      const inherited = locksOf(enclosing);
+      const offsets = paragraphOffsetIndex(targetNode);
+      for (const entry of contentControlsIn(targetNode)) {
+        const span = offsets.spanOf(entry.node);
+        if (!span || target.range.start <= span.start || target.range.start >= span.end) continue;
+        touches.push({
+          control: entry.node,
+          locks: inherited.concat(locksOf(entry.ancestors.concat(entry.node))),
+          removed: false,
+          discarded: false,
+        });
+      }
+      // Adding a control is document structure, not a permitted form-field value edit.
+      unprotected.push(targetNode.id);
+      continue;
+    }
+    if (
+      targetNode?.kind === 'paragraph' &&
+      (target.point === 'run-content' || target.point === 'paragraph-sibling') &&
+      target.range !== undefined &&
+      target.range.start === target.range.end
+    ) {
+      const landing =
+        target.point === 'run-content'
+          ? insertionLandingNodeId(targetNode, target.range.start, null, target.bias)
+          : targetNode.id;
+      const controls = enclosingContentControls(part, landing);
+      for (let index = 0; index < controls.length; index += 1) {
+        touches.push({
+          control: controls[index]!,
+          locks: locksOf(controls.slice(0, index + 1)),
+          removed: false,
+          discarded: false,
+        });
+      }
+      if (controls.length === 0) unprotected.push(target.nodeId);
+      continue;
+    }
     const chain = enclosingContentControls(part, target.nodeId);
     const enclosing = chain.filter((node) => node.id !== target.nodeId);
     for (let index = 0; index < enclosing.length; index += 1) {
@@ -628,7 +719,7 @@ function resolveReach(part: OoxmlPart, reach: TreeOpReach): ResolvedReach {
         discarded: false,
       });
     }
-    const node = findNode(part, target.nodeId);
+    const node = targetNode;
     if (!node || node.kind === 'textValue') {
       if (enclosing.length === 0) unprotected.push(target.nodeId);
       continue;
@@ -962,37 +1053,6 @@ export function contentControlBindingRefusal(
 // ---------------------------------------------------------------------------
 
 /**
- * Whether `settings.xml` enforces `w:documentProtection w:edit="forms"` (§17.15.1.29).
- *
- * Enforcement is a separate attribute from the mode: Word stores the mode a document was last
- * protected with even after the protection is lifted, so a file with `w:enforcement="0"` is an
- * ordinary editable document and treating it as protected would lock users out of their own
- * text.
- */
-export function enforcesFormsProtection(settings: OoxmlPart | null | undefined): boolean {
-  if (!settings) return false;
-  for (const child of settings.root.children) {
-    if (child.kind === 'textValue') continue;
-    if (child.namespaceUri !== WML_NAMESPACE_URI || child.localName !== 'documentProtection') {
-      continue;
-    }
-    const attribute = (name: string): string | undefined =>
-      child.attributes.find(
-        (entry) => entry.localName === name && entry.namespaceUri === WML_NAMESPACE_URI
-      )?.value;
-    if (attribute('edit') !== 'forms') return false;
-    return isTrue(attribute('enforcement'));
-  }
-  return false;
-}
-
-/** `ST_OnOff`: absent means on for a flag element, and "0"/"false"/"off" always means off. */
-function isTrue(value: string | undefined): boolean {
-  if (value === undefined) return true;
-  return value !== '0' && value !== 'false' && value !== 'off';
-}
-
-/**
  * Whether forms protection reaches a node, i.e. it is not inside a control and not in a
  * section that switched form protection off (`w:sectPr/w:formProt`, §17.6.7).
  *
@@ -1002,9 +1062,19 @@ function isTrue(value: string | undefined): boolean {
 export function formsProtectionRefusal(
   part: OoxmlPart,
   settings: OoxmlPart | null | undefined,
-  op: TreeDocOp
+  op: TreeDocOp,
+  preferredFieldId?: string
 ): TreeOpRejection | null {
   if (!enforcesFormsProtection(settings)) return null;
+  const textField = textFormFieldForEdit(part, op, preferredFieldId);
+  if (
+    (op.op === 'insertText' || op.op === 'deleteText') &&
+    op.textFormFieldId !== undefined &&
+    !textField
+  )
+    return 'invalidArgs';
+  if (textField && 'paragraphId' in op && sectionProtectsForms(part, op.paragraphId))
+    return protectedTextFormEditRefusal(part, op, textField);
   const reach = treeOpReach(op);
   if (reach.kind === 'none') return null;
   for (const node of resolveReach(part, reach).unprotected) {
@@ -1014,50 +1084,6 @@ export function formsProtectionRefusal(
     return 'locked';
   }
   return null;
-}
-
-/**
- * Whether the section owning a node still has form protection on.
- *
- * `w:formProt` is per-section, so a protected document may carry an unprotected section. The
- * owning section is the first `w:sectPr` at or after the node in body order, which is how a
- * section's extent is expressed in the body at all.
- */
-function sectionProtectsForms(part: OoxmlPart, nodeId: string): boolean {
-  let seenTarget = false;
-  let answer = true;
-  const walk = (node: OoxmlNode): boolean => {
-    if (node.kind === 'textValue') return false;
-    if (node.id === nodeId) seenTarget = true;
-    if (
-      seenTarget &&
-      node.namespaceUri === WML_NAMESPACE_URI &&
-      node.localName === 'sectPr' &&
-      node.id !== nodeId
-    ) {
-      const formProt = node.children.find(
-        (child) =>
-          child.kind !== 'textValue' &&
-          child.namespaceUri === WML_NAMESPACE_URI &&
-          child.localName === 'formProt'
-      );
-      // No `w:formProt` on the section leaves the document's own protection in force.
-      if (formProt && formProt.kind !== 'textValue') {
-        answer = isTrue(
-          formProt.attributes.find(
-            (entry) => entry.localName === 'val' && entry.namespaceUri === WML_NAMESPACE_URI
-          )?.value
-        );
-      }
-      return true;
-    }
-    for (const child of node.children) {
-      if (walk(child)) return true;
-    }
-    return false;
-  };
-  walk(part.root);
-  return answer;
 }
 
 // ---------------------------------------------------------------------------

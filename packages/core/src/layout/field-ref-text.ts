@@ -11,6 +11,10 @@ import {
   type OoxmlNode,
 } from '@docx-editor.dev/core/store';
 import {
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+} from '../store/package/ooxml-shared.ts';
+import {
   consumeScanNode,
   createScanBudget,
   MAX_STORY_FIELD_SCAN_DEPTH,
@@ -86,8 +90,9 @@ export function bookmarkRangeText(paragraph: OoxmlElement, name: string): string
     text += value.length > room ? value.slice(0, room) : value;
   };
 
-  const visit = (node: OoxmlNode, depth: number): void => {
+  const visit = (node: OoxmlNode, depth: number, containerDepth: number): void => {
     if (done || node.kind === 'textValue') return;
+    if (containerDepth >= MAX_INLINE_CONTAINER_DEPTH) return;
     if (budget.exhausted || depth > MAX_STORY_FIELD_SCAN_DEPTH) return;
     if (node.kind === 'bookmarkStart') {
       if (!collecting && wmlAttribute(node, 'name') === name) {
@@ -116,11 +121,12 @@ export function bookmarkRangeText(paragraph: OoxmlElement, name: string): string
     }
     if (isDrawingHost(node) || isFldSimple(node)) return;
     if (!consumeScanNode(budget)) return;
-    for (const child of node.children) visit(child, depth + 1);
+    const nextDepth = nextInlineContainerDepth(node, containerDepth);
+    for (const child of node.children) visit(child, depth + 1, nextDepth);
   };
   for (const child of paragraph.children) {
     if (done || !consumeScanNode(budget)) break;
-    visit(child, 1);
+    visit(child, 1, 0);
   }
 
   if (!memo) {

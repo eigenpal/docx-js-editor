@@ -21,6 +21,7 @@ import {
   serializeOoxmlPart,
   writeOoxmlPackage,
   type OoxmlPackage,
+  type OoxmlNode,
   type OoxmlPart,
 } from '../package/index.ts';
 import { diffSemanticDigests, semanticDigest } from '../package/ooxml-digest.ts';
@@ -116,8 +117,12 @@ function openStore(bytes: Uint8Array): TreePackageStore {
   return new TreePackageStore(pkg, main);
 }
 
+function mainPartOf(pkg: OoxmlPackage): OoxmlPart {
+  return pkg.parts.get(pkg.mainDocumentPart)!;
+}
+
 function firstParagraphId(pkg: OoxmlPackage): string {
-  const main = pkg.parts.get(pkg.mainDocumentPart)!;
+  const main = mainPartOf(pkg);
   const body = main.root.children.find((child) => child.kind === 'body')!;
   const p = body.children.find((child) => child.kind === 'paragraph')!;
   return p.id;
@@ -128,6 +133,23 @@ const seededNotes =
   `<w:footnote w:type="continuationSeparator" w:id="0"><w:p><w:r><w:continuationSeparator/></w:r></w:p></w:footnote>` +
   `<w:footnote w:id="1"><w:p><w:r><w:footnoteRef/></w:r><w:r><w:t>one</w:t></w:r></w:p></w:footnote>` +
   `<w:footnote w:id="3"><w:p><w:r><w:t>three</w:t></w:r></w:p></w:footnote>`;
+
+/** The ancestors of the first footnote citation under `root`, or null when there is none. */
+function citationAncestors(root: OoxmlNode): OoxmlNode[] | null {
+  const path: OoxmlNode[] = [];
+  const visit = (node: OoxmlNode, ancestors: OoxmlNode[]): boolean => {
+    if (node.kind === 'textValue') return false;
+    if (node.localName === 'footnoteReference') {
+      for (const ancestor of ancestors) path.push(ancestor);
+      return true;
+    }
+    ancestors.push(node);
+    for (const child of node.children) if (visit(child, ancestors)) return true;
+    ancestors.pop();
+    return false;
+  };
+  return visit(root, []) ? path : null;
+}
 
 describe('insertNote', () => {
   test('creates part/rel/content-type and allocates id from max+1', () => {

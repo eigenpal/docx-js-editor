@@ -31,6 +31,10 @@ import {
 import type { OoxmlPackage } from '../store/package/ooxml-package.ts';
 import { noteIdOf, noteReferenceKindOf, type NoteKind } from '../store/package/note-nodes.ts';
 import {
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+} from '../store/package/ooxml-shared.ts';
+import {
   authoredDocumentEndnoteProperties,
   authoredDocumentFootnoteProperties,
   authoredEndnotePropertiesFromSectPr,
@@ -350,8 +354,9 @@ export function firstNoteReferenceIdInBookmark(
   let found: string | null = null;
   const budget = createScanBudget();
 
-  const visit = (node: OoxmlNode, depth: number): void => {
+  const visit = (node: OoxmlNode, depth: number, containerDepth: number): void => {
     if (done || node.kind === 'textValue') return;
+    if (containerDepth >= MAX_INLINE_CONTAINER_DEPTH) return;
     if (budget.exhausted || depth > MAX_STORY_FIELD_SCAN_DEPTH) return;
     if (node.kind === 'bookmarkStart') {
       if (!collecting && wmlAttribute(node, 'name') === name) {
@@ -370,11 +375,12 @@ export function firstNoteReferenceIdInBookmark(
       return;
     }
     if (!consumeScanNode(budget)) return;
-    for (const child of node.children) visit(child, depth + 1);
+    const nextDepth = nextInlineContainerDepth(node, containerDepth);
+    for (const child of node.children) visit(child, depth + 1, nextDepth);
   };
   for (const child of paragraph.children) {
     if (done || !consumeScanNode(budget)) break;
-    visit(child, 1);
+    visit(child, 1, 0);
   }
 
   if (!memo) {

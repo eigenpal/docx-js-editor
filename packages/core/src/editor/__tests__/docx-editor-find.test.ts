@@ -15,6 +15,7 @@ if (!GlobalRegistrator.isRegistered) GlobalRegistrator.register();
 import { describe, expect, test } from 'bun:test';
 import { zipSync, strToU8 } from 'fflate';
 import { createDocxEditor, type DocxEditorInstance } from '../docx-editor.ts';
+import type { OoxmlNode } from '../../store/package/ooxml-tree.ts';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
@@ -45,6 +46,24 @@ function mount(body: string): DocxEditorInstance {
   return editor;
 }
 
+function textUnder(node: OoxmlNode, localName: string): string | null {
+  if (node.kind === 'textValue') return null;
+  if (node.localName === localName) {
+    const collect = (child: OoxmlNode): string => {
+      if (child.kind === 'textValue') return child.value;
+      let text = '';
+      for (const inner of child.children) text += collect(inner);
+      return text;
+    };
+    return collect(node);
+  }
+  for (const child of node.children) {
+    const found = textUnder(child, localName);
+    if (found !== null) return found;
+  }
+  return null;
+}
+
 describe('Editor find', () => {
   test('findMatches answers from the tree, and selectMatch moves the selection onto one', () => {
     const editor = mount(p('Exhibit A') + p('See Exhibit B'));
@@ -56,6 +75,88 @@ describe('Editor find', () => {
     const selection = editor.surface!.state().selection;
     expect(selection.anchor.paragraphId).toBe(matches[1]!.blockId);
     expect([selection.anchor.offset, selection.head.offset]).toEqual([4, 11]);
+  });
+
+  test('selectMatch finds wrapper text and typing at an interior caret stays inside', () => {
+    const editor = mount(
+      '<w:p><w:r><w:t xml:space="preserve">before </w:t></w:r>' +
+        '<w:smartTag><w:r><w:t>needle</w:t></w:r></w:smartTag>' +
+        '<w:r><w:t xml:space="preserve"> after</w:t></w:r></w:p>'
+    );
+    const match = editor.findMatches('needle')[0]!;
+
+    expect(editor.selectMatch(match)).toEqual({ ok: true, changed: false });
+    expect(editor.surface!.state().selection).toEqual({
+      anchor: { paragraphId: match.blockId, offset: 7 },
+      head: { paragraphId: match.blockId, offset: 13 },
+    });
+    editor.surface!.setSelection({
+      anchor: { paragraphId: match.blockId, offset: 10 },
+      head: { paragraphId: match.blockId, offset: 10 },
+    });
+    editor.surface!.type('X');
+    expect(editor.surface!.session.bodyText()).toBe('before neeXdle after');
+    expect(editor.surface!.state().lastRejection).toBeNull();
+    expect(textUnder(editor.surface!.session.part().root, 'smartTag')).toBe('neeXdle');
+  });
+
+  test('smartTag boundary typing follows the shared insertion-site rule', () => {
+    const insertAt = (offset: number): DocxEditorInstance => {
+      const editor = mount(
+        '<w:p><w:r><w:t>A</w:t></w:r><w:smartTag><w:r><w:t>BC</w:t></w:r></w:smartTag>' +
+          '<w:r><w:t>D</w:t></w:r></w:p>'
+      );
+      const paragraphId = editor.surface!.session.paragraphIds()[0]!;
+      editor.surface!.setSelection({
+        anchor: { paragraphId, offset },
+        head: { paragraphId, offset },
+      });
+      editor.surface!.type('X');
+      return editor;
+    };
+    const leading = insertAt(1);
+    expect(leading.surface!.session.bodyText()).toBe('AXBCD');
+    expect(textUnder(leading.surface!.session.part().root, 'smartTag')).toBe('BC');
+    const interior = insertAt(2);
+    expect(interior.surface!.session.bodyText()).toBe('ABXCD');
+    expect(textUnder(interior.surface!.session.part().root, 'smartTag')).toBe('BXC');
+    const trailing = insertAt(3);
+    expect(trailing.surface!.session.bodyText()).toBe('ABCXD');
+    expect(textUnder(trailing.surface!.session.part().root, 'smartTag')).toBe('BC');
+
+    const terminal = mount('<w:p><w:smartTag><w:r><w:t>BC</w:t></w:r></w:smartTag></w:p>');
+    const paragraphId = terminal.surface!.session.paragraphIds()[0]!;
+    terminal.surface!.setSelection({
+      anchor: { paragraphId, offset: 2 },
+      head: { paragraphId, offset: 2 },
+    });
+    terminal.surface!.type('X');
+    expect(terminal.surface!.session.bodyText()).toBe('BCX');
+    expect(textUnder(terminal.surface!.session.part().root, 'smartTag')).toBe('BC');
+
+    const initial = mount('<w:p><w:smartTag><w:r><w:t>BC</w:t></w:r></w:smartTag></w:p>');
+    const initialId = initial.surface!.session.paragraphIds()[0]!;
+    initial.surface!.setSelection({
+      anchor: { paragraphId: initialId, offset: 0 },
+      head: { paragraphId: initialId, offset: 0 },
+    });
+    initial.surface!.type('X');
+    expect(initial.surface!.session.bodyText()).toBe('XBC');
+    expect(textUnder(initial.surface!.session.part().root, 'smartTag')).toBe('BC');
+
+    const adjacent = mount(
+      '<w:p><w:smartTag><w:r><w:t>A</w:t></w:r></w:smartTag>' +
+        '<w:customXml><w:r><w:t>B</w:t></w:r></w:customXml></w:p>'
+    );
+    const adjacentId = adjacent.surface!.session.paragraphIds()[0]!;
+    adjacent.surface!.setSelection({
+      anchor: { paragraphId: adjacentId, offset: 1 },
+      head: { paragraphId: adjacentId, offset: 1 },
+    });
+    adjacent.surface!.type('X');
+    expect(adjacent.surface!.session.bodyText()).toBe('AXB');
+    expect(textUnder(adjacent.surface!.session.part().root, 'smartTag')).toBe('A');
+    expect(textUnder(adjacent.surface!.session.part().root, 'customXml')).toBe('B');
   });
 
   test('findMatches narrows on matchCase and wholeWord', () => {

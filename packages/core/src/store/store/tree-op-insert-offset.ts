@@ -17,8 +17,7 @@ import {
   type OoxmlParagraphNode,
   type OoxmlPart,
 } from '../package/ooxml-tree.ts';
-import { isContentRevisionKind } from '../package/ooxml-shared.ts';
-import { segmentsOf } from './tree-op-segments.ts';
+import { insertionSite, segmentsOf } from './tree-op-segments.ts';
 
 function contains(node: OoxmlNode, id: string): boolean {
   if (node.id === id) return true;
@@ -84,11 +83,13 @@ export function insertRunPayloadAtOffset(
   options?: EditOptions
 ): OoxmlEditResult {
   const nextId = createNodeIdAllocator(part);
-  const segments = segmentsOf(paragraph);
+  const site = insertionSite(paragraph, offset, null);
 
-  for (const segment of segments) {
-    if (segment.node.kind !== 'textValue') continue;
-    if (offset <= segment.start || offset >= segment.end) continue;
+  if (site.kind === 'withinValue') {
+    const segment = site.segment;
+    if (segment.node.kind !== 'textValue') {
+      return { ok: false, issues: [{ code: 'known-node-invariant', path: 'text-value' }] };
+    }
     const local = offset - segment.start;
     const value = segment.node.value;
     const textNode = findTextContainer(paragraph, segment.node.id);
@@ -116,35 +117,26 @@ export function insertRunPayloadAtOffset(
     return replaceChildren(part, run.id, rebuilt, options);
   }
 
-  const boundary = segments.find((segment) => segment.start === offset);
-  if (boundary) {
-    const run = findNode(part, boundary.runId);
+  if (site.kind === 'atBoundary') {
+    const run = findNode(part, site.segment.runId);
     if (!run || run.kind !== 'run') {
       return {
         ok: false,
-        issues: [{ code: 'known-node-invariant', path: 'missing-run', nodeId: boundary.runId }],
+        issues: [{ code: 'known-node-invariant', path: 'missing-run', nodeId: site.segment.runId }],
       };
     }
-    const index = run.children.findIndex((child) => contains(child, boundary.node.id));
+    const index = run.children.findIndex((child) => contains(child, site.segment.node.id));
     return insertChildren(part, run.id, Math.max(0, index), payload, options);
   }
 
-  const runs = paragraph.children.flatMap((child) => {
-    if (child.kind === 'run') return [child];
-    if (child.kind === 'hyperlink' || isContentRevisionKind(child.kind)) {
-      return child.children.filter((inner) => inner.kind === 'run');
-    }
-    return [];
-  });
-  const last = runs[runs.length - 1];
-  if (last && last.kind === 'run') {
-    return insertChildren(part, last.id, last.children.length, payload, options);
+  if (site.kind === 'appendToRun') {
+    return insertChildren(part, site.run.id, site.run.children.length, payload, options);
   }
 
   return insertChildren(
     part,
-    paragraph.id,
-    paragraph.children.length,
+    site.holder.id,
+    site.index ?? site.holder.children.length,
     [runElement(nextId, payload)],
     options
   );

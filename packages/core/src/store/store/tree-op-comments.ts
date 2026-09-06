@@ -16,7 +16,7 @@ import {
   type OoxmlParagraphNode,
   type OoxmlPart,
 } from '../package/ooxml-tree.ts';
-import { isContentRevisionKind } from '../package/ooxml-shared.ts';
+import { isInlineRunContainer, MAX_INLINE_CONTAINER_DEPTH } from '../package/ooxml-shared.ts';
 // The SAME predicate and accessor the offset authority walks with. A second pair that
 // disagreed — `content-control-nodes.ts` matches only a TYPED control, while the authority
 // also measures a demoted generic `w:sdt` — would refuse offsets the authority hands out.
@@ -46,6 +46,7 @@ function locateOffset(
   offset: number,
   depth: number
 ): { readonly containerId: string; readonly index: number } | null {
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return null;
   const index = paragraphOffsetIndex(paragraph);
   const span =
     container.id === paragraph.id ? { start: 0, end: index.length } : index.spanOf(container);
@@ -100,7 +101,7 @@ function locateOffset(
     // inside a tracked insertion is ordinary. A comment anchored inside tracked text belongs
     // inside the wrapper that tracks it, or the markup claims the comment covers text the
     // revision does not.
-    if (offset > cursor && offset < cursor + length && depth < MAX_CONTAINER_DEPTH) {
+    if (offset > cursor && offset < cursor + length) {
       const inner = descendableContainer(child);
       if (inner) {
         const found = locateOffset(paragraph, inner, offset, depth + 1);
@@ -112,9 +113,6 @@ function locateOffset(
   return cursor === offset ? { containerId: container.id, index: container.children.length } : null;
 }
 
-/** Matches the offset authority's own nesting bound. */
-const MAX_CONTAINER_DEPTH = 32;
-
 /**
  * The element to descend into for an offset inside `child`, or null when the offset is
  * inside something indivisible.
@@ -125,7 +123,7 @@ const MAX_CONTAINER_DEPTH = 32;
  */
 function descendableContainer(child: OoxmlNode): OoxmlElement | null {
   if (child.kind === 'textValue') return null;
-  if (isContentRevisionKind(child.kind) || child.kind === 'hyperlink') {
+  if (isInlineRunContainer(child)) {
     return child as OoxmlElement;
   }
   // An inline content control holds its content in `w:sdtContent`; the wrapper's other

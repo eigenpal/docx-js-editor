@@ -103,6 +103,23 @@ describe('content controls are typed canonical nodes at every level', () => {
     expect(contentControlLevelOf(paragraph.children[1] as OoxmlElement)).toBe('inline');
   });
 
+  test('customXml content distinguishes block and inline controls', () => {
+    const block = controlsOf(
+      parseDoc(
+        '<w:sdt><w:sdtContent><w:customXml><w:p><w:r><w:t>block</w:t></w:r></w:p>' +
+          '</w:customXml></w:sdtContent></w:sdt>'
+      )
+    )[0]!;
+    const inline = controlsOf(
+      parseDoc(
+        '<w:p><w:sdt><w:sdtContent><w:customXml><w:r><w:t>inline</w:t></w:r>' +
+          '</w:customXml></w:sdtContent></w:sdt></w:p>'
+      )
+    )[0]!;
+    expect(contentControlLevelOf(block)).toBe('block');
+    expect(contentControlLevelOf(inline)).toBe('inline');
+  });
+
   test('row-level and cell-level controls type at their own level', () => {
     const part = parseDoc(
       `<w:tbl>` +

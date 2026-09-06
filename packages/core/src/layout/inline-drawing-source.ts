@@ -36,6 +36,7 @@ import {
 import { createPackageShapeThemeResolvers } from '../store/package/theme-color-resolution.ts';
 import type { OoxmlPackage } from '../store/package/ooxml-package.ts';
 import type { InlineDrawingLayoutContext } from './drawing-layout.ts';
+import { walkDrawingAtoms } from './drawing-inline-walk.ts';
 import { aggregateParagraphTokensForTableBlock, framedTokenJoin } from './layout-cache.ts';
 
 /** Layout-owned read surface for inline drawing package state (no binding/session lane). */
@@ -496,20 +497,20 @@ function drawingResourceLayoutToken(resource: ImageResourceState): string {
  */
 const MAX_HOSTED_STORY_TOKEN_DEPTH = 1;
 
-function collectDrawingAtoms(node: OoxmlNode, ids: string[]): void {
-  if (node.kind === 'drawing' || isRunLevelMcAlternateContent(node)) {
-    ids.push(node.id);
+function collectStoryDrawingAtoms(node: OoxmlNode, ids: string[]): void {
+  if (node.kind === 'paragraph') {
+    for (const id of drawingAtomsInParagraph(node)) ids.push(id);
     return;
   }
   if ('children' in node) {
-    for (const child of node.children) collectDrawingAtoms(child, ids);
+    for (const child of node.children) collectStoryDrawingAtoms(child, ids);
   }
 }
 
 function drawingAtomsInParagraph(paragraph: OoxmlNode): readonly string[] {
   if (paragraph.kind !== 'paragraph') return [];
   const ids: string[] = [];
-  for (const child of paragraph.children) collectDrawingAtoms(child, ids);
+  walkDrawingAtoms(paragraph, (node) => ids.push(node.id));
   return Object.freeze(ids);
 }
 
@@ -646,7 +647,7 @@ function createPartDrawingContextSlot(options: {
         const story = atomProjections.get(atomId)?.textboxStory;
         if (!story) continue;
         const inner: string[] = [];
-        collectDrawingAtoms(story.content, inner);
+        collectStoryDrawingAtoms(story.content, inner);
         if (inner.length === 0) continue;
         if (!expanded) expanded = [...direct];
         // A LOOP, not `push(...inner)`: the count comes from the file, and spreading a few

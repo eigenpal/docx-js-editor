@@ -10,8 +10,14 @@
 // bookmarks as it likes, and a lookup structure built from attacker input gets a cap like
 // every other one.
 
-import { WML_NAMESPACE_URI } from './ooxml-shared.ts';
-import type { OoxmlNode, OoxmlPart } from './ooxml-tree.ts';
+import {
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+  WML_NAMESPACE_URI,
+} from './ooxml-shared.ts';
+import { contentControlContentOf, isContentControl } from './content-control-walk.ts';
+import type { OoxmlNode, OoxmlParagraphNode, OoxmlPart } from './ooxml-tree.ts';
+import { paragraphOffsetIndex } from '../store/tree-op-segments.ts';
 
 /** Word's own limit is 40 characters; this is the fail-closed bound, not a fidelity claim. */
 const MAX_BOOKMARK_NAME_LENGTH = 256;
@@ -61,22 +67,16 @@ function attributeValue(node: OoxmlNode, localName: string): string | undefined 
 export function buildBookmarkIndex(part: OoxmlPart): BookmarkIndex {
   const index = new Map<string, BookmarkAnchor>();
 
-  const inlineLength = (node: OoxmlNode): number => {
-    if (node.kind === 'textValue') return node.value.length;
-    if (node.kind === 'tab' || node.kind === 'hardBreak') return 1;
-    if (node.kind === 'runProperties' || node.kind === 'generic') return 0;
-    let total = 0;
-    for (const child of node.children) total += inlineLength(child);
-    return total;
-  };
-
-  const scanParagraph = (paragraph: OoxmlNode): void => {
-    if (paragraph.kind === 'textValue') return;
-    let offset = 0;
-    const walkInline = (child: OoxmlNode): void => {
+  const scanParagraph = (paragraph: OoxmlParagraphNode): void => {
+    // Paragraphs without bookmark starts need no retained offset index.
+    let offsets: ReturnType<typeof paragraphOffsetIndex> | undefined;
+    const walkInline = (child: OoxmlNode, depth: number): void => {
+      if (depth >= MAX_INLINE_CONTAINER_DEPTH) return;
       if (child.kind === 'bookmarkStart') {
         const name = attributeValue(child, 'name');
+        const span = (offsets ??= paragraphOffsetIndex(paragraph)).spanOf(child);
         if (
+          span !== null &&
           name !== undefined &&
           name.length > 0 &&
           name.length <= MAX_BOOKMARK_NAME_LENGTH &&
@@ -84,21 +84,23 @@ export function buildBookmarkIndex(part: OoxmlPart): BookmarkIndex {
           !index.has(name) &&
           index.size < MAX_BOOKMARKS
         ) {
-          index.set(name, { name, paragraphId: paragraph.id, offset });
+          index.set(name, { name, paragraphId: paragraph.id, offset: span.start });
         }
         return;
       }
-      if (child.kind === 'run') {
-        offset += inlineLength(child);
-        return;
-      }
+      if (child.kind === 'run') return;
       // A link's markers sit at real positions inside it, so the walk descends rather than
       // charging the whole link's width before looking.
-      if (child.kind === 'hyperlink') {
-        for (const inner of child.children) walkInline(inner);
+      if (isInlineRunContainer(child)) {
+        for (const inner of child.children) walkInline(inner, depth + 1);
+        return;
+      }
+      if (isContentControl(child)) {
+        const content = contentControlContentOf(child);
+        if (content) for (const inner of content) walkInline(inner, depth + 1);
       }
     };
-    for (const child of paragraph.children) walkInline(child);
+    for (const child of paragraph.children) walkInline(child, 0);
   };
 
   const walk = (node: OoxmlNode): void => {

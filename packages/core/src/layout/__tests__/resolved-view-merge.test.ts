@@ -314,12 +314,9 @@ describe('a group that cannot be measured is not merged', () => {
     expect(paragraphs.size).toBe(2);
   });
 
-  test('a paragraph the walk over-publishes is left alone', () => {
-    // Content at the nesting cap counts differently on each side — the store stops one level
-    // before layout does — so the store cannot address what layout paints. Merging would put
-    // the survivor's text inside that gap. The depth matters: BELOW the cap both lanes agree
-    // and the merge is right; far ABOVE it neither lane publishes the text, so the interesting
-    // case is the cap itself.
+  test('content at the shared nesting cap is omitted before a paragraph merge', () => {
+    // Store and layout both make content reached at the cap opaque. The struck paragraph mark
+    // can therefore merge the later visible paragraph without publishing unaddressable text.
     const deep = (depth: number, inner: string): string =>
       depth === 0 ? inner : `<w:sdt><w:sdtContent>${deep(depth - 1, inner)}</w:sdtContent></w:sdt>`;
     const atTheCap =
@@ -327,7 +324,7 @@ describe('a group that cannot be measured is not merged', () => {
       deep(32, '<w:r><w:t xml:space="preserve">deep </w:t></w:r>') +
       '</w:p>' +
       plain('world');
-    expect(textPerLine(load(atTheCap), 'proposed')).toEqual(['deep ', 'world']);
+    expect(textPerLine(load(atTheCap), 'proposed')).toEqual(['world']);
 
     const belowTheCap =
       '<w:p><w:pPr><w:rPr><w:del w:id="1" w:author="A"/></w:rPr></w:pPr>' +

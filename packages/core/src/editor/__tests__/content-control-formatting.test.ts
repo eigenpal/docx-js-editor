@@ -127,6 +127,24 @@ describe('hyperlinks composed with typed inline content controls', () => {
     expect(links[0]!.text).toBe('here');
   });
 
+  test('a link around a DEMOTED control reports its text, not just its span', () => {
+    // `w:sdtPr` after `w:sdtContent` is misordered, so the reader preserves the control as a
+    // generic node. The offset walk still counts its text, so a walk that stops at the
+    // wrapper reports the right span with an empty label — a blank hyperlink editor.
+    const demoted = load(
+      '<w:p>' +
+        '<w:hyperlink w:anchor="x"><w:sdt>' +
+        '<w:sdtContent><w:r><w:t>here</w:t></w:r></w:sdtContent><w:sdtPr/>' +
+        '</w:sdt></w:hyperlink>' +
+        '</w:p>'
+    );
+    const links = hyperlinksInParagraph(demoted, PARAGRAPH, noopResolve);
+    expect(links).toHaveLength(1);
+    expect(links[0]!.start).toBe(0);
+    expect(links[0]!.end).toBe(4);
+    expect(links[0]!.text).toBe('here');
+  });
+
   test('a control around link text still formats the link run', () => {
     const linkInControl = load(
       '<w:p>' +

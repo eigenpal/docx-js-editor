@@ -942,7 +942,7 @@ export const wordFeatures: WordFeature[] = [
     roundTrip: 'preserved',
     tier: 'community',
     notes:
-      'FORMTEXT result text is editable inline, with an accurate caret and selection. FORMCHECKBOX renders its checked or default state from w:ffData, and an explicit w:size sets the glyph size. FORMDROPDOWN renders the cached result, or the selected list entry when the file caches none. Field markers, instructions, and w:ffData round-trip, and tracked edits survive. Form-field shading applies unless w:doNotShadeFormData is set. Checkbox and dropdown interaction, Tab navigation, ffData constraints, and forms-protection fill mode are not built.',
+      'FORMTEXT supports partial text edits, whole-field replacement in unprotected documents, and a default-text dialog on double-click. In documents protected for forms, plain text results remain fillable and Tab selects the next enabled text field. FORMCHECKBOX renders its checked or default state from w:ffData, and an explicit w:size sets the glyph size. FORMDROPDOWN renders the cached result, or the selected list entry when the file caches none. Field markers, instructions, and w:ffData round-trip, and tracked edits survive. Form-field shading applies unless w:doNotShadeFormData is set. Checkbox and dropdown interaction and ffData formatting constraints are not built. Results with nested fields, revisions, or non-text structure cannot use the default-text dialog or protected filling.',
   },
 
   // --- Document structure & content controls ---------------------------------

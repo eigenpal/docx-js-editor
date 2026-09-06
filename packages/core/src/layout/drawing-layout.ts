@@ -17,7 +17,8 @@ import {
   drawingAccessibility,
   isRunLevelMcAlternateContent,
 } from '../store/package/drawing-projection.ts';
-import type { OoxmlNode } from '../store/package/ooxml-tree.ts';
+import type { OoxmlNode, OoxmlParagraphNode } from '../store/package/ooxml-tree.ts';
+import { paragraphOffsetIndex } from '../store/store/tree-op-segments.ts';
 import { pageClipRegion } from './drawing-page-clip.ts';
 export { pageClipRegion } from './drawing-page-clip.ts';
 import type { ImageResourceState } from '../store/package/image-resources.ts';
@@ -32,6 +33,7 @@ import {
   type RevisionAuthorFilter,
   type RevisionDisplayMode,
 } from './revision-projection.ts';
+import { walkDrawingAtoms, walkDrawingRunContent } from './drawing-inline-walk.ts';
 import { measureDisplayText } from './run-style.ts';
 import { styleForFontSlot } from './script-itemization.ts';
 import {
@@ -1023,7 +1025,12 @@ export function anchoredDrawingAtomsInParagraph(
     projection: DrawingProjection;
     revisions: readonly RevisionAttribution[];
   }[] = [];
-  const visit = (node: OoxmlNode, revisions: readonly RevisionAttribution[]): void => {
+  walkDrawingAtoms(paragraph, (node, containers) => {
+    let revisions: readonly RevisionAttribution[] = NO_REVISIONS;
+    for (const container of containers) {
+      const attribution = isRevisionWrapper(container) ? revisionAttributionOf(container) : null;
+      if (attribution) revisions = withRevision(revisions, attribution);
+    }
     if (node.kind === 'drawing') {
       const projection =
         context.projectionForAtom?.(node.id) ??
@@ -1034,49 +1041,25 @@ export function anchoredDrawingAtomsInParagraph(
     if (isRunLevelMcAlternateContent(node)) {
       const projection = context.projectionForAtom?.(node.id) ?? null;
       if (projection?.kind === 'anchored') atoms.push({ atomId: node.id, projection, revisions });
-      return;
     }
-    if ('children' in node) {
-      const attribution = isRevisionWrapper(node) ? revisionAttributionOf(node) : null;
-      const enclosing = attribution ? withRevision(revisions, attribution) : revisions;
-      for (const child of node.children) visit(child, enclosing);
-    }
-  };
-  for (const child of paragraph.children) visit(child, NO_REVISIONS);
+  });
   return Object.freeze(atoms);
 }
 
 export function drawingModelOffsetsInParagraph(paragraph: OoxmlNode): ReadonlyMap<string, number> {
   const offsets = new Map<string, number>();
   if (paragraph.kind !== 'paragraph') return offsets;
-  let offset = 0;
-  const visitRunContent = (node: OoxmlNode): void => {
-    if (node.kind === 'drawing' || isRunLevelMcAlternateContent(node)) {
-      offsets.set(node.id, offset);
-      offset += 1;
-      return;
-    }
-    if (node.kind === 'textValue') {
-      offset += node.value.length;
-      return;
-    }
-    if ('children' in node) {
-      for (const child of node.children) visitRunContent(child);
-    }
-  };
-  // Descends hyperlinks and revision wrappers in either order: a `w:ins` wraps runs and
-  // hyperlinks the model still counts, so skipping it left every drawing after (or inside)
-  // the wrapper at a stale offset and an anchored drawing in a tracked insertion invisible.
-  const visitInlineChild = (child: OoxmlNode): void => {
-    if (child.kind === 'run') {
-      for (const grand of child.children) visitRunContent(grand);
-      return;
-    }
-    if (child.kind === 'hyperlink' || isRevisionWrapper(child)) {
-      for (const grand of child.children) visitInlineChild(grand);
-    }
-  };
-  for (const child of paragraph.children) visitInlineChild(child);
+  // Offsets come from the paragraph offset index — THE authority — not a private counter.
+  // Counting only text and drawings put a drawing after a `w:br` at the break's offset, so
+  // the anchor attached to the wrong line: every modeled atom occupies its own unit.
+  // Text-only paragraphs need no drawing offsets. Keeping their full indexes alive
+  // inflated large export layouts past the constrained Node heap.
+  let index: ReturnType<typeof paragraphOffsetIndex> | undefined;
+  walkDrawingRunContent(paragraph, (node) => {
+    if (node.kind !== 'drawing' && !isRunLevelMcAlternateContent(node)) return;
+    const span = (index ??= paragraphOffsetIndex(paragraph as OoxmlParagraphNode)).spanOf(node);
+    if (span) offsets.set(node.id, span.start);
+  });
   return offsets;
 }
 

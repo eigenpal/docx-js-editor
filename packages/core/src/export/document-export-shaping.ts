@@ -39,7 +39,11 @@ import { noteIdOf, noteTypeOf, type NoteKind } from '../store/package/note-nodes
 import { hasLegacyFormFieldData } from '../store/package/field-nodes.ts';
 import { collectFlowBlocks } from '../store/package/content-control-walk.ts';
 import type { OoxmlElement } from '../store/package/ooxml-tree.ts';
-import { WML_NAMESPACE_URI } from '../store/package/ooxml-shared.ts';
+import {
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+  WML_NAMESPACE_URI,
+} from '../store/package/ooxml-shared.ts';
 import {
   openHeadlessDocument,
   type HeadlessDocumentView,
@@ -71,6 +75,7 @@ import {
   type ExportLaidOutTextApi,
 } from './export-laid-out-text.ts';
 import { createSessionExportShaping, type SessionExportShaping } from './shared-export-shaping.ts';
+import { boundedTextContent, complexSymbolFieldFonts } from './export-inline-field-fonts.ts';
 
 export type {
   ExportDroppedEmbeddedFont,
@@ -590,16 +595,23 @@ function collectParagraphSynthesizedFieldGlyphIds(
     node: OoxmlElement;
     runId: string | null;
     visibility: number;
+    containerDepth: number;
   }> = [];
   for (let index = paragraph.children.length - 1; index >= 0; index -= 1) {
     const child = paragraph.children[index]!;
     if (child.kind !== 'textValue') {
-      stack.push({ node: child as OoxmlElement, runId: null, visibility: ALL_REVISION_VIEWS });
+      stack.push({
+        node: child as OoxmlElement,
+        runId: null,
+        visibility: ALL_REVISION_VIEWS,
+        containerDepth: 0,
+      });
     }
   }
 
   while (stack.length > 0) {
-    const { node, runId: inheritedRunId, visibility } = stack.pop()!;
+    const { node, runId: inheritedRunId, visibility, containerDepth } = stack.pop()!;
+    if (containerDepth >= MAX_INLINE_CONTAINER_DEPTH) continue;
     // A textbox is a distinct story with its own paragraph field state. It is discovered by
     // the root walk and processed separately; never let its markers nest into the host paragraph.
     if (node.namespaceUri === WML_NAMESPACE_URI && node.localName === 'p') continue;
@@ -691,6 +703,7 @@ function collectParagraphSynthesizedFieldGlyphIds(
           node: child as OoxmlElement,
           runId,
           visibility: visibility & revisionWrapperVisibility(node),
+          containerDepth: nextInlineContainerDepth(node, containerDepth),
         });
       }
     }
@@ -793,74 +806,6 @@ function layoutSynthesizedFontFamilies(roots: readonly OoxmlElement[]): readonly
     }
   }
   return [...byFold.values()];
-}
-
-function complexSymbolFieldFonts(paragraph: OoxmlElement): readonly string[] {
-  const families: string[] = [];
-  const state = createFieldParseState();
-  const stack: OoxmlElement[] = [];
-  for (let index = paragraph.children.length - 1; index >= 0; index -= 1) {
-    const child = paragraph.children[index]!;
-    if (child.kind !== 'textValue') stack.push(child as OoxmlElement);
-  }
-  while (stack.length > 0) {
-    const node = stack.pop()!;
-    if (node.namespaceUri === WML_NAMESPACE_URI && node.localName === 'p') continue;
-    if (node.namespaceUri === WML_NAMESPACE_URI && node.localName === 'fldChar') {
-      const kind = attributeValue(node, 'fldCharType');
-      if (kind === 'begin') onFldCharBegin(state);
-      else if (kind === 'separate') {
-        if (state.nesting === 1) noteEffectiveSymbolFont(state, families);
-        onFldCharSeparate(state);
-      } else if (kind === 'end') {
-        if (state.nesting === 1) noteEffectiveSymbolFont(state, families);
-        onFldCharEnd(state);
-      }
-      continue;
-    }
-    if (
-      node.namespaceUri === WML_NAMESPACE_URI &&
-      (node.localName === 'instrText' || node.localName === 'delInstrText')
-    ) {
-      onInstrText(state, boundedTextContent(node), node.localName === 'delInstrText');
-      continue;
-    }
-    if (node.namespaceUri === WML_NAMESPACE_URI && node.localName === 'fldSimple') {
-      const spec = parseSymbolInstruction(attributeValue(node, 'instr') ?? '');
-      if (spec?.font) families.push(spec.font);
-    }
-    for (let index = node.children.length - 1; index >= 0; index -= 1) {
-      const child = node.children[index]!;
-      if (child.kind !== 'textValue') stack.push(child as OoxmlElement);
-    }
-  }
-  resetFieldParseState(state);
-  return families;
-}
-
-function noteEffectiveSymbolFont(
-  state: ReturnType<typeof createFieldParseState>,
-  families: string[]
-): void {
-  const effective = effectiveFieldInstruction(state);
-  if (effective.overflow) return;
-  const spec = parseSymbolInstruction(effective.instruction);
-  if (spec?.font) families.push(spec.font);
-}
-
-function boundedTextContent(root: OoxmlElement): string {
-  let text = '';
-  const stack = [...root.children].reverse();
-  while (stack.length > 0 && text.length <= 256) {
-    const node = stack.pop()!;
-    if (node.kind === 'textValue') text += node.value;
-    else {
-      for (let index = node.children.length - 1; index >= 0; index -= 1) {
-        stack.push(node.children[index]!);
-      }
-    }
-  }
-  return text;
 }
 
 function usedNumberingFontFamilies(

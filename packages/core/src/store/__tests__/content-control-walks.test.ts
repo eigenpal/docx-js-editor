@@ -119,6 +119,19 @@ describe('content-control walk helpers', () => {
 });
 
 describe('store projections descend block content controls', () => {
+  test('all shared story walks descend through block customXml', () => {
+    const part = load(
+      '<w:customXml><w:p><w:r><w:t>one</w:t></w:r></w:p>' +
+        '<w:p><w:r><w:t>two</w:t></w:r></w:p></w:customXml>'
+    );
+    const blocks: string[] = [];
+    walkStoryBlocks(bodyOf(part).children, 0, (block) => blocks.push(block.id));
+    const paragraphs: string[] = [];
+    walkAllStoryParagraphs(bodyOf(part).children, 0, (paragraph) => paragraphs.push(paragraph.id));
+    expect(blocks).toEqual(paragraphs);
+    expect(blocks).toHaveLength(2);
+  });
+
   test('digest reaches paragraphs inside generic block SDTs and table cells', () => {
     const digest = semanticDigest([load(BLOCK_XML)]);
     const texts = digest.stories[0]!.paragraphs.map((paragraph) => paragraph.text);

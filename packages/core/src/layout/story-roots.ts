@@ -19,11 +19,8 @@ import type {
   OoxmlParagraphNode,
   OoxmlPart,
 } from '@docx-editor.dev/core/store';
-import {
-  contentControlContentChildren,
-  isContentControl,
-  MAX_CONTENT_CONTROL_NESTING,
-} from '../store/package/content-control-walk.ts';
+import { MAX_CONTENT_CONTROL_NESTING } from '../store/package/content-control-walk.ts';
+import { blockStoryContainerChildren } from '../store/package/story-blocks.ts';
 import { WML_NAMESPACE_URI } from '../store/package/ooxml-tree.ts';
 import { paragraphOffsetIndex } from '../store/store/tree-op-segments.ts';
 import { piecesOfParagraph } from './field-projection.ts';
@@ -241,7 +238,7 @@ export function isEmptyCellTerminator(paragraph: OoxmlElement): boolean {
 /** A block, and which children array it actually lives in. */
 interface ParentedBlock {
   readonly block: OoxmlElement;
-  /** Node id of the enclosing content control, or `''` for the story root's own children. */
+  /** Node id of the enclosing transparent wrapper, or `''` for the story root's own children. */
   readonly parentKey: string;
 }
 
@@ -255,8 +252,9 @@ function flowBlocksWithParent(children: readonly OoxmlNode[]): readonly Parented
         blocks.push({ block: child, parentKey });
         continue;
       }
-      if (isContentControl(child) && nest < MAX_CONTENT_CONTROL_NESTING) {
-        collect(contentControlContentChildren(child), nest + 1, child.id);
+      const nested = blockStoryContainerChildren(child);
+      if (nested !== null && nest < MAX_CONTENT_CONTROL_NESTING) {
+        collect(nested, nest + 1, child.id);
       }
     }
   };

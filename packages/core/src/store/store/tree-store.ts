@@ -1,3 +1,5 @@
+import { textFormFieldForEdit } from './text-form-fields.ts';
+import { applyProtectedTextFormEdit } from './tree-op-field-results.ts';
 // Tree-backed document store with intent-scoped semantic history (tasks 5.2, 5.4-5.6).
 //
 // One transaction = one atomic publication = one history entry. `apply` stages ops against
@@ -21,7 +23,11 @@ import { withPart, type OoxmlPackage } from '../package/ooxml-package.ts';
 import { validatePackageInvariants } from '../package/package-edit.ts';
 import { settingsPartOf } from '../package/note-properties.ts';
 import { ORIGIN_IDS } from '../registry/frozen-ids.ts';
-import { formsProtectionRefusal } from './tree-op-content-controls.ts';
+import {
+  formsProtectionRefusal,
+  enforcesFormsProtection,
+  sectionProtectsForms,
+} from './tree-op-content-controls.ts';
 import { nextRevisionId } from './tree-op-revision-ids.ts';
 import { PROPERTY_CHANGE_WRAPPER_OF_OP } from './tree-op-tracked-properties.ts';
 import type { TransactionRevisionIds } from '../package/ooxml-edit.ts';
@@ -559,6 +565,7 @@ export class TreeDocumentStore {
       return writes ? revisionIdsFor(part) : null;
     };
 
+    let fillingField: { partName: string; paragraphId: string; fieldNodeId: string } | null = null;
     const applyToPart = (partName: string, op: TreeDocOp): boolean => {
       if (failure) return false;
       const target = working.parts.get(partName);
@@ -572,7 +579,12 @@ export class TreeDocumentStore {
       const protection = formsProtectionRefusal(
         target,
         this.settingsPartOverride?.() ?? settingsPartOf(working),
-        op
+        op,
+        fillingField?.partName === partName &&
+          'paragraphId' in op &&
+          fillingField.paragraphId === op.paragraphId
+          ? fillingField.fieldNodeId
+          : undefined
       );
       if (protection) {
         failure = { reason: protection };
@@ -584,11 +596,31 @@ export class TreeDocumentStore {
       // inside `applyTreeOp` before any tree work.
       const revisionIds = sharedRevisionIds(op, target);
       const trackedRevisionIds = trackedRevisionIdsFor(op, target);
-      const result = applyTreeOp(target, op, {
+      const settings = this.settingsPartOverride?.() ?? settingsPartOf(working);
+      const formField =
+        enforcesFormsProtection(settings) &&
+        'paragraphId' in op &&
+        sectionProtectsForms(target, op.paragraphId)
+          ? textFormFieldForEdit(
+              target,
+              op,
+              fillingField?.partName === partName && fillingField.paragraphId === op.paragraphId
+                ? fillingField.fieldNodeId
+                : undefined
+            )
+          : null;
+      fillingField =
+        formField && 'paragraphId' in op
+          ? { partName, paragraphId: op.paragraphId, fieldNodeId: formField.fieldNodeId }
+          : null;
+      const editOptions = {
         deferValidation: true,
         ...(revisionIds ? { revisionIds } : {}),
         ...(trackedRevisionIds ? { trackedRevisionIds } : {}),
-      });
+      };
+      const result = formField
+        ? applyProtectedTextFormEdit(target, op, formField, editOptions)
+        : applyTreeOp(target, op, editOptions);
       if (!result.ok) {
         failure = { reason: result.reason, ...(result.detail ? { detail: result.detail } : {}) };
         return false;

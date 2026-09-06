@@ -1,3 +1,7 @@
+import { splitsSurrogate } from './tree-op-segments.ts';
+import { namedOwnerRefusal } from './tree-op-validate.ts';
+import type { TextFormFieldRange } from './text-form-fields.ts';
+import { textFormFieldsOf, textFormFieldForEdit } from './text-form-fields.ts';
 // Field-result refresh TreeDocOp — rewrite a field's cached RESULT runs in place.
 //
 // The op carries the paragraph, the field anchor (the run holding the `begin` fldChar, or
@@ -19,9 +23,14 @@ import {
   createNodeIdAllocator,
   findNode,
   replaceChildren,
+  replaceNode,
   type EditOptions,
 } from '../package/ooxml-edit.ts';
-import { WML_NAMESPACE_URI } from '../package/ooxml-shared.ts';
+import {
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+  WML_NAMESPACE_URI,
+} from '../package/ooxml-shared.ts';
 import type { OoxmlElement, OoxmlNode, OoxmlPart } from '../package/ooxml-tree.ts';
 import { isValidXmlText } from '../package/sinks.ts';
 import { effectiveContentLockAt, isBoundAt, ok, parentOf } from './tree-op-nodes.ts';
@@ -64,6 +73,7 @@ interface LocatedField extends LocatedFieldResult {
   readonly containerId: string;
   /** Result runs in order; the first receives the new text, the rest lose theirs. */
   readonly resultRunIds: readonly string[];
+  readonly emptyResultEndRunId?: string;
 }
 
 interface LocateBudget {
@@ -137,7 +147,8 @@ function consumeComplexField(
   containerId: string,
   children: readonly OoxmlNode[],
   beginIndex: number,
-  budget: LocateBudget
+  budget: LocateBudget,
+  allowInstructionBookmarks = false
 ): { field: LocatedField | null; nextIndex: number } {
   const beginRun = children[beginIndex] as OoxmlElement;
   let anchorId: string | null = null;
@@ -169,6 +180,14 @@ function consumeComplexField(
     budget.nodes -= 1;
     if (budget.nodes <= 0) return { field: null, nextIndex: children.length };
     const node = children[index]!;
+    // Word's legacy forms place the named bookmark before their instruction.
+    // Keep it in place; it is outside the rewritten result. Computed refresh stays strict.
+    if (
+      allowInstructionBookmarks &&
+      phase === 'instruction' &&
+      (node.kind === 'bookmarkStart' || node.kind === 'bookmarkEnd')
+    )
+      continue;
     // Only sibling RUNS are understood; a hyperlink, bookmark, SDT or revision wrapper
     // inside the field means the boundaries cannot be tracked here — fail the locate.
     if (node.kind !== 'run') return { field: null, nextIndex: index + 1 };
@@ -179,7 +198,11 @@ function consumeComplexField(
     if (node.children.some((child) => isFldChar(child, 'end'))) {
       if (!isBoundaryOnlyRun(node, 'end')) plain = false;
       if (anchorId === null) return { field: null, nextIndex: index + 1 };
-      const rewritable = plain && !locked && phase === 'result' && resultRunIds.length > 0;
+      const rewritable =
+        plain &&
+        !locked &&
+        phase === 'result' &&
+        (resultRunIds.length > 0 || allowInstructionBookmarks);
       return {
         field: {
           fieldNodeId: anchorId,
@@ -188,6 +211,7 @@ function consumeComplexField(
           rewritable,
           containerId,
           resultRunIds,
+          ...(resultRunIds.length === 0 ? { emptyResultEndRunId: node.id } : {}),
         },
         nextIndex: index + 1,
       };
@@ -255,9 +279,11 @@ function locateFieldsInContainer(
   container: OoxmlElement,
   depth: number,
   budget: LocateBudget,
-  out: LocatedField[]
+  out: LocatedField[],
+  allowInstructionBookmarks = false
 ): void {
-  if (depth > MAX_LOCATE_DEPTH) return;
+  if (allowInstructionBookmarks ? depth >= MAX_INLINE_CONTAINER_DEPTH : depth > MAX_LOCATE_DEPTH)
+    return;
   const children = container.children;
   let index = 0;
   while (index < children.length) {
@@ -276,7 +302,13 @@ function locateFieldsInContainer(
     }
     if (node.kind === 'run') {
       if (node.children.some((child) => isFldChar(child, 'begin'))) {
-        const consumed = consumeComplexField(container.id, children, index, budget);
+        const consumed = consumeComplexField(
+          container.id,
+          children,
+          index,
+          budget,
+          allowInstructionBookmarks
+        );
         if (consumed.field) out.push(consumed.field);
         index = consumed.nextIndex;
         continue;
@@ -285,7 +317,13 @@ function locateFieldsInContainer(
       continue;
     }
     if (!isDrawingContainer(node) && !isRevisionContainer(node)) {
-      locateFieldsInContainer(node, depth + 1, budget, out);
+      locateFieldsInContainer(
+        node,
+        allowInstructionBookmarks ? nextInlineContainerDepth(node, depth) : depth + 1,
+        budget,
+        out,
+        allowInstructionBookmarks
+      );
     }
     index += 1;
   }
@@ -296,8 +334,21 @@ function locateFieldsInContainer(
  * order. Bounded walk; a paragraph past the budget answers what it found so far.
  */
 export function locateFieldResults(paragraph: OoxmlElement): readonly LocatedFieldResult[] {
+  return locatePlainFields(paragraph);
+}
+
+function locatePlainFields(
+  paragraph: OoxmlElement,
+  allowInstructionBookmarks = false
+): LocatedField[] {
   const out: LocatedField[] = [];
-  locateFieldsInContainer(paragraph, 0, { nodes: MAX_LOCATE_NODES }, out);
+  locateFieldsInContainer(
+    paragraph,
+    0,
+    { nodes: MAX_LOCATE_NODES },
+    out,
+    allowInstructionBookmarks
+  );
   return out;
 }
 
@@ -404,7 +455,15 @@ function rewriteFieldResult(
       const content = node.id === firstRunId ? resultRunContent(text, mint) : [];
       return { ...node, children: [...properties, ...content] } as OoxmlNode;
     }
-    const children = node.children.map(rewrite);
+    const children = node.children.flatMap((child) => {
+      if (child.id === field.emptyResultEndRunId && child.kind === 'run') {
+        return [
+          { ...child, id: mint(), children: resultRunContent(text, mint) } as OoxmlNode,
+          child,
+        ];
+      }
+      return [rewrite(child)];
+    });
     return children.some((child, index) => child !== node.children[index])
       ? ({ ...node, children } as OoxmlNode)
       : node;
@@ -422,13 +481,28 @@ export function applyRefreshFieldResults(
   op: RefreshFieldResultsOp,
   options?: EditOptions
 ): TreeOpResult {
+  return applyFieldResults(part, op, options);
+}
+
+function applyFieldResults(
+  part: OoxmlPart,
+  op: RefreshFieldResultsOp,
+  options?: EditOptions,
+  allowInstructionBookmarks = false
+): TreeOpResult {
   let current = part;
   const dirty: string[] = [];
   for (const update of op.updates) {
     const paragraph = findNode(current, update.paragraphId);
     if (!paragraph || paragraph.kind !== 'paragraph') continue;
     const located: LocatedField[] = [];
-    locateFieldsInContainer(paragraph, 0, { nodes: MAX_LOCATE_NODES }, located);
+    locateFieldsInContainer(
+      paragraph,
+      0,
+      { nodes: MAX_LOCATE_NODES },
+      located,
+      allowInstructionBookmarks
+    );
     const field = located.find((entry) => entry.fieldNodeId === update.fieldNodeId);
     if (!field || !field.rewritable || field.cachedText === update.text) continue;
     const mint = createNodeIdAllocator(current);
@@ -448,6 +522,186 @@ export function applyRefreshFieldResults(
     created: [],
     deleted: [],
     dependencyKeys: dirty,
+    impact: 'text-local',
+  });
+}
+
+export function validateTextFormFieldDefault(
+  part: OoxmlPart,
+  op: Extract<TreeDocOp, { op: 'setTextFormFieldDefault' }>
+): TreeOpRejection | null {
+  if (typeof op.text !== 'string' || !isValidXmlText(op.text) || /[\r\n\t]/.test(op.text))
+    return 'invalidArgs';
+  const refusal = fieldResultUpdateRefusal(part, op.fieldNodeId);
+  if (refusal) return refusal;
+  const paragraph = findNode(part, op.paragraphId);
+  if (!paragraph || paragraph.kind !== 'paragraph') return 'unknown-paragraph';
+  if (!textFormFieldsOf(paragraph).some((f) => f.fieldNodeId === op.fieldNodeId))
+    return 'invalidArgs';
+  return locatePlainFields(paragraph, true).some(
+    (f) => f.fieldNodeId === op.fieldNodeId && f.rewritable
+  )
+    ? null
+    : 'invalidArgs';
+}
+
+export function applyTextFormFieldDefault(
+  part: OoxmlPart,
+  op: Extract<TreeDocOp, { op: 'setTextFormFieldDefault' }>,
+  options?: EditOptions
+): TreeOpResult {
+  const result = applyFieldResults(
+    part,
+    { op: 'refreshFieldResults', updates: [op] },
+    options,
+    true
+  );
+  if (!result.ok) return result;
+  const field = findNode(result.part, op.fieldNodeId);
+  if (!field || field.kind === 'textValue') return { ok: false, reason: 'invalidArgs' };
+  const data = field.children.find((n) => n.kind !== 'textValue' && n.localName === 'ffData');
+  if (!data || data.kind === 'textValue') return { ok: false, reason: 'invalidArgs' };
+  const input = data.children.find((n) => n.kind !== 'textValue' && n.localName === 'textInput');
+  if (!input || input.kind === 'textValue') return { ok: false, reason: 'invalidArgs' };
+  const mint = createNodeIdAllocator(result.part);
+  const old = input.children.find((n) => n.kind !== 'textValue' && n.localName === 'default');
+  const def = {
+    id: mint(),
+    kind: 'generic',
+    namespaceUri: WML_NAMESPACE_URI,
+    prefix: 'w',
+    localName: 'default',
+    namespaceBindings: [],
+    children: [],
+    attributes: [
+      {
+        kind: 'genericExtension',
+        namespaceUri: WML_NAMESPACE_URI,
+        prefix: 'w',
+        localName: 'val',
+        value: op.text,
+      },
+    ],
+  } as OoxmlNode;
+  const edited = old
+    ? replaceNode(result.part, old.id, def, options)
+    : replaceChildren(result.part, input.id, [...input.children, def], options);
+  if (!edited.ok) return { ok: false, reason: 'tree-invariant' };
+  return ok(edited.part, {
+    dirty: [op.paragraphId],
+    created: [],
+    deleted: [],
+    dependencyKeys: [op.paragraphId],
+    impact: 'text-local',
+  });
+}
+
+export function protectedTextFormEditRefusal(
+  part: OoxmlPart,
+  op: TreeDocOp,
+  field: TextFormFieldRange
+): TreeOpRejection | null {
+  if (op.op !== 'insertText' && op.op !== 'deleteText') return 'invalidArgs';
+  const paragraph = findNode(part, op.paragraphId);
+  if (!paragraph || paragraph.kind !== 'paragraph') return 'unknown-paragraph';
+  // Filling addresses this field's result, not the ordinary paragraph insertion landing.
+  if (textFormFieldForEdit(part, op, field.fieldNodeId)?.fieldNodeId !== field.fieldNodeId)
+    return 'invalidArgs';
+  const start = op.op === 'insertText' ? op.offset : op.start;
+  const end = op.op === 'insertText' ? op.offset : op.end;
+  if (op.op === 'deleteText' && start >= end) return 'invalid-range';
+  if (splitsSurrogate(paragraph, start) || splitsSurrogate(paragraph, end))
+    return 'splits-surrogate-pair';
+  if (op.op === 'insertText') {
+    if (typeof op.text !== 'string' || !isValidXmlText(op.text)) return 'invalid-text';
+    if (op.bias !== undefined && op.bias !== 'left' && op.bias !== 'right') return 'invalidArgs';
+    if (op.inside !== undefined) {
+      const owner = namedOwnerRefusal(part, op.paragraphId, op.offset, op.inside);
+      if (owner) return owner;
+      let ancestor = parentOf(part, field.fieldNodeId);
+      while (ancestor && ancestor.id !== op.inside) ancestor = parentOf(part, ancestor.id);
+      if (!ancestor) return 'invalidArgs';
+    }
+  }
+
+  const located = locatePlainFields(paragraph, true).find(
+    (f) => f.fieldNodeId === field.fieldNodeId
+  );
+  if (!located?.rewritable) return 'invalidArgs';
+  if (op.op === 'insertText' && /[\r\n]/.test(op.text)) return 'invalidArgs';
+  return fieldResultUpdateRefusal(part, field.fieldNodeId);
+}
+
+export function applyProtectedTextFormEdit(
+  part: OoxmlPart,
+  op: TreeDocOp,
+  field: TextFormFieldRange,
+  options?: EditOptions
+): TreeOpResult {
+  const refusal = protectedTextFormEditRefusal(part, op, field);
+  if (refusal) return { ok: false, reason: refusal };
+  if (op.op !== 'insertText' && op.op !== 'deleteText') return { ok: false, reason: 'invalidArgs' };
+  const paragraph = findNode(part, op.paragraphId);
+  if (!paragraph || paragraph.kind !== 'paragraph')
+    return { ok: false, reason: 'unknown-paragraph' };
+  const located = locatePlainFields(paragraph, true).find(
+    (f) => f.fieldNodeId === field.fieldNodeId
+  )!;
+  const start = (op.op === 'insertText' ? op.offset : op.start) - field.start;
+  const end = (op.op === 'insertText' ? op.offset : op.end) - field.start;
+  const locked = fieldResultUpdateRefusal(part, field.fieldNodeId);
+  if (locked) return { ok: false, reason: locked };
+  if (op.op === 'insertText' && /[\r\n]/.test(op.text)) return { ok: false, reason: 'invalidArgs' };
+  if (!located.resultRunIds.length && op.op === 'insertText') {
+    return applyFieldResults(
+      part,
+      {
+        op: 'refreshFieldResults',
+        updates: [{ paragraphId: op.paragraphId, fieldNodeId: field.fieldNodeId, text: op.text }],
+      },
+      options,
+      true
+    );
+  }
+  let current = part;
+  let offset = 0;
+  let inserted = false;
+  const mint = createNodeIdAllocator(part);
+  for (const runId of located.resultRunIds) {
+    const run = findNode(current, runId);
+    if (!run || run.kind !== 'run') return { ok: false, reason: 'tree-invariant' };
+    const oldText = plainRunText(run);
+    const runEnd = offset + oldText.length;
+    let text = oldText;
+    if (op.op === 'insertText') {
+      if (!inserted && start >= offset && start <= runEnd) {
+        text = oldText.slice(0, start - offset) + op.text + oldText.slice(start - offset);
+        inserted = true;
+      }
+    } else if (start < runEnd && end > offset) {
+      text =
+        oldText.slice(0, Math.max(0, start - offset)) +
+        oldText.slice(Math.min(oldText.length, end - offset));
+    }
+    offset = runEnd;
+    if (text === oldText) continue;
+    const edited = replaceChildren(
+      current,
+      runId,
+      [
+        ...run.children.filter((child) => child.kind === 'runProperties'),
+        ...resultRunContent(text, mint),
+      ],
+      options
+    );
+    if (!edited.ok) return { ok: false, reason: 'tree-invariant' };
+    current = edited.part;
+  }
+  return ok(current, {
+    dirty: [op.paragraphId],
+    created: [],
+    deleted: [],
+    dependencyKeys: [op.paragraphId],
     impact: 'text-local',
   });
 }

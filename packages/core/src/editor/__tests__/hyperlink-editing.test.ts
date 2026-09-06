@@ -54,6 +54,14 @@ function docx(body: string, rels = '', stylesXml = ''): Uint8Array {
 const p = (text: string) => `<w:p><w:r><w:t>${text}</w:t></w:r></w:p>`;
 const PID = (index: number) => `/word/document.xml#0.0.${index}`;
 
+function nestedSmartTags(inner: string, count: number): string {
+  let nested = inner;
+  for (let index = 0; index < count; index += 1) {
+    nested = `<w:smartTag>${nested}</w:smartTag>`;
+  }
+  return nested;
+}
+
 /**
  * A mounted editor and ITS OWN container.
  *
@@ -254,6 +262,46 @@ describe('editing a hyperlink through the editor', () => {
     expect(mounted.editor.surface!.session.bodyText()).toBe('Visit our site today');
   });
 
+  const enclosingLinkCases = [
+    { name: 'smartTag', wrap: (inner: string) => `<w:smartTag>${inner}</w:smartTag>` },
+    { name: 'customXml', wrap: (inner: string) => `<w:customXml>${inner}</w:customXml>` },
+    {
+      name: 'w:ins',
+      wrap: (inner: string) =>
+        `<w:ins w:id="7" w:author="Prior" w:date="2020-01-01T00:00:00Z">${inner}</w:ins>`,
+    },
+  ] as const;
+
+  test.each(enclosingLinkCases)(
+    'right-biased display replacement stays in a hyperlink inside $name',
+    ({ wrap }) => {
+      const target = 'https://example.com/original';
+      const hyperlink = '<w:hyperlink r:id="rId9"><w:r><w:t>Docs</w:t></w:r></w:hyperlink>';
+      const mounted = mount(
+        `<w:p>${wrap(hyperlink)}<w:r><w:t> tail</w:t></w:r></w:p>`,
+        `<Relationship Id="rId9" Type="${R}/hyperlink" Target="${target}" TargetMode="External"/>`
+      );
+      const before = mounted.editor.surface!.hyperlinks.linksInCaretParagraph()[0]!;
+      caret(mounted, 0, 2);
+
+      expect(
+        mounted.editor.surface!.hyperlinks.applyHyperlink({ url: target, text: 'Guide' })
+      ).toBe(true);
+
+      const links = mounted.editor.surface!.hyperlinks.linksInCaretParagraph();
+      expect(links).toHaveLength(1);
+      expect(links[0]!.id).toBe(before.id);
+      expect(links[0]!.text).toBe('Guide');
+      expect(links[0]!.href).toBe(target);
+      expect(mounted.editor.surface!.session.bodyText()).toBe('Guide tail');
+      expect(
+        mounted.editor
+          .surface!.session.currentPackage()
+          .externalTargets.some((entry) => entry.id === 'rId9' && entry.rawTarget === target)
+      ).toBe(true);
+    }
+  );
+
   test('deleting a link’s whole text keeps the bookmarks that were inside it', () => {
     // Removing the emptied `w:hyperlink` took its subtree with it, so an anchor other links
     // point at disappeared — while the identical marker written OUTSIDE a link survives the
@@ -396,6 +444,39 @@ describe('editing a hyperlink through the editor', () => {
     expect(link?.href).toBe('https://example.com');
     expect(reopened.surface!.session.bodyText()).toBe('Visit example today');
   });
+
+  test('a hyperlink at the container cap is not reported or activated', () => {
+    const target = 'https://example.com/deep';
+    const relationship = `<Relationship Id="rId9" Type="${R}/hyperlink" Target="${target}" TargetMode="External"/>`;
+    const link = '<w:hyperlink r:id="rId9"><w:r><w:t>Hidden</w:t></w:r></w:hyperlink>';
+    const mounted = mount(`<w:p>${nestedSmartTags(link, 31)}</w:p>`, relationship);
+    caret(mounted, 0, 0);
+
+    expect(mounted.editor.surface!.session.bodyText()).toBe('');
+    expect(mounted.editor.surface!.hyperlinks.linksInCaretParagraph()).toEqual([]);
+    expect(mounted.editor.surface!.hyperlinks.linkAtCaret()).toBeNull();
+    expect(mounted.editor.query({ type: 'hyperlinkAt' })).toBeNull();
+    expect(mounted.container.querySelector('a.docx-hyperlink')).toBeNull();
+  });
+
+  test('a hyperlink below the container cap reports its span and activates', () => {
+    const target = 'https://example.com/deep';
+    const relationship = `<Relationship Id="rId9" Type="${R}/hyperlink" Target="${target}" TargetMode="External"/>`;
+    const link = '<w:hyperlink r:id="rId9"><w:r><w:t>Visible</w:t></w:r></w:hyperlink>';
+    const mounted = mount(`<w:p>${nestedSmartTags(link, 30)}</w:p>`, relationship);
+    const activations: string[] = [];
+    mounted.editor.setHyperlinkChrome({
+      onPopover: (activation) => activations.push(activation.link.href ?? ''),
+    });
+    caret(mounted, 0, 0);
+
+    expect(mounted.editor.surface!.hyperlinks.linksInCaretParagraph()).toMatchObject([
+      { start: 0, end: 7, text: 'Visible', href: target },
+    ]);
+    expect(mounted.editor.surface!.hyperlinks.linkAtCaret()?.href).toBe(target);
+    click(anchorFor(mounted, 'Visible'));
+    expect(activations).toEqual([target]);
+  });
 });
 
 describe('clicking a painted link', () => {
@@ -449,6 +530,30 @@ describe('clicking a painted link', () => {
     click(anchorFor(mounted, 'Go'));
     expect(seen).toEqual([]);
     expect(mounted.editor.surface!.state().selection.head.paragraphId).toBe(PID(2));
+  });
+
+  test('an internal link jumps after a wrapped complex field at its model offset', () => {
+    const mounted = mount(
+      '<w:p><w:hyperlink w:anchor="target"><w:r><w:t>Go</w:t></w:r></w:hyperlink></w:p>' +
+        '<w:p><w:smartTag>' +
+        '<w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+        '<w:r><w:instrText> PAGE </w:instrText></w:r>' +
+        '<w:r><w:fldChar w:fldCharType="separate"/></w:r>' +
+        '<w:r><w:t>12</w:t></w:r>' +
+        '<w:r><w:fldChar w:fldCharType="end"/></w:r>' +
+        '<w:bookmarkStart w:id="1" w:name="target"/>' +
+        '<w:r><w:t>Destination</w:t></w:r>' +
+        '</w:smartTag></w:p>'
+    );
+    expect(mounted.editor.surface!.bookmarks().get('target')?.offset).toBe(1);
+
+    caret(mounted, 0, 1);
+    click(anchorFor(mounted, 'Go'));
+
+    expect(mounted.editor.surface!.state().selection.head).toMatchObject({
+      paragraphId: PID(1),
+      offset: 1,
+    });
   });
 
   test('a dangling anchor is an inert click: no jump, no popover, no error', () => {

@@ -23,7 +23,7 @@
 // zero-click load of a target an untrusted file chose.
 
 import { nextStripedDecimalId, resolveAllocationActor } from './actor-scoped-ids.ts';
-import { W14_NAMESPACE_URI, WML_NAMESPACE_URI } from './ooxml-shared.ts';
+import { isInlineRunContainer, W14_NAMESPACE_URI, WML_NAMESPACE_URI } from './ooxml-shared.ts';
 import type {
   OoxmlContentControlContentNode,
   OoxmlContentControlEndPropertiesNode,
@@ -566,15 +566,7 @@ export function contentControlLevelOf(control: OoxmlNode): ContentControlLevel {
       if (nested !== 'empty') return nested;
       continue;
     }
-    if (
-      child.kind === 'run' ||
-      child.kind === 'hyperlink' ||
-      child.kind === 'fldSimple' ||
-      child.kind === 'revisionInsert' ||
-      child.kind === 'revisionDelete' ||
-      child.kind === 'revisionMoveFrom' ||
-      child.kind === 'revisionMoveTo'
-    ) {
+    if (child.kind === 'run' || child.kind === 'fldSimple' || isInlineRunContainer(child)) {
       sawInline = true;
       continue;
     }

@@ -189,3 +189,12 @@ describe('textboxStoriesInPart', () => {
     expect(textboxStoriesInPart(replaceDrawingWithDeepChain(part))).toEqual([]);
   });
 });
+
+for (const depth of [31, 32])
+  test(`textbox search shares the inline addressability boundary at ${depth}`, () => {
+    const wrapped =
+      '<w:smartTag>'.repeat(depth) + textbox(paragraph('boxed'), 1) + '</w:smartTag>'.repeat(depth);
+    expect(textboxStoriesInPart(documentPart(`<w:p>${wrapped}</w:p>`))).toHaveLength(
+      depth < 32 ? 1 : 0
+    );
+  });

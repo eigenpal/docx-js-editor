@@ -1,8 +1,7 @@
 // Serializes a clipboard fragment package — the miniature WordprocessingML OPC zip the copy
 // lane produces — into the visible half of the `text/html` flavour. Structure comes from the
 // canonical tree (headings, real lists, tables, anchors); formatting comes from a small
-// self-contained cascade over the FRAGMENT's own styles part, emitted as inline CSS so Word
-// and Google Docs need no stylesheet.
+// cascade over the FRAGMENT's styles part, emitted as inline CSS for external editors.
 //
 // Security posture: the fragment is read through the bounded `readOoxmlPackage` trust
 // boundary, and this writer is a pure string builder — no DOM APIs, no insertion sinks.
@@ -22,6 +21,12 @@ import { relationshipsOf } from '../store/package/package-edit.ts';
 import { resolveInternalTarget } from '../store/package/opc-names.ts';
 import type { RelationshipRecord } from '../store/package/relationships.ts';
 import { attributeValueOf } from '../store/store/tree-op-nodes.ts';
+import { contentControlContentOf } from '../store/package/content-control-walk.ts';
+import {
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+} from '../store/package/ooxml-shared.ts';
 import { clipboardBase64Of } from './clipboard-html-base64.ts';
 import {
   foldAttribute,
@@ -522,20 +527,22 @@ function renderDrawing(ctx: RenderContext, drawing: OoxmlElement): string {
  *  Walks EXACTLY what the renderer walks: a fldChar inside a drawing's textbox or
  *  an SDT's properties never reaches renderRun, so counting it would desync the
  *  balance probe from the render pass and blank everything after it. */
-function advanceFieldState(node: OoxmlElement, fields: FieldState): void {
+function advanceFieldState(node: OoxmlElement, fields: FieldState, depth = 0): void {
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return;
+  const childDepth = nextInlineContainerDepth(node, depth);
   for (const child of node.children) {
     if (!isElement(child)) continue;
     if (child.kind === 'drawing') continue;
     if (child.kind === 'contentControl') {
       const content = child.children.find((inner) => inner.kind === 'contentControlContent');
-      if (content && isElement(content)) advanceFieldState(content, fields);
+      if (content && isElement(content)) advanceFieldState(content, fields, childDepth + 1);
       continue;
     }
     if (child.kind === 'fldChar') {
       advanceFieldCharacter(child, fields);
       continue;
     }
-    advanceFieldState(child, fields);
+    advanceFieldState(child, fields, childDepth);
   }
 }
 
@@ -625,8 +632,10 @@ function renderInline(
   ctx: RenderContext,
   children: readonly OoxmlNode[],
   paragraphPPr: OoxmlElement | null,
-  fields: FieldState
+  fields: FieldState,
+  depth = 0
 ): string {
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return '';
   let out = '';
   for (const child of children) {
     if (!isElement(child)) continue;
@@ -635,7 +644,7 @@ function renderInline(
         out += renderRun(ctx, child, paragraphPPr, fields);
         break;
       case 'hyperlink': {
-        const inner = renderInline(ctx, child.children, paragraphPPr, fields);
+        const inner = renderInline(ctx, child.children, paragraphPPr, fields, depth + 1);
         if (inner === '') break;
         const relId = attributeValueOf(child, 'id', RELATIONSHIPS_NAMESPACE_URI);
         // Match by id alone: producers vary the relationship Type string, and the
@@ -663,28 +672,33 @@ function renderInline(
       }
       case 'fldSimple':
         // The cached result runs are the visible value.
-        out += renderInline(ctx, child.children, paragraphPPr, fields);
+        out += renderInline(ctx, child.children, paragraphPPr, fields, depth);
         break;
       case 'contentControl': {
         const content = child.children.find((inner) => inner.kind === 'contentControlContent');
         if (content && isElement(content)) {
-          out += renderInline(ctx, content.children, paragraphPPr, fields);
+          out += renderInline(ctx, content.children, paragraphPPr, fields, depth + 1);
         }
         break;
       }
       case 'revisionInsert':
       case 'revisionMoveTo':
-        out += renderInline(ctx, child.children, paragraphPPr, fields);
+        out += renderInline(ctx, child.children, paragraphPPr, fields, depth + 1);
         break;
       // Deleted and moved-away content never travels to external apps — but its
       // fldChars still terminate fields, or an unbalanced 'instr' state would blank
       // every later paragraph.
       case 'revisionDelete':
       case 'revisionMoveFrom':
-        advanceFieldState(child, fields);
+        advanceFieldState(child, fields, depth);
         break;
       case 'generic':
-        out += renderInline(ctx, child.children, paragraphPPr, fields);
+        if (isInlineRunContainer(child)) {
+          out += renderInline(ctx, child.children, paragraphPPr, fields, depth + 1);
+        } else {
+          const content = contentControlContentOf(child);
+          if (content) out += renderInline(ctx, content, paragraphPPr, fields, depth + 1);
+        }
         break;
       default:
         break;

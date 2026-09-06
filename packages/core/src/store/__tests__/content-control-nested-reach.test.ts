@@ -512,18 +512,21 @@ describe('the nesting bound is the same bound for the refusal and for the write'
     expect(attempt.innerText).toBe('MID');
   });
 
-  test('a locked control AT the bound refuses it too', () => {
-    const part = nested(32);
+  test('the last addressable locked control before the bound refuses it', () => {
+    const part = nested(31);
     const attempt = nameAndWrite(part, commandEdges(part).end);
     expect(attempt.reason).toBe('locked');
     expect(attempt.innerText).toBe('MID');
   });
 
-  test('past the bound the write does not reach the locked content at all', () => {
-    const part = nested(40);
-    const attempt = nameAndWrite(part, commandEdges(part).end);
-    // Nothing past the cap is addressable, so the characters go in the NAMED control's own
-    // content rather than into a control no walk reports.
-    expect(attempt.innerText).toBe('MID');
+  test('at and past the bound the write does not reach the locked content', () => {
+    for (const depth of [32, 40]) {
+      const part = nested(depth);
+      const attempt = nameAndWrite(part, commandEdges(part).end);
+      // Nothing at the cap is addressable, so the characters go in the NAMED control's own
+      // content rather than into a control no walk reports.
+      expect(attempt.reason).toBeNull();
+      expect(attempt.innerText).toBe('MID');
+    }
   });
 });

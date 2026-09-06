@@ -24,6 +24,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   paragraphTextOf,
+  readOoxmlPart,
   readOoxmlPackage,
   type OoxmlNode,
   type OoxmlPart,
@@ -162,6 +163,37 @@ function defectsIn(fixture: string): OffsetDefect[] {
 const KNOWN_CONTENT_CONTROL_DISAGREEMENTS = 31;
 
 describe('paragraph offset coverage', () => {
+  test('inline run wrappers paint their text in reading order over the model range', () => {
+    const result = readOoxmlPart(
+      `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">` +
+        '<w:body><w:p><w:r><w:t>before </w:t></w:r>' +
+        '<w:smartTag><w:r><w:t>smart</w:t></w:r></w:smartTag>' +
+        '<w:customXml><w:r><w:t>custom</w:t></w:r></w:customXml>' +
+        '<w:dir w:val="rtl"><w:r><w:rPr>' +
+        '<w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="SimSun"/>' +
+        '</w:rPr><w:t>A漢B</w:t></w:r></w:dir>' +
+        '<w:bdo w:val="rtl"><w:r><w:t>abc</w:t></w:r></w:bdo>' +
+        '<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="SimSun"/>' +
+        '</w:rPr><w:t>C字D</w:t></w:r>' +
+        '<w:r><w:t> after</w:t></w:r></w:p></w:body></w:document>',
+      { name: '/word/document.xml', contentType: 'app/xml' }
+    );
+    if (!result.ok) throw new Error(result.reason);
+    const paragraph = storyBlocks(result.part, 'all-markup').find(
+      (block) => block.kind === 'paragraph'
+    );
+    if (!paragraph || paragraph.kind !== 'paragraph') throw new Error('no paragraph');
+    const model = paragraphTextOf(result.part, paragraph.id);
+    const pieces = piecesOfParagraph(paragraph, [], undefined, undefined, undefined, undefined);
+
+    expect(model).toBe('before smartcustomA漢BabcC字D after');
+    expect(pieces.map((piece) => piece.text).join('')).toBe(model);
+    expect(pieces[pieces.length - 1]?.end).toBe(model?.length);
+    expect(
+      pieces.filter((piece) => piece.fontSlot === 'eastAsia').map((piece) => piece.text)
+    ).toEqual(['漢', '字']);
+  });
+
   test('what the store says a paragraph is worth, layout lays out — across the corpus', () => {
     const fixtures = readdirSync(FIXTURES).filter(
       (name) => name.endsWith('.docx') && !NON_CORPUS_FIXTURES.has(name)

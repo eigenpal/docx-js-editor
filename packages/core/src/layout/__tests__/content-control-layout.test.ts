@@ -11,10 +11,11 @@
 // layout rather than read back out of the DOM.
 
 import { describe, expect, test } from 'bun:test';
-import { readOoxmlPart, type OoxmlPart } from '@docx-editor.dev/core/store';
+import { readOoxmlPart, storyParagraphs, type OoxmlPart } from '@docx-editor.dev/core/store';
 import { createFixedMeasurer } from '../index.ts';
 import { contentControlBoundaries } from '../content-control-boundaries.ts';
 import { layoutSemanticDocument } from '../semantic-layout.ts';
+import { storyBlocks } from '../story-roots.ts';
 import type { LineRecord, SemanticLayout, StyleSpanRecord } from '../semantic-records.ts';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -121,6 +122,24 @@ describe('a control wrapper changes nothing about the page', () => {
     );
     expect(textOf(layout)).toBe('onetwo');
   });
+
+  test('store and layout agree on paragraphs inside block customXml', () => {
+    const part = parseDoc(
+      '<w:sdt><w:sdtContent><w:customXml>' +
+        '<w:p><w:r><w:t>one</w:t></w:r></w:p>' +
+        '<w:p><w:r><w:t>two</w:t></w:r></w:p>' +
+        '</w:customXml></w:sdtContent></w:sdt>'
+    );
+    const body = part.root.children.find((child) => child.kind === 'body');
+    if (!body) throw new Error('no body');
+    const storeIds = storyParagraphs(body).map((paragraph) => paragraph.id);
+    const layoutIds = storyBlocks(part)
+      .filter((block) => block.kind === 'paragraph')
+      .map((paragraph) => paragraph.id);
+    expect(layoutIds).toEqual(storeIds);
+    expect(layoutIds).toHaveLength(2);
+    expect(textOf(layoutOf(part))).toBe('onetwo');
+  });
 });
 
 describe('boundary records describe every control the layout laid out', () => {
@@ -193,5 +212,24 @@ describe('boundary records describe every control the layout laid out', () => {
       ['outer', 0],
       ['inner', 1],
     ]);
+  });
+
+  test('block custom XML contributes control blocks and nested boundaries', () => {
+    const nested = parseDoc(
+      `<w:sdt><w:sdtPr><w:tag w:val="outer"/></w:sdtPr><w:sdtContent><w:customXml>` +
+        `<w:p><w:r><w:t>one</w:t></w:r></w:p>` +
+        `<w:sdt><w:sdtPr><w:tag w:val="inner"/></w:sdtPr><w:sdtContent>` +
+        `<w:p><w:r><w:t>two</w:t></w:r></w:p>` +
+        `</w:sdtContent></w:sdt></w:customXml></w:sdtContent></w:sdt>`
+    );
+    const records = contentControlBoundaries(nested, layoutOf(nested));
+    expect(records.map((record) => [record.tag, record.depth])).toEqual([
+      ['outer', 0],
+      ['inner', 1],
+    ]);
+    expect(records[0]!.paragraphIds).toHaveLength(2);
+    expect(records[0]!.fragments.length).toBeGreaterThan(0);
+    expect(records[1]!.paragraphIds).toHaveLength(1);
+    expect(records[1]!.fragments.length).toBeGreaterThan(0);
   });
 });

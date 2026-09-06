@@ -3,6 +3,7 @@
 import { isContentControl, isContentControlContent } from './content-control-walk.ts';
 import { fldCharType, instrTextValue, isInstrTextNode } from './field-nodes.ts';
 import type { OoxmlElement, OoxmlNode, OoxmlPart } from './ooxml-tree.ts';
+import { MAX_INLINE_CONTAINER_DEPTH, nextInlineContainerDepth } from './ooxml-shared.ts';
 import {
   TOC_MAX_FIELD_NESTING,
   TOC_MAX_INSTRUCTION_CHARS,
@@ -50,15 +51,17 @@ function fieldTokens(paragraph: OoxmlElement): readonly OoxmlNode[] {
   const cached = fieldTokensByParagraph.get(paragraph);
   if (cached) return cached;
   const tokens: OoxmlNode[] = [];
-  const walk = (node: OoxmlNode): void => {
+  const walk = (node: OoxmlNode, depth: number): void => {
     if (node.kind === 'textValue') return;
+    if (depth >= MAX_INLINE_CONTAINER_DEPTH) return;
     if (fldCharType(node) !== null || isInstrTextNode(node)) {
       tokens.push(node);
       return;
     }
-    for (const child of node.children) walk(child);
+    const nextDepth = nextInlineContainerDepth(node, depth);
+    for (const child of node.children) walk(child, nextDepth);
   };
-  for (const child of paragraph.children) walk(child);
+  for (const child of paragraph.children) walk(child, 0);
   fieldTokensByParagraph.set(paragraph, tokens);
   return tokens;
 }

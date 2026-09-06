@@ -1,3 +1,5 @@
+import { applyTextFormFieldDefault } from './tree-op-field-results.ts';
+import { removeCoveredTextFormDefinitions } from './text-form-field-deletion.ts';
 // Op application over the canonical tree (tree-ops seam).
 //
 // This module owns turning a VALIDATED op into a new part plus its structural effect.
@@ -7,7 +9,13 @@
 /* eslint-disable max-lines -- pre-existing size; furniture lifecycle only adds union narrowing */
 
 import { hardBreakAttributes } from '../package/hard-break.ts';
-import { isContentRevisionKind, W14_NAMESPACE_URI } from '../package/ooxml-shared.ts';
+import { withFreshIds } from '../package/hf-lifecycle-shell.ts';
+import {
+  isContentRevisionKind,
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+  W14_NAMESPACE_URI,
+} from '../package/ooxml-shared.ts';
 import { linearMathToOmml } from '../package/omml-equation.ts';
 import {
   WML_NAMESPACE_URI,
@@ -27,6 +35,7 @@ import {
   type EditOptions,
 } from '../package/ooxml-edit.ts';
 import { wmlFreshNamespaceContextAt } from '../package/wml-namespace.ts';
+import { contentControlLevelOf } from '../package/content-control-nodes.ts';
 import { resolveRevisions } from './tree-op-revisions.ts';
 import { applyInsertCommentMarker } from './tree-op-comments.ts';
 import { applyDeleteTracked } from './tree-op-tracked-delete.ts';
@@ -67,7 +76,6 @@ import {
   findContentControl,
   formatSdtDateDisplay,
   fromEdit,
-  inlineContainerOf,
   innermostContentControlAround,
   isContentControlNode,
   isParagraphMarkRevision,
@@ -76,6 +84,7 @@ import {
   isShowingPlaceholder,
   isTemporaryControl,
   listItemsOf,
+  leavesInlineContainer,
   namedChild,
   normalizeSdtFullDate,
   ok,
@@ -112,10 +121,11 @@ import {
   placeholderControlForInsertion,
 } from './tree-op-content-controls.ts';
 import {
-  insertionSite,
+  insertionDestination,
   isParagraph,
   paragraphLength,
   runsUnder,
+  segmentAncestryNodeId,
   segmentsOf,
   type Segment,
 } from './tree-op-segments.ts';
@@ -127,6 +137,7 @@ import {
 import { applyRefreshFieldResults } from './tree-op-field-results.ts';
 import { applyInsertTable } from './tree-op-insert-table.ts';
 import { applyReplaceStoryBlocks } from './tree-op-story-replace.ts';
+import { inlineWrapperProperties, wrapperChildren } from './tree-op-inline-wrapper-split.ts';
 import type {
   OoxmlProperty,
   RevisionAttributionInput,
@@ -299,6 +310,7 @@ export function applyTreeOp(part: OoxmlPart, op: TreeDocOp, options?: EditOption
   if (op.op === 'insertToc') return applyInsertToc(part, op, options);
   if (op.op === 'replaceTocResult') return applyReplaceTocResult(part, op, options);
   if (op.op === 'rewriteTocPageNumbers') return applyRewriteTocPageNumbers(part, op, options);
+  if (op.op === 'setTextFormFieldDefault') return applyTextFormFieldDefault(part, op, options);
   if (op.op === 'refreshFieldResults') return applyRefreshFieldResults(part, op, options);
   if (op.op === 'joinParagraphs') return applyJoin(part, op.firstId, op.secondId, options);
   if (op.op === 'setHyperlinkTarget') return applySetHyperlinkTarget(part, op, options);
@@ -398,7 +410,15 @@ export function applyTreeOp(part: OoxmlPart, op: TreeDocOp, options?: EditOption
   switch (op.op) {
     case 'insertText':
       if (op.revision) {
-        return applyInsertTracked(part, paragraph, op.offset, op.text, op.revision, options);
+        return applyInsertTracked(
+          part,
+          paragraph,
+          op.offset,
+          op.text,
+          op.revision,
+          options,
+          op.bias
+        );
       }
       return applyInsertContent(
         part,
@@ -636,7 +656,7 @@ function applyInsertContent(
   const owner = found?.kind === 'textValue' ? null : found;
   // ONE resolution of where this lands, shared with the validation that refuses it. Two copies
   // of this rule is how a lock came to be resolved against a different place than the write.
-  const site = insertionSite(paragraph, offset, owner);
+  const site = insertionDestination(paragraph, offset, owner, bias).site;
 
   let inserted: TreeOpResult;
   // Inside a text value: split it and place the new content between the halves.
@@ -712,6 +732,31 @@ function applyInsertContent(
     return finishContentEdit(inserted, control, options);
   }
 
+  if (site.kind === 'newRun') {
+    // The left run still wins its formatting. A minted run at a wrapper's leading edge sits
+    // right after the preceding run, so typing there inherits that run's properties exactly
+    // as it does at an ordinary boundary; a bare run came out unformatted instead.
+    const leftSegment = findLast(segments, (segment) => segment.end === offset);
+    const leftRun = leftSegment ? findNode(part, leftSegment.runId) : null;
+    const inheritedProperties =
+      leftRun && leftRun.kind === 'run'
+        ? leftRun.children
+            .filter((child) => child.kind === 'runProperties')
+            .map((child) => withFreshIds(child, nextId))
+        : [];
+    inserted = fromEdit(
+      insertChildren(
+        part,
+        site.holder.id,
+        site.index ?? site.holder.children.length,
+        [runElement(nextId, [...inheritedProperties, ...nodes])],
+        deferOptions(options, control)
+      ),
+      effect
+    );
+    return finishContentEdit(inserted, control, options);
+  }
+
   // AT A BOUNDARY, THE RUN TO THE LEFT WINS.
   //
   // Word types into the run holding the character BEFORE the caret; `authoredRunPropertiesAt`
@@ -733,7 +778,7 @@ function applyInsertContent(
     before &&
     before.removeNodeIds === undefined &&
     !crossesContentControlBoundary(part, before, after) &&
-    !leavesContainer(paragraph, before, after)
+    !leavesInlineContainer(paragraph, before, after)
   ) {
     const run = findNode(part, before.runId);
     if (!run || run.kind !== 'run') return { ok: false, reason: 'tree-invariant' };
@@ -803,37 +848,6 @@ function applyInsertContent(
       effect
     );
     return finishContentEdit(inserted, control, options);
-  }
-
-  // The caret sits at a CONTAINER's outer edge with nothing beyond it — a hyperlink or a
-  // locked chip ending the paragraph. The text lands in a fresh run BESIDE the container,
-  // immediately after it in the container's OWN parent: falling through to "the last run"
-  // instead put the keystroke into whatever run happened to precede the container,
-  // characters away from the caret — and for a content-locked chip the write was refused
-  // outright, so typing at the end of the paragraph did nothing at all. The container's
-  // parent, not the paragraph: a chip nested inside an outer control (or a link) is only
-  // being LEFT one level, and validation attributes the caret to that outer container.
-  if (before) {
-    const container = inlineContainerOf(paragraph, before.runId);
-    if (container) {
-      const parent = parentOf(part, container.id);
-      if (parent) {
-        const index = parent.children.findIndex((child) => child.id === container.id);
-        if (index >= 0) {
-          inserted = fromEdit(
-            insertChildren(
-              part,
-              parent.id,
-              index + 1,
-              [runElement(nextId, nodes)],
-              deferOptions(options, control)
-            ),
-            effect
-          );
-          return finishContentEdit(inserted, control, options);
-        }
-      }
-    }
   }
 
   // A paragraph-level atom has no owning run. At its trailing boundary, insert a sibling
@@ -988,7 +1002,7 @@ function applyPlaceholderReplace(
   const nextId = createNodeIdAllocator(part);
   const nodes = builders.map((build) => build(nextId));
   const owner = parentOf(part, control.id);
-  const inline = owner?.kind === 'paragraph';
+  const inline = contentControlLevelOf(control) === 'inline';
   const run = runElement(nextId, nodes);
   const contentChildren = inline
     ? [run]
@@ -1073,45 +1087,6 @@ function crossesContentControlBoundary(
   return beforeControl !== afterControl;
 }
 
-/**
- * Whether typing into `before`'s run would carry the text INTO a container the caret is
- * leaving — a hyperlink or a field whose last character this is, with ordinary paragraph
- * content on the other side of the boundary.
- */
-function leavesContainer(
-  paragraph: OoxmlParagraphNode,
-  before: { readonly runId: string },
-  after: { readonly runId: string } | undefined
-): boolean {
-  const container = (runId: string): OoxmlNode | null => {
-    let held: OoxmlNode | null = null;
-    const visit = (node: OoxmlNode, inside: OoxmlNode | null): void => {
-      if (node.kind === 'textValue' || held) return;
-      if (node.id === runId) {
-        held = inside;
-        return;
-      }
-      const nested =
-        node.kind === 'hyperlink' ||
-        node.kind === 'fldSimple' ||
-        // A content control is a container the same way a link is: typing at
-        // its OUTER edge must not join the run inside and grow the control —
-        // which is exactly what pressing space after a custom-node chip did
-        // before this branch (pro-review-and-custom-nodes 4.6).
-        node.kind === 'contentControl' ||
-        (node.kind === 'generic' && node.localName === 'fldSimple')
-          ? node
-          : inside;
-      for (const child of node.children) visit(child, nested);
-    };
-    for (const child of paragraph.children) visit(child, null);
-    return held;
-  };
-  const held = container(before.runId);
-  if (held === null) return false;
-  return after === undefined || container(after.runId) !== held;
-}
-
 function contains(node: OoxmlNode, id: string): boolean {
   if (node.id === id) return true;
   if (node.kind === 'textValue') return false;
@@ -1175,6 +1150,16 @@ function applyDeleteText(
   let current = part;
   const nextId = createNodeIdAllocator(part);
 
+  const fieldsRemoved = removeCoveredTextFormDefinitions(
+    current,
+    paragraph,
+    start,
+    end,
+    editOptions
+  );
+  if (!fieldsRemoved.ok) return fieldsRemoved;
+  current = fieldsRemoved.part;
+
   // Highest offset first, so earlier segment positions stay valid as edits apply.
   for (const segment of [...segments].reverse()) {
     if (segment.end <= start || segment.start >= end) continue;
@@ -1220,10 +1205,17 @@ function applyDeleteText(
   // behind would make the next character typed at that offset silently join the dead link.
   const after = findNode(current, paragraph.id);
   if (after && after.kind === 'paragraph') {
-    const sweep = (children: readonly OoxmlNode[]): TreeOpResult | null => {
+    const sweep = (children: readonly OoxmlNode[], depth: number): TreeOpResult | null => {
+      if (depth >= MAX_INLINE_CONTAINER_DEPTH) return null;
       for (const child of children) {
+        if (child.kind === 'generic' && isInlineRunContainer(child)) {
+          // The generic wrapper is authored structure and survives empty. Its empty runs do not.
+          const nested = sweep(child.children, depth + 1);
+          if (nested) return nested;
+          continue;
+        }
         if (child.kind === 'hyperlink') {
-          const nested = sweep(child.children);
+          const nested = sweep(child.children, depth + 1);
           if (nested) return nested;
           const link = findNode(current, child.id);
           if (link && link.kind !== 'textValue' && runsUnder(link).length === 0) {
@@ -1249,7 +1241,7 @@ function applyDeleteText(
           continue;
         }
         if (child.kind !== 'textValue' && isContentRevisionKind(child.kind)) {
-          const nested = sweep(child.children);
+          const nested = sweep(child.children, depth + 1);
           if (nested) return nested;
           const wrapper = findNode(current, child.id);
           if (wrapper && wrapper.kind !== 'textValue' && runsUnder(wrapper).length === 0) {
@@ -1285,7 +1277,7 @@ function applyDeleteText(
           // only empty runs inside them are swept.
           const content = contentControlContentOf(child);
           if (content) {
-            const nested = sweep(content.children);
+            const nested = sweep(content.children, depth + 1);
             if (nested) return nested;
           }
           continue;
@@ -1301,7 +1293,7 @@ function applyDeleteText(
       }
       return null;
     };
-    const failure = sweep(after.children);
+    const failure = sweep(after.children, 0);
     if (failure) return failure;
   }
   return finishContentEdit(ok(current, effect), control, options);
@@ -1391,18 +1383,21 @@ function hyperlinkElement(
  * two `w:rStyle` children make the `w:rPr` schema-invalid, which Word repairs by dropping
  * the run's formatting entirely.
  */
-function withCharacterStyle(node: OoxmlNode, styleId: string, nextId: () => string): OoxmlNode {
+function withCharacterStyle(
+  node: OoxmlNode,
+  styleId: string,
+  nextId: () => string,
+  depth = 0
+): OoxmlNode {
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return node;
   // A revision wrapper is not a run: the style goes on the runs INSIDE it. Marking the
   // wrapper itself minted a `w:rPr` child on `w:ins` — a shape `CT_RunTrackChange` has no
   // room for — the moment a link was applied over tracked display text, which is every
   // link created in suggesting mode.
-  if (
-    node.kind !== 'textValue' &&
-    (node.kind === 'hyperlink' || isContentRevisionKind(node.kind))
-  ) {
+  if (isInlineRunContainer(node)) {
     return withChildren(
       node,
-      node.children.map((child) => withCharacterStyle(child, styleId, nextId)),
+      node.children.map((child) => withCharacterStyle(child, styleId, nextId, depth + 1)),
       null
     );
   }
@@ -2377,11 +2372,16 @@ function splitIdentityOf(
   return { headId: headParaId.toUpperCase(), prefix };
 }
 
-/** The segments of one paragraph child, at any depth — a run's own, or every run in a link. */
-function segmentsForChild(child: OoxmlNode, segments: readonly Segment[]): Segment[] {
-  const runIds = new Set(runsUnder(child).map((run) => run.id));
-  if (runIds.size === 0) return [];
-  return segments.filter((segment) => runIds.has(segment.runId));
+/** Every segment owned by one paragraph child, including atoms that have no run. */
+export function segmentsForChild(child: OoxmlNode, segments: readonly Segment[]): Segment[] {
+  const descendantIds = new Set<string>();
+  const collect = (node: OoxmlNode): void => {
+    descendantIds.add(node.id);
+    if (node.kind === 'textValue') return;
+    for (const inner of node.children) collect(inner);
+  };
+  collect(child);
+  return segments.filter((segment) => descendantIds.has(segmentAncestryNodeId(segment)));
 }
 
 /**
@@ -2401,19 +2401,17 @@ function divideInline(
   child: OoxmlNode,
   offset: number,
   segments: readonly Segment[],
-  nextId: () => string
+  nextId: () => string,
+  depth = 0
 ): { readonly head: OoxmlNode | null; readonly tail: OoxmlNode | null } {
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return { head: child, tail: null };
   // A REVISION WRAPPER SPLITS LIKE A HYPERLINK. `w:ins` and `w:del` are containers of run
   // content, not run content, so the "not a run, keep it whole" answer below put an entire
   // tracked insertion into the HEAD half however far into it the caret was: pressing Enter in
   // the middle of somebody's suggested sentence broke the paragraph after the suggestion
   // instead of at the caret, and said nothing. Both halves keep the same author, date and id,
   // which is how a reader groups them back into one decision.
-  if (
-    child.kind === 'hyperlink' ||
-    isContentControlNode(child) ||
-    (child.kind !== 'textValue' && isContentRevisionKind(child.kind))
-  ) {
+  if (isInlineRunContainer(child) || isContentControlNode(child)) {
     // Exclude textValue so both the wrapper and its content owner expose `.children`.
     if (child.kind === 'textValue') return { head: child, tail: null };
     const contentOwner = isContentControlNode(child) ? contentControlContentOf(child) : child;
@@ -2428,7 +2426,9 @@ function divideInline(
     // starting at zero said "before every boundary" for content that sits well past one.
     let cursor = segmentsForChild(child, segments)[0]?.start ?? 0;
     const ownerChildren: readonly OoxmlNode[] = contentOwner.children;
+    const properties = inlineWrapperProperties(child);
     for (const inner of ownerChildren) {
+      if (properties.some((property) => property.id === inner.id)) continue;
       const innerSegments = segmentsForChild(inner, segments);
       if (innerSegments.length === 0) {
         (cursor < offset ? headChildren : tailChildren).push(inner);
@@ -2440,15 +2440,21 @@ function divideInline(
       if (end <= offset) headChildren.push(inner);
       else if (start >= offset) tailChildren.push(inner);
       else {
-        const divided = divideInline(inner, offset, segments, nextId);
+        const divided = divideInline(inner, offset, segments, nextId, depth + 1);
         if (divided.head) headChildren.push(divided.head);
         if (divided.tail) tailChildren.push(divided.tail);
       }
     }
-    if (child.kind === 'hyperlink' || isContentRevisionKind(child.kind)) {
+    if (isInlineRunContainer(child)) {
       return {
-        head: headChildren.length > 0 ? withChildren(child, headChildren, null) : null,
-        tail: tailChildren.length > 0 ? withChildren(child, tailChildren, nextId) : null,
+        head:
+          headChildren.length > 0
+            ? withChildren(child, wrapperChildren(properties, headChildren, false, nextId), null)
+            : null,
+        tail:
+          tailChildren.length > 0
+            ? withChildren(child, wrapperChildren(properties, tailChildren, true, nextId), nextId)
+            : null,
       };
     }
     // Content control: keep sdtPr / sdtEndPr on both halves; only sdtContent splits.
@@ -2697,14 +2703,20 @@ function pieceIndexOf(
  * The original identity is kept by the FIRST piece that gets content; later pieces are
  * clones, matching what the equivalent sequence of single splits produces.
  */
-function distributeInline(
+export function distributeInline(
   child: OoxmlNode,
   offsets: readonly number[],
   pieceCount: number,
   segments: readonly Segment[],
-  nextId: () => string
+  nextId: () => string,
+  depth = 0
 ): OoxmlNode[][] {
   const byPiece: OoxmlNode[][] = Array.from({ length: pieceCount }, () => []);
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) {
+    const start = segmentsForChild(child, segments)[0]?.start ?? 0;
+    byPiece[pieceIndexOf(offsets, start)]!.push(child);
+    return byPiece;
+  }
 
   // A REVISION WRAPPER DISTRIBUTES LIKE A HYPERLINK, the same rule `divideInline` states:
   // `w:ins` and `w:del` are containers of run content, not run content, so the "not a run,
@@ -2712,11 +2724,9 @@ function distributeInline(
   // many boundaries ran through it — a multi-line paste in suggesting mode kept its lines in
   // one paragraph and minted empty tails. Every piece keeps the same author, date and id,
   // which is how a reader groups them back into one decision.
-  if (
-    child.kind === 'hyperlink' ||
-    (child.kind !== 'textValue' && isContentRevisionKind(child.kind))
-  ) {
+  if (isInlineRunContainer(child)) {
     const innerByPiece: OoxmlNode[][] = Array.from({ length: pieceCount }, () => []);
+    const properties = inlineWrapperProperties(child);
     // Absolute paragraph offsets, seeded from the link's own start — see `divideInline`.
     // At zero, `pieceIndexOf` put every zero-length child of a link in the FIRST piece: a
     // bookmark travelled to a paragraph its text did not, an empty `w:hyperlink` husk was
@@ -2724,6 +2734,7 @@ function distributeInline(
     // while the real link got a fresh one — so a later retarget addressed the husk.
     let cursor = segmentsForChild(child, segments)[0]?.start ?? 0;
     for (const inner of child.children) {
+      if (properties.some((property) => property.id === inner.id)) continue;
       const innerSegments = segmentsForChild(inner, segments);
       if (innerSegments.length === 0) {
         innerByPiece[pieceIndexOf(offsets, cursor)]!.push(inner);
@@ -2738,7 +2749,7 @@ function distributeInline(
         innerByPiece[startPiece]!.push(inner);
         continue;
       }
-      const nested = distributeInline(inner, offsets, pieceCount, segments, nextId);
+      const nested = distributeInline(inner, offsets, pieceCount, segments, nextId, depth + 1);
       for (let piece = 0; piece < pieceCount; piece += 1) {
         for (const node of nested[piece]!) innerByPiece[piece]!.push(node);
       }
@@ -2747,7 +2758,13 @@ function distributeInline(
     for (let piece = 0; piece < pieceCount; piece += 1) {
       const children = innerByPiece[piece]!;
       if (children.length === 0) continue;
-      byPiece[piece]!.push(withChildren(child, children, keptOriginal ? nextId : null));
+      byPiece[piece]!.push(
+        withChildren(
+          child,
+          wrapperChildren(properties, children, keptOriginal, nextId),
+          keptOriginal ? nextId : null
+        )
+      );
       keptOriginal = true;
     }
     return byPiece;
@@ -2782,7 +2799,7 @@ function distributeInline(
         innerByPiece[startPiece]!.push(inner);
         continue;
       }
-      const nested = distributeInline(inner, offsets, pieceCount, segments, nextId);
+      const nested = distributeInline(inner, offsets, pieceCount, segments, nextId, depth + 1);
       for (let piece = 0; piece < pieceCount; piece += 1) {
         for (const node of nested[piece]!) innerByPiece[piece]!.push(node);
       }

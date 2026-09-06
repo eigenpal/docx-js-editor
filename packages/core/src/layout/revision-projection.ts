@@ -334,7 +334,12 @@ export function withRevision(
 }
 
 /** True when the node is a wrapper layout should descend into rather than skip. */
-export function isRevisionWrapper(node: OoxmlNode): node is OoxmlElement {
+export function isRevisionWrapper(node: OoxmlNode): node is Extract<
+  OoxmlElement,
+  {
+    readonly kind: 'revisionInsert' | 'revisionDelete' | 'revisionMoveFrom' | 'revisionMoveTo';
+  }
+> {
   return node.kind !== 'textValue' && isContentRevisionKind(node.kind);
 }
 

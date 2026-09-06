@@ -1,7 +1,13 @@
 // Canonical tree <-> ProseMirror binding (tasks 6.1, 6.2, 6.3).
 
 import { describe, expect, test } from 'bun:test';
-import { readOoxmlPart, TreeDocumentStore, type OoxmlPart } from '@docx-editor.dev/core/store';
+import { EditorState } from 'prosemirror-state';
+import {
+  readOoxmlPart,
+  TreeDocumentStore,
+  type OoxmlNode,
+  type OoxmlPart,
+} from '@docx-editor.dev/core/store';
 import { treeSchema } from '../tree-schema.ts';
 import { bodyParagraphs, docToTreeOps, reconcileDoc, treeToDoc } from '../tree-binding.ts';
 import { paragraphTextOf, ORIGIN_IDS } from '@docx-editor.dev/core/store';
@@ -16,6 +22,26 @@ function load(body: string): OoxmlPart {
   );
   if (!result.ok) throw new Error(result.reason);
   return result.part;
+}
+
+function firstNamed(part: OoxmlPart, localName: string): OoxmlNode {
+  const visit = (node: OoxmlNode): OoxmlNode | null => {
+    if (node.kind === 'textValue') return null;
+    if (node.localName === localName) return node;
+    for (const child of node.children) {
+      const found = visit(child);
+      if (found) return found;
+    }
+    return null;
+  };
+  const found = visit(part.root);
+  if (!found) throw new Error(`no ${localName}`);
+  return found;
+}
+
+function textUnder(node: OoxmlNode): string {
+  if (node.kind === 'textValue') return node.value;
+  return node.children.map(textUnder).join('');
 }
 
 const SIMPLE = '<w:p><w:r><w:t>Hello world</w:t></w:r></w:p>';
@@ -87,6 +113,18 @@ describe('projection (task 6.1)', () => {
     expect(paragraph.textContent).toBe('before after');
   });
 
+  test('inline wrapper properties do not project as visible unknown tokens', () => {
+    const part = load(
+      '<w:p><w:smartTag><w:smartTagPr w:uri="urn:test"/>' +
+        '<w:r><w:t>inside</w:t></w:r></w:smartTag></w:p>'
+    );
+    const paragraph = treeToDoc(part).child(0);
+    const kinds: string[] = [];
+    paragraph.forEach((child) => kinds.push(child.isText ? 'text' : child.type.name));
+    expect(kinds).toEqual(['text']);
+    expect(paragraph.textContent).toBe('inside');
+  });
+
   test('an empty body still projects an editable paragraph', () => {
     expect(treeToDoc(load('')).childCount).toBe(1);
   });
@@ -131,6 +169,68 @@ describe('reverse mapping (task 6.2)', () => {
       { op: 'insertText', paragraphId: id, offset: 6, text: 'there' },
     ]);
     expect(paragraphTextOf(commit(part, doc), id)).toBe('Hello there');
+  });
+
+  test('a terminal wrapper edge round-trips an unowned insertion outside', () => {
+    const part = load('<w:p><w:smartTag><w:r><w:t>BC</w:t></w:r></w:smartTag></w:p>');
+    const paragraphId = bodyParagraphs(part)[0]!.id;
+    const state = EditorState.create({ doc: treeToDoc(part) });
+    const doc = state.apply(state.tr.insertText('X', 3)).doc;
+    const mapped = docToTreeOps(part, doc);
+    expect(mapped).toEqual({
+      ok: true,
+      ops: [{ op: 'insertText', paragraphId, offset: 2, text: 'X' }],
+    });
+    const next = commit(part, doc);
+    expect(paragraphTextOf(next, paragraphId)).toBe('BCX');
+    expect(textUnder(firstNamed(next, 'smartTag'))).toBe('BC');
+  });
+
+  test('leading wrapper edges round-trip unowned insertions outside', () => {
+    const initial = load('<w:p><w:smartTag><w:r><w:t>BC</w:t></w:r></w:smartTag></w:p>');
+    const initialState = EditorState.create({ doc: treeToDoc(initial) });
+    const initialNext = commit(initial, initialState.apply(initialState.tr.insertText('X', 1)).doc);
+    expect(paragraphTextOf(initialNext, bodyParagraphs(initialNext)[0]!.id)).toBe('XBC');
+    expect(textUnder(firstNamed(initialNext, 'smartTag'))).toBe('BC');
+
+    const adjacent = load(
+      '<w:p><w:smartTag><w:r><w:t>A</w:t></w:r></w:smartTag>' +
+        '<w:customXml><w:r><w:t>B</w:t></w:r></w:customXml></w:p>'
+    );
+    const adjacentState = EditorState.create({ doc: treeToDoc(adjacent) });
+    const adjacentNext = commit(
+      adjacent,
+      adjacentState.apply(adjacentState.tr.insertText('X', 2)).doc
+    );
+    expect(paragraphTextOf(adjacentNext, bodyParagraphs(adjacentNext)[0]!.id)).toBe('AXB');
+    expect(textUnder(firstNamed(adjacentNext, 'smartTag'))).toBe('A');
+    expect(textUnder(firstNamed(adjacentNext, 'customXml'))).toBe('B');
+  });
+
+  test('projection and offsets share the inline-wrapper nesting cutoff', () => {
+    let nested = '<w:smartTag><w:r><w:t>hidden</w:t></w:r></w:smartTag>';
+    nested = `<w:smartTag><w:r><w:t>open</w:t></w:r>${nested}</w:smartTag>`;
+    for (let depth = 2; depth < 32; depth += 1) nested = `<w:smartTag>${nested}</w:smartTag>`;
+    const atLimit = load(`<w:p>${nested}</w:p>`);
+    const paragraphId = bodyParagraphs(atLimit)[0]!.id;
+    const projected = treeToDoc(atLimit);
+
+    expect(paragraphTextOf(atLimit, paragraphId)).toBe('open');
+    expect(projected.textContent).toBe('open');
+
+    const state = EditorState.create({ doc: projected });
+    const edited = state.apply(state.tr.insertText('X', 3)).doc;
+    const next = commit(atLimit, edited);
+    expect(paragraphTextOf(next, paragraphId)).toBe('opXen');
+
+    let tooDeep = '<w:r><w:t>hidden</w:t></w:r>';
+    for (let depth = 0; depth < 33; depth += 1) {
+      tooDeep = `<w:smartTag>${tooDeep}</w:smartTag>`;
+    }
+    const pastLimit = load(`<w:p>${tooDeep}</w:p>`);
+    const pastLimitId = bodyParagraphs(pastLimit)[0]!.id;
+    expect(paragraphTextOf(pastLimit, pastLimitId)).toBe('');
+    expect(treeToDoc(pastLimit).textContent).toBe('');
   });
 
   test('a typed tab and hard break map to content-token ops, not characters', () => {

@@ -17,12 +17,11 @@
 // dropping it would lose text. Only the intersection is removed.
 
 import type { OoxmlNode } from '@docx-editor.dev/core/store';
+import { isInlineRunContainer, MAX_INLINE_CONTAINER_DEPTH } from '../store/package/ooxml-shared.ts';
 import {
   contentControlContentOf,
   isContentControl,
-  MAX_CONTENT_CONTROL_NESTING,
 } from '../store/package/content-control-walk.ts';
-import { MAX_REVISION_DEPTH } from './revision-projection.ts';
 import { WML_NAMESPACE_URI } from '../store/package/ooxml-tree.ts';
 import {
   isRevisionWrapper,
@@ -43,8 +42,6 @@ import {
  * nested past 8 was called empty here while layout still emitted its spans — so file-
  * controlled nesting, which costs an attacker nothing, dropped visible text from the page.
  */
-const MAX_INLINE_DEPTH = MAX_REVISION_DEPTH;
-
 /**
  * A child in the WordprocessingML namespace, by name.
  *
@@ -108,7 +105,7 @@ function rendersNoText(
   revisions: readonly RevisionAttribution[] = []
 ): boolean {
   if (node.kind === 'textValue') return true;
-  if (depth > MAX_INLINE_DEPTH) return true;
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return true;
   const walkChildren = (children: readonly OoxmlNode[], childDepth: number): boolean => {
     for (const child of children) {
       if (child.kind === 'textValue') continue;
@@ -128,12 +125,12 @@ function rendersNoText(
         continue;
       }
       if (isContentControl(child)) {
-        if (childDepth >= MAX_CONTENT_CONTROL_NESTING) continue;
+        if (childDepth + 1 >= MAX_INLINE_CONTAINER_DEPTH) continue;
         const content = contentControlContentOf(child);
         if (content && !walkChildren(content, childDepth + 1)) return false;
         continue;
       }
-      if (child.kind === 'hyperlink') {
+      if (isInlineRunContainer(child) && !isRevisionWrapper(child)) {
         if (!rendersNoText(child, childDepth + 1, displayMode, authorFilter, revisions))
           return false;
         continue;

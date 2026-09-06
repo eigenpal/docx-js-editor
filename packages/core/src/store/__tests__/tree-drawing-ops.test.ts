@@ -15,7 +15,8 @@ import {
   DEFAULT_SUPPORTED_MC_REQUIRES,
   type ImageWrapTarget,
 } from '../package/drawing-projection.ts';
-import { applyTreeOp, validateTreeOp, type TreeDocOp } from '../store/tree-ops.ts';
+import { applyTreeOp, paragraphTextOf, validateTreeOp, type TreeDocOp } from '../store/tree-ops.ts';
+import { formsProtectionRefusal } from '../store/tree-op-content-controls.ts';
 import { drawingOpImpact, wrapTargetToAnchorSpec } from '../store/tree-op-drawings.ts';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -147,27 +148,6 @@ function extentOf(part: OoxmlPart): { cx: string; cy: string } {
   return found;
 }
 
-function siblingFingerprint(part: OoxmlPart, drawingId: string): string {
-  const drawing = findById(part.root, drawingId);
-  if (!drawing || drawing.kind === 'textValue') return '';
-  const anchor = drawing.children[0];
-  if (!anchor || anchor.kind === 'textValue') return '';
-  const generic = anchor.children.filter(
-    (child) =>
-      child.kind === 'generic' || (child.kind !== 'textValue' && child.localName === 'effectExtent')
-  );
-  return canonicalOoxmlFingerprint({
-    id: 'x',
-    kind: 'generic',
-    namespaceUri: '',
-    localName: 'x',
-    prefix: '',
-    namespaceBindings: [],
-    attributes: [],
-    children: generic,
-  } as OoxmlElement);
-}
-
 function findById(node: OoxmlNode, id: string): OoxmlNode | null {
   if (node.kind === 'textValue') return node.id === id ? node : null;
   if (node.id === id) return node;
@@ -176,6 +156,26 @@ function findById(node: OoxmlNode, id: string): OoxmlNode | null {
     if (found) return found;
   }
   return null;
+}
+
+function firstNamed(part: OoxmlPart, localName: string): OoxmlNode {
+  const visit = (node: OoxmlNode): OoxmlNode | null => {
+    if (node.kind === 'textValue') return null;
+    if (node.localName === localName) return node;
+    for (const child of node.children) {
+      const found = visit(child);
+      if (found) return found;
+    }
+    return null;
+  };
+  const found = visit(part.root);
+  if (!found) throw new Error(`no ${localName}`);
+  return found;
+}
+
+function hasDescendant(node: OoxmlNode, kind: OoxmlNode['kind']): boolean {
+  if (node.kind === kind) return true;
+  return node.kind !== 'textValue' && node.children.some((child) => hasDescendant(child, kind));
 }
 
 function paragraphIdOf(part: OoxmlPart): string {
@@ -430,6 +430,33 @@ describe('sets drawing locks', () => {
 });
 
 describe('inserts drawing', () => {
+  test('forms protection resolves a terminal wrapper drawing inside its control', () => {
+    const host = parse(
+      `<w:document xmlns:w="${W}"><w:body><w:p><w:sdt><w:sdtPr/>` +
+        '<w:sdtContent><w:smartTag><w:r><w:t>B</w:t></w:r></w:smartTag>' +
+        '</w:sdtContent></w:sdt></w:p></w:body></w:document>'
+    );
+    const settings = readOoxmlPart(
+      `<w:settings xmlns:w="${W}"><w:documentProtection w:edit="forms" ` +
+        'w:enforcement="1"/></w:settings>',
+      {
+        name: '/word/settings.xml',
+        contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml',
+      }
+    );
+    if (!settings.ok) throw new Error(settings.reason);
+    const op: TreeDocOp = {
+      op: 'insertDrawing',
+      paragraphId: paragraphIdOf(host),
+      offset: 1,
+      drawing: drawingOf(parse(inlinePictureDrawing())),
+    };
+    expect(formsProtectionRefusal(host, settings.part, op)).toBeNull();
+    const next = apply(host, op);
+    const control = firstNamed(next, 'sdt');
+    expect(hasDescendant(control, 'drawing')).toBe(true);
+  });
+
   test('places a picture drawing atom at a legal paragraph offset', () => {
     const host = parse(
       `<w:document xmlns:w="${W}"><w:body><w:p><w:r><w:t>Hi</w:t></w:r></w:p></w:body></w:document>`
@@ -446,6 +473,153 @@ describe('inserts drawing', () => {
     expect(
       validateTreeOp(next, { op: 'insertText', paragraphId, offset: 2, text: '!' })
     ).toBeNull();
+  });
+
+  const trailingWrappers = [
+    {
+      name: 'smartTag',
+      xml: '<w:smartTag><w:r><w:t>B</w:t></w:r></w:smartTag>',
+    },
+    {
+      name: 'hyperlink',
+      xml: '<w:hyperlink w:anchor="target"><w:r><w:t>B</w:t></w:r></w:hyperlink>',
+    },
+    {
+      name: 'ins',
+      xml: '<w:ins w:id="7" w:author="Prior"><w:r><w:t>B</w:t></w:r></w:ins>',
+    },
+  ] as const;
+
+  for (const wrapper of trailingWrappers) {
+    test.each([false, true])(
+      `places a trailing drawing after ${wrapper.name} at its stated offset (tracked=%s)`,
+      (tracked) => {
+        const host = parse(
+          `<w:document xmlns:w="${W}"><w:body><w:p>` +
+            `<w:r><w:t>A</w:t></w:r>${wrapper.xml}</w:p></w:body></w:document>`
+        );
+        const templateDrawing = drawingOf(parse(inlinePictureDrawing()));
+        const paragraphId = paragraphIdOf(host);
+        const wrapperId = firstNamed(host, wrapper.name).id;
+        const op: TreeDocOp = {
+          op: 'insertDrawing',
+          paragraphId,
+          offset: 2,
+          drawing: templateDrawing,
+          ...(tracked ? { revision: { author: 'Reviewer' } } : {}),
+        };
+        expect(validateTreeOp(host, op)).toBeNull();
+        const next = apply(host, op);
+        const updatedWrapper = findById(next.root, wrapperId)!;
+        const paragraph = findById(next.root, paragraphId)!;
+        if (paragraph.kind === 'textValue') throw new Error('paragraph became text');
+        const wrapperIndex = paragraph.children.findIndex((child) => child.id === wrapperId);
+        expect(paragraphTextOf(next, paragraphId)).toBe(`AB\uFFFC`);
+        expect(hasDescendant(updatedWrapper, 'drawing')).toBe(false);
+        expect(hasDescendant(paragraph.children[wrapperIndex + 1]!, 'drawing')).toBe(true);
+      }
+    );
+  }
+
+  test.each([false, true])(
+    'places a leading drawing before a paragraph-initial smartTag (tracked=%s)',
+    (tracked) => {
+      const host = parse(
+        `<w:document xmlns:w="${W}"><w:body><w:p>` +
+          '<w:smartTag><w:r><w:t>B</w:t></w:r></w:smartTag>' +
+          '</w:p></w:body></w:document>'
+      );
+      const paragraphId = paragraphIdOf(host);
+      const wrapperId = firstNamed(host, 'smartTag').id;
+      const op: TreeDocOp = {
+        op: 'insertDrawing',
+        paragraphId,
+        offset: 0,
+        drawing: drawingOf(parse(inlinePictureDrawing())),
+        ...(tracked ? { revision: { author: 'Reviewer' } } : {}),
+      };
+      expect(validateTreeOp(host, op)).toBeNull();
+      const next = apply(host, op);
+      const paragraph = findById(next.root, paragraphId)!;
+      if (paragraph.kind === 'textValue') throw new Error('paragraph became text');
+      const wrapperIndex = paragraph.children.findIndex((child) => child.id === wrapperId);
+
+      expect(paragraphTextOf(next, paragraphId)).toBe(`\uFFFCB`);
+      expect(hasDescendant(findById(next.root, wrapperId)!, 'drawing')).toBe(false);
+      expect(wrapperIndex).toBeGreaterThan(0);
+      expect(hasDescendant(paragraph.children[wrapperIndex - 1]!, 'drawing')).toBe(true);
+    }
+  );
+
+  test.each([false, true])(
+    'places a boundary drawing between adjacent wrappers (tracked=%s)',
+    (tracked) => {
+      const host = parse(
+        `<w:document xmlns:w="${W}"><w:body><w:p>` +
+          '<w:smartTag><w:r><w:t>A</w:t></w:r></w:smartTag>' +
+          '<w:customXml><w:r><w:t>B</w:t></w:r></w:customXml>' +
+          '</w:p></w:body></w:document>'
+      );
+      const paragraphId = paragraphIdOf(host);
+      const leftId = firstNamed(host, 'smartTag').id;
+      const rightId = firstNamed(host, 'customXml').id;
+      const op: TreeDocOp = {
+        op: 'insertDrawing',
+        paragraphId,
+        offset: 1,
+        drawing: drawingOf(parse(inlinePictureDrawing())),
+        ...(tracked ? { revision: { author: 'Reviewer' } } : {}),
+      };
+      expect(validateTreeOp(host, op)).toBeNull();
+      const next = apply(host, op);
+      const paragraph = findById(next.root, paragraphId)!;
+      if (paragraph.kind === 'textValue') throw new Error('paragraph became text');
+      const leftIndex = paragraph.children.findIndex((child) => child.id === leftId);
+      const rightIndex = paragraph.children.findIndex((child) => child.id === rightId);
+
+      expect(paragraphTextOf(next, paragraphId)).toBe(`A\uFFFCB`);
+      expect(hasDescendant(findById(next.root, leftId)!, 'drawing')).toBe(false);
+      expect(hasDescendant(findById(next.root, rightId)!, 'drawing')).toBe(false);
+      expect(rightIndex).toBeGreaterThan(leftIndex + 1);
+      expect(hasDescendant(paragraph.children[leftIndex + 1]!, 'drawing')).toBe(true);
+    }
+  );
+
+  test('validation and apply place a trailing drawing outside a nested locked control', () => {
+    const host = parse(
+      `<w:document xmlns:w="${W}"><w:body><w:p><w:smartTag>` +
+        '<w:sdt><w:sdtPr><w:lock w:val="sdtContentLocked"/></w:sdtPr>' +
+        '<w:sdtContent><w:r><w:t>Hi</w:t></w:r></w:sdtContent></w:sdt>' +
+        '</w:smartTag></w:p></w:body></w:document>'
+    );
+    const templateDrawing = drawingOf(parse(inlinePictureDrawing()));
+    const paragraphId = paragraphIdOf(host);
+    const control = (() => {
+      const walk = (node: OoxmlNode): OoxmlNode | null => {
+        if (node.kind === 'textValue') return null;
+        if (node.kind === 'contentControl') return node;
+        for (const child of node.children) {
+          const found = walk(child);
+          if (found) return found;
+        }
+        return null;
+      };
+      return walk(host.root);
+    })();
+    if (!control) throw new Error('no content control');
+    const op: TreeDocOp = {
+      op: 'insertDrawing',
+      paragraphId,
+      offset: 2,
+      drawing: templateDrawing,
+    };
+    expect(validateTreeOp(host, op)).toBeNull();
+    const next = apply(host, op);
+    const updatedControl = findById(next.root, control.id)!;
+    const paragraph = findById(next.root, paragraphId)!;
+    if (paragraph.kind === 'textValue') throw new Error('paragraph became text');
+    expect(hasDescendant(updatedControl, 'drawing')).toBe(false);
+    expect(hasDescendant(paragraph.children.at(-1)!, 'drawing')).toBe(true);
   });
 });
 

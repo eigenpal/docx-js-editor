@@ -41,12 +41,21 @@ import {
   NOTE_ID_MIN,
 } from './note-nodes.ts';
 import {
+  canHoldNoteCitation,
+  citationSplitParent,
   freeRelationshipId,
   withContentTypeOverride,
   withFreshIds,
   withNotesRelationship,
 } from './note-lifecycle-shell.ts';
 import { writeDocumentNoteProperties, writeSectionNoteProperties } from './note-lifecycle-props.ts';
+import {
+  ancestorPathHolding,
+  citationBesideControlAt,
+  placeOutsideOutermostRevision,
+  placeCitationAtRunBoundary,
+  splitRunAroundText,
+} from './note-citation-placement.ts';
 import {
   isLegalEndnotePosition,
   isLegalFootnotePosition,
@@ -970,17 +979,6 @@ function topChildIndexOf(paragraph: OoxmlParagraphNode, nodeId: string): number 
   return paragraph.children.findIndex((child) => holds(child));
 }
 
-/** The node whose DIRECT child is `nodeId`, anywhere under `root`, or null. */
-function parentHolding(root: OoxmlNode, nodeId: string): OoxmlNode | null {
-  if (root.kind === 'textValue') return null;
-  for (const child of root.children) {
-    if (child.id === nodeId) return root;
-    const found = parentHolding(child, nodeId);
-    if (found) return found;
-  }
-  return null;
-}
-
 function insertNodesAtOffset(
   part: OoxmlPart,
   paragraph: OoxmlParagraphNode,
@@ -1006,35 +1004,23 @@ function insertNodesAtOffset(
     if (!textParent) return null;
     const run = findNode(part, segment.runId);
     if (!run || run.kind !== 'run') return null;
-    // A run nested inside a link or a revision wrapper cannot host the split — a citation
-    // spliced into somebody's `w:ins` would join their proposal. Refuse; the caller
-    // degrades to a rejection, never to a silently misplaced reference.
-    const runIndex = paragraph.children.findIndex((child) => child.id === run.id);
-    if (runIndex < 0) return null;
+    // Refuse a split the citation must not host; the caller degrades to a rejection, never
+    // to a silently misplaced reference.
+    const splitParent = citationSplitParent(paragraph, run.id);
+    if (!splitParent) return null;
 
-    const headRun = {
-      ...run,
-      id: nextId(),
-      children: run.children.flatMap((child) =>
-        child.id === textParent.id ? [textElement(nextId, value.slice(0, local))] : [child]
-      ),
-    } as OoxmlNode;
-    const tailRun = {
-      ...run,
-      id: nextId(),
-      children: run.children.flatMap((child) =>
-        child.id === textParent.id
-          ? [textElement(nextId, value.slice(local))]
-          : [cloneShallow(child, nextId)]
-      ),
-    } as OoxmlNode;
-    // Remint ids inside head/tail copies so the split halves stay unique.
-    const head = withFreshIds(headRun, nextId);
-    const tail = withFreshIds(tailRun, nextId);
-    const rebuilt = paragraph.children.flatMap((child) =>
-      child.id === run.id ? [head, ...nodes, tail] : [child]
+    const halves = splitRunAroundText(
+      run,
+      textParent.id,
+      textElement(nextId, value.slice(0, local)),
+      textElement(nextId, value.slice(local)),
+      nextId
     );
-    const replaced = replaceChildren(part, paragraph.id, rebuilt);
+    if (!halves?.head || !halves.tail) return null;
+    const rebuilt = splitParent.children.flatMap((child) =>
+      child.id === run.id ? [halves.head!, ...nodes, halves.tail!] : [child]
+    );
+    const replaced = replaceChildren(part, splitParent.id, rebuilt);
     return replaced.ok ? replaced.part : null;
   }
 
@@ -1061,8 +1047,7 @@ function insertNodesAtOffset(
     const anchorId = boundary.runId || boundary.node.id;
     const direct = paragraph.children.findIndex((child) => child.id === anchorId);
     if (direct >= 0) {
-      const inserted = insertChildren(part, paragraph.id, direct, nodes);
-      return inserted.ok ? inserted.part : null;
+      return placeCitationAtRunBoundary(part, paragraph, anchorId, boundary.node.id, nodes, nextId);
     }
     const index = topChildIndexOf(paragraph, anchorId);
     if (index >= 0) {
@@ -1085,16 +1070,35 @@ function insertNodesAtOffset(
         const inserted = insertChildren(part, paragraph.id, index, nodes);
         return inserted.ok ? inserted.part : null;
       }
-      // An interior boundary joins the DIRECT parent's content at the caret, whatever the
-      // nesting — a citation mid-link belongs in the link. ONLY neutral containers accept
-      // it: spliced into a revision wrapper, the citation would join somebody's proposal
-      // (or their deletion), and rejecting their revision would take the citation and its
-      // note body with it. Everything else refuses rather than misplaces.
-      const parent = parentHolding(top, anchorId);
-      if (parent && (parent.kind === 'hyperlink' || parent.kind === 'contentControlContent')) {
-        const at = parent.children.findIndex((child) => child.id === anchorId);
-        const inserted = insertChildren(part, parent.id, Math.max(0, at), nodes);
+      // Split from the segment child because a shared run id would change the requested offset.
+      const precisePath = ancestorPathHolding(top, boundary.node.id);
+      if (precisePath) {
+        const placed = placeOutsideOutermostRevision(
+          part,
+          paragraph,
+          precisePath,
+          boundary.node.id,
+          nodes,
+          nextId,
+          // A control is atomic, so the citation may only sit beside it — which is the
+          // requested position exactly when the control's own span starts at this offset.
+          (node) => offsets.spanOf(node)?.start === offset
+        );
+        if (placed !== undefined) return placed;
+      }
+      const beside = citationBesideControlAt(
+        paragraph,
+        anchorId,
+        (node) => offsets.spanOf(node)?.start === offset
+      );
+      if (beside) {
+        const inserted = insertChildren(part, beside.holder.id, beside.index, nodes);
         return inserted.ok ? inserted.part : null;
+      }
+      const path = ancestorPathHolding(top, anchorId);
+      const parent = path?.at(-1) ?? null;
+      if (canHoldNoteCitation(parent, path ?? [])) {
+        return placeCitationAtRunBoundary(part, parent, anchorId, boundary.node.id, nodes, nextId);
       }
       return null;
     }
@@ -1102,15 +1106,6 @@ function insertNodesAtOffset(
 
   const inserted = insertChildren(part, paragraph.id, paragraph.children.length, nodes);
   return inserted.ok ? inserted.part : null;
-}
-
-function cloneShallow(node: OoxmlNode, nextId: () => string): OoxmlNode {
-  if (node.kind === 'textValue') return { ...node, id: nextId() };
-  return {
-    ...node,
-    id: nextId(),
-    children: node.children.map((child) => cloneShallow(child, nextId)),
-  } as OoxmlNode;
 }
 
 function textElement(nextId: () => string, text: string): OoxmlNode {

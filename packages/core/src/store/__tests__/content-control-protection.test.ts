@@ -15,6 +15,7 @@ import {
   type OoxmlParagraphNode,
 } from '../index.ts';
 import { TreeDocumentStore } from '../store/tree-store.ts';
+import { formsProtectionRefusal } from '../store/tree-op-content-controls.ts';
 import type { TreeDocOp, TreeOpRejection } from '../store/tree-op-types.ts';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -171,6 +172,95 @@ describe('forms protection over an inline field', () => {
   test('typing inside the field is allowed', () => {
     const pkg = build(inlineBody(), FORMS);
     expect(typeAt(pkg, span(pkg).start + 1)).toBeNull();
+  });
+
+  test('a trailing smart tag resolves as content of the form field', () => {
+    const pkg = build(
+      '<w:p><w:sdt><w:sdtPr><w:tag w:val="field"/></w:sdtPr><w:sdtContent>' +
+        '<w:smartTag><w:r><w:t>MID</w:t></w:r></w:smartTag>' +
+        '</w:sdtContent></w:sdt></w:p><w:sectPr/>',
+      FORMS
+    );
+    expect(typeAt(pkg, span(pkg).end)).toBeNull();
+  });
+
+  test('every terminal point insertion uses its applier placement under forms protection', () => {
+    const body =
+      '<w:p><w:sdt><w:sdtPr><w:tag w:val="field"/></w:sdtPr><w:sdtContent>' +
+      '<w:smartTag><w:r><w:t>MID</w:t></w:r></w:smartTag>' +
+      '</w:sdtContent></w:sdt></w:p><w:sectPr/>';
+    const fragmentSource = build('<w:p><w:r><w:t>rich</w:t></w:r></w:p><w:sectPr/>', '');
+    const fragmentPart = fragmentSource.parts.get(fragmentSource.mainDocumentPart)!;
+    const fragment = firstParagraph(fragmentPart.root as never);
+    const pkg = build(body, FORMS);
+    const paragraphId = paragraphIds(pkg)[0]!;
+    const main = pkg.parts.get(pkg.mainDocumentPart)!;
+    const settings = pkg.parts.get('/word/settings.xml')!;
+    const field = contentControlsIn(main.root)[0]!.node;
+    const allowed: readonly TreeDocOp[] = [
+      { op: 'insertText', paragraphId, offset: 3, text: 'X' },
+      { op: 'insertTab', paragraphId, offset: 3 },
+      { op: 'insertHardBreak', paragraphId, offset: 3 },
+      { op: 'insertPageBreak', paragraphId, offset: 3 },
+      { op: 'insertPageField', paragraphId, offset: 3, field: 'PAGE' },
+    ];
+    for (const op of allowed) {
+      expect(formsProtectionRefusal(main, settings, op)).toBeNull();
+      const store = new TreeDocumentStore(pkg, pkg.mainDocumentPart);
+      const result = store.transact((ctx) => ctx.apply(op));
+      expect(result.ok).toBe(true);
+      const paragraph = firstParagraph(store.part.root as never);
+      expect(paragraphOffsetIndex(paragraph).spanOf(field)?.end).toBe(4);
+    }
+    expect(
+      formsProtectionRefusal(main, settings, {
+        op: 'insertNote',
+        paragraphId,
+        offset: 3,
+        noteKind: 'footnote',
+        revision: { author: 'Reviewer' },
+      })
+    ).toBeNull();
+
+    const refused: readonly TreeDocOp[] = [
+      { op: 'insertInlineContentControl', paragraphId, offset: 3, tag: 'new', text: 'X' },
+      { op: 'insertFragment', paragraphId, offset: 3, blocks: [fragment] },
+      { op: 'insertCommentMarker', paragraphId, offset: 3, commentId: '1', marker: 'start' },
+      { op: 'insertNote', paragraphId, offset: 3, noteKind: 'footnote' },
+    ];
+    for (const op of refused) {
+      expect(formsProtectionRefusal(main, settings, op)).toBe('locked');
+    }
+    expect(refusal(pkg, refused[0]!)).toBe('locked');
+    expect(refusal(pkg, refused[1]!)).toBe('locked');
+    expect(refusal(pkg, refused[2]!)).toBe('locked');
+
+    for (const makeOp of [
+      (id: string): TreeDocOp => ({
+        op: 'insertInlineContentControl',
+        paragraphId: id,
+        offset: 3,
+        tag: 'new',
+        text: 'X',
+      }),
+      (id: string): TreeDocOp => ({
+        op: 'insertFragment',
+        paragraphId: id,
+        offset: 3,
+        blocks: [fragment],
+      }),
+    ]) {
+      const editable = build(body, '');
+      const editableMain = editable.parts.get(editable.mainDocumentPart)!;
+      const originalControl = contentControlsIn(editableMain.root)[0]!.node;
+      const editableParagraph = paragraphIds(editable)[0]!;
+      const store = new TreeDocumentStore(editable, editable.mainDocumentPart);
+      const result = store.transact((ctx) => ctx.apply(makeOp(editableParagraph)));
+      expect(result.ok).toBe(true);
+      const paragraph = firstParagraph(store.part.root as never);
+      expect(paragraphOffsetIndex(paragraph).spanOf(originalControl)?.end).toBe(3);
+      expect(paragraphOffsetIndex(paragraph).length).toBeGreaterThan(3);
+    }
   });
 
   test('typing at the leading edge is allowed, because the text lands inside', () => {

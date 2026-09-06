@@ -23,7 +23,17 @@ import {
   type OoxmlProperty,
   type TreeDocOp,
 } from '@docx-editor.dev/core/store';
-import { walkParagraphInline } from '../store/package/content-control-walk.ts';
+import {
+  contentControlContentOf,
+  isContentControl,
+} from '../store/package/content-control-walk.ts';
+import { isInlineContainerProperty } from '../store/package/inline-container-properties.ts';
+import {
+  isContentRevisionKind,
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+} from '../store/package/ooxml-shared.ts';
 import { runPropsOf, treeSchema } from './tree-schema.ts';
 
 /**
@@ -56,7 +66,11 @@ export type MapResult =
 
 /** One projected inline token, in paragraph order. */
 type Token =
-  | { readonly kind: 'text'; readonly text: string; readonly props: readonly OoxmlProperty[] }
+  | {
+      readonly kind: 'text';
+      readonly text: string;
+      readonly props: readonly OoxmlProperty[];
+    }
   | { readonly kind: 'tab' }
   | { readonly kind: 'hardBreak' }
   | { readonly kind: 'pageBreak' }
@@ -155,14 +169,42 @@ function tokensOfParagraph(paragraph: OoxmlNode): Token[] {
       tokens.push({ kind: 'unknown', nodeId: grand.id, label: unknownLabel(grand) });
     }
   };
-  walkParagraphInline(paragraph.children, 0, (child) => {
+  const visit = (child: OoxmlNode): void => {
     if (child.kind === 'run') {
       emitRun(child);
       return;
     }
     // Paragraph-level unknown content keeps a position in the inline sequence.
     tokens.push({ kind: 'unknown', nodeId: child.id, label: unknownLabel(child) });
-  });
+  };
+  const walkEditable = (children: readonly OoxmlNode[], depth: number): void => {
+    for (const child of children) {
+      if (child.kind === 'textValue' || child.kind === 'paragraphProperties') continue;
+      // Match the paragraph-offset walk exactly: children AT the cap are not addressable.
+      if (depth >= MAX_INLINE_CONTAINER_DEPTH) continue;
+      if (
+        isInlineRunContainer(child) &&
+        !isContentRevisionKind(child.kind) &&
+        depth < MAX_INLINE_CONTAINER_DEPTH
+      ) {
+        walkEditable(
+          child.children.filter((grand) => !isInlineContainerProperty(child, grand)),
+          nextInlineContainerDepth(child, depth)
+        );
+        continue;
+      }
+      if (isContentControl(child)) {
+        const content = contentControlContentOf(child);
+        if (content) {
+          walkEditable(content, nextInlineContainerDepth(child, depth));
+        }
+        continue;
+      }
+      visit(child);
+    }
+  };
+  // Revisions stay opaque here. The reverse PM binding must preserve their authored identity.
+  walkEditable(paragraph.children, 0);
   return tokens;
 }
 

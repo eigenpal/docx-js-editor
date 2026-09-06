@@ -9,19 +9,22 @@ import { buildBookmarkIndex } from './bookmarks.ts';
 import { hyperlinkAnchorOf } from './hyperlink.ts';
 import { findNode } from './ooxml-edit.ts';
 import type { OoxmlNode, OoxmlPart } from './ooxml-tree.ts';
+import { MAX_INLINE_CONTAINER_DEPTH, nextInlineContainerDepth } from './ooxml-shared.ts';
 import { tocEntryText, type TocOutlineHeading } from './toc-build.ts';
 import type { DetectedToc } from './toc-detect.ts';
 
 /** The anchor of the first `w:hyperlink` in a row, or undefined for a plain row. */
-function rowAnchor(paragraph: OoxmlNode): string | undefined {
+function rowAnchor(paragraph: OoxmlNode, depth = 0): string | undefined {
   if (paragraph.kind === 'textValue') return undefined;
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return undefined;
+  if (paragraph.kind === 'hyperlink') {
+    const anchor = hyperlinkAnchorOf(paragraph);
+    if (anchor !== undefined && anchor.length > 0) return anchor;
+  }
+  const childDepth = nextInlineContainerDepth(paragraph, depth);
   for (const child of paragraph.children) {
     if (child.kind === 'textValue') continue;
-    if (child.kind === 'hyperlink') {
-      const anchor = hyperlinkAnchorOf(child);
-      if (anchor !== undefined && anchor.length > 0) return anchor;
-    }
-    const nested = rowAnchor(child);
+    const nested = rowAnchor(child, childDepth);
     if (nested !== undefined) return nested;
   }
   return undefined;
@@ -36,8 +39,9 @@ function rowAnchor(paragraph: OoxmlNode): string | undefined {
 function rowTitle(paragraph: OoxmlNode): string {
   let title = '';
   let done = false;
-  const walk = (node: OoxmlNode): void => {
+  const walk = (node: OoxmlNode, depth: number): void => {
     if (done || node.kind === 'textValue') return;
+    if (depth >= MAX_INLINE_CONTAINER_DEPTH) return;
     if (node.kind === 'tab' || node.localName === 'ptab' || node.localName === 'tab') {
       done = true;
       return;
@@ -48,9 +52,10 @@ function rowTitle(paragraph: OoxmlNode): string {
       }
       return;
     }
-    for (const child of node.children) walk(child);
+    const childDepth = nextInlineContainerDepth(node, depth);
+    for (const child of node.children) walk(child, childDepth);
   };
-  walk(paragraph);
+  walk(paragraph, 0);
   return tocEntryText(title);
 }
 

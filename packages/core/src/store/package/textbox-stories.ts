@@ -1,3 +1,4 @@
+import { segmentsOf } from '../store/tree-op-segments.ts';
 // Lightweight text-box story enumeration for search and other read-only derivations.
 
 import { MAX_XML_DEPTH, schemaAttributeValue } from './ooxml-drawing-rules.ts';
@@ -105,6 +106,7 @@ interface WalkFrame {
   readonly paragraphId: string | null;
   readonly namespaceScope: ReadonlyMap<string, string>;
   readonly depth: number;
+  readonly paragraphAtoms: ReadonlySet<string> | null;
 }
 
 const textboxStoriesCache = new WeakMap<OoxmlElement, readonly TextboxStoryRoot[]>();
@@ -132,7 +134,13 @@ export function textboxStoriesInPart(part: OoxmlPart): readonly TextboxStoryRoot
   if (cached) return cached;
   const stories: TextboxStoryRoot[] = [];
   const stack: WalkFrame[] = [
-    { node: part.root, paragraphId: null, namespaceScope: emptyNamespaceScope(), depth: 0 },
+    {
+      node: part.root,
+      paragraphId: null,
+      namespaceScope: emptyNamespaceScope(),
+      depth: 0,
+      paragraphAtoms: null,
+    },
   ];
   let visited = 0;
   while (stack.length > 0) {
@@ -143,11 +151,17 @@ export function textboxStoriesInPart(part: OoxmlPart): readonly TextboxStoryRoot
     if (frame.depth > MAX_XML_DEPTH) continue;
     const scope = namespaceScopeForNode(frame.namespaceScope, frame.node);
     const paragraphId = frame.node.kind === 'paragraph' ? frame.node.id : frame.paragraphId;
+    const paragraphAtoms =
+      frame.node.kind === 'paragraph'
+        ? new Set(segmentsOf(frame.node).map((segment) => segment.node.id))
+        : frame.paragraphAtoms;
     if (frame.node.kind === 'drawing') {
+      if (!paragraphAtoms?.has(frame.node.id)) continue;
       appendTextboxStory(stories, frame.node, frame.node.id, paragraphId);
       continue;
     }
     if (isMcAlternateContent(frame.node)) {
+      if (!paragraphAtoms?.has(frame.node.id)) continue;
       const resolved = resolveRunLevelMcAtom(
         frame.node,
         scope,
@@ -164,7 +178,13 @@ export function textboxStoriesInPart(part: OoxmlPart): readonly TextboxStoryRoot
     for (let index = frame.node.children.length - 1; index >= 0; index -= 1) {
       const child = frame.node.children[index];
       if (!isElement(child)) continue;
-      stack.push({ node: child, paragraphId, namespaceScope: scope, depth: frame.depth + 1 });
+      stack.push({
+        node: child,
+        paragraphId,
+        namespaceScope: scope,
+        depth: frame.depth + 1,
+        paragraphAtoms,
+      });
     }
   }
   const frozen = Object.freeze(stories);

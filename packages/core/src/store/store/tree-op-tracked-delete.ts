@@ -4,6 +4,12 @@
 // wrapper-merging and adjacency rules both lanes share. The dependency runs one way: this
 // module imports the builders; nothing here is imported back.
 
+import {
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+} from '../package/ooxml-shared.ts';
+import { isInlineContainerProperty } from '../package/inline-container-properties.ts';
 import type { OoxmlNode, OoxmlParagraphNode, OoxmlPart } from '../package/ooxml-tree.ts';
 import { createNodeIdAllocator, replaceChildren, type EditOptions } from '../package/ooxml-edit.ts';
 import { nextRevisionId } from './tree-op-revision-ids.ts';
@@ -102,7 +108,12 @@ export function applyDeleteTracked(
     return build(mint(), 'revisionDelete', 'del', revisionAttributes(id, attribution), nodes);
   };
 
-  const rebuild = (nodes: readonly OoxmlNode[], stack: readonly OoxmlNode[]): OoxmlNode[] => {
+  const rebuild = (
+    nodes: readonly OoxmlNode[],
+    stack: readonly OoxmlNode[],
+    containerDepth = 0
+  ): OoxmlNode[] => {
+    if (containerDepth >= MAX_INLINE_CONTAINER_DEPTH) return nodes.slice();
     const out: OoxmlNode[] = [];
     for (const node of nodes) {
       const length = offsets.lengthOf(node);
@@ -136,26 +147,31 @@ export function applyDeleteTracked(
 
       if (
         node.kind !== 'textValue' &&
-        (node.kind === 'hyperlink' ||
+        (isInlineRunContainer(node) ||
           // A content control is a run container too (`w:sdtContent` takes `EG_PContent`,
           // `w:del` included). Passing it through whole made a suggested deletion over its
           // text a silent NO-OP: the transaction committed, nothing was struck, and the
           // reviewer's replacement landed beside words that were never proposed away.
           node.kind === 'contentControl' ||
-          node.kind === 'contentControlContent' ||
-          node.kind === 'revisionInsert' ||
-          node.kind === 'revisionDelete' ||
-          node.kind === 'revisionMoveFrom' ||
-          node.kind === 'revisionMoveTo')
+          node.kind === 'contentControlContent')
       ) {
-        const rebuilt = rebuild(node.children, [...stack, node]);
+        const rebuilt = rebuild(
+          node.children,
+          [...stack, node],
+          nextInlineContainerDepth(node, containerDepth)
+        );
         // A wrapper emptied by the removal of our own insertion goes with it; one that
         // still holds content stays, because it is still saying something about that
         // content. A CONTROL is not a wrapper: it is document structure the user placed,
         // so it keeps its (possibly emptied) `w:sdtContent` — dropping it left a `w:sdt`
         // husk with properties and no content element, a shape Word never writes.
-        const structural = node.kind === 'contentControl' || node.kind === 'contentControlContent';
-        if (rebuilt.length > 0 || structural) {
+        const structural =
+          node.kind === 'contentControl' ||
+          node.kind === 'contentControlContent' ||
+          (node.kind === 'generic' &&
+            isInlineRunContainer(node) &&
+            insertionAuthor(stack) !== revision.author);
+        if (structural || rebuilt.some((child) => !isInlineContainerProperty(node, child))) {
           out.push({ ...node, children: rebuilt } as OoxmlNode);
         }
         continue;

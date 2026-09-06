@@ -872,3 +872,22 @@ describe('showingPlcHdr placeholder selection is atomic', () => {
     mounted.surface.destroy();
   });
 });
+
+test('engine pointer double click opens legacy text form options', () => {
+  const mounted = mount(
+    '<w:p><w:r><w:fldChar w:fldCharType="begin"><w:ffData><w:name w:val="InputA"/><w:textInput><w:default w:val="Sample"/></w:textInput></w:ffData></w:fldChar></w:r><w:r><w:instrText> FORMTEXT </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>Sample</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>'
+  );
+  try {
+    for (let click = 0; click < 2; click++) {
+      const field = mounted.pages.querySelector<HTMLElement>('[data-field-atom="form"]')!;
+      field.dispatchEvent(pointer('pointerdown', 3, 5));
+      document.dispatchEvent(pointer('pointerup', 3, 5));
+    }
+    const dialog = mounted.container.querySelector('dialog');
+    expect(dialog).not.toBeNull();
+    expect(dialog!.querySelector('input')!.value).toBe('Sample');
+  } finally {
+    mounted.surface.destroy();
+    mounted.container.remove();
+  }
+});

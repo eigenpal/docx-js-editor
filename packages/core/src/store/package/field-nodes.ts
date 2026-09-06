@@ -18,7 +18,12 @@ import {
   MAX_CONTENT_CONTROL_NESTING,
 } from './content-control-walk.ts';
 import { hardBreakText } from './hard-break.ts';
-import { isContentRevisionKind, WML_NAMESPACE_URI } from './ooxml-shared.ts';
+import {
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+  WML_NAMESPACE_URI,
+} from './ooxml-shared.ts';
 import type {
   OoxmlFldCharNode,
   OoxmlFldSimpleNode,
@@ -444,6 +449,7 @@ export function collectFieldRunChildren(
   let complete = true;
   const visit = (child: OoxmlNode, sdtDepth: number, hiddenInOriginal: boolean): void => {
     if (!complete) return;
+    if (sdtDepth >= MAX_INLINE_CONTAINER_DEPTH) return;
     if (budget && budget.left-- <= 0) {
       complete = false;
       return;
@@ -471,8 +477,13 @@ export function collectFieldRunChildren(
       return;
     }
     if (child.kind === 'textValue') return;
-    if (child.kind === 'hyperlink' || isContentRevisionKind(child.kind)) {
-      for (const inner of child.children) visit(inner, sdtDepth, hidden);
+    // Every transparent run container descends: a link, a revision wrapper, and the generic
+    // wrappers (`w:smartTag`, `w:customXml`, `w:dir`, `w:bdo`) all hold ordinary run content,
+    // and a field inside one is an ordinary field. Depth follows the shared authority so this
+    // walk and `segmentsOf` agree about what is addressable.
+    if (isInlineRunContainer(child)) {
+      const depth = nextInlineContainerDepth(child, sdtDepth);
+      for (const inner of child.children) visit(inner, depth, hidden);
     }
   };
   if (container.kind !== 'textValue') {

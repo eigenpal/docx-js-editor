@@ -11,10 +11,10 @@
 // note), and a header part holds exactly one. Keeping the root and the walk separate is what
 // lets a caller ask about one story without conflating it with its neighbours in the same part.
 //
-// Table cells and block-level content controls are TRANSPARENT: a paragraph inside a cell or
-// inside `w:sdtContent` is an ordinary editable paragraph, and reading order is the order you
-// would meet them reading the page. SDT nesting is bounded, because the nesting depth is
-// file-supplied and a document is untrusted input.
+// Table cells, block-level content controls and block `w:customXml` are TRANSPARENT: a paragraph
+// inside one is an ordinary editable paragraph, and reading order is the order you would meet
+// them reading the page. Wrapper nesting is bounded, because the nesting depth is file-supplied
+// and a document is untrusted input.
 
 import {
   contentControlContentChildren,
@@ -22,15 +22,32 @@ import {
   isContentControlWrapper,
 } from './content-control-nodes.ts';
 import type { OoxmlNode, OoxmlPart } from './ooxml-tree.ts';
+import { isInlineRunContainer, WML_NAMESPACE_URI } from './ooxml-shared.ts';
 import { isNormalNote } from './note-nodes.ts';
 
-/** How deep block-level content controls may nest before the walk stops descending. */
+/** How deep transparent block wrappers may nest before the walk stops descending. */
 export const MAX_STORY_SDT_NESTING = 32;
+
+/** Children that join a story through one transparent block wrapper. */
+export function blockStoryContainerChildren(node: OoxmlNode): readonly OoxmlNode[] | null {
+  if (node.kind === 'textValue') return null;
+  if (isContentControlWrapper(node)) return contentControlContentChildren(node);
+  const children = node.children;
+  if (
+    node.kind === 'generic' &&
+    node.namespaceUri === WML_NAMESPACE_URI &&
+    node.localName === 'customXml' &&
+    !isInlineRunContainer(node)
+  ) {
+    return children;
+  }
+  return null;
+}
 
 /** Which kind of story a root is. Layout walks all four the same way. */
 export type OoxmlStoryKind = 'body' | 'header' | 'footer' | 'note';
 
-/** One story root and the blocks under it, with block-level SDTs already flattened. */
+/** One story root and the blocks under it, with transparent block wrappers already flattened. */
 export interface OoxmlStoryRoot {
   readonly kind: OoxmlStoryKind;
   /** The `w:body` / `w:hdr` / `w:ftr` / `w:footnote` element that holds the blocks. */
@@ -108,8 +125,8 @@ export function bodyStoryRoot(part: OoxmlPart): OoxmlNode | null {
 /**
  * Every paragraph of one story, in reading order.
  *
- * Descends through tables (rows, cells, nested tables) and flattens block-level content
- * controls. The returned nodes are paragraph elements; a caller addresses them by `id`.
+ * Descends through tables (rows, cells, nested tables), block controls and block custom XML.
+ * The returned nodes are paragraph elements; a caller addresses them by `id`.
  */
 export function storyParagraphs(root: OoxmlNode): readonly OoxmlNode[] {
   if (root.kind === 'textValue') return [];
@@ -146,8 +163,9 @@ export function collectStoryParagraphs(
       }
       continue;
     }
-    if (isContentControlWrapper(child) && sdtDepth < MAX_STORY_SDT_NESTING) {
-      collectStoryParagraphs(contentControlContentChildren(child), out, sdtDepth + 1);
+    const nested = blockStoryContainerChildren(child);
+    if (nested !== null && sdtDepth < MAX_STORY_SDT_NESTING) {
+      collectStoryParagraphs(nested, out, sdtDepth + 1);
     }
   }
 }

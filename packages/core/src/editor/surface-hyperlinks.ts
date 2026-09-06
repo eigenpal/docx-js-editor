@@ -15,7 +15,6 @@ import type { TreeApplyResult, TreeDocxSessionView } from '@docx-editor.dev/core
 import {
   hardBreakText,
   hyperlinkTargetOf,
-  isContentRevisionKind,
   isInstrText,
   paragraphOffsetIndex,
   type OoxmlNode,
@@ -25,21 +24,38 @@ import {
   type TreeDocOp,
 } from '@docx-editor.dev/core/store';
 import {
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+} from '../store/package/ooxml-shared.ts';
+import {
   fragmentsOfParagraph,
   type SemanticLayout,
   type SemanticPosition,
   type SemanticSelection,
 } from '@docx-editor.dev/core/layout';
 
-/** Inline `w:sdt` nesting bound — matches `segmentsOf` and formatting walks. */
-const MAX_SDT_NESTING = 32;
+/** WordprocessingML, for the demoted controls the reader preserves as generic nodes. */
+const WML = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
+/**
+ * A content control, typed or DEMOTED.
+ *
+ * A `w:sdt` the reader could not type — properties after `w:sdtContent`, say — is preserved
+ * as a generic node, and the shared offset walk still counts its text. Matching only the
+ * typed kind here reported a link with the right span and an EMPTY label, because the walk
+ * that gathers the text stopped at the wrapper the offsets had already descended.
+ */
 function isContentControl(node: OoxmlNode): boolean {
-  return node.kind !== 'textValue' && (node as { kind: string }).kind === 'contentControl';
+  if (node.kind === 'textValue') return false;
+  if ((node as { kind: string }).kind === 'contentControl') return true;
+  return node.kind === 'generic' && node.localName === 'sdt' && node.namespaceUri === WML;
 }
 
 function isContentControlContent(node: OoxmlNode): boolean {
-  return node.kind !== 'textValue' && (node as { kind: string }).kind === 'contentControlContent';
+  if (node.kind === 'textValue') return false;
+  if ((node as { kind: string }).kind === 'contentControlContent') return true;
+  return node.kind === 'generic' && node.localName === 'sdtContent' && node.namespaceUri === WML;
 }
 
 /**
@@ -68,11 +84,6 @@ function elementChildren(node: OoxmlNode): readonly OoxmlNode[] {
   return node.kind === 'textValue' ? [] : node.children;
 }
 
-/** The kinds whose nesting is file-controlled, and therefore depth-capped. */
-function isDepthCountedContainer(node: OoxmlNode): boolean {
-  return node.kind === 'hyperlink' || isContentControl(node) || isContentRevisionKind(node.kind);
-}
-
 /**
  * The LIVE display text under a link: what survives once pending deletions resolve.
  *
@@ -83,12 +94,15 @@ function isDepthCountedContainer(node: OoxmlNode): boolean {
  */
 function liveTextUnder(node: OoxmlNode, depth = 0): string {
   if (node.kind === 'textValue') return node.value;
-  if (depth >= MAX_SDT_NESTING) return '';
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return '';
   if (node.kind === 'deletedText' || isContentRevisionDeletion(node.kind)) return '';
   if (isInstrText(node) || node.kind === 'runProperties') return '';
+  // A demoted content control is transparent to the offset walk, so it must be transparent
+  // here too, or the link's label comes back empty for a span the offsets say has text.
+  if (node.kind === 'generic' && !isInlineRunContainer(node) && !isContentControl(node)) return '';
   if (node.kind === 'tab') return '\t';
   if (node.kind === 'hardBreak') return hardBreakText(node);
-  const next = isDepthCountedContainer(node) ? depth + 1 : depth;
+  const next = nextInlineContainerDepth(node, depth);
   let text = '';
   for (const child of node.children) text += liveTextUnder(child, next);
   return text;
@@ -103,28 +117,30 @@ function isContentRevisionDeletion(kind: string): boolean {
 function walkInlineChildren(
   children: readonly OoxmlNode[],
   depth: number,
-  visit: (child: OoxmlNode) => void
+  visit: (child: OoxmlNode, depth: number) => void
 ): void {
-  if (depth >= MAX_SDT_NESTING) return;
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return;
   for (const child of children) {
     if (child.kind === 'hyperlink') {
-      visit(child);
+      if (nextInlineContainerDepth(child, depth) < MAX_INLINE_CONTAINER_DEPTH) {
+        visit(child, depth);
+      }
       continue;
     }
     // Transparent, so a link a tracked edit wraps is still found and reported in order.
     // Depth-counted like every descent here: wrapper nesting is file-derived.
-    if (isContentRevisionKind(child.kind)) {
-      walkInlineChildren(elementChildren(child), depth + 1, visit);
+    if (isInlineRunContainer(child)) {
+      walkInlineChildren(elementChildren(child), nextInlineContainerDepth(child, depth), visit);
       continue;
     }
     if (isContentControl(child)) {
       for (const inner of elementChildren(child)) {
         if (!isContentControlContent(inner)) continue;
-        walkInlineChildren(elementChildren(inner), depth + 1, visit);
+        walkInlineChildren(elementChildren(inner), nextInlineContainerDepth(child, depth), visit);
       }
       continue;
     }
-    visit(child);
+    visit(child, depth);
   }
 }
 
@@ -150,7 +166,7 @@ export function hyperlinksInParagraph(
   const found: SurfaceHyperlink[] = [];
   // The walk position so far: it is only read for a link whose content owns no offsets.
   let cursor = 0;
-  walkInlineChildren(paragraph.children, 0, (child) => {
+  walkInlineChildren(paragraph.children, 0, (child, depth) => {
     const span = offsets.spanOf(child);
     if (span) cursor = Math.max(cursor, span.end);
     if (child.kind !== 'hyperlink') return;
@@ -164,7 +180,7 @@ export function hyperlinksInParagraph(
       paragraphId,
       start,
       end,
-      text: liveTextUnder(child),
+      text: liveTextUnder(child, depth),
       kind: target.kind,
       href: target.href,
       authored: target.authored,

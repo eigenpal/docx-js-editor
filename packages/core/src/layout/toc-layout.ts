@@ -4,6 +4,10 @@ import { fldCharType, isInstrTextNode } from '../store/package/field-nodes.ts';
 import { findNode } from '../store/package/ooxml-edit.ts';
 import { detectBodyTocs, type DetectedToc } from '../store/package/toc-detect.ts';
 import type { OoxmlElement, OoxmlNode, OoxmlPart } from '../store/package/ooxml-tree.ts';
+import {
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+} from '../store/package/ooxml-shared.ts';
 
 const visibleTextByParagraph = new WeakMap<OoxmlElement, boolean>();
 
@@ -17,8 +21,9 @@ function paragraphHasVisibleText(paragraph: OoxmlElement): boolean {
 }
 
 function computeParagraphHasVisibleText(paragraph: OoxmlElement): boolean {
-  const walk = (node: OoxmlNode): boolean => {
+  const walk = (node: OoxmlNode, depth: number): boolean => {
     if (node.kind === 'textValue') return false;
+    if (depth >= MAX_INLINE_CONTAINER_DEPTH) return false;
     if (isInstrTextNode(node) || fldCharType(node) !== null) return false;
     if (node.kind === 'text' || node.localName === 't') {
       for (const child of node.children) {
@@ -26,13 +31,14 @@ function computeParagraphHasVisibleText(paragraph: OoxmlElement): boolean {
       }
       return false;
     }
+    const nextDepth = nextInlineContainerDepth(node, depth);
     for (const child of node.children) {
-      if (child.kind !== 'textValue' && walk(child)) return true;
+      if (child.kind !== 'textValue' && walk(child, nextDepth)) return true;
     }
     return false;
   };
   for (const child of paragraph.children) {
-    if (child.kind !== 'textValue' && walk(child)) return true;
+    if (child.kind !== 'textValue' && walk(child, 0)) return true;
   }
   return false;
 }

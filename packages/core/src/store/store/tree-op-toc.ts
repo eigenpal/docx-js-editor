@@ -16,6 +16,7 @@ import {
   type EditOptions,
 } from '../package/ooxml-edit.ts';
 import type { OoxmlElement, OoxmlNode, OoxmlPart } from '../package/ooxml-tree.ts';
+import { MAX_INLINE_CONTAINER_DEPTH, nextInlineContainerDepth } from '../package/ooxml-shared.ts';
 import {
   effectiveContentLockAt,
   effectiveLockOf,
@@ -324,7 +325,8 @@ function rewritePageNumberInParagraph(
   // Find text nodes inside hyperlink or direct runs; replace the last w:t.
   const texts: OoxmlNode[] = [];
   let hasPageTab = false;
-  const walk = (node: OoxmlNode): void => {
+  const walk = (node: OoxmlNode, depth: number): void => {
+    if (depth >= MAX_INLINE_CONTAINER_DEPTH) return;
     if (node.kind === 'tab' || (node.kind !== 'textValue' && node.localName === 'ptab')) {
       hasPageTab = true;
     }
@@ -333,9 +335,10 @@ function rewritePageNumberInParagraph(
       return;
     }
     if (node.kind === 'textValue') return;
-    node.children.forEach(walk);
+    const childDepth = nextInlineContainerDepth(node, depth);
+    for (const child of node.children) walk(child, childDepth);
   };
-  walk(paragraph);
+  walk(paragraph, 0);
   if (!hasPageTab || texts.length < 2) return null;
   const target = texts[texts.length - 1]!;
   if (target.kind === 'textValue') return null;

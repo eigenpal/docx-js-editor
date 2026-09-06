@@ -74,6 +74,10 @@ import {
 // Re-exported so every existing importer keeps its one `field-ref.ts` import site.
 export { parseRefInstruction, type RefFieldSpec } from './field-ref-parse.ts';
 import { isNormalNote, notesOf, MAX_NOTES_PER_PART } from '../store/package/note-nodes.ts';
+import {
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+} from '../store/package/ooxml-shared.ts';
 import { noteStoryBlocks } from './story-roots.ts';
 import {
   consumeScanNode,
@@ -312,8 +316,9 @@ function scanParagraphRefs(paragraph: OoxmlElement): ParagraphRefScan {
     pending = null;
   };
 
-  const visit = (node: OoxmlNode, depth: number): void => {
+  const visit = (node: OoxmlNode, depth: number, containerDepth: number): void => {
     if (node.kind === 'textValue') return;
+    if (containerDepth >= MAX_INLINE_CONTAINER_DEPTH) return;
     if (budget.exhausted || depth > MAX_STORY_FIELD_SCAN_DEPTH) return;
     if (node.kind === 'bookmarkStart') {
       const name = wmlAttribute(node, 'name');
@@ -394,16 +399,18 @@ function scanParagraphRefs(paragraph: OoxmlElement): ParagraphRefScan {
       if (attribution) {
         const enclosing = revisions;
         revisions = withRevision(enclosing, attribution);
-        for (const child of node.children) visit(child, depth + 1);
+        const nextDepth = nextInlineContainerDepth(node, containerDepth);
+        for (const child of node.children) visit(child, depth + 1, nextDepth);
         revisions = enclosing;
         return;
       }
     }
-    for (const child of node.children) visit(child, depth + 1);
+    const nextDepth = nextInlineContainerDepth(node, containerDepth);
+    for (const child of node.children) visit(child, depth + 1, nextDepth);
   };
   for (const child of paragraph.children) {
     if (!consumeScanNode(budget)) break;
-    visit(child, 1);
+    visit(child, 1, 0);
   }
 
   const scan: ParagraphRefScan =

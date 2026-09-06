@@ -18,14 +18,6 @@
 //   - deleting your own pending insertion REMOVES it, because there is nothing to propose to
 //     anyone else — the text never existed for them;
 //   - deleting inside an existing `w:del` does nothing, since it is already gone.
-//
-// EVERY length here comes from `paragraphOffsetIndex`, which is `segmentsOf`'s own walk. This
-// module used to carry a private `lengthOf` that summed text characters, and it disagreed with
-// the authority on three things: a note reference and an atomic field measure ONE unit each and
-// it gave them none, and a field's `w:instrText` measures nothing and it counted its
-// characters. In any paragraph holding a footnote, an endnote or a field, that put a tracked
-// insert at the wrong offset, refused an insert at the true paragraph end as out of range, and
-// struck one character too many while leaving the reference standing.
 
 import {
   WML_NAMESPACE_URI,
@@ -34,13 +26,24 @@ import {
   type OoxmlParagraphNode,
   type OoxmlPart,
 } from '../package/ooxml-tree.ts';
+import {
+  isContentRevisionKind,
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+  nextInlineContainerDepth,
+} from '../package/ooxml-shared.ts';
+import { isInlineContainerProperty } from '../package/inline-container-properties.ts';
 import { createNodeIdAllocator, replaceChildren, type EditOptions } from '../package/ooxml-edit.ts';
 import { equivalentNodes } from './ooxml-node-equality.ts';
 import { nextRevisionId } from './tree-op-revision-ids.ts';
 import { TEXT_DEPS, fromEdit } from './tree-op-nodes.ts';
-import { paragraphOffsetIndex, type ParagraphOffsetIndex } from './tree-op-segments.ts';
+import {
+  insertionDestination,
+  paragraphOffsetIndex,
+  trailingInsertionDestination,
+  type ParagraphOffsetIndex,
+} from './tree-op-segments.ts';
 import { insertionAuthor } from './tree-op-retraction.ts';
-import type { RevisionAttributionInput, TreeOpEffect, TreeOpResult } from './tree-op-validate.ts';
 import {
   adjacentDeletion,
   deletionId,
@@ -48,44 +51,11 @@ import {
   revisionKey,
   sameEditingMoment,
 } from './tree-op-tracked-adjacency.ts';
+import type { RevisionAttributionInput, TreeOpEffect, TreeOpResult } from './tree-op-validate.ts';
+import { build, revisionAttributes } from './tree-op-tracked-builders.ts';
 
-function attr(localName: string, value: string) {
-  return {
-    kind: 'genericExtension' as const,
-    namespaceUri: WML_NAMESPACE_URI,
-    localName,
-    prefix: 'w',
-    value,
-  };
-}
-
-export function build(
-  id: string,
-  kind: OoxmlElement['kind'],
-  localName: string,
-  attributes: OoxmlElement['attributes'],
-  children: readonly OoxmlNode[]
-): OoxmlElement {
-  return {
-    id,
-    kind,
-    namespaceUri: WML_NAMESPACE_URI,
-    localName,
-    prefix: 'w',
-    namespaceBindings: [],
-    attributes,
-    children,
-  } as OoxmlElement;
-}
-
-/** The `CT_TrackChange` attribute triple, spelled once for every wrapper a tracked edit writes. */
-export function revisionAttributes(id: string, revision: RevisionAttributionInput) {
-  return [
-    attr('id', id),
-    attr('author', revision.author),
-    ...(revision.date === undefined ? [] : [attr('date', revision.date)]),
-  ];
-}
+export { sameEditingMoment } from './tree-op-tracked-adjacency.ts';
+export { build, revisionAttributes } from './tree-op-tracked-builders.ts';
 
 /** A `w:t`, or the `w:delText` the same characters become once struck. */
 export function textNode(mint: () => string, value: string, deleted: boolean): OoxmlNode {
@@ -246,7 +216,8 @@ export function applyInsertTracked(
   offset: number,
   text: string,
   revision: RevisionAttributionInput,
-  options?: EditOptions
+  options?: EditOptions,
+  bias: 'left' | 'right' = 'left'
 ): TreeOpResult {
   return applyTrackedInsertion(
     part,
@@ -254,7 +225,8 @@ export function applyInsertTracked(
     offset,
     { length: text.length, nodes: (mint) => [textNode(mint, text, false)] },
     revision,
-    options
+    options,
+    bias
   );
 }
 
@@ -346,7 +318,8 @@ function applyTrackedInsertion(
   aim: number,
   payload: TrackedInsertionPayload,
   revision: RevisionAttributionInput,
-  options?: EditOptions
+  options?: EditOptions,
+  bias: 'left' | 'right' = 'left'
 ): TreeOpResult {
   const mint = createNodeIdAllocator(part);
   const offsets = paragraphOffsetIndex(paragraph);
@@ -409,6 +382,9 @@ function applyTrackedInsertion(
   const offset = replacesThisEdit
     ? Math.max(aim, replacedEnd(paragraph, offsets, replaced!, revision.author, aim))
     : aim;
+  const trailingDestination = trailingInsertionDestination(paragraph, offset);
+  const rightBiasedDestination =
+    bias === 'right' ? insertionDestination(paragraph, offset, null, bias) : null;
   // Minted LAZILY, on the first wrapper actually built: `nextRevisionId` walks the whole
   // part, and typing on inside your own `w:ins` — every keystroke after the first — extends
   // the existing wrapper and builds none, so it must not pay that walk. A transaction lends
@@ -438,7 +414,12 @@ function applyTrackedInsertion(
       payload.nodes ? [runOf(mint, [...properties, ...payload.nodes(mint)])] : [payload.run!(mint)]
     );
 
-  const rebuild = (nodes: readonly OoxmlNode[], stack: readonly OoxmlNode[]): OoxmlNode[] => {
+  const rebuild = (
+    nodes: readonly OoxmlNode[],
+    stack: readonly OoxmlNode[],
+    containerDepth = 0
+  ): OoxmlNode[] => {
+    if (containerDepth >= MAX_INLINE_CONTAINER_DEPTH) return nodes.slice();
     const out: OoxmlNode[] = [];
     for (const node of nodes) {
       if (placed) {
@@ -460,7 +441,12 @@ function applyTrackedInsertion(
       // `w:sdtPr`/`w:sdtEndPr` ahead of `w:sdtContent`, they measure nothing, and the
       // boundary rule below would otherwise put an insertion aimed at the control's first
       // character in FRONT of them.
-      if (node.kind === 'contentControlProperties' || node.kind === 'contentControlEndProperties') {
+      const parent = stack.at(-1);
+      if (
+        node.kind === 'contentControlProperties' ||
+        node.kind === 'contentControlEndProperties' ||
+        (parent !== undefined && isInlineContainerProperty(parent, node))
+      ) {
         out.push(node);
         continue;
       }
@@ -469,34 +455,23 @@ function applyTrackedInsertion(
       const start = cursor.offset;
       const end = start + length;
 
-      // Chrome of an atom already passed: never a place to put words. A field's instruction,
-      // separator, cached result and end run all measure nothing and all sit at the same
-      // offset as each other, so the first of them would take an insertion aimed at the
-      // position AFTER the field — putting the typed text inside the field, where it is
-      // invisible to every reader including this one.
+      // Atom chrome measures zero at one offset. Let all of it pass before inserting, or the
+      // new text lands inside the field and remains invisible.
       if (isAtomTailRun(node, atoms)) {
         out.push(node);
         continue;
       }
 
-      // A container the offset falls inside: descend, and let the split happen at the run.
-      //
-      // At a BOUNDARY the rule is narrower — descend only into our own `w:ins`. Typing on at
-      // the end of your own insertion is one continuous proposal and Word records it as one
-      // `w:ins`; without this every keystroke opened a new revision, so a typed word arrived
-      // in the review pane as a column of one-letter cards. Stepping into anyone ELSE's
-      // wrapper at a boundary would be the opposite mistake: putting your words inside their
-      // proposal, where accepting theirs would accept yours.
-      // A DELETION is not descended into. Text placed inside one would be written as `w:t`
-      // where §17.3.3.7 requires `w:delText`, and — worse — accepting that unrelated
-      // deletion would take the newly typed words with it. The insertion goes beside it.
+      // Descend inside a container. At a boundary, only an existing or shared container keeps it.
+      // Never descend into a deletion: it requires `w:delText`, and accepting it would also
+      // take the new insertion.
       const container =
         node.kind !== 'textValue' &&
-        (node.kind === 'hyperlink' ||
+        ((isInlineRunContainer(node) &&
+          node.kind !== 'revisionDelete' &&
+          node.kind !== 'revisionMoveFrom') ||
           node.kind === 'contentControl' ||
-          node.kind === 'contentControlContent' ||
-          node.kind === 'revisionInsert' ||
-          node.kind === 'revisionMoveTo');
+          node.kind === 'contentControlContent');
       // Same MOMENT as well as the same author — the deletion path already gates on this.
       // Typing at the end of your own month-old insertion backdated today's edit into that
       // revision, and rejecting one then rejected both.
@@ -504,6 +479,8 @@ function applyTrackedInsertion(
         container &&
         insertionAuthor([node]) === revision.author &&
         sameEditingMoment(revisionDateOf(node), revision.date);
+      const sharedTrailingOwner = trailingDestination?.path.has(node.id) === true;
+      const rightBiasedOwner = rightBiasedDestination?.path.has(node.id) === true;
       // THE REPLACEMENT FOLLOWS THE DELETION IT REPLACES — into a link or a control, and
       // only when the WHOLE deletion lives there. Replacing a link's display text strikes
       // runs INSIDE the `w:hyperlink`, and the insertion adopting that deletion aims at
@@ -520,7 +497,7 @@ function applyTrackedInsertion(
       // adopted deletion exists at all.
       const followable =
         container &&
-        (node.kind === 'hyperlink' ||
+        ((isInlineRunContainer(node) && !isContentRevisionKind(node.kind)) ||
           node.kind === 'contentControl' ||
           node.kind === 'contentControlContent');
       // `replacesThisEdit`, not merely "a deletion is adjacent": this is the THIRD place the
@@ -535,13 +512,23 @@ function applyTrackedInsertion(
       if (
         container &&
         ((offset > start && offset < end) ||
-          ((ownInsertion || holdsReplaced) && offset >= start && offset <= end))
+          ((ownInsertion || holdsReplaced || sharedTrailingOwner || rightBiasedOwner) &&
+            offset >= start &&
+            offset <= end))
       ) {
-        const rebuilt = rebuild(node.children, [...stack, node]);
+        const rebuilt = rebuild(
+          node.children,
+          [...stack, node],
+          nextInlineContainerDepth(node, containerDepth)
+        );
         // The adopted deletion ends exactly where the container does, so the inner walk
         // comes back unplaced. The replacement still belongs beside the struck words,
         // INSIDE the container that holds them.
-        if (!placed && holdsReplaced && offset === cursor.offset) {
+        if (
+          !placed &&
+          (holdsReplaced || (sharedTrailingOwner && node.id === trailingDestination?.holderId)) &&
+          offset === cursor.offset
+        ) {
           rebuilt.push(wrap([]));
           placed = true;
         }
@@ -602,6 +589,22 @@ function applyTrackedInsertion(
       // field's `begin` and its instruction; deferring lets the tail runs pass and the
       // insertion land after the field, which is where the model offset points.
       if (holdsAtomBegin(node, atoms) && offset === end && offset !== start) {
+        cursor.offset = end;
+        out.push(node);
+        continue;
+      }
+
+      // A right bias names the container the caller wants the words in, and a run ENDING at
+      // this offset is not it: taking the insertion here would leave the text outside the
+      // requested wrapper, which validation had already resolved as the destination. Walk on
+      // and let that container claim it.
+      if (
+        node.kind === 'run' &&
+        offset === end &&
+        offset !== start &&
+        rightBiasedDestination !== null &&
+        !rightBiasedDestination.path.has(node.id)
+      ) {
         cursor.offset = end;
         out.push(node);
         continue;

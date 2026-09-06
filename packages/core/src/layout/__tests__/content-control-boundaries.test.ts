@@ -2,7 +2,12 @@
 // fragments, and metadata-only invalidation of wrapper chrome without stale page reuse.
 
 import { describe, expect, test } from 'bun:test';
-import { readOoxmlPart, type OoxmlPart } from '@docx-editor.dev/core/store';
+import {
+  findNode,
+  paragraphOffsetIndex,
+  readOoxmlPart,
+  type OoxmlPart,
+} from '@docx-editor.dev/core/store';
 import {
   contentControlAtPoint,
   createFixedMeasurer,
@@ -12,7 +17,9 @@ import {
   type PageGeometry,
   type SemanticLayout,
 } from '../index.ts';
+import { collectedControlIndexOf } from '../content-control-boundary-layout.ts';
 import { contentControlContextToken } from '../semantic-layout.ts';
+import { MAX_INLINE_CONTAINER_DEPTH } from '../../store/store/tree-op-segments.ts';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const W14 = 'http://schemas.microsoft.com/office/word/2010/wordml';
@@ -151,6 +158,31 @@ describe('block, inline, and nested boundaries', () => {
 });
 
 describe('inline boundary fragments', () => {
+  test('content past the wrapper cap consumes no offsets before a later control', () => {
+    let capped = sdt('<w:alias w:val="capped"/>', run('hidden'));
+    for (let depth = 0; depth < MAX_INLINE_CONTAINER_DEPTH; depth += 1) {
+      capped = `<w:smartTag>${capped}</w:smartTag>`;
+    }
+    const part = load(`<w:p>${capped}${sdt('<w:alias w:val="later"/>', run('X'))}</w:p>`);
+    const layout = layoutSemanticDocument(part, 1, { measurer, geometry: GEOMETRY });
+    const fragment = layout.pages[0]!.fragments[0]!;
+    if (fragment.kind !== 'paragraph') throw new Error('expected a paragraph');
+    const paragraphNode = findNode(part, fragment.paragraphId);
+    if (!paragraphNode || paragraphNode.kind !== 'paragraph') throw new Error('missing paragraph');
+
+    expect(paragraphOffsetIndex(paragraphNode).length).toBe(1);
+    expect(layout.contentControls?.map((entry) => entry.alias)).toEqual(['later']);
+    const later = layout.contentControls![0]!;
+    const collected = collectedControlIndexOf(part).controls.find(
+      (entry) => entry.control.id === later.id
+    );
+    expect(collected?.range).toEqual({ start: 0, end: 1 });
+    const box = later.fragments[0]!.box;
+    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    expect(contentControlAtPoint(layout, 0, point)?.alias).toBe('later');
+    expect(hitTestPage(layout, 0, point)?.contentControlId).toBe(later.id);
+  });
+
   test('a line-wrapped inline control publishes one fragment per line, not a union rect', () => {
     // Content width 110pt at 6pt/char fits 18 characters: "xxxx yyyy yyyy" stays on line
     // one and the control's trailing "yyyy" wraps onto line two.

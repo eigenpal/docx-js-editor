@@ -122,6 +122,8 @@ export interface PointerHost {
    * Called after mousedown is prevented so the caret is not stolen.
    */
   onContentControlWidget?(controlId: string, kind: string): void;
+  /** Options interaction on a legacy text form, before ordinary word selection. */
+  onTextFormDoubleClick?(event: PointerEvent): boolean;
   /**
    * A pointer selection gesture has settled — the press, drag and release are over and the
    * model selection is final.
@@ -910,6 +912,8 @@ export function createPointerController(
       event.preventDefault();
       return;
     }
+
+    if (clicks() === 2 && host.onTextFormDoubleClick?.(event)) return;
 
     event.preventDefault();
     // Preventing the default cancels the browser's own focus transfer, and the surface only

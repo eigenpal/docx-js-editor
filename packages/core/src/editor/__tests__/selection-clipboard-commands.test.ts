@@ -125,6 +125,19 @@ describe('copy', () => {
     expect(texts(editor)).toEqual(['hello world']);
   });
 
+  test('writes plain text from inline run wrappers', () => {
+    const body =
+      '<w:p><w:smartTag><w:r><w:t>smart</w:t></w:r></w:smartTag>' +
+      '<w:customXml><w:r><w:t>custom</w:t></w:r></w:customXml>' +
+      '<w:dir><w:r><w:t>dir</w:t></w:r></w:dir>' +
+      '<w:bdo><w:r><w:t>bdo</w:t></w:r></w:bdo></w:p>';
+    const { editor } = mount(body);
+    editor.exec({ type: 'selectAll' });
+
+    expect(editor.exec({ type: 'copy' })).toEqual({ ok: true, changed: false });
+    expect(written).toEqual(['smartcustomdirbdo']);
+  });
+
   test('is refused at a collapsed caret — nothing to copy', () => {
     const { editor } = mount(p('hello world'));
     caretInFirst(editor, 3);

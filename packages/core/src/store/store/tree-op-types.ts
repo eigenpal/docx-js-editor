@@ -1,3 +1,5 @@
+import type { InsertTextOp, DeleteTextOp } from './text-edit-op-types.ts';
+import type { SetTextFormFieldDefaultOp } from './text-form-fields.ts';
 // The op vocabulary and effect/rejection contracts (tree-ops seam).
 //
 // This module owns what an op IS — the declarative, JSON-safe `TreeDocOp` shapes, the
@@ -19,7 +21,6 @@ import type {
 } from './tree-op-content-controls.ts';
 import type { TableBorderStyle } from '../table-border-style.ts';
 
-/** JSON-safe color input carried on table cell property ops. Theme/auto require a validated literal. */
 /**
  * A colour as an op carries it: a literal, a theme reference, or automatic.
  *
@@ -37,7 +38,6 @@ export type TreeDocColorValue =
     }
   | { readonly kind: 'auto'; readonly resolvedHex: string };
 
-/** Which cell edges a selected-cell border op targets. */
 /** Which edges a border op addresses — the four sides, the interiors, all, or clear. */
 export type TableBorderTarget =
   | 'all'
@@ -49,7 +49,6 @@ export type TableBorderTarget =
   | 'left'
   | 'right';
 
-/** Concrete edge scopes that apply or clear a complete border spec. */
 /** A {@link TableBorderTarget} that draws something — everything except clear. */
 export type TableBorderEdgeTarget = Exclude<TableBorderTarget, 'none'>;
 
@@ -187,49 +186,8 @@ export type TreeDocOp =
         readonly name: string;
       }[];
     }
-  | {
-      readonly op: 'insertText';
-      readonly paragraphId: string;
-      readonly offset: number;
-      readonly text: string;
-      /**
-       * Write this as a TRACKED insertion, attributed here.
-       *
-       * On the op rather than on the store, so suggesting stays a decision the surface makes
-       * per edit and the write vocabulary stays explicit — a global "everything is tracked
-       * now" flag is exactly what `DocEdits` refuses, because it makes the meaning of an op
-       * depend on state the op does not carry.
-       */
-      readonly revision?: RevisionAttributionInput;
-      /**
-       * When set, the text belongs INSIDE this content control, whatever sits at the offset.
-       *
-       * A boundary offset is owned by the run that starts there, which at a control's trailing
-       * edge is the run after the control — so an offset alone cannot say "append to this field",
-       * the way it cannot say which run of a field result to format (see `targetRunIds`). A
-       * caller that names the control gets the text in the control; one that does not gets the
-       * plain offset rule, which is what a keystroke beside a field means.
-       */
-      readonly inside?: string;
-      /**
-       * Which side of a run BOUNDARY the text joins. Default `'left'` — Word's typing rule:
-       * the next character takes the formatting of the character before the caret.
-       *
-       * `'right'` is for a caller that is not typing but placing text inside the run that
-       * STARTS at the offset — the hyperlink editor rewriting a link's display text, where
-       * landing left of the boundary would put the new text outside the link. Ignored when
-       * the offset falls strictly inside a run, which has no boundary to choose.
-       */
-      readonly bias?: 'left' | 'right';
-    }
-  | {
-      readonly op: 'deleteText';
-      readonly paragraphId: string;
-      readonly start: number;
-      readonly end: number;
-      /** Write this as a TRACKED deletion — the characters stay, wrapped in `w:del`. */
-      readonly revision?: RevisionAttributionInput;
-    }
+  | InsertTextOp
+  | DeleteTextOp
   | {
       /**
        * Mark a paragraph's own MARK as inserted or deleted (`w:pPr/w:rPr/w:ins|w:del`,
@@ -1025,6 +983,7 @@ export type TreeDocOp =
         readonly pageNumberText: string;
       }[];
     }
+  | SetTextFormFieldDefaultOp
   | {
       /**
        * Rewrite recognized fields' cached RESULT runs in place — between the `separate` and
@@ -1137,6 +1096,7 @@ export const TREE_DOC_OP_KINDS = [
   'replaceTocResult',
   'rewriteTocPageNumbers',
   'refreshFieldResults',
+  'setTextFormFieldDefault',
 ] as const satisfies readonly TreeDocOpKind[];
 
 // Compile-time exhaustiveness, matching the legacy `DOC_OP_KINDS` guard: a new op must be

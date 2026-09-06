@@ -680,5 +680,24 @@ export function authorableCoverageFixtures(): JournalCoverageFixture[] {
         updates: [{ paragraphId: paragraphIds(store)[1]!, fieldNodeId: beginId, text: 'new' }],
       };
     }),
+    story(
+      'setTextFormFieldDefault',
+      zipDoc({
+        body: '<w:p><w:r><w:fldChar w:fldCharType="begin"><w:ffData><w:name w:val="InputA"/><w:textInput><w:default w:val="Old"/></w:textInput></w:ffData></w:fldChar></w:r><w:r><w:instrText> FORMTEXT </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>Old</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p><w:sectPr/>',
+      }),
+      (store) => {
+        let fieldNodeId: string | undefined;
+        walkNodes(store.bodyStore().part.root, (node) => {
+          if (fieldNodeId === undefined && node.kind === 'fldChar') fieldNodeId = node.id;
+        });
+        if (!fieldNodeId) throw new Error('missing text form');
+        return {
+          op: 'setTextFormFieldDefault',
+          paragraphId: firstParagraphId(store),
+          fieldNodeId,
+          text: 'New',
+        };
+      }
+    ),
   ];
 }

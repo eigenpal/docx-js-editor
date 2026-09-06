@@ -5,7 +5,12 @@
 // half both of them need.
 
 import { findNode, parentNodeOf, type OoxmlEditResult } from '../package/ooxml-edit.ts';
-import { readOnOffChild, W14_NAMESPACE_URI } from '../package/ooxml-shared.ts';
+import {
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+  readOnOffChild,
+  W14_NAMESPACE_URI,
+} from '../package/ooxml-shared.ts';
 import {
   WML_NAMESPACE_URI,
   type OoxmlElement,
@@ -49,8 +54,8 @@ const SDT_PR_CHILD_NAMESPACE: Readonly<Record<string, string>> = {
 };
 
 /**
- * Shared nesting budget for transparent content-control walks (layout / binding / ops).
- * Beyond this depth the wrapper is treated as opaque rather than recursed.
+ * Nesting budget for control-only and block-control walks.
+ * Paragraph-inline walks use `MAX_INLINE_CONTAINER_DEPTH` across every transparent container.
  */
 export const MAX_CONTENT_CONTROL_NESTING = 32;
 
@@ -263,33 +268,43 @@ export function hasGlossaryPlaceholderRef(control: OoxmlNode): boolean {
 }
 
 /**
- * The innermost inline CONTAINER (hyperlink, field, content control) holding a run, within
- * one paragraph. Null for an ordinary top-level run.
+ * The inline CONTAINERS holding a descendant, innermost first, within one paragraph.
  */
-export function inlineContainerOf(
+export function inlineContainersOf(
   paragraph: { readonly children: readonly OoxmlNode[] },
-  runId: string
-): OoxmlNode | null {
-  let held: OoxmlNode | null = null;
-  const visit = (node: OoxmlNode, inside: OoxmlNode | null): void => {
-    if (node.kind === 'textValue' || held) return;
-    if (node.id === runId) {
-      held = inside;
+  descendantId: string
+): readonly OoxmlNode[] {
+  let held: OoxmlNode[] | null = null;
+  const path: OoxmlNode[] = [];
+  const visit = (node: OoxmlNode, depth: number): void => {
+    if (node.kind === 'textValue' || held !== null) return;
+    if (depth >= MAX_INLINE_CONTAINER_DEPTH) return;
+    if (node.id === descendantId) {
+      held = path.slice().reverse();
       return;
     }
-    const nested =
-      node.kind === 'hyperlink' ||
+    const counted =
       node.kind === 'fldSimple' ||
+      (node.kind === 'generic' && node.localName === 'fldSimple') ||
+      isInlineRunContainer(node) ||
       // A content control is a container the same way a link is: typing at its OUTER edge
       // must not join the run inside and grow the control (pro-review-and-custom-nodes 4.6).
-      node.kind === 'contentControl' ||
-      (node.kind === 'generic' && node.localName === 'fldSimple')
-        ? node
-        : inside;
-    for (const child of node.children) visit(child, nested);
+      isContentControlNode(node);
+    const nextDepth = counted ? depth + 1 : depth;
+    if (counted) path.push(node);
+    for (const child of node.children) visit(child, nextDepth);
+    if (counted) path.pop();
   };
-  for (const child of paragraph.children) visit(child, null);
-  return held;
+  for (const child of paragraph.children) visit(child, 0);
+  return held ?? [];
+}
+
+/** The innermost inline container holding a descendant, or null for a direct child. */
+export function inlineContainerOf(
+  paragraph: { readonly children: readonly OoxmlNode[] },
+  descendantId: string
+): OoxmlNode | null {
+  return inlineContainersOf(paragraph, descendantId)[0] ?? null;
 }
 
 /**

@@ -6524,3 +6524,29 @@ a.docx-hyperlink:focus-visible {
   outline: 2px solid var(--doc-primary);
   outline-offset: 1px;
 }
+
+.docx-editor .docx-text-form-dialog {
+  color: var(--doc-text);
+  background: var(--doc-bg);
+  border: 1px solid var(--doc-border);
+  border-radius: 8px;
+  padding: 24px;
+  max-width: min(420px, 90vw);
+}
+.docx-editor .docx-text-form-dialog label {
+  display: grid;
+  gap: 8px;
+  margin-block: 16px;
+}
+.docx-editor .docx-text-form-dialog input {
+  color: inherit;
+  background: inherit;
+  border: 1px solid var(--doc-border);
+  padding: 8px;
+}
+.docx-editor .docx-text-form-dialog button {
+  margin-inline-end: 8px;
+  padding: 6px 16px;
+  border: 1px solid var(--doc-border);
+  border-radius: 4px;
+}

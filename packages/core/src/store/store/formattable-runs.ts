@@ -30,7 +30,11 @@ import {
   isContentControlNode,
 } from './tree-op-nodes.ts';
 import { isFldSimple } from '../package/field-nodes.ts';
-import { isContentRevisionKind } from '../package/ooxml-shared.ts';
+import {
+  isContentRevisionKind,
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+} from '../package/ooxml-shared.ts';
 import type { OoxmlNode, OoxmlParagraphNode } from '../package/ooxml-tree.ts';
 
 /**
@@ -99,9 +103,6 @@ export function revisionReachedInMode(
   }
 }
 
-/** Matches the cap `segmentsOf` applies to the same containers; see `MAX_INLINE_CONTAINER_DEPTH`. */
-const MAX_FORMATTABLE_RUN_DEPTH = 32;
-
 /**
  * Every `w:r` in a paragraph a formatting read or write may address, in document order.
  *
@@ -167,7 +168,7 @@ function collectFormattableRuns(
   // File-controlled nesting costs an attacker nothing, so the bound is on the walk rather
   // than on the document. Past it the content stays in the tree and simply stops being
   // formattable — the fail-closed direction.
-  if (depth >= MAX_FORMATTABLE_RUN_DEPTH) return;
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return;
   for (const child of children) {
     if (child.kind === 'textValue' || child.kind === 'paragraphProperties') continue;
     if (child.kind === 'run') {
@@ -177,7 +178,7 @@ function collectFormattableRuns(
     // A revision wrapper and a link are both run containers, and either can hold the other:
     // a link inside a tracked insertion is ordinary. Stopping at the wrapper made every
     // property write over tracked text plan zero edits (#493).
-    if (child.kind === 'hyperlink') {
+    if (isInlineRunContainer(child) && !isContentRevisionKind(child.kind)) {
       collectFormattableRuns(child.children, displayMode, authorFilter, depth + 1, out);
       continue;
     }

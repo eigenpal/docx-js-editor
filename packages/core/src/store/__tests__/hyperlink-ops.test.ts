@@ -342,6 +342,29 @@ describe('a many-way split is equivalent to the singles it stands for', () => {
   });
 });
 
+describe('bookmark offsets use the paragraph field model', () => {
+  test('a bookmark after a wrapped complex field follows its one model unit', () => {
+    const part = load(
+      '<w:p><w:smartTag>' +
+        '<w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+        '<w:r><w:instrText> PAGE </w:instrText></w:r>' +
+        '<w:r><w:fldChar w:fldCharType="separate"/></w:r>' +
+        '<w:r><w:t>12</w:t></w:r>' +
+        '<w:r><w:fldChar w:fldCharType="end"/></w:r>' +
+        '<w:bookmarkStart w:id="1" w:name="afterField"/>' +
+        '<w:r><w:t>Target</w:t></w:r>' +
+        '</w:smartTag></w:p>'
+    );
+    const anchor = buildBookmarkIndex(part).get('afterField');
+    const text = paragraphTextOf(part, PARAGRAPH);
+
+    expect(anchor).toBeDefined();
+    expect(anchor?.offset).toBe(1);
+    expect(anchor!.offset).toBeLessThanOrEqual(text.length);
+    expect(text).toBe('\uFFFCTarget');
+  });
+});
+
 describe('setHyperlinkTarget re-aims without replacing the element', () => {
   const LINKED =
     '<w:p><w:hyperlink r:id="rId9" w:history="1" w:tgtFrame="_blank">' +

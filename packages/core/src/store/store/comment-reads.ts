@@ -34,13 +34,14 @@ import {
   type OoxmlParagraphNode,
   type OoxmlPart,
 } from '../package/ooxml-tree.ts';
-import { isContentRevisionKind } from '../package/ooxml-shared.ts';
+import { isInlineRunContainer, MAX_INLINE_CONTAINER_DEPTH } from '../package/ooxml-shared.ts';
 import {
   chargePart,
   createCommentScanBudget,
   walkCharged,
 } from '../package/comment-lifecycle-scan.ts';
 import { paragraphOffsetIndex, transientParagraphOffsetIndex } from './tree-op-segments.ts';
+import { contentControlContentOf, isContentControlNode } from './tree-op-nodes.ts';
 import { createRecentRootCache } from './recent-root-cache.ts';
 
 /** The `w15` namespace: `commentsExtended.xml` — thread parent and resolved state. */
@@ -156,16 +157,16 @@ function computeMarkersInParagraph(
   // Nearly every paragraph has no marker. Check the exact bounded containers the real walk
   // descends before building a full node-offset index, which is the expensive retained value.
   const hasMarker = (children: readonly OoxmlNode[], depth: number): boolean => {
+    if (depth >= MAX_INLINE_CONTAINER_DEPTH) return false;
     for (const child of children) {
       if (child.kind === 'textValue') continue;
       if (child.kind === 'commentRangeStart' || child.kind === 'commentRangeEnd') return true;
-      if (
-        (child.kind === 'hyperlink' || isContentRevisionKind(child.kind)) &&
-        depth < 32 &&
-        hasMarker(child.children, depth + 1)
-      ) {
+      if (isInlineRunContainer(child) && hasMarker(child.children, depth + 1)) {
         return true;
       }
+      if (!isContentControlNode(child)) continue;
+      const content = contentControlContentOf(child);
+      if (content && hasMarker(content.children, depth + 1)) return true;
     }
     return false;
   };
@@ -175,6 +176,7 @@ function computeMarkersInParagraph(
     : transientParagraphOffsetIndex(paragraph);
   const points: MarkerPoint[] = [];
   const walk = (children: readonly OoxmlNode[], depth: number): void => {
+    if (depth >= MAX_INLINE_CONTAINER_DEPTH) return;
     for (const child of children) {
       if (child.kind === 'textValue') continue;
       if (child.kind === 'commentRangeStart' || child.kind === 'commentRangeEnd') {
@@ -195,9 +197,13 @@ function computeMarkersInParagraph(
       // A link is a run container like a revision wrapper, and either can hold the other.
       // Depth is bounded for the same reason the layout walk bounds it: nesting is the
       // cheapest unbounded axis in an attacker-controlled file.
-      if ((child.kind === 'hyperlink' || isContentRevisionKind(child.kind)) && depth < 32) {
+      if (isInlineRunContainer(child)) {
         walk(child.children, depth + 1);
+        continue;
       }
+      if (!isContentControlNode(child)) continue;
+      const content = contentControlContentOf(child);
+      if (content) walk(content.children, depth + 1);
     }
   };
   walk(paragraph.children, 0);

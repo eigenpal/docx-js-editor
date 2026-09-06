@@ -810,5 +810,12 @@
     "replaced": "Replaced",
     "replacedWith": "with",
     "commentRefused": "Could not add the comment"
+  },
+  "textFormField": {
+    "title": "Text Form Field Options",
+    "defaultText": "Default text",
+    "apply": "OK",
+    "cancel": "Cancel",
+    "unavailable": "This field cannot be changed."
   }
 }

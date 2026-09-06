@@ -12,6 +12,10 @@ import { createDocxEditor } from '../docx-editor.ts';
 import { contentControlSummaryOf, inlineContentControlsAt } from '../content-controls.ts';
 import type { OoxmlElement, OoxmlNode } from '@docx-editor.dev/core/store';
 import { WML_NAMESPACE_URI } from '@docx-editor.dev/core/store';
+import {
+  MAX_INLINE_CONTAINER_DEPTH,
+  paragraphOffsetIndex,
+} from '../../store/store/tree-op-segments.ts';
 
 const W = WML_NAMESPACE_URI;
 const CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
@@ -366,6 +370,46 @@ describe('contentControlSummaryOf (typed-shaped nodes)', () => {
       'outer-tag',
     ]);
     expect(inlineContentControlsAt(paragraph, 4)).toEqual([]);
+  });
+
+  test('a capped control contributes no offset before a visible control', () => {
+    const control = (tag: string, text: string): OoxmlElement =>
+      element('contentControl', 'sdt', [
+        element('contentControlProperties', 'sdtPr', [element('tag', 'tag', [], [wmlVal(tag)])]),
+        element('contentControlContent', 'sdtContent', [runElement(text)]),
+      ]);
+    let capped: OoxmlElement = control('capped', 'hidden');
+    for (let depth = 0; depth < MAX_INLINE_CONTAINER_DEPTH; depth += 1) {
+      capped = element('generic', 'smartTag', [capped]);
+    }
+    const visible = control('visible', 'shown');
+    const paragraph = element('paragraph', 'p', [capped, visible]);
+    const span = paragraphOffsetIndex(paragraph as never).spanOf(visible);
+
+    expect(span).toEqual({ start: 0, end: 5 });
+    expect(inlineContentControlsAt(paragraph, span!.start).map((summary) => summary.tag)).toEqual([
+      'visible',
+    ]);
+
+    let cappedXml = inlineSdt('<w:tag w:val="capped"/>', run('hidden'));
+    for (let depth = 0; depth < MAX_INLINE_CONTAINER_DEPTH; depth += 1) {
+      cappedXml = `<w:smartTag>${cappedXml}</w:smartTag>`;
+    }
+    const editor = mount(pMixed(cappedXml + inlineSdt('<w:tag w:val="visible"/>', run('shown'))));
+    caretAt(editor.surface!, span!.start);
+    expect(editor.query({ type: 'contentControlAt' })).toMatchObject({ tag: 'visible' });
+  });
+
+  test('contentControlAt ignores a misplaced wrapper inside a run', () => {
+    const editor = mount(
+      pMixed(
+        '<w:r><w:t>A</w:t><w:smartTag><w:r><w:t>hidden</w:t></w:r></w:smartTag>' +
+          '<w:t>B</w:t></w:r>' +
+          inlineSdt('<w:tag w:val="visible"/>', run('shown'))
+      )
+    );
+    caretAt(editor.surface!, 2);
+    expect(editor.query({ type: 'contentControlAt' })).toMatchObject({ tag: 'visible' });
   });
 
   test('maps typed contentControlProperties to summary fields', () => {

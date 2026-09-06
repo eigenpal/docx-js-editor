@@ -98,3 +98,18 @@ macros, DDE instructions, OLE content, or external include instructions.
 - [Headers and footers](/docs/2.x/guides/headers-footers): Add page-number fields.
 - [Loading and saving](/docs/2.x/guides/loading-and-saving): Save updated field results.
 - [Word fidelity](/docs/2.x/word-fidelity): Review field support status.
+
+## Legacy text form fields
+
+In an unprotected document, replacing the whole `FORMTEXT` result removes the
+field definition. Editing part of its result keeps the definition.
+Double-click a text form field to change its default text and displayed result.
+
+In a document protected for forms, typing changes the result and keeps the
+field definition and default. Press Tab or Shift+Tab to select another enabled
+text form field. Other document text remains protected.
+
+The default-text dialog and protected filling accept plain text results.
+They refuse results with nested fields, revision markup, or other structure.
+The editor preserves other form-field options but does not apply their text
+format or maximum-length constraints. It never runs entry or exit macros.

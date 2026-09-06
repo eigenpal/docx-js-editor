@@ -8,7 +8,13 @@
 // `contentControlContent` nodes are the authority once the reader emits them. Both paths
 // share one bound so nesting cannot recurse without limit.
 
-import { isContentRevisionKind, WML_NAMESPACE_URI } from './ooxml-shared.ts';
+import {
+  isContentRevisionKind,
+  isInlineRunContainer,
+  MAX_INLINE_CONTAINER_DEPTH,
+  WML_NAMESPACE_URI,
+} from './ooxml-shared.ts';
+import { blockStoryContainerChildren } from './story-blocks.ts';
 import type {
   OoxmlContentControlContentNode,
   OoxmlContentControlNode,
@@ -72,8 +78,9 @@ export function contentControlContentOf(node: OoxmlNode): readonly OoxmlNode[] |
 /**
  * Children of every `w:sdtContent` under a control, in document order.
  *
- * Does not recurse into nested controls — callers that flatten blocks or inline runs do that
- * with their own depth counter against {@link MAX_CONTENT_CONTROL_NESTING}.
+ * Does not recurse into nested controls. Block callers use
+ * {@link MAX_CONTENT_CONTROL_NESTING}; paragraph callers use
+ * {@link MAX_INLINE_CONTAINER_DEPTH} across all transparent containers.
  */
 export function contentControlContentChildren(control: OoxmlNode): readonly OoxmlNode[] {
   if (control.kind === 'textValue' || !isContentControl(control)) return [];
@@ -88,7 +95,7 @@ export function contentControlContentChildren(control: OoxmlNode): readonly Ooxm
 }
 
 /**
- * Collect paragraph and table blocks from a sibling list, flattening through content-control
+ * Collect paragraph and table blocks from a sibling list, flattening through transparent block
  * wrappers up to {@link MAX_CONTENT_CONTROL_NESTING}.
  *
  * `accept` filters which typed blocks are kept (e.g. skip revision-removed paragraphs). When
@@ -108,8 +115,9 @@ export function collectFlowBlocks(
         if (accept(child)) blocks.push(child);
         continue;
       }
-      if (isContentControl(child) && nest < MAX_CONTENT_CONTROL_NESTING) {
-        collect(contentControlContentChildren(child), nest + 1);
+      const nested = blockStoryContainerChildren(child);
+      if (nested !== null && nest < MAX_CONTENT_CONTROL_NESTING) {
+        collect(nested, nest + 1);
       }
     }
   };
@@ -118,8 +126,8 @@ export function collectFlowBlocks(
 }
 
 /**
- * Story blocks in document order, flattening block-level content controls — same shape as
- * layout's `storyBlocks` and store `bodyBlocks`.
+ * Story blocks in document order, flattening transparent block wrappers — same shape as layout's
+ * `storyBlocks` and store `bodyBlocks`.
  */
 export function walkStoryBlocks(
   children: readonly OoxmlNode[],
@@ -132,9 +140,9 @@ export function walkStoryBlocks(
       visit(child);
       continue;
     }
-    if (isContentControl(child) && depth < MAX_CONTENT_CONTROL_NESTING) {
-      const content = contentControlContentOf(child);
-      if (content) walkStoryBlocks(content, depth + 1, visit);
+    const nested = blockStoryContainerChildren(child);
+    if (nested !== null && depth < MAX_CONTENT_CONTROL_NESTING) {
+      walkStoryBlocks(nested, depth + 1, visit);
     }
   }
 }
@@ -159,9 +167,11 @@ export function walkAllStoryParagraphs(
           walkAllStoryParagraphs(cell.children, sdtDepth, visit);
         }
       }
-    } else if (isContentControl(child) && sdtDepth < MAX_CONTENT_CONTROL_NESTING) {
-      const content = contentControlContentOf(child);
-      if (content) walkAllStoryParagraphs(content, sdtDepth + 1, visit);
+    } else {
+      const nested = blockStoryContainerChildren(child);
+      if (nested !== null && sdtDepth < MAX_CONTENT_CONTROL_NESTING) {
+        walkAllStoryParagraphs(nested, sdtDepth + 1, visit);
+      }
     }
   }
 }
@@ -179,25 +189,27 @@ export function walkParagraphInline(
   visit: (child: OoxmlNode) => void,
   options: { readonly descendRevisions?: boolean } = {}
 ): void {
+  if (depth >= MAX_INLINE_CONTAINER_DEPTH) return;
   for (const child of children) {
     if (child.kind === 'textValue' || child.kind === 'paragraphProperties') continue;
     if (child.kind === 'run') {
       visit(child);
       continue;
     }
-    if (
-      child.kind === 'hyperlink' ||
-      (options.descendRevisions === true && isContentRevisionKind(child.kind))
-    ) {
-      if (depth < MAX_CONTENT_CONTROL_NESTING)
-        walkParagraphInline(child.children, depth + 1, visit, options);
+    // A revision wrapper is a run container like the rest, but descending it is OPT-IN: a
+    // caller addressing runs inside tracked changes asks for it, and one that does not must
+    // still meet the wrapper as an opaque node.
+    if (isInlineRunContainer(child)) {
+      if (isContentRevisionKind(child.kind) && options.descendRevisions !== true) {
+        visit(child);
+        continue;
+      }
+      walkParagraphInline(child.children, depth + 1, visit, options);
       continue;
     }
     if (isContentControl(child)) {
-      if (depth < MAX_CONTENT_CONTROL_NESTING) {
-        const content = contentControlContentOf(child);
-        if (content) walkParagraphInline(content, depth + 1, visit, options);
-      }
+      const content = contentControlContentOf(child);
+      if (content) walkParagraphInline(content, depth + 1, visit, options);
       continue;
     }
     visit(child);

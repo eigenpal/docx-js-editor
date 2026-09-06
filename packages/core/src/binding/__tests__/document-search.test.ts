@@ -134,6 +134,29 @@ describe('collectTextMatches', () => {
     expect(matches[0]!.runOffset).toBe(1);
   });
 
+  test('finds and addresses runs inside each inline run wrapper', () => {
+    const body = para(
+      run('start '),
+      `<w:smartTag>${run('smart')}</w:smartTag>`,
+      `<w:customXml>${run('custom')}</w:customXml>`,
+      `<w:dir>${run('direction')}</w:dir>`,
+      `<w:bdo>${run('override')}</w:bdo>`
+    );
+    const expected = [
+      ['smart', 1],
+      ['custom', 2],
+      ['direction', 3],
+      ['override', 4],
+    ] as const;
+
+    for (const [query, runIndex] of expected) {
+      const matches = search(body, query).matches;
+      expect(matches).toHaveLength(1);
+      expect(matches[0]!.runIndex).toBe(runIndex);
+      expect(matches[0]!.runOffset).toBe(0);
+    }
+  });
+
   test('counts a tab as one character, so offsets match the tree ops', () => {
     const body = para(`<w:r><w:tab/><w:t>Exhibit</w:t></w:r>`);
     const { matches } = search(body, 'Exhibit');
