@@ -14,13 +14,16 @@ export interface CellContentInsets {
 
 export function contentInsets(
   margins: CellMarginsPt,
-  borders: SemanticTableCell['borders']
+  borders: SemanticTableCell['borders'],
+  cellSpacingPt = 0
 ): CellContentInsets {
-  // Border extents shrink the content box (border-box model) so thick rules do not cover text.
+  // A collapsed horizontal rule is centered on the shared row boundary.
+  // Separated cells retain the full rule inside each cell's content inset.
+  const verticalFactor = Number.isFinite(cellSpacingPt) && cellSpacingPt > 0 ? 1 : 0.5;
   return {
-    top: margins.top + borderExtentPt(borders.top),
+    top: margins.top + borderExtentPt(borders.top) * verticalFactor,
     right: margins.right + borderExtentPt(borders.right),
-    bottom: margins.bottom + borderExtentPt(borders.bottom),
+    bottom: margins.bottom + borderExtentPt(borders.bottom) * verticalFactor,
     left: margins.left + borderExtentPt(borders.left),
   };
 }

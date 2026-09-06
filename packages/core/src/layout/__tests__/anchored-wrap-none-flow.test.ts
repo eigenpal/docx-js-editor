@@ -290,7 +290,8 @@ describe('anchored wrapNone flow', () => {
     expect(wrapSquare.pages).toHaveLength(2);
     const squarePage = wrapSquare.pages[1]!;
     expect(anchoredOf(squarePage)[0]?.wrap).toBe('square');
-    expect(spanStartsOf(squarePage, ANCHOR_PARAGRAPH_ID)).toEqual([17.28, 17.28, 43.2, 43.2]);
+    // Each anchor authors a 114300 EMU (9pt) right-side text distance.
+    expect(spanStartsOf(squarePage, ANCHOR_PARAGRAPH_ID)).toEqual([26.28, 26.28, 52.2, 52.2]);
   });
 
   test('a page-sized paragraph-relative offset resolves unclamped and adds no page', () => {

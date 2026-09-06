@@ -2016,7 +2016,7 @@ function layoutBlocksPass(
     const live =
       zones.length > 0 ? topAndBottomSkipBeforeLine(cursorY, pendingLine.height, zones) : 0;
     const breakSkip = pendingLine.exclusionSkipBefore ?? 0;
-    return live > 0.001 ? live : breakSkip;
+    return Math.max(live, breakSkip);
   };
 
   const layoutTableInFlow = (table: OoxmlElement): boolean => {

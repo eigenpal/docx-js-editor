@@ -156,6 +156,8 @@ Floating pictures: select in the canvas, drag to move (`setImagePosition`), eigh
 
 Wrap changes are **layout-structural**: exclusion zones feed line breaking before paint. Square/tight/through use authored polygons (with distances and `effectExtent`); top-and-bottom and square variants reflow body text accordingly. Header/footer rule: page-relative anchored letterheads do **not** inflate the header box. Body flow height still sizes the furniture band.
 
+Text distances inherit each missing side from `wp:anchor`; an explicit wrap-child value, including zero, overrides that side. When square or rectangular tight wrapping leaves no passage wide enough for the next glyph, text clears the image before continuing. The clearance participates in pagination without repeating the gap on subsequent lines. Nonrectangular contours keep their existing scanline behavior.
+
 ## Accessibility
 
 Alt text uses `@descr`, then `@title`; `@name` is never announced. A picture with neither description nor title is exposed as decorative. Hidden drawings (`@hidden`) suppress paint, hit-testing, and handles while remaining preserved on save.

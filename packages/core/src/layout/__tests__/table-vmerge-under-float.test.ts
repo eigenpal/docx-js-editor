@@ -223,9 +223,27 @@ describe('a merged head under a float the plan could not see', () => {
           ],
         ],
       ]);
-      expect(paintedText(layoutUnderFloat(tall, zones, ROOMY))).not.toBe(
-        paintedText(layoutWithoutFloat(tall, ROOMY))
-      );
+      const withFloat = layoutUnderFloat(tall, zones, ROOMY);
+      const withoutFloat = layoutWithoutFloat(tall, ROOMY);
+      const coveredLineTop = (layout: SemanticLayout): number => {
+        for (const page of layout.pages)
+          for (const fragment of page.fragments) {
+            if (fragment.kind !== 'table') continue;
+            for (const row of fragment.rows)
+              for (const cell of row.cells)
+                for (const block of cell.blocks) {
+                  if (block.kind !== 'paragraph') continue;
+                  for (const line of block.lines)
+                    if (line.spans.some((span) => span.text.includes('w0'))) return line.box.y;
+                }
+          }
+        throw new Error('covered row text was not placed');
+      };
+      // A gap narrower than one glyph now moves the whole line below the float.
+      // Text segmentation need not change, so verify clearance instead of chopped words.
+      expect(coveredLineTop(withFloat)).toBeGreaterThan(coveredLineTop(withoutFloat));
+      expect(coveredLineTop(withFloat)).toBeGreaterThanOrEqual(80);
+      expect(paintedText(withFloat)).toBe(paintedText(withoutFloat));
     });
   });
 

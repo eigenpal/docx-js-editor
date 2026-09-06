@@ -101,7 +101,7 @@ import type {
 import { firstLineShift, type ResolvedListItem } from './list-resolve.ts';
 import { publishListMarker } from './list-marker.ts';
 import { annotateTableFragmentGeometry } from './semantic-table-interaction.ts';
-import { borderExtentPt, type TableBorderOwnershipBudget } from './table-borders.ts';
+import type { TableBorderOwnershipBudget } from './table-borders.ts';
 import { type TableVMergeResolveBudget } from './table-vmerge.ts';
 import { acceptVMergeSpansAt, planTableVMergeHeights } from './table-vmerge-heights.ts';
 import { contentInsets } from './table-cell-geometry.ts';
@@ -647,9 +647,10 @@ function placeCellParagraph(
     const afterExtra = isLastLine && includeAfter && !collapseHeight ? spacing.after : 0;
     const skipBefore = collapseHeight
       ? 0
-      : pageZones.length > 0
-        ? topAndBottomSkipBeforeLine(y, pendingLine.height, pageZones)
-        : (pendingLine.exclusionSkipBefore ?? 0);
+      : Math.max(
+          pageZones.length > 0 ? topAndBottomSkipBeforeLine(y, pendingLine.height, pageZones) : 0,
+          pendingLine.exclusionSkipBefore ?? 0
+        );
     const lineBottom = collapseHeight
       ? y
       : y + skipBefore + pendingLine.height + borderExtra + afterExtra;
@@ -1314,8 +1315,8 @@ export function layoutRowFragmentBounded(
     const inset = Math.min(gap, Math.max((slotW - MIN_CELL_BOX_PT) / 2, 0));
     const cellX = slotX + inset;
     const cellW = Math.max(slotW - 2 * inset, MIN_CELL_BOX_PT);
-    const insets = contentInsets(cell.margins, cell.borders);
-    const topInset = isContinuation ? borderExtentPt(cell.borders.top) : insets.top;
+    const insets = contentInsets(cell.margins, cell.borders, cellSpacingPt);
+    const topInset = isContinuation ? insets.top - cell.margins.top : insets.top;
     // Always reserve bottom inset so the fragment never paints into the margin/border band.
     // A detached head answers to the page and to its own SPAN, and to nothing about this
     // row: `hRule="exact"` fixes the height of the ROW (17.18.37) while the merged content

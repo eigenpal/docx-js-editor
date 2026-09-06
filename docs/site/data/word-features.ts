@@ -388,7 +388,7 @@ export const wordFeatures: WordFeature[] = [
     roundTrip: 'full',
     tier: 'community',
     notes:
-      'Both adapters expose contextual toolbar controls that set borders and fill on the selected cells. Authored table and cell borders and table-style shading render and round-trip.',
+      'Both adapters expose contextual toolbar controls that set borders and fill on the selected cells. Authored borders and table-style shading render and round-trip. Collapsed horizontal borders contribute half their stroke to each vertical content inset; separated borders retain the full stroke.',
   },
   {
     id: 'tables.merge',
@@ -480,7 +480,7 @@ export const wordFeatures: WordFeature[] = [
     tier: 'community',
     docsLink: '/docs/2.x/guides/images',
     notes:
-      'Nine wrap modes, exclusion reflow, z-order, and drag and resize in both adapters. Both share setImageWrapType and toolbarCommandState.',
+      'Nine wrap modes, exclusion reflow, z-order, and drag and resize in both adapters. Authored anchor text distances are preserved. Text clears square and rectangular tight-wrap gaps narrower than the next glyph. Both share setImageWrapType and toolbarCommandState.',
   },
   {
     id: 'images.bmp-webp',

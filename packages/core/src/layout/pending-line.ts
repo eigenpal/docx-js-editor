@@ -38,7 +38,7 @@ export interface PendingLine {
   columnBreakAfter?: boolean;
   /** Model ranges on this line covering deleted content; see {@link LineRecord.deletedRanges}. */
   deletedRanges?: readonly ModelRange[];
-  /** Vertical gap inserted before this line to clear a topAndBottom exclusion band. */
+  /** Vertical gap inserted before this line to clear a drawing exclusion band. */
   exclusionSkipBefore?: number;
   /** Tracked anchored-drawing attributions on this line; see {@link LineRecord.anchorRevisions}. */
   anchorRevisions?: readonly RevisionAttribution[];
@@ -171,10 +171,10 @@ export function pendingLineFlowExtentAtPlacement(
   zones: readonly ExclusionZone[],
   tail = 0
 ): number {
-  const skip =
-    zones.length > 0
-      ? topAndBottomSkipBeforeLine(lineTopY, line.height, zones)
-      : (line.exclusionSkipBefore ?? 0);
+  const skip = Math.max(
+    zones.length > 0 ? topAndBottomSkipBeforeLine(lineTopY, line.height, zones) : 0,
+    line.exclusionSkipBefore ?? 0
+  );
   return skip + Math.max(0, line.height - line.trailingSpacing) + tail;
 }
 
