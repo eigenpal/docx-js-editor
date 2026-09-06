@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedFrom": {
     "package": "docxeditor-declarations (compat/docxeditor/declarations.ts)",
-    "version": "2.15.1"
+    "version": "2.16.0"
   },
   "symbols": {
     "Body": {

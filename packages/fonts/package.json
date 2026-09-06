@@ -1,6 +1,6 @@
 {
   "name": "@docx-editor.dev/fonts",
-  "version": "2.15.1",
+  "version": "2.16.0",
   "description": "Open-licensed substitutes for common Word fonts, packaged for @docx-editor.dev shaped measurement.",
   "sideEffects": false,
   "type": "module",

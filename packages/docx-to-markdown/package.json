@@ -29,10 +29,10 @@
     "api:check": "node ../../scripts/api-extractor.mjs --package @docx-editor.dev/docx-to-markdown"
   },
   "peerDependencies": {
-    "@docx-editor.dev/core": "~2.15.0"
+    "@docx-editor.dev/core": "~2.16.0"
   },
   "dependencies": {
-    "@docx-editor.dev/fonts": "~2.15.1"
+    "@docx-editor.dev/fonts": "~2.16.0"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.8.3",
