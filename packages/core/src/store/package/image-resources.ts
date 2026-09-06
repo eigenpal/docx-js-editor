@@ -4,6 +4,7 @@
 // the decode port are authoritative. Validated bytes never enter public state.
 
 import { sha256FontBytes } from './sha256.ts';
+import { createLegacyGraphicResolver } from './legacy-vml-resources.ts';
 import {
   createValidatedImageBytesRegistry,
   type ValidatedImageBytesHandle,
@@ -13,9 +14,9 @@ import {
   IMAGE_RELATIONSHIP_TYPE,
   resolveImageRelationship,
   type ImageRelationshipResolution,
-  type RelationshipRecord,
 } from './relationships.ts';
-import { projectDrawingsInPackage, type DrawingProjection } from './drawing-projection.ts';
+import type { DrawingProjection } from './drawing-projection.ts';
+import { countDrawingImageReferences } from './image-reference-count.ts';
 import type { OoxmlPackage } from './ooxml-package.ts';
 import { readPngPhysicalDensity } from './png-physical-density.ts';
 import {
@@ -832,17 +833,13 @@ function relationshipFingerprint(
   return `${ownerPartName}\0${relationshipId}\0missing`;
 }
 
-function relationshipsFor(pkg: OoxmlPackage, ownerPartName: string): readonly RelationshipRecord[] {
-  return pkg.relationships.get(ownerPartName) ?? [];
-}
-
 function resolveEmbeddedPartName(
   pkg: OoxmlPackage,
   ownerPartName: string,
   relationshipId: string
 ): ImageRelationshipResolution {
   return resolveImageRelationship(
-    relationshipsFor(pkg, ownerPartName),
+    pkg.relationships.get(ownerPartName) ?? [],
     ownerPartName,
     relationshipId
   );
@@ -856,14 +853,7 @@ interface CachedLookupEntry {
 
 /** Package-wide live drawing references to a media part name. */
 export function liveDrawingReferenceCount(pkg: OoxmlPackage, partName: string): number {
-  let count = 0;
-  for (const projection of projectDrawingsInPackage(pkg)) {
-    const embedId = projection.picture?.embeddedRelationshipId;
-    if (!embedId) continue;
-    const resolved = resolveEmbeddedPartName(pkg, projection.ownerPartName, embedId);
-    if (resolved.mode === 'internal' && resolved.partName === partName) count += 1;
-  }
-  return count;
+  return countDrawingImageReferences(pkg, partName);
 }
 
 /** How the image cache decodes, and what it will spend doing so. */
@@ -1414,10 +1404,18 @@ function createImageResourceCacheInternal(
     );
   };
 
+  const resolveLegacyGraphic = createLegacyGraphicResolver({
+    resolveEmbedded,
+    registry: validatedBytesRegistry,
+    limits,
+    ensureActive,
+  });
+
   const resolveForProjection = async (
     projection: DrawingProjection
   ): Promise<ImageResourceState> => {
     ensureActive();
+    if (projection.legacyGraphic) return resolveLegacyGraphic(projection);
     if (!projection.picture) {
       return unrenderable(null, 'unknown', 'non-picture-graphic');
     }

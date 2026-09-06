@@ -24,6 +24,8 @@ import {
   type TreeDocOp,
 } from '@docx-editor.dev/core/store';
 import { walkParagraphInline } from '../store/package/content-control-walk.ts';
+import { isLegacyVmlAtom } from '../store/package/legacy-vml-projection.ts';
+import { FIELD_ATOM_CHAR } from '../store/package/field-nodes.ts';
 import { runPropsOf, treeSchema } from './tree-schema.ts';
 
 /**
@@ -60,7 +62,14 @@ type Token =
   | { readonly kind: 'tab' }
   | { readonly kind: 'hardBreak' }
   | { readonly kind: 'pageBreak' }
-  | { readonly kind: 'unknown'; readonly nodeId: string; readonly label: string };
+  | {
+      readonly kind: 'unknown';
+      readonly nodeId: string;
+      readonly label: string;
+      readonly modelLength: 0 | 1;
+    };
+
+type TokenReader = (node: PMNode) => Token[];
 
 function propsEqual(a: readonly OoxmlProperty[], b: readonly OoxmlProperty[]): boolean {
   return JSON.stringify(normalizeProps(a)) === JSON.stringify(normalizeProps(b));
@@ -152,7 +161,12 @@ function tokensOfParagraph(paragraph: OoxmlNode): Token[] {
         if (text.length > 0) tokens.push({ kind: 'text', text, props });
         continue;
       }
-      tokens.push({ kind: 'unknown', nodeId: grand.id, label: unknownLabel(grand) });
+      tokens.push({
+        kind: 'unknown',
+        nodeId: grand.id,
+        label: unknownLabel(grand),
+        modelLength: isLegacyVmlAtom(grand) ? 1 : 0,
+      });
     }
   };
   walkParagraphInline(paragraph.children, 0, (child) => {
@@ -161,7 +175,7 @@ function tokensOfParagraph(paragraph: OoxmlNode): Token[] {
       return;
     }
     // Paragraph-level unknown content keeps a position in the inline sequence.
-    tokens.push({ kind: 'unknown', nodeId: child.id, label: unknownLabel(child) });
+    tokens.push({ kind: 'unknown', nodeId: child.id, label: unknownLabel(child), modelLength: 0 });
   });
   return tokens;
 }
@@ -274,7 +288,7 @@ export function treeToDoc(part: OoxmlPart): PMNode {
 }
 
 /** Read a PM paragraph back into the same token shape, for comparison. */
-function tokensOfNode(node: PMNode): Token[] {
+function tokensOfNode(node: PMNode, legacyAtomIds: ReadonlySet<string>): Token[] {
   const tokens: Token[] = [];
   node.forEach((child) => {
     if (child.isText && child.text) {
@@ -289,6 +303,7 @@ function tokensOfNode(node: PMNode): Token[] {
         kind: 'unknown',
         nodeId: String(child.attrs.nodeId ?? ''),
         label: String(child.attrs.label ?? ''),
+        modelLength: legacyAtomIds.has(String(child.attrs.nodeId ?? '')) ? 1 : 0,
       });
     }
   });
@@ -303,7 +318,8 @@ function textOf(tokens: readonly Token[]): string {
     else if (token.kind === 'tab') text += '\t';
     else if (token.kind === 'hardBreak') text += '\n';
     else if (token.kind === 'pageBreak') text += PAGE_BREAK_CHAR;
-    // An unknown token occupies no text offset: it is not addressable content.
+    else if (token.modelLength === 1) text += FIELD_ATOM_CHAR;
+    // Other opaque content keeps its existing zero-length model.
   }
   return text;
 }
@@ -321,7 +337,10 @@ function unknownPositions(tokens: readonly Token[]): string[] {
     if (token.kind === 'text') offset += token.text.length;
     else if (token.kind === 'tab' || token.kind === 'hardBreak' || token.kind === 'pageBreak')
       offset += 1;
-    else positions.push(`${token.nodeId}@${offset}`);
+    else {
+      positions.push(`${token.nodeId}@${offset}`);
+      offset += token.modelLength;
+    }
   }
   return positions;
 }
@@ -354,6 +373,9 @@ function propsByOffset(tokens: readonly Token[]): (readonly OoxmlProperty[])[] {
       // A tab or break carries its run's properties too, but the projection does not model
       // them, so it inherits whatever the surrounding text has rather than claiming none.
       at.push(at[at.length - 1] ?? []);
+    } else if (token.kind === 'unknown' && token.modelLength === 1) {
+      // Reserve the model unit without pretending the picture has editable text marks.
+      at.push([]);
     }
   }
   return at;
@@ -368,11 +390,29 @@ function paragraphOps(
 ): MapResult {
   const ops: TreeDocOp[] = [];
 
+  const beforeText = textOf(before);
+  const afterText = textOf(after);
+  const range = diffRange(beforeText, afterText);
+
   // Unknown content must survive an edit unchanged and in place. A projection that lost or
   // reordered it means the editor mutated something it does not model.
-  const beforeUnknown = unknownPositions(before);
-  const afterUnknown = unknownPositions(after);
-  if (JSON.stringify(beforeUnknown) !== JSON.stringify(afterUnknown)) {
+  const shiftedBefore: string[] = [];
+  let offset = 0;
+  let crossesAtom = false;
+  for (const token of before) {
+    if (token.kind !== 'unknown') {
+      offset += token.kind === 'text' ? token.text.length : 1;
+      continue;
+    }
+    let projectedOffset = offset;
+    if (token.modelLength === 1 && range) {
+      if (range.start < offset + 1 && range.endBefore > offset) crossesAtom = true;
+      if (range.endBefore <= offset) projectedOffset += range.endAfter - range.endBefore;
+    }
+    shiftedBefore.push(`${token.nodeId}@${projectedOffset}`);
+    offset += token.modelLength;
+  }
+  if (crossesAtom || JSON.stringify(shiftedBefore) !== JSON.stringify(unknownPositions(after))) {
     return { ok: false, reason: 'unknown-content-moved', detail: paragraphId };
   }
 
@@ -380,9 +420,6 @@ function paragraphOps(
     ops.push({ op: 'setParagraphProperties', paragraphId, properties: normalizeProps(afterProps) });
   }
 
-  const beforeText = textOf(before);
-  const afterText = textOf(after);
-  const range = diffRange(beforeText, afterText);
   if (range) {
     // Delete first, then insert at the same offset: two ops that compose to a replacement
     // without needing a replace primitive.
@@ -468,6 +505,15 @@ function paragraphOps(
  */
 export function docToTreeOps(part: OoxmlPart, doc: PMNode): MapResult {
   const treeParagraphs = bodyParagraphs(part);
+  // Only canonical run tokens decide which unknown nodes occupy one model unit.
+  // A projection cannot forge a length, or promote an opaque descendant to an atom.
+  const legacyAtomIds = new Set<string>();
+  for (const paragraph of treeParagraphs) {
+    for (const token of tokensOfParagraph(paragraph)) {
+      if (token.kind === 'unknown' && token.modelLength === 1) legacyAtomIds.add(token.nodeId);
+    }
+  }
+  const readTokens: TokenReader = (node) => tokensOfNode(node, legacyAtomIds);
   const docParagraphs: PMNode[] = [];
   doc.forEach((node) => {
     if (node.type.name === 'paragraph') docParagraphs.push(node);
@@ -488,7 +534,7 @@ export function docToTreeOps(part: OoxmlPart, doc: PMNode): MapResult {
       const result = paragraphOps(
         paragraph.id,
         tokensOfParagraph(paragraph),
-        tokensOfNode(node),
+        readTokens(node),
         propertiesOf(
           paragraph.kind === 'textValue'
             ? undefined
@@ -502,8 +548,8 @@ export function docToTreeOps(part: OoxmlPart, doc: PMNode): MapResult {
     return { ok: true, ops };
   }
 
-  if (delta === 1) return mapSplit(treeParagraphs, docParagraphs);
-  if (delta === -1) return mapJoin(treeParagraphs, docParagraphs);
+  if (delta === 1) return mapSplit(treeParagraphs, docParagraphs, readTokens);
+  if (delta === -1) return mapJoin(treeParagraphs, docParagraphs, readTokens);
   return { ok: false, reason: 'paragraph-count-unexplained', detail: String(delta) };
 }
 
@@ -517,7 +563,8 @@ export function docToTreeOps(part: OoxmlPart, doc: PMNode): MapResult {
  */
 function mapSplit(
   treeParagraphs: readonly OoxmlNode[],
-  docParagraphs: readonly PMNode[]
+  docParagraphs: readonly PMNode[],
+  readTokens: TokenReader
 ): MapResult {
   for (let index = 0; index < treeParagraphs.length; index += 1) {
     const source = treeParagraphs[index]!;
@@ -530,12 +577,20 @@ function mapSplit(
     const tailId = tail.attrs.nodeId;
     if (tailId !== null && tailId !== source.id) continue;
 
-    const headText = textOf(tokensOfNode(head));
-    if (headText + textOf(tokensOfNode(tail)) !== textOf(tokensOfParagraph(source))) continue;
-    if (!alignsBefore(treeParagraphs, docParagraphs, index)) continue;
+    const headTokens = readTokens(head),
+      tailTokens = readTokens(tail);
+    const sourceTokens = tokensOfParagraph(source);
+    const headText = textOf(headTokens);
+    if (headText + textOf(tailTokens) !== textOf(sourceTokens)) continue;
+    if (
+      JSON.stringify(unknownPositions([...headTokens, ...tailTokens])) !==
+      JSON.stringify(unknownPositions(sourceTokens))
+    )
+      continue;
+    if (!alignsBefore(treeParagraphs, docParagraphs, index, readTokens)) continue;
     // Everything after the split must be untouched, or a structural change is riding along
     // with an edit and the two cannot be told apart afterwards.
-    if (!alignsAfter(treeParagraphs, docParagraphs, index + 1, index + 2)) continue;
+    if (!alignsAfter(treeParagraphs, docParagraphs, index + 1, index + 2, readTokens)) continue;
 
     return {
       ok: true,
@@ -548,17 +603,24 @@ function mapSplit(
 /** Exactly two adjacent paragraphs merged, with everything else untouched. */
 function mapJoin(
   treeParagraphs: readonly OoxmlNode[],
-  docParagraphs: readonly PMNode[]
+  docParagraphs: readonly PMNode[],
+  readTokens: TokenReader
 ): MapResult {
   for (let index = 0; index + 1 < treeParagraphs.length; index += 1) {
     const first = treeParagraphs[index]!;
     const second = treeParagraphs[index + 1]!;
     const survivor = docParagraphs[index];
     if (!survivor || survivor.attrs.nodeId !== first.id) continue;
-    const expected = textOf(tokensOfParagraph(first)) + textOf(tokensOfParagraph(second));
-    if (textOf(tokensOfNode(survivor)) !== expected) continue;
-    if (!alignsBefore(treeParagraphs, docParagraphs, index)) continue;
-    if (!alignsAfter(treeParagraphs, docParagraphs, index + 2, index + 1)) continue;
+    const expectedTokens = [...tokensOfParagraph(first), ...tokensOfParagraph(second)];
+    const survivorTokens = readTokens(survivor);
+    if (textOf(survivorTokens) !== textOf(expectedTokens)) continue;
+    if (
+      JSON.stringify(unknownPositions(survivorTokens)) !==
+      JSON.stringify(unknownPositions(expectedTokens))
+    )
+      continue;
+    if (!alignsBefore(treeParagraphs, docParagraphs, index, readTokens)) continue;
+    if (!alignsAfter(treeParagraphs, docParagraphs, index + 2, index + 1, readTokens)) continue;
 
     return { ok: true, ops: [{ op: 'joinParagraphs', firstId: first.id, secondId: second.id }] };
   }
@@ -569,13 +631,19 @@ function mapJoin(
 function alignsBefore(
   treeParagraphs: readonly OoxmlNode[],
   docParagraphs: readonly PMNode[],
-  count: number
+  count: number,
+  readTokens: TokenReader
 ): boolean {
   for (let i = 0; i < count; i += 1) {
     const node = docParagraphs[i];
     const paragraph = treeParagraphs[i]!;
     if (!node || node.attrs.nodeId !== paragraph.id) return false;
-    if (textOf(tokensOfNode(node)) !== textOf(tokensOfParagraph(paragraph))) return false;
+    if (textOf(readTokens(node)) !== textOf(tokensOfParagraph(paragraph))) return false;
+    if (
+      JSON.stringify(unknownPositions(readTokens(node))) !==
+      JSON.stringify(unknownPositions(tokensOfParagraph(paragraph)))
+    )
+      return false;
   }
   return true;
 }
@@ -585,13 +653,19 @@ function alignsAfter(
   treeParagraphs: readonly OoxmlNode[],
   docParagraphs: readonly PMNode[],
   treeFrom: number,
-  docFrom: number
+  docFrom: number,
+  readTokens: TokenReader
 ): boolean {
   for (let offset = 0; treeFrom + offset < treeParagraphs.length; offset += 1) {
     const paragraph = treeParagraphs[treeFrom + offset]!;
     const node = docParagraphs[docFrom + offset];
     if (!node || node.attrs.nodeId !== paragraph.id) return false;
-    if (textOf(tokensOfNode(node)) !== textOf(tokensOfParagraph(paragraph))) return false;
+    if (textOf(readTokens(node)) !== textOf(tokensOfParagraph(paragraph))) return false;
+    if (
+      JSON.stringify(unknownPositions(readTokens(node))) !==
+      JSON.stringify(unknownPositions(tokensOfParagraph(paragraph)))
+    )
+      return false;
   }
   return true;
 }

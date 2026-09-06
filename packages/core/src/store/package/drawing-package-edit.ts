@@ -17,7 +17,7 @@ import {
   type ImageDecodePort,
   type SupportedImageMime,
 } from './image-resources.ts';
-import { projectDrawingsInPackage } from './drawing-projection.ts';
+import { canonicalMediaReferenceCount } from './canonical-media-references.ts';
 import { resolveImageResourceLimits } from '../runtime/limits.ts';
 import {
   readOoxmlPart,
@@ -33,7 +33,7 @@ import {
   withRelationship,
   withRelationshipsPartFor,
 } from './package-edit.ts';
-import { IMAGE_RELATIONSHIP_TYPE, resolveImageRelationship } from './relationships.ts';
+import { IMAGE_RELATIONSHIP_TYPE } from './relationships.ts';
 import { withoutContentTypeOverride } from './hf-lifecycle-shell.ts';
 import { sha256FontBytes as sha256Bytes } from './sha256.ts';
 import {
@@ -307,22 +307,10 @@ function drawingReferencesRelationship(
   ownerPart: string,
   relationshipId: string
 ): boolean {
-  return projectDrawingsInPackage(pkg).some((projection) => {
-    if (projection.ownerPartName !== ownerPart) return false;
-    const embed = projection.picture?.embeddedRelationshipId;
-    const link = projection.picture?.linkedRelationshipId;
-    return embed === relationshipId || link === relationshipId;
-  });
-}
-
-function resolvedInternalMediaPart(
-  pkg: OoxmlPackage,
-  ownerPart: string,
-  relationshipId: string
-): string | null {
-  const records = pkg.relationships.get(ownerPart) ?? [];
-  const resolved = resolveImageRelationship(records, ownerPart, relationshipId);
-  return resolved.mode === 'internal' ? resolved.partName : null;
+  const part = pkg.parts.get(ownerPart);
+  if (!part) return true;
+  const references = canonicalMediaReferenceCount(part.root, new Set([relationshipId]));
+  return references.count > 0 || references.truncated;
 }
 
 function isPartReferencedByAnyInternalRelationship(pkg: OoxmlPackage, partName: string): boolean {
@@ -338,16 +326,28 @@ function isPartReferencedByAnyInternalRelationship(pkg: OoxmlPackage, partName: 
   return false;
 }
 
-/** Package-wide live drawing references to a media part through owner-scoped relationships. */
+/** Authored media references include preserved VML and unselected compatibility branches. */
 export function liveDrawingReferenceCount(pkg: OoxmlPackage, partName: string): number {
   const key = canonicalPartKey(partName);
   if (key === null) return 0;
   let count = 0;
-  for (const projection of projectDrawingsInPackage(pkg)) {
-    const embedId = projection.picture?.embeddedRelationshipId;
-    if (!embedId) continue;
-    const resolvedPart = resolvedInternalMediaPart(pkg, projection.ownerPartName, embedId);
-    if (resolvedPart !== null && canonicalPartKey(resolvedPart) === key) count += 1;
+  for (const [ownerPart, relationships] of pkg.relationships) {
+    const ids = new Set<string>();
+    for (const relationship of relationships) {
+      if (relationship.targetMode === 'External' || relationship.type !== IMAGE_RELATIONSHIP_TYPE)
+        continue;
+      const resolved = resolveInternalTarget(ownerPart, relationship.rawTarget);
+      if (resolved.ok && canonicalPartKey(resolved.partName) === key) {
+        ids.add(relationship.id);
+      }
+    }
+    if (ids.size === 0) continue;
+    const part = pkg.parts.get(ownerPart);
+    if (!part) return Math.max(1, count);
+    const references = canonicalMediaReferenceCount(part.root, ids);
+    count += references.count;
+    // A bounded scan cannot prove a resource orphaned after truncation.
+    if (references.truncated) return Math.max(1, count);
   }
   return count;
 }

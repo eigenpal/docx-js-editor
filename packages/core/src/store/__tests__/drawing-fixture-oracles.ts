@@ -286,12 +286,16 @@ export const FIXTURE_ORACLES: Readonly<Record<string, FixtureLayoutPaintOracle>>
     },
   },
   'images-compatibility-malformed.docx': {
-    drawingCount: 1,
+    drawingCount: 2,
     pageCount: 1,
-    readyCount: 1,
+    readyCount: 2,
     placeholderCount: 0,
     assertProjections: (projections) => {
-      expect(projections).toHaveLength(1);
+      // One selected DrawingML branch plus the independent native VML photo.
+      // The malformed anchor and unselected fallback still add nothing.
+      expect(projections).toHaveLength(2);
+      expect(projections.filter((projection) => projection.legacyGraphic)).toHaveLength(1);
+      expect(projections.filter((projection) => projection.picture)).toHaveLength(1);
     },
   },
   'images-drawingml-watermark.docx': {

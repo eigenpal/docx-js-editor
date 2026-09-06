@@ -4,6 +4,7 @@
 // ancestor xmlns bindings. Field projection consumes the atom-id map; it never re-walks MC
 // with an empty namespace scope.
 
+import { isLegacyVmlAtom } from '../store/package/legacy-vml-projection.ts';
 import type {
   OoxmlDrawingNode,
   OoxmlGenericElementNode,
@@ -113,7 +114,7 @@ function subtreeDrawingAtoms(node: OoxmlNode, composeDepth: number): SubtreeDraw
   const cached = subtreeDrawingAtomMemos.get(node);
   if (cached) return cached;
   let result: SubtreeDrawingAtoms;
-  if (node.kind === 'drawing' || isRunLevelMcAlternateContent(node)) {
+  if (node.kind === 'drawing' || isRunLevelMcAlternateContent(node) || isLegacyVmlAtom(node)) {
     result = { atoms: new Map([[node.id, node]]), visited: 1, deepest: 0 };
   } else if (!('children' in node) || node.children.length === 0) {
     result = { atoms: EMPTY_ATOMS, visited: 1, deepest: 0 };
@@ -150,7 +151,11 @@ function subtreeDrawingAtoms(node: OoxmlNode, composeDepth: number): SubtreeDraw
       if (visited > MAX_PART_SCAN_ELEMENTS) break;
       if (frame.depth > deepest) deepest = frame.depth;
       const current = frame.node;
-      if (current.kind === 'drawing' || isRunLevelMcAlternateContent(current)) {
+      if (
+        current.kind === 'drawing' ||
+        isRunLevelMcAlternateContent(current) ||
+        isLegacyVmlAtom(current)
+      ) {
         atoms.set(current.id, current);
         continue;
       }
@@ -309,6 +314,7 @@ function drawingProjectionLayoutToken(projection: DrawingProjection): string {
     projection.compatibilityBranchNodeId ?? '',
     anchor?.simplePos ? 'sp' : 'pv',
     anchor ? String(anchor.relativeHeight) : '',
+    anchor ? (anchor.behindDocument ? '1' : '0') : '',
     anchor ? (anchor.layoutInCell ? '1' : '0') : '',
     picture
       ? framedTokenJoin([
@@ -329,6 +335,7 @@ function drawingProjectionLayoutToken(projection: DrawingProjection): string {
         ])
       : '',
     vector ? vectorShapeLayoutToken(vector) : '',
+    projection.legacyGraphic ? JSON.stringify(projection.legacyGraphic) : '',
     wrap
       ? framedTokenJoin([
           wrap.element,
@@ -391,7 +398,7 @@ function drawingResourceLayoutToken(resource: ImageResourceState): string {
 const MAX_HOSTED_STORY_TOKEN_DEPTH = 1;
 
 function collectDrawingAtoms(node: OoxmlNode, ids: string[]): void {
-  if (node.kind === 'drawing' || isRunLevelMcAlternateContent(node)) {
+  if (node.kind === 'drawing' || isRunLevelMcAlternateContent(node) || isLegacyVmlAtom(node)) {
     ids.push(node.id);
     return;
   }
@@ -802,7 +809,7 @@ export const createInlineDrawingLayoutInput = createInlineDrawingLayoutBundle;
 export function isInlineDrawingRunAtom(
   node: OoxmlNode
 ): node is OoxmlDrawingNode | OoxmlGenericElementNode {
-  return node.kind === 'drawing' || isRunLevelMcAlternateContent(node);
+  return node.kind === 'drawing' || isRunLevelMcAlternateContent(node) || isLegacyVmlAtom(node);
 }
 
 /** Paragraph-local drawing cache token from a layout context (tests / headless callers). */

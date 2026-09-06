@@ -176,11 +176,32 @@ Alt text uses `@descr`, then `@title`; `@name` is never announced. A picture wit
 | Anchored text boxes                                     | Render the story read-only and clip it to the extent |
 | Page fields in anchored header or footer text boxes     | Evaluate per page                                    |
 | Inline text boxes, linked chains, autofit, and rotation | Show a placeholder                                   |
-| VML (`w:pict`)                                          | Preserve inertly; do not render or edit watermarks   |
+| Standalone VML (`w:pict`)                               | Render the bounded read-only subset described below  |
 | `w:object` and `w:altChunk`                             | Preserve as generic content with diagnostics         |
 | Tracked image insertion and deletion                    | Record the change in suggesting mode                 |
 | Tracked image property edits                            | Stay unavailable in suggesting mode                  |
 | Artistic effects (`a:effectLst`)                        | Do not render; authored markup round-trips           |
+
+## Legacy VML previews
+
+Standalone `w:pict` can render unrotated embedded photos and bounded groups of photos,
+solid rectangles/ellipses, straight line segments with arrows, and straight fit-to-box
+WordArt (`_x0000_t136`). Group-local coordinates, picture crops, supported text wrapping,
+and source order are retained. WordArt uses the authored font when available on the host;
+curved or rotated WordArt is not supported.
+
+The preview is one read-only drawing atom. Original VML, media, and relationships remain
+canonical: saving does not add generated SVG parts or replace the source with DrawingML.
+Shared photo relationships remain protected when another picture is deleted. Unsupported
+or oversized groups remain opaque as a whole, including groups whose members or ink would
+be clipped by the preview extent. Custom templates, text boxes, curves, image effects,
+rotation, and mixed unsupported members are not partially rendered. Only recognized
+standard shape templates are accepted. An already-selected DrawingML MC branch never
+paints its dead VML fallback too; VML-only MC fallback support is unchanged.
+
+Generated previews use bounded static SVG resources. Embedded members still pass the
+normal image validation and decode limits; an external or missing member never triggers
+a fetch or a misleading partial group preview.
 
 ## Next steps
 

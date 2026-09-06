@@ -4,6 +4,8 @@
 // projection-only — every authored branch stays in the tree on save.
 
 import { sanitizeHref } from './sinks.ts';
+import { freezeDrawingProjection } from './freeze-drawing-projection.ts';
+import { projectLegacyVml, type LegacyGraphicProjection } from './legacy-vml-projection.ts';
 import { HYPERLINK_RELATIONSHIP_TYPE, type RelationshipTargetResolver } from './hyperlink.ts';
 import { resolveRelationship } from './relationships.ts';
 import {
@@ -213,6 +215,8 @@ export interface DrawingProjection {
   readonly picture: PictureProjection | null;
   readonly vectorShape: VectorShapeProjection | null;
   readonly textboxStory: TextboxStoryProjection | null;
+  /** Read-only preview of the supported native VML subset; the canonical XML is untouched. */
+  readonly legacyGraphic?: LegacyGraphicProjection;
   readonly locks: DrawingLocks;
   readonly effects: Readonly<{ grayscale: boolean; brightness: number; contrast: number }>;
   readonly compatibilityBranchNodeId: string | null;
@@ -1247,77 +1251,6 @@ function projectPicture(
   };
 }
 
-function freezeDrawingProjection(projection: DrawingProjection): DrawingProjection {
-  return Object.freeze({
-    ...projection,
-    extentEmu: Object.freeze({ ...projection.extentEmu }),
-    effectExtentEmu: Object.freeze({ ...projection.effectExtentEmu }),
-    inlineDistancesEmu: Object.freeze({ ...projection.inlineDistancesEmu }),
-    wrapGeometry: projection.wrapGeometry
-      ? Object.freeze({
-          ...projection.wrapGeometry,
-          distancesEmu: Object.freeze({ ...projection.wrapGeometry.distancesEmu }),
-          polygon: Object.freeze(
-            projection.wrapGeometry.polygon.map((point) => Object.freeze({ ...point }))
-          ),
-        })
-      : null,
-    position: projection.position
-      ? Object.freeze({
-          ...projection.position,
-          simplePosition: Object.freeze({ ...projection.position.simplePosition }),
-          horizontal: Object.freeze({ ...projection.position.horizontal }),
-          vertical: Object.freeze({ ...projection.position.vertical }),
-        })
-      : null,
-    anchor: projection.anchor ? Object.freeze({ ...projection.anchor }) : null,
-    picture: projection.picture
-      ? Object.freeze({
-          ...projection.picture,
-          crop: Object.freeze({ ...projection.picture.crop }),
-          transform: Object.freeze({ ...projection.picture.transform }),
-        })
-      : null,
-    vectorShape: projection.vectorShape
-      ? Object.freeze({
-          ...projection.vectorShape,
-          extentEmu: Object.freeze({ ...projection.vectorShape.extentEmu }),
-          subpathsEmu: Object.freeze(
-            projection.vectorShape.subpathsEmu.map((points) =>
-              Object.freeze(points.map((point) => Object.freeze({ ...point })))
-            )
-          ),
-          // `components` is required and non-empty: paint iterates it, so a conditional
-          // spread that ever took the empty branch would strip the field and throw.
-          components: Object.freeze(
-            projection.vectorShape.components.map((component) =>
-              Object.freeze({
-                ...component,
-                subpathsEmu: Object.freeze(
-                  component.subpathsEmu.map((points) =>
-                    Object.freeze(points.map((point) => Object.freeze({ ...point })))
-                  )
-                ),
-              })
-            )
-          ),
-        })
-      : null,
-    // `content` is a canonical-tree node shared with the store; it is not deep-frozen here.
-    textboxStory: projection.textboxStory
-      ? Object.freeze({
-          ...projection.textboxStory,
-          insetsEmu: Object.freeze({ ...projection.textboxStory.insetsEmu }),
-        })
-      : null,
-    locks: Object.freeze({ ...projection.locks }),
-    effects: Object.freeze({ ...projection.effects }),
-    diagnostics: Object.freeze(
-      projection.diagnostics.map((diagnostic) => Object.freeze({ ...diagnostic }))
-    ),
-  });
-}
-
 function buildUnrenderableProjection(
   drawing: OoxmlDrawingNode,
   ctx: ProjectionContext,
@@ -1700,6 +1633,13 @@ function collectDrawingsInPartBounded(
     if (frame.depth > MAX_XML_DEPTH) continue;
 
     const scope = namespaceScopeForNode(frame.namespaceScope, frame.node);
+
+    const legacy = projectLegacyVml(frame.node, ownerPartName);
+    if (legacy) {
+      out.push(legacy);
+      atomIndex?.set(frame.node.id, legacy);
+      continue;
+    }
 
     if (frame.node.kind === 'drawing') {
       const projected = projectDrawing(frame.node, { ...ctx, namespaceScope: scope });

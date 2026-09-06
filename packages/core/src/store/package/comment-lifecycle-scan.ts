@@ -11,6 +11,7 @@ import type { OoxmlPackage } from './ooxml-package.ts';
 import { W14_NAMESPACE_URI } from './ooxml-shared.ts';
 import { isValidParaId } from './para-id.ts';
 import { WML_NAMESPACE_URI, type OoxmlElement, type OoxmlNode } from './ooxml-tree.ts';
+import { isLegacyVmlAtom } from './legacy-vml-projection.ts';
 
 /** The `w15` namespace: `commentsExtended.xml` — `w15:commentEx`. */
 export const W15_NAMESPACE_URI = 'http://schemas.microsoft.com/office/word/2012/wordml';
@@ -456,7 +457,8 @@ export function collectOwnerAnchorStates(
         node.kind === 'tab' ||
         node.kind === 'hardBreak' ||
         node.kind === 'noteReference' ||
-        node.kind === 'drawing'
+        node.kind === 'drawing' ||
+        isLegacyVmlAtom(node)
       ) {
         units += 1;
         return true;
@@ -528,7 +530,8 @@ export function collectOwnerCommentSpans(
         node.kind === 'tab' ||
         node.kind === 'hardBreak' ||
         node.kind === 'noteReference' ||
-        node.kind === 'drawing'
+        node.kind === 'drawing' ||
+        isLegacyVmlAtom(node)
       ) {
         offset += 1;
         return true;
