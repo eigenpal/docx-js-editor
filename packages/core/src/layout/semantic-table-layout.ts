@@ -104,7 +104,7 @@ import { annotateTableFragmentGeometry } from './semantic-table-interaction.ts';
 import { borderExtentPt, type TableBorderOwnershipBudget } from './table-borders.ts';
 import { type TableVMergeResolveBudget } from './table-vmerge.ts';
 import { acceptVMergeSpansAt, planTableVMergeHeights } from './table-vmerge-heights.ts';
-import { contentInsets } from './table-cell-geometry.ts';
+import { contentInsets, type CellContentInsets } from './table-cell-geometry.ts';
 import { blockInlineRight } from './table-cell-text-direction.ts';
 import { finalizeTableRows, shiftBlocks } from './table-fragment-finalize.ts';
 export { finalizeTableRows } from './table-fragment-finalize.ts';
@@ -208,6 +208,8 @@ export interface HostedStoryFlowDeps {
 
 export interface TableFlowDeps {
   readonly measurer: TextMeasurer;
+  /** Layout-only insets for one repeated-header/body occurrence. */
+  readonly cellContentInsets?: ReadonlyMap<string, CellContentInsets>;
   readonly cache?: ParagraphLayoutCache<readonly PendingLine[]> | undefined;
   readonly producer: string;
   /** Produces a stable id from the paragraph-local line identity. */
@@ -1314,7 +1316,8 @@ export function layoutRowFragmentBounded(
     const inset = Math.min(gap, Math.max((slotW - MIN_CELL_BOX_PT) / 2, 0));
     const cellX = slotX + inset;
     const cellW = Math.max(slotW - 2 * inset, MIN_CELL_BOX_PT);
-    const insets = contentInsets(cell.margins, cell.borders);
+    const insets =
+      deps.cellContentInsets?.get(cell.id) ?? contentInsets(cell.margins, cell.borders);
     const topInset = isContinuation ? borderExtentPt(cell.borders.top) : insets.top;
     // Always reserve bottom inset so the fragment never paints into the margin/border band.
     // A detached head answers to the page and to its own SPAN, and to nothing about this
