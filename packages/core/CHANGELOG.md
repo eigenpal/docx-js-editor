@@ -1,5 +1,31 @@
 # @docx-editor.dev/core
 
+## 2.16.0
+
+### Minor Changes
+
+- 0a3b35d: Fix East Asian wrapping across formatting changes, preserve full-width number groups, and apply CJK justification and document typography settings.
+- 6fac0e1: Keep symbol faces, such as the MS Gothic face a Word checkbox names, out of the font substitution notice, and report them to the font resolver so an app can supply them. Fixes #729, fixes #730
+- 1de0f64: Write a suggested replacement as Word does: the deletion first, then the insertion, each under its own revision id, wherever in the paragraph the replaced text sits. Add `replacementLanding` to the editor surface and the automation port, so a scripted replacement writes and reports the same position typing does. Fixes #691.
+
+### Patch Changes
+
+- 96d7e74: CJK text now wraps at the column width with UAX #14 ideographic break opportunities and basic kinsoku, instead of breaking only at run boundaries or spaces. Fixes #526
+- 7a18c15: Render flipped DrawingML paths and open connectors with triangular line ends.
+- 863680d: Honor explicit East Asian font hints for Latin-1 symbols, including middle dots, degree signs, multiplication and division signs. Keep ASCII text, model offsets and canonical run formatting unchanged.
+- 62a6911: Keep floating image overlays visible beyond their anchor cells while preserving page clipping.
+- a4a9bbc: Search body, header, and footer text-box stories during Find navigation. Fixes #711
+- 76a4c5d: Keep overflowing whitespace-only runs at the end of their current line instead of indenting the next line, preserving their canonical text and caret ranges.
+- b7c82fa: Render JPEG photos with large metadata segments and validate their EXIF-oriented dimensions without changing the original media.
+- 03b88ea: Position supported legacy PAGE footer frames without adding an extra footer line. Clip fixed-width frames above empty or PAGE anchors while preserving fields, selections, and document structure.
+- 485bfd4: Render the DrawingML bilevel picture color mode.
+- 85bfd9c: Keep joined emoji and combining marks intact under East Asian font hints, avoid premature word wrapping at trailing spaces, and preserve terminal floating tables beside empty anchors with bookmarks or paragraph spacing.
+- 3641f1e: Improve fidelity for justified lines, East Asian font hints, explicit symbol fonts, drawing and textbox updates, EXIF-oriented JPEG photos, and clicks beside legacy centered PAGE footer frames.
+- 46c0de2: Render opaque solid Word 2010 text outlines with explicit RGB colors.
+- eb0e520: Enabling suggesting mode without a configured author now returns a clear configuration error and raises it once through the `error` event, instead of entering the mode and silently ignoring keystrokes. Setting the author later enters the requested mode, and the toolbar's mode menu keeps the other modes available. Fixes #692
+- 6f7da01: Avoid an extra blank page after simple text-anchored tables with a terminal empty paragraph that fits the same page.
+- @docx-editor.dev/i18n@2.16.0
+
 ## 2.15.1
 
 ### Patch changes

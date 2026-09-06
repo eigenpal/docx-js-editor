@@ -1,6 +1,6 @@
 {
   "name": "@docx-editor.dev/i18n",
-  "version": "2.15.1",
+  "version": "2.16.0",
   "description": "Shared UI locale strings and types for the @docx-editor.dev editor adapters (React and Vue).",
   "sideEffects": false,
   "main": "./dist/index.js",

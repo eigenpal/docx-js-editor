@@ -1,5 +1,32 @@
 # @docx-editor.dev/editor-api
 
+## 2.16.0
+
+### Minor Changes
+
+- d0bac83: Use the engine's configurable element budget when opening XML parts and identify exceeded resource limits in the server API. Fixes #693.
+
+### Patch Changes
+
+- Updated dependencies [96d7e74]
+- Updated dependencies [0a3b35d]
+- Updated dependencies [7a18c15]
+- Updated dependencies [863680d]
+- Updated dependencies [62a6911]
+- Updated dependencies [a4a9bbc]
+- Updated dependencies [76a4c5d]
+- Updated dependencies [b7c82fa]
+- Updated dependencies [03b88ea]
+- Updated dependencies [485bfd4]
+- Updated dependencies [6fac0e1]
+- Updated dependencies [85bfd9c]
+- Updated dependencies [3641f1e]
+- Updated dependencies [46c0de2]
+- Updated dependencies [eb0e520]
+- Updated dependencies [1de0f64]
+- Updated dependencies [6f7da01]
+  - @docx-editor.dev/core@2.16.0
+
 ## 2.15.1
 
 ## 2.15.0

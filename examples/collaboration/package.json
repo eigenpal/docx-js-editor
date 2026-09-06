@@ -1,7 +1,7 @@
 {
   "name": "@docx-editor.dev/example-collaboration",
   "private": true,
-  "version": "0.0.7",
+  "version": "0.0.8",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173 --strictPort",
